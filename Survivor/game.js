@@ -1,3 +1,29 @@
+// --- SYSTÈME DE MUSIQUE ---
+const playlist = ["intro.mp3", "cyber.mp3"];
+
+const bgMusic = new Audio();
+bgMusic.volume = 0.3; // 0.3 = 30% du volume (pour ne pas casser les oreilles)
+
+function playRandomMusic() {
+  if (playlist.length === 0) return; // Sécurité si la liste est vide
+
+  // Choisir un titre au hasard
+  const randomTrack = playlist[Math.floor(Math.random() * playlist.length)];
+
+  // Construire le chemin (ex: "musique/techno.mp3")
+  bgMusic.src = `musique/${randomTrack}`;
+
+  // Lancer la lecture
+  bgMusic
+    .play()
+    .catch((e) => console.log("Attente d'interaction pour la musique..."));
+}
+
+// Quand une musique est finie, on en lance une autre automatiquement
+bgMusic.addEventListener("ended", () => {
+  playRandomMusic();
+});
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 function resizeCanvas() {
@@ -396,6 +422,16 @@ const enemyTypes = {
   },
 };
 
+// Vérifie si un objet est dans l'écran (+ une marge de 100px)
+function isOnScreen(x, y, size) {
+  return (
+    x + size > camera.x - 100 &&
+    x - size < camera.x + canvas.width + 100 &&
+    y + size > camera.y - 100 &&
+    y - size < camera.y + canvas.height + 100
+  );
+}
+
 function logUpgrade(name) {
   if (!player.inventory[name]) player.inventory[name] = 0;
   player.inventory[name]++;
@@ -672,12 +708,24 @@ function addFloatingText(x, y, text, color = "#fff", size = 14, duration = 40) {
     maxLife: duration,
   });
 }
+
 function createGem(x, y, xpValue) {
+  // OPTIMISATION : Limite stricte à 300 gemmes au sol.
+  // Si on dépasse, on supprime la plus ancienne (la première du tableau)
+  if (gems.length > 300) {
+    gems.shift();
+  }
+
+  // OPTIMISATION : On force la gemme à rester dans la carte
+  x = Math.max(MAP_BOUNDS.minX + 20, Math.min(MAP_BOUNDS.maxX - 20, x));
+  y = Math.max(MAP_BOUNDS.minY + 20, Math.min(MAP_BOUNDS.maxY - 20, y));
+
   let color = "#ff3333";
   if (xpValue > 10) color = "#33ff33";
   if (xpValue > 50) color = "#3333ff";
   gems.push({ x, y, xp: xpValue, color, vx: 0, vy: 0, collected: false });
 }
+
 function gainXp(amount) {
   player.xp += amount;
   game.totalRunXp += amount;
@@ -702,6 +750,7 @@ function returnToMenu() {
 }
 
 function startGame(isReplay) {
+  playRandomMusic();
   savePseudo();
   if (!currentPseudo) {
     alert("Veuillez entrer un pseudo !");
@@ -1297,8 +1346,11 @@ function update() {
     proj.x += proj.vx;
     proj.y += proj.vy;
     if (
-      Math.abs(proj.x - player.worldX) > 800 ||
-      Math.abs(proj.y - player.worldY) > 800
+      proj.x < MAP_BOUNDS.minX ||
+      proj.x > MAP_BOUNDS.maxX ||
+      proj.y < MAP_BOUNDS.minY ||
+      proj.y > MAP_BOUNDS.maxY ||
+      !isOnScreen(proj.x, proj.y, 200)
     ) {
       projectiles.splice(i, 1);
       continue;
@@ -1769,6 +1821,8 @@ function render() {
   });
 
   gems.forEach((g) => {
+    if (!isOnScreen(g.x, g.y, 10)) return;
+
     const s = toScreen(g.x, g.y);
     ctx.fillStyle = g.color;
     ctx.shadowBlur = 10;
@@ -1869,6 +1923,8 @@ function render() {
   }
 
   enemies.forEach((e) => {
+    if (!isOnScreen(e.x, e.y, e.size)) return;
+
     const s = toScreen(e.x, e.y);
     if (
       s.x < -50 ||
@@ -2080,8 +2136,12 @@ function createProjectile(angle) {
     pierce: player.piercing + (player.hasRayGun ? 2 : 0),
   });
 }
+
 function createParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++)
+  // Si trop de particules, on réduit la qualité visuelle
+  if (particles.length > 200) count = 2;
+
+  for (let i = 0; i < count; i++) {
     particles.push({
       x,
       y,
@@ -2090,7 +2150,13 @@ function createParticles(x, y, color, count) {
       life: 20 + Math.random() * 20,
       color,
     });
+  }
+  // Nettoyage d'urgence si ça explose
+  if (particles.length > 1000) {
+    particles.splice(0, 200);
+  }
 }
+
 function createAoEEffect(x, y, radius) {
   visualEffects.push({
     type: "aoe",
