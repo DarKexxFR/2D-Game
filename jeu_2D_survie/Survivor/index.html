@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Survivor - Augmented</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="gameContainer">
+      <canvas id="gameCanvas"></canvas>
+      <div id="xpContainer"><div id="xpBar"></div></div>
+      <div id="levelIndicator">LVL <span id="lvlVal">1</span></div>
+
+      <div id="ui">
+        <div class="ui-header">
+          <div>VAGUE <span id="wave" style="color: #00ffff">1</span></div>
+          <div>KILLS <span id="kills">0</span></div>
+        </div>
+        <div id="timerContainer"><div id="timerBar"></div></div>
+        <div class="health-bar">
+          <div class="health-text" id="healthText">100/100</div>
+          <div class="health-fill" id="playerHealth" style="width: 100%"></div>
+        </div>
+        <div class="ui-divider"></div>
+        <div class="stat-grid">
+          <div class="stat-item">ATK: <span id="statAtk">10</span></div>
+          <div class="stat-item">DEF: <span id="statDef">0</span></div>
+          <div class="stat-item">SPD: <span id="statSpd">3.0</span></div>
+          <div class="stat-item">AIMANT: <span id="statMagnet">100</span></div>
+          <div class="stat-item">
+            CRIT: <span id="statCrit" class="stat-crit">5%</span>
+          </div>
+          <div class="stat-item">
+            DMG: <span id="statCdmg" class="stat-crit">150%</span>
+          </div>
+        </div>
+        <div class="skill-box">
+          <div style="font-size: 10px; color: #aaa">DASH (ESPACE)</div>
+          <div class="skill-bar">
+            <div
+              class="health-fill"
+              id="dashBar"
+              style="width: 100%; background: #00ffff"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="controls">ZQSD : Bouger | ESPACE : Dash | P : Menu Pause</div>
+      <div id="bossWarning">⚠️ BOSS EN APPROCHE ⚠️</div>
+
+      <div id="mainMenu" class="menu-overlay">
+        <h1>SURVIVOR</h1>
+
+        <div id="nameInputSection" style="margin: 20px 0">
+          <input
+            type="text"
+            id="playerNameInput"
+            placeholder="Entrez votre pseudo"
+            maxlength="20"
+            style="
+              width: 100%;
+              padding: 10px;
+              font-size: 16px;
+              border-radius: 6px;
+              border: 2px solid #00ffff;
+              background: #1a1a2e;
+              color: white;
+              text-align: center;
+            "
+          />
+          <p
+            id="currentPlayerName"
+            style="margin-top: 10px; color: #00ffff; font-weight: bold"
+          ></p>
+        </div>
+
+        <div class="account-stats">
+          <div class="ac-level">
+            <span style="color: #fff"
+              >Compte Niv.
+              <span id="acLvlDisplay" style="color: #ffd700">1</span></span
+            ><span style="font-size: 14px; color: #aaa" id="acXpDisplay"
+              >0/1000 XP</span
+            >
+          </div>
+          <div class="ac-bar-bg">
+            <div class="ac-bar-fill" id="acBarFill"></div>
+          </div>
+          <div style="margin-top: 10px; color: #ffff00; font-weight: bold">
+            💰 OR : <span id="acGoldDisplay">0</span>
+          </div>
+        </div>
+
+        <button onclick="openLeaderboard()">🏆 CLASSEMENT</button>
+        <button onclick="openShop()">BOUTIQUE & AMÉLIORATIONS</button>
+        <button onclick="startGame(false)">JOUER</button>
+      </div>
+
+      <div id="shopMenu" class="menu-overlay">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+          "
+        >
+          <h2 style="color: #00ff88; margin: 0">BOUTIQUE</h2>
+          <div style="color: #ffff00; font-weight: bold">
+            💰 <span id="shopGoldDisplay">0</span>
+          </div>
+        </div>
+        <div class="shop-item">
+          <div style="text-align: left; width: 60%">
+            <h4 style="color: #fff">
+              Drone de Combat
+              <span
+                id="droneLvlBadge"
+                style="
+                  font-size: 10px;
+                  background: #444;
+                  padding: 2px 5px;
+                  border-radius: 4px;
+                "
+                >Lvl 0</span
+              >
+            </h4>
+            <p style="color: #aaa; font-size: 12px">
+              Tire automatiquement des lasers.
+            </p>
+            <div
+              id="droneStats"
+              style="font-size: 11px; color: #00ff88; margin-top: 5px"
+            ></div>
+          </div>
+          <div id="btnDroneContainer"></div>
+        </div>
+        <button class="secondary" onclick="closeShop()">RETOUR</button>
+      </div>
+
+      <div id="upgradeMenu" class="menu-overlay">
+        <h2>CHOISISSEZ !</h2>
+        <div id="upgradeOptions"></div>
+      </div>
+
+      <div id="leaderboardMenu" class="menu-overlay">
+        <h2 style="color: #ffd700">🏆 CLASSEMENT</h2>
+        <div
+          id="leaderboardList"
+          style="max-height: 400px; overflow-y: auto; margin: 20px 0"
+        ></div>
+        <button class="secondary" onclick="closeLeaderboard()">RETOUR</button>
+      </div>
+
+      <div id="pauseMenu" class="menu-overlay">
+        <h2>PAUSE</h2>
+        <div class="inv-list" id="pauseInventory"></div>
+        <button onclick="togglePause()">REPRENDRE</button
+        ><button onclick="returnToMenu()" class="secondary">
+          MENU PRINCIPAL
+        </button>
+      </div>
+      <div id="gameOver" class="menu-overlay">
+        <h1 style="color: #ff0000">MORT</h1>
+        <p style="color: #aaa">
+          Niveau: <span id="finalLvl" style="color: #fff">1</span> | Vague:
+          <span id="finalWave" style="color: #fff">0</span>
+        </p>
+        <p style="color: #aaa; margin-top: 10px">
+          Score:
+          <span
+            id="finalScore"
+            style="color: #ffd700; font-size: 24px; font-weight: bold"
+            >0</span
+          >
+        </p>
+        <div
+          style="
+            background: #222;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 15px;
+          "
+        >
+          <p style="color: #fff">
+            +<span id="runXpGain">0</span> XP |
+            <span style="color: #ffff00"
+              >+<span id="runGoldGain">0</span> OR</span
+            >
+          </p>
+        </div>
+        <div class="btn-grid">
+          <button onclick="startGame(true)">REJOUER</button
+          ><button class="secondary" onclick="returnToMenu()">MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
