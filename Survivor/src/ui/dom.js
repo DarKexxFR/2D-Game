@@ -38,6 +38,10 @@ export function setVisible(id, visible) {
   }
 }
 
+export function setClass(id, className, enabled) {
+  $(id).classList.toggle(className, enabled);
+}
+
 export function isVisible(id) {
   return $(id).style.display === "block";
 }

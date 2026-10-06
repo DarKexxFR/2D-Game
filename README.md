@@ -29,6 +29,11 @@ Alternatives : `npx serve Survivor`, ou l'extension **Live Server** de VS Code.
 | A | Activer / désactiver le tir automatique |
 | P / Échap | Pause |
 
+**Sur mobile / tablette** : joystick virtuel sur la moitié gauche de l'écran (posez le doigt n'importe où),
+boutons **DASH** et **ULT** à droite, bouton **📦** quand vous êtes près de la boîte mystère, **II** pour la pause.
+Le tir est automatique (vise l'ennemi le plus proche). La vue est dézoomée sur petit écran
+pour voir autant de terrain que sur PC ; portrait et paysage sont tous deux jouables.
+
 ## Classement mondial (Supabase)
 
 Les scores de fin de partie sont envoyés à une base [Supabase](https://supabase.com) gratuite.
@@ -53,12 +58,13 @@ Survivor/
 │   ├── base.css            # Reset, polices, boutons, utilitaires
 │   ├── hud.css             # Interface en jeu
 │   ├── menus.css           # Menus / boutique / classement / pause / fin
+│   ├── touch.css           # Commandes tactiles + petits écrans
 │   └── animations.css      # @keyframes
 └── src/
     ├── main.js             # Point d'entrée : cycle de vie d'une partie + boucle principale
     ├── config.js           # Toutes les constantes d'équilibrage
     ├── core/
-    │   ├── canvas.js       # Canvas + redimensionnement
+    │   ├── canvas.js       # Canvas, vue logique (zoom mobile, écrans haute densité)
     │   ├── input.js        # Clavier / souris
     │   ├── events.js       # Bus d'événements (systèmes -> UI)
     │   └── state.js        # État de la partie (game, player, world...) + reset
@@ -88,7 +94,8 @@ Survivor/
     │   ├── leaderboardMenu.js # Classement mondial / local
     │   ├── upgradeMenu.js  # Choix d'amélioration
     │   ├── pauseMenu.js    # Pause + inventaire
-    │   └── gameOverScreen.js
+    │   ├── gameOverScreen.js
+    │   └── touchControls.js # Joystick et boutons tactiles
     ├── services/
     │   ├── storage.js      # Sauvegarde (compte, pseudo, classement local)
     │   ├── onlineLeaderboard.js # Classement mondial (Supabase)

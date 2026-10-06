@@ -30,6 +30,7 @@ import { showBossWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
+import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
 import { showUpgradeMenu } from "./ui/upgradeMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
@@ -41,6 +42,7 @@ function startGame() {
   resetPlayer(account.level);
   resetPet(account.petLevels.drone || 0);
   resetMysteryBox();
+  player.autoShoot = isTouchDevice; // pas de souris pour viser sur mobile
   hideScreens();
   showHud(true);
   spawnWave();
@@ -56,6 +58,7 @@ function returnToMenu() {
 }
 
 function endGame() {
+  showTouchControls(false);
   addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
   refreshAccountUI();
   const pseudo = getPseudo();
@@ -138,6 +141,11 @@ function init() {
   });
   onKeyPress("a", () => {
     if (game.started) player.autoShoot = !player.autoShoot;
+  });
+
+  initTouchControls({
+    onUltimate: () => game.running && !game.paused && activateUltimate(),
+    onPause: pause,
   });
 
   on("levelUp", showUpgradeMenu);

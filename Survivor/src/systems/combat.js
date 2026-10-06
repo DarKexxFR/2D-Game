@@ -1,7 +1,7 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
 import { MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
-import { canvas } from "../core/canvas.js";
+import { view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
@@ -25,9 +25,9 @@ export function rebuildEnemyGrid() {
 export function isOnScreen(x, y, size, margin = 100) {
   return (
     x + size > camera.x - margin &&
-    x - size < camera.x + canvas.width + margin &&
+    x - size < camera.x + view.width + margin &&
     y + size > camera.y - margin &&
-    y - size < camera.y + canvas.height + margin
+    y - size < camera.y + view.height + margin
   );
 }
 
@@ -107,7 +107,7 @@ export function shoot() {
     if (!target) return;
     angle = angleTo(player.worldX, player.worldY, target.x, target.y);
   } else {
-    angle = angleTo(canvas.width / 2, canvas.height / 2, mouse.x, mouse.y);
+    angle = angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y);
   }
   player.lastAttack = game.time;
 

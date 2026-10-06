@@ -1,7 +1,10 @@
-import { canvas } from "./canvas.js";
+import { toViewCoords, view } from "./canvas.js";
 
 export const keys = {};
-export const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+export const mouse = { x: view.width / 2, y: view.height / 2 };
+
+// Direction du joystick tactile (x, y entre -1 et 1), écrite par ui/touchControls.js.
+export const touchMove = { x: 0, y: 0 };
 
 // Raccourcis ponctuels (pause, tir auto...) enregistrés par les autres modules.
 const keyActions = new Map();
@@ -31,7 +34,7 @@ document.addEventListener("keyup", (e) => {
 });
 
 window.addEventListener("mousemove", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - rect.left;
-  mouse.y = e.clientY - rect.top;
+  const p = toViewCoords(e.clientX, e.clientY);
+  mouse.x = p.x;
+  mouse.y = p.y;
 });
