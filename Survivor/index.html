@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/menus.css" />
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/inventory.css" />
+    <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -108,6 +109,7 @@
           <button id="btnInventory" class="secondary">🎒 ÉQUIPEMENT</button>
           <button id="btnLeaderboard" class="secondary">🏆 CLASSEMENT</button>
         </div>
+        <button id="btnOptions" class="secondary mt-15">⚙️ OPTIONS</button>
         <button id="btnReset" class="reset-btn">⚠️ RESET PROGRESSION</button>
       </div>
 
@@ -192,7 +194,39 @@
         <h2>PAUSE</h2>
         <div class="inv-list" id="pauseInventory"></div>
         <button id="btnResume">REPRENDRE</button>
-        <button id="btnQuit" class="secondary mt-15">QUITTER</button>
+        <div class="btn-grid">
+          <button id="btnPauseOptions" class="secondary">⚙️ OPTIONS</button>
+          <button id="btnQuit" class="secondary">QUITTER</button>
+        </div>
+      </div>
+
+      <!-- ===== OPTIONS ===== -->
+      <div id="optionsMenu" class="menu-overlay">
+        <h2>OPTIONS</h2>
+        <div class="option-row">
+          <label for="optMusic">🎵 Musique</label>
+          <input type="range" id="optMusic" min="0" max="100" step="5" />
+          <span id="optMusicValue" class="option-value"></span>
+        </div>
+        <div class="option-row">
+          <label for="optSfx">🔊 Effets</label>
+          <input type="range" id="optSfx" min="0" max="100" step="5" />
+          <span id="optSfxValue" class="option-value"></span>
+        </div>
+        <div class="option-row" id="optVibrationRow">
+          <label for="optVibration">📳 Vibrations</label>
+          <button id="optVibration" class="toggle-btn"></button>
+        </div>
+        <div class="option-row option-quality">
+          <span>🖥️ Qualité graphique</span>
+          <div class="segmented">
+            <button data-quality="low">BASSE</button>
+            <button data-quality="medium">MOYENNE</button>
+            <button data-quality="high">HAUTE</button>
+          </div>
+          <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+        </div>
+        <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== GAME OVER ===== -->

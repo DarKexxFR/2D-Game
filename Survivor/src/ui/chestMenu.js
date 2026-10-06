@@ -9,6 +9,7 @@ import {
   openChest,
   openFreeChest,
 } from "../services/inventory.js";
+import { playSfx } from "../services/sfx.js";
 import { account } from "../services/storage.js";
 import { $, el, forgetCached, setClass, setText } from "./dom.js";
 import { RARITY_LABELS, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
@@ -98,6 +99,7 @@ function buy(chestId) {
 }
 
 function showReveal({ item, result, refund }) {
+  playSfx("chest");
   const owned = getOwned(item.id);
   const box = el("div", `chest-reveal rarity-glow-${item.rarity}`);
   box.style.setProperty("--rarity", rarityColor(item.rarity));

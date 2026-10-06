@@ -2,6 +2,7 @@
 // (ou dans src/data/) plutôt qu'en dur dans la logique.
 
 export const STORAGE_KEYS = {
+  settings: "survivor_settings",
   save: "survivor_save_v11",
   pseudo: "survivor_pseudo",
   leaderboard: "survivor_lb_v1",
@@ -114,7 +115,6 @@ export const RARITIES = {
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],
-  volume: 0.3,
 };
 
 // Classement mondial (Supabase). Laisser vide pour désactiver le mode en ligne.

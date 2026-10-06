@@ -10,6 +10,7 @@ const SCREENS = [
   "leaderboardMenu",
   "upgradeMenu",
   "pauseMenu",
+  "optionsMenu",
   "gameOver",
 ];
 

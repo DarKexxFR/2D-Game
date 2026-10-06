@@ -9,6 +9,7 @@ import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { ensureStarterItems } from "./services/inventory.js";
+import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
   activateUltimate,
@@ -33,6 +34,7 @@ import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu }
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
+import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { showUpgradeMenu } from "./ui/upgradeMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
@@ -136,6 +138,16 @@ function init() {
   $("btnQuit").addEventListener("click", returnToMenu);
   $("btnReplay").addEventListener("click", startGame);
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
+  $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
+  $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
+  initOptionsMenu();
+
+  // L'audio ne peut démarrer qu'après une interaction ; petit « clic » sur chaque bouton.
+  document.addEventListener("pointerdown", unlockAudio);
+  document.addEventListener("keydown", unlockAudio);
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("button:not(.touch-btn)")) playSfx("click");
+  });
 
   const pause = () => canTogglePause() && togglePause();
   onKeyPress("p", pause);
@@ -154,7 +166,11 @@ function init() {
 
   on("levelUp", showUpgradeMenu);
   on("playerDied", endGame);
-  on("bossWarning", showBossWarning);
+  on("bossWarning", (text) => {
+    showBossWarning(text);
+    playSfx("boss");
+    vibrate([100, 50, 100]);
+  });
 
   showMainMenu();
   requestAnimationFrame(frame);
