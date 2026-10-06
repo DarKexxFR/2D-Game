@@ -107,18 +107,24 @@
 
       <!-- ===== CLASSEMENT ===== -->
       <div id="leaderboardMenu" class="menu-overlay">
-        <h2>TOP 10 LÉGENDES</h2>
-        <table class="lb-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>PSEUDO</th>
-              <th>VAGUE</th>
-              <th>XP</th>
-            </tr>
-          </thead>
-          <tbody id="lbContent"></tbody>
-        </table>
+        <h2>CLASSEMENT</h2>
+        <div class="lb-tabs">
+          <button id="lbTabGlobal" class="lb-tab active">🌍 MONDIAL</button>
+          <button id="lbTabLocal" class="lb-tab">💾 MES SCORES</button>
+        </div>
+        <div class="lb-scroll">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>PSEUDO</th>
+                <th>VAGUE</th>
+                <th>XP</th>
+              </tr>
+            </thead>
+            <tbody id="lbContent"></tbody>
+          </table>
+        </div>
         <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
       </div>
 
@@ -149,6 +155,7 @@
           <p class="reward-gold">+<span id="runGoldGain">0</span> OR</p>
         </div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>
+        <div id="onlineStatus"></div>
         <div class="btn-grid">
           <button id="btnReplay">REJOUER</button>
           <button id="btnGameOverMenu" class="secondary">MENU</button>

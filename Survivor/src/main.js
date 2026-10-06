@@ -7,6 +7,7 @@ import { onKeyPress } from "./core/input.js";
 import { game, player, resetGame, resetMysteryBox, resetPet, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
+import { isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
   activateUltimate,
@@ -24,7 +25,7 @@ import { updatePickups } from "./systems/pickups.js";
 import { updatePlayer } from "./systems/player.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
-import { showGameOver } from "./ui/gameOverScreen.js";
+import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBossWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
@@ -67,6 +68,13 @@ function endGame() {
     gold: game.runGold,
     isNewRecord,
   });
+
+  setOnlineStatus(isOnlineEnabled() ? "Envoi du score au classement mondial..." : "");
+  if (isOnlineEnabled()) {
+    submitScore({ name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level }).then((ok) =>
+      setOnlineStatus(ok ? "🌍 Score envoyé au classement mondial" : "⚠️ Classement mondial indisponible"),
+    );
+  }
 }
 
 // --- MISE À JOUR (un tick = 1/60 s) ---
