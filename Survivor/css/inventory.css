@@ -213,3 +213,48 @@
     max-height: 40vh;
   }
 }
+
+/* --- Coffre gratuit --- */
+.chest-free {
+  border-color: #00ff88;
+}
+.chest-free.ready {
+  box-shadow:
+    0 0 15px rgba(0, 255, 136, 0.5),
+    inset 0 0 20px rgba(0, 255, 136, 0.15);
+  animation: freePulse 1.5s infinite;
+}
+.chest-free .shop-btn {
+  min-width: 110px;
+}
+.chest-free.ready .shop-btn {
+  background: linear-gradient(180deg, #00ff88, #00aa55);
+}
+#btnShop {
+  position: relative;
+  overflow: visible;
+}
+#btnShop.has-free::after {
+  content: "🎁";
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  font-size: 20px;
+  animation: bounceBadge 1s infinite;
+}
+@keyframes freePulse {
+  50% {
+    border-color: #aaffdd;
+  }
+}
+@keyframes bounceBadge {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.btn-grid:has(#btnShop) {
+  overflow: visible;
+}
+.chest-card .shop-btn {
+  flex-shrink: 0;
+}

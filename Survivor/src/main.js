@@ -7,7 +7,7 @@ import { onKeyPress } from "./core/input.js";
 import { game, player, resetGame, resetMysteryBox, resetPet, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
-import { isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
+import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { ensureStarterItems } from "./services/inventory.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
@@ -77,8 +77,8 @@ function endGame() {
 
   setOnlineStatus(isOnlineEnabled() ? "Envoi du score au classement mondial..." : "");
   if (isOnlineEnabled()) {
-    submitScore({ name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level }).then((ok) =>
-      setOnlineStatus(ok ? "🌍 Score envoyé au classement mondial" : "⚠️ Classement mondial indisponible"),
+    submitScore({ name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level }).then((status) =>
+      setOnlineStatus(SUBMIT_MESSAGES[status]),
     );
   }
 }

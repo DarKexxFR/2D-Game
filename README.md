@@ -46,6 +46,8 @@ qui donnent une **arme** ou une **armure** selon des probabilités de rareté.
   10 niveaux maximum, +15 % de puissance et rend l'objet plus imposant en jeu
   (canon plus long et lumineux, armure plus épaisse, pointes en orbite dès ★3, halo doré à ★5).
 - Un doublon d'un objet déjà ★5 est converti en or.
+- Un **coffre gratuit** (basique) est offert toutes les 4 heures (`FREE_CHEST` dans `items.js`) ;
+  un badge 🎁 apparaît sur le bouton Boutique quand il est disponible.
 
 Tout l'équilibrage se trouve dans [`Survivor/src/data/items.js`](Survivor/src/data/items.js).
 
@@ -62,6 +64,7 @@ Sans configuration, le jeu fonctionne normalement avec le classement local uniqu
 La clé *anon* est faite pour être publique : les règles de sécurité de la base autorisent
 seulement la lecture et l'ajout de scores (pas de modification ni de suppression), avec des
 limites de valeurs et un envoi maximum toutes les 10 secondes par pseudo.
+Les scores du pseudo par défaut (« Survivor ») et des parties sans XP ne sont pas envoyés.
 
 ## Structure du projet
 
