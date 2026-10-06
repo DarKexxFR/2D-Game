@@ -12,3 +12,7 @@ export function showGameOver({ pseudo, level, wave, xp, gold, isNewRecord }) {
   setVisible("newRecordMsg", isNewRecord);
   showScreen("gameOver");
 }
+
+export function setOnlineStatus(text) {
+  setText("onlineStatus", text);
+}

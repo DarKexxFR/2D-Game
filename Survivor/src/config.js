@@ -116,3 +116,15 @@ export const MUSIC = {
   tracks: ["intro.mp3", "cyber.mp3"],
   volume: 0.3,
 };
+
+// Classement mondial (Supabase). Laisser vide pour désactiver le mode en ligne.
+// Valeurs dans Supabase : Project Settings → API. La clé « anon public » est
+// faite pour être publique ; la sécurité est assurée par les règles RLS (voir supabase/schema.sql).
+export const ONLINE = {
+  supabaseUrl: "",
+  supabaseAnonKey: "",
+  table: "scores",
+  leaderboardView: "leaderboard",
+  topCount: 50,
+  timeoutMs: 6000,
+};

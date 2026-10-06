@@ -29,6 +29,20 @@ Alternatives : `npx serve Survivor`, ou l'extension **Live Server** de VS Code.
 | A | Activer / désactiver le tir automatique |
 | P / Échap | Pause |
 
+## Classement mondial (Supabase)
+
+Les scores de fin de partie sont envoyés à une base [Supabase](https://supabase.com) gratuite.
+Sans configuration, le jeu fonctionne normalement avec le classement local uniquement.
+
+1. Dans Supabase, ouvrir **SQL Editor → New query**, coller le contenu de
+   [`supabase/schema.sql`](supabase/schema.sql) puis cliquer sur **Run**.
+2. Dans **Project Settings → API**, copier l'**URL du projet** et la clé **anon public**.
+3. Les coller dans `ONLINE` en bas de [`Survivor/src/config.js`](Survivor/src/config.js).
+
+La clé *anon* est faite pour être publique : les règles de sécurité de la base autorisent
+seulement la lecture et l'ajout de scores (pas de modification ni de suppression), avec des
+limites de valeurs et un envoi maximum toutes les 10 secondes par pseudo.
+
 ## Structure du projet
 
 ```
@@ -70,12 +84,14 @@ Survivor/
     │   ├── dom.js          # Cache d'éléments + écritures uniquement si changement
     │   ├── screens.js      # Affichage d'un menu à la fois
     │   ├── hud.js          # Interface en jeu
-    │   ├── mainMenu.js     # Menu principal, boutique, classement
+    │   ├── mainMenu.js     # Menu principal, boutique
+    │   ├── leaderboardMenu.js # Classement mondial / local
     │   ├── upgradeMenu.js  # Choix d'amélioration
     │   ├── pauseMenu.js    # Pause + inventaire
     │   └── gameOverScreen.js
     ├── services/
-    │   ├── storage.js      # Sauvegarde (compte, pseudo, classement)
+    │   ├── storage.js      # Sauvegarde (compte, pseudo, classement local)
+    │   ├── onlineLeaderboard.js # Classement mondial (Supabase)
     │   └── audio.js        # Musique
     └── utils/
         ├── math.js         # clamp, distance, tirage pondéré...
