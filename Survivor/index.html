@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/menus.css" />
     <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -103,7 +104,10 @@
           <button id="btnPlay">JOUER</button>
           <button id="btnShop" class="secondary">BOUTIQUE</button>
         </div>
-        <button id="btnLeaderboard" class="secondary mt-15">🏆 CLASSEMENT</button>
+        <div class="btn-grid">
+          <button id="btnInventory" class="secondary">🎒 ÉQUIPEMENT</button>
+          <button id="btnLeaderboard" class="secondary">🏆 CLASSEMENT</button>
+        </div>
         <button id="btnReset" class="reset-btn">⚠️ RESET PROGRESSION</button>
       </div>
 
@@ -113,6 +117,9 @@
           <h2>ARMURERIE</h2>
           <div class="shop-gold">💰 <span id="shopGoldDisplay">0</span></div>
         </div>
+        <h3 class="shop-section">COFFRES</h3>
+        <div id="chestList" class="chest-list"></div>
+        <h3 class="shop-section">FAMILIER</h3>
         <div class="shop-item">
           <div class="shop-item-info">
             <h4>Drone de Combat <span id="droneLvlBadge" class="lvl-badge">Lvl 0</span></h4>
@@ -122,6 +129,33 @@
           <button id="btnDrone" class="shop-btn">ACHETER</button>
         </div>
         <button id="btnShopBack" class="secondary mt-20">RETOUR</button>
+      </div>
+
+      <!-- ===== ÉQUIPEMENT ===== -->
+      <div id="inventoryMenu" class="menu-overlay">
+        <div class="shop-header">
+          <h2>ÉQUIPEMENT</h2>
+          <div class="shop-gold">💰 <span id="invGoldDisplay">0</span></div>
+        </div>
+        <div class="equipped-slots">
+          <div id="equippedWeapon" class="equipped-slot"></div>
+          <div id="equippedArmor" class="equipped-slot"></div>
+        </div>
+        <div class="lb-tabs">
+          <button id="invTabWeapon" class="lb-tab active">🔫 ARMES</button>
+          <button id="invTabArmor" class="lb-tab">🛡️ ARMURES</button>
+        </div>
+        <div id="itemList" class="item-list"></div>
+        <button id="btnInventoryBack" class="secondary mt-15">RETOUR</button>
+      </div>
+
+      <!-- ===== OUVERTURE DE COFFRE ===== -->
+      <div id="chestReveal" class="menu-overlay">
+        <div id="chestRevealContent"></div>
+        <div class="btn-grid">
+          <button id="btnChestAgain" class="secondary">ENCORE</button>
+          <button id="btnChestOk">OK</button>
+        </div>
       </div>
 
       <!-- ===== CLASSEMENT ===== -->

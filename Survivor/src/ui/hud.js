@@ -25,7 +25,7 @@ export function updateHud() {
   setText("lvlVal", player.level);
 
   setText("statAtk", Math.round(player.attack));
-  setText("statDef", player.defense);
+  setText("statDef", Math.round(player.defense));
   setText("statSpd", player.baseSpeed.toFixed(1));
   setText("statMagnet", Math.round(player.magnetRadius));
   setText("statCrit", Math.round(player.critChance * 100) + "%");
