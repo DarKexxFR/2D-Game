@@ -175,12 +175,15 @@ export const ITEMS = {
 export const STARTER_ITEMS = ["blaster"];
 
 // --- COFFRES ---
+/** Coffre gratuit : quel coffre et toutes les combien d'heures. */
+export const FREE_CHEST = { chestId: "basic", intervalHours: 4 };
+
 export const CHESTS = [
   { id: "basic", name: "Coffre basique", icon: "📦", cost: 250, odds: { common: 70, rare: 25, epic: 5 } },
   {
     id: "premium",
     name: "Coffre premium",
-    icon: "🎁",
+    icon: "💎",
     cost: 1000,
     odds: { common: 30, rare: 45, epic: 20, legendary: 5 },
   },

@@ -3,6 +3,7 @@
 
 import {
   CHESTS,
+  FREE_CHEST,
   ITEMS,
   MAXED_DUPLICATE_GOLD,
   MAX_PRESTIGE,
@@ -44,7 +45,31 @@ export function openChest(chestId) {
   const chest = CHESTS.find((c) => c.id === chestId);
   if (!chest || account.gold < chest.cost) return null;
   account.gold -= chest.cost;
+  return rollChest(chest);
+}
 
+// --- COFFRE GRATUIT ---
+
+const FREE_INTERVAL_MS = FREE_CHEST.intervalHours * 3600 * 1000;
+
+/** Millisecondes restantes avant le prochain coffre gratuit (0 = disponible). */
+export function freeChestRemainingMs(now = Date.now()) {
+  // Si l'horloge a reculé, on ne bloque pas le joueur plus d'un intervalle.
+  const last = Math.min(account.lastFreeChest, now);
+  return Math.max(0, last + FREE_INTERVAL_MS - now);
+}
+
+export function isFreeChestReady() {
+  return freeChestRemainingMs() === 0;
+}
+
+export function openFreeChest() {
+  if (!isFreeChestReady()) return null;
+  account.lastFreeChest = Date.now();
+  return rollChest(CHESTS.find((c) => c.id === FREE_CHEST.chestId));
+}
+
+function rollChest(chest) {
   const rarity = weightedPick(Object.keys(chest.odds), (r) => chest.odds[r]);
   const pool = Object.values(ITEMS).filter((it) => it.rarity === rarity);
   const item = pool[Math.floor(Math.random() * pool.length)];
