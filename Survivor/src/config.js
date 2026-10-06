@@ -121,7 +121,7 @@ export const MUSIC = {
 // Valeurs dans Supabase : Project Settings → API. La clé « anon public » est
 // faite pour être publique ; la sécurité est assurée par les règles RLS (voir supabase/schema.sql).
 export const ONLINE = {
-  supabaseUrl: "",
+  supabaseUrl: "https://eibzkrgobawkgjwheyfl.supabase.co",
   supabaseAnonKey: "",
   table: "scores",
   leaderboardView: "leaderboard",
