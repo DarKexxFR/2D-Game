@@ -60,6 +60,7 @@ export function resetPlayer(accountLevel) {
     level: 1,
     xp: 0,
     lastAttack: -Infinity,
+    lastKunaiAttack: -Infinity,
     isDashing: false,
     dashTimer: 0,
     dashCooldownTimer: 0,

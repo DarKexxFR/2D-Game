@@ -116,6 +116,14 @@ export const UPGRADES = [
     apply: (p) => p.orbitals++,
   },
   {
+    name: "Kunai",
+    rarity: "epic",
+    icon: "🗡️",
+    desc: "Lance automatiquement +1 kunai perçant",
+    canApply: (p) => (p.inventory.Kunai || 0) < 5,
+    apply: () => {},
+  },
+  {
     name: "Multi-Tir",
     rarity: "epic",
     icon: "🏹",
