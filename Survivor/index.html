@@ -2,12 +2,19 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#1a0b2e" />
     <title>Survivor - Neon Edition</title>
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/menus.css" />
     <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
     <div id="gameContainer">
@@ -60,6 +67,18 @@
         E : Boîte <br />
         A : Tir auto <br />
         P : Pause
+      </div>
+
+      <!-- ===== COMMANDES TACTILES ===== -->
+      <div id="touchControls">
+        <div id="joystickZone"></div>
+        <div id="joystickBase"><div id="joystickKnob"></div></div>
+        <button id="btnTouchPause" class="touch-btn touch-pause">II</button>
+        <div class="touch-actions">
+          <button id="btnTouchBox" class="touch-btn touch-box">📦</button>
+          <button id="btnTouchUlt" class="touch-btn touch-ult">ULT</button>
+          <button id="btnTouchDash" class="touch-btn touch-dash">DASH</button>
+        </div>
       </div>
 
       <!-- ===== MENU PRINCIPAL ===== -->

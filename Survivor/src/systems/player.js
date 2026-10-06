@@ -1,9 +1,9 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
 import { MAP_BOUNDS } from "../config.js";
-import { canvas } from "../core/canvas.js";
+import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
-import { keys } from "../core/input.js";
+import { keys, touchMove } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
@@ -13,8 +13,8 @@ export function updatePlayer() {
   updateRegen();
   updateDash();
   move();
-  camera.x = player.worldX - canvas.width / 2;
-  camera.y = player.worldY - canvas.height / 2;
+  camera.x = player.worldX - view.width / 2;
+  camera.y = player.worldY - view.height / 2;
 }
 
 function updateBuffs() {
@@ -65,6 +65,11 @@ function move() {
   if (dx !== 0 && dy !== 0) {
     dx *= Math.SQRT1_2;
     dy *= Math.SQRT1_2;
+  }
+  if (dx === 0 && dy === 0) {
+    // Joystick tactile (analogique)
+    dx = touchMove.x;
+    dy = touchMove.y;
   }
   const r = player.size;
   player.worldX = clamp(player.worldX + dx * player.speed, MAP_BOUNDS.minX + r, MAP_BOUNDS.maxX - r);
