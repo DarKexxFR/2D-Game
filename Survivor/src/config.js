@@ -122,7 +122,7 @@ export const MUSIC = {
 // faite pour être publique ; la sécurité est assurée par les règles RLS (voir supabase/schema.sql).
 export const ONLINE = {
   supabaseUrl: "https://eibzkrgobawkgjwheyfl.supabase.co",
-  supabaseAnonKey: "",
+  supabaseAnonKey: "sb_publishable__LDgojI-trllPtdOuAmhaA_jhbCP2Kd",
   table: "scores",
   leaderboardView: "leaderboard",
   topCount: 50,
