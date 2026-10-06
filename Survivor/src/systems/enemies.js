@@ -2,6 +2,7 @@
 
 import { game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { playSfx } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect } from "./effects.js";
@@ -83,6 +84,7 @@ function handleContact(e) {
   if (e.type === "kamikaze") {
     takeDamage(e.damage);
     createAoEEffect(e.x, e.y, 40);
+    playSfx("explosion");
     killEnemy(e);
     return;
   }

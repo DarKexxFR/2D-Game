@@ -2,10 +2,11 @@
 
 import { MUSIC } from "../config.js";
 import { randomItem } from "../utils/math.js";
+import { onSettingsChange } from "./settings.js";
 
 const bgMusic = new Audio();
-bgMusic.volume = MUSIC.volume;
 bgMusic.addEventListener("ended", playRandomMusic);
+onSettingsChange((s) => (bgMusic.volume = s.musicVolume));
 
 export function playRandomMusic() {
   if (MUSIC.tracks.length === 0) return;

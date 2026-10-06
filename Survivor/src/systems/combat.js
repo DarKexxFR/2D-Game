@@ -1,10 +1,11 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
 import { MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
-import { view } from "../core/canvas.js";
+import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -56,6 +57,7 @@ export function damageEnemy(enemy, amount) {
 export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
+  playSfx("kill");
 
   game.score += 10;
   game.kills++;
@@ -111,6 +113,7 @@ export function shoot() {
   }
   player.lastAttack = game.time;
   player.aimAngle = angle;
+  playSfx("shoot");
 
   // Projectiles de l'arme + bonus Multi-Tir
   const w = player.weapon;
@@ -182,6 +185,7 @@ export function updateProjectiles() {
 }
 
 function hitEnemy(proj, enemy) {
+  playSfx("hit");
   let damage = proj.damage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
@@ -200,13 +204,14 @@ function hitEnemy(proj, enemy) {
   const k = angleTo(proj.x, proj.y, enemy.x, enemy.y);
   enemy.x += Math.cos(k) * 10 * player.knockbackMult;
   enemy.y += Math.sin(k) * 10 * player.knockbackMult;
-  addFloatingText(
-    enemy.x,
-    enemy.y,
-    Math.round(damage) + (isCrit ? "!" : ""),
-    isCrit ? "#d000ff" : "#fff",
-    isCrit ? 20 : 14,
-  );
+  if (gfx.damageNumbers)
+    addFloatingText(
+      enemy.x,
+      enemy.y,
+      Math.round(damage) + (isCrit ? "!" : ""),
+      isCrit ? "#d000ff" : "#fff",
+      isCrit ? 20 : 14,
+    );
   if (player.vampirism > 0 && Math.random() < 0.3) heal(damage * player.vampirism);
   damageEnemy(enemy, damage);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy);
@@ -215,6 +220,7 @@ function hitEnemy(proj, enemy) {
 /** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
 function explode(x, y, radius, damage, exclude) {
   createAoEEffect(x, y, radius);
+  playSfx("explosion");
   addScreenShake(3);
   for (const e of enemyGrid.query(x, y, radius).slice()) {
     if (e === exclude || e.dead || dist(e.x, e.y, x, y) >= radius + e.size) continue;
@@ -230,7 +236,7 @@ export function updateAura() {
   let hit = false;
   for (const e of enemyGrid.query(player.worldX, player.worldY, player.auraRadius).slice()) {
     if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= player.auraRadius) continue;
-    addFloatingText(e.x, e.y, Math.round(player.auraDamage), "#ff6600", 12, 20);
+    if (gfx.damageNumbers) addFloatingText(e.x, e.y, Math.round(player.auraDamage), "#ff6600", 12, 20);
     damageEnemy(e, player.auraDamage);
     hit = true;
   }
@@ -269,6 +275,8 @@ export function activateUltimate() {
   player.ultCharge = 0;
   player.isUltReady = false;
   addScreenShake(20);
+  playSfx("ultimate");
+  vibrate(150);
   createAoEEffect(player.worldX, player.worldY, 400);
   for (const e of enemyGrid.query(player.worldX, player.worldY, ULTIMATE.radius).slice()) {
     if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= ULTIMATE.radius) continue;

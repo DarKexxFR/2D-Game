@@ -5,6 +5,7 @@ import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { keys, touchMove } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
+import { playSfx, vibrate } from "../services/sfx.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
 
@@ -42,6 +43,7 @@ function updateDash() {
     player.dashTimer = player.dashDuration;
     player.dashCooldownTimer = player.dashCooldown;
     createParticles(player.worldX, player.worldY, "#fff", 10);
+    playSfx("dash");
   }
   if (player.isDashing) {
     player.speed = player.dashSpeed;
@@ -88,10 +90,14 @@ export function heal(amount) {
 export function takeDamage(amount) {
   if (game.over) return;
   player.health -= amount;
+  playSfx("hurt");
+  vibrate(40);
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
   if (player.health <= 0) {
     game.over = true;
+    playSfx("death");
+    vibrate(300);
     game.running = false;
     emit("playerDied");
   }
@@ -106,6 +112,8 @@ export function gainXp(amount) {
   player.level++;
   player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.3);
   addFloatingText(player.worldX, player.worldY - 50, "LEVEL UP!", "#ffd700", 30, 100);
+  playSfx("levelUp");
+  vibrate([30, 40, 30]);
   createSpawnEffect(player.worldX, player.worldY, "#ffd700");
   emit("levelUp");
 }

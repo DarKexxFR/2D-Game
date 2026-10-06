@@ -1,0 +1,81 @@
+/* Menu Options */
+#optionsMenu {
+  border-color: #00ccff;
+}
+.option-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+  text-align: left;
+}
+.option-row label,
+.option-row > span {
+  color: #ddd;
+  font-size: 14px;
+}
+.option-value {
+  text-align: right;
+  font-size: 13px;
+  color: #00ffff;
+}
+.option-row input[type="range"] {
+  width: 100%;
+  accent-color: #00ffff;
+  touch-action: pan-x;
+  height: 28px;
+}
+#optVibrationRow {
+  grid-template-columns: 140px 1fr;
+}
+.toggle-btn {
+  padding: 8px;
+  font-size: 13px;
+  background: linear-gradient(180deg, #444, #222);
+  color: #888;
+}
+.toggle-btn.on {
+  background: linear-gradient(180deg, #00ff88, #00aa55);
+  color: #000;
+}
+.option-quality {
+  grid-template-columns: 1fr;
+  border-bottom: none;
+}
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.segmented button {
+  padding: 10px 4px;
+  font-size: 12px;
+  background: linear-gradient(180deg, #333, #1a1a1a);
+  color: #888;
+}
+.segmented button.active {
+  background: linear-gradient(180deg, #00ffff, #0088aa);
+  color: #000;
+}
+.option-hint {
+  font-size: 11px;
+  color: #777;
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .option-row {
+    grid-template-columns: 110px 1fr 44px;
+    gap: 8px;
+  }
+  #optVibrationRow {
+    grid-template-columns: 110px 1fr;
+  }
+  .option-row.option-quality {
+    grid-template-columns: 1fr;
+  }
+  .segmented button {
+    font-size: 11px;
+  }
+}
