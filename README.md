@@ -51,6 +51,40 @@ qui donnent une **arme** ou une **armure** selon des probabilités de rareté.
 
 Tout l'équilibrage se trouve dans [`Survivor/src/data/items.js`](Survivor/src/data/items.js).
 
+## Options
+
+Menu **⚙️ Options** (menu principal ou pause) : volume de la musique, volume des effets sonores
+(générés en direct avec la Web Audio API, aucun fichier), vibrations sur mobile, et qualité graphique :
+
+| Qualité | Effets lumineux | Particules | Netteté | Chiffres de dégâts |
+| --- | --- | --- | --- | --- |
+| Basse | ✗ | 30 % | ×1 | ✗ |
+| Moyenne (défaut mobile) | ✓ | 60 % | ×1 | ✓ |
+| Haute (défaut PC) | ✓ | 100 % | ×1,5 | ✓ |
+
+## Tests automatiques
+
+À chaque pull request (et à chaque push sur `main`), GitHub Actions lance :
+
+- **Format & syntaxe** : Prettier + vérification de chaque module JS ;
+- **Jeu (PC + mobile)** : [Playwright](https://playwright.dev) ouvre le jeu dans Chromium, sur un écran de PC
+  et sur un téléphone simulé, et joue réellement : menus, partie, pause, améliorations, mort, rejouer,
+  joystick tactile, coffres, prestige, chacune des 6 armes, coffre gratuit, classement (Supabase simulé),
+  options. Toute erreur JavaScript fait échouer le test.
+
+En local (Node.js requis, uniquement pour les tests — le jeu n'a aucune dépendance) :
+
+```bash
+npm install
+npx playwright install chromium   # une seule fois
+npm test                           # tous les tests
+npm run lint                       # format + syntaxe
+npm run format                     # reformate le code
+```
+
+En cas d'échec sur GitHub, le rapport (captures d'écran, traces) est téléchargeable dans l'onglet
+**Actions** → le run → **Artifacts**.
+
 ## Classement mondial (Supabase)
 
 Les scores de fin de partie sont envoyés à une base [Supabase](https://supabase.com) gratuite.
@@ -69,6 +103,9 @@ Les scores du pseudo par défaut (« Survivor ») et des parties sans XP ne sont
 ## Structure du projet
 
 ```
+.github/workflows/tests.yml  # Tests automatiques (GitHub Actions)
+tests/                      # Tests Playwright (PC + mobile)
+supabase/schema.sql         # Base du classement mondial
 Survivor/
 ├── index.html              # Structure HTML (aucun script ni style inline)
 ├── assets/audio/           # Musiques
@@ -77,6 +114,7 @@ Survivor/
 │   ├── hud.css             # Interface en jeu
 │   ├── menus.css           # Menus / boutique / classement / pause / fin
 │   ├── inventory.css       # Coffres et écran Équipement
+│   ├── options.css         # Menu Options
 │   ├── touch.css           # Commandes tactiles + petits écrans
 │   └── animations.css      # @keyframes
 └── src/
@@ -119,9 +157,12 @@ Survivor/
     │   ├── upgradeMenu.js  # Choix d'amélioration
     │   ├── pauseMenu.js    # Pause + inventaire
     │   ├── gameOverScreen.js
+    │   ├── optionsMenu.js  # Menu Options
     │   └── touchControls.js # Joystick et boutons tactiles
     ├── services/
     │   ├── storage.js      # Sauvegarde (compte, pseudo, classement local)
+    │   ├── settings.js     # Préférences (volumes, vibrations, qualité)
+    │   ├── sfx.js          # Effets sonores synthétisés + vibrations
     │   ├── onlineLeaderboard.js # Classement mondial (Supabase)
     │   ├── inventory.js    # Coffres, niveau, prestige, équipement
     │   └── audio.js        # Musique
