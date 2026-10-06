@@ -1,7 +1,7 @@
 // Décor et objets posés au sol : grille, bordure, boîte mystère, sanctuaires, butin.
 
 import { MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
-import { canvas, ctx } from "../core/canvas.js";
+import { ctx, view } from "../core/canvas.js";
 import { camera, mysteryBox as box, world } from "../core/state.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
@@ -14,13 +14,13 @@ export function drawGrid() {
   ctx.strokeStyle = "rgba(157, 0, 255, 0.15)";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let x = -camera.x % GRID_SIZE; x < canvas.width; x += GRID_SIZE) {
+  for (let x = -camera.x % GRID_SIZE; x < view.width; x += GRID_SIZE) {
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
+    ctx.lineTo(x, view.height);
   }
-  for (let y = -camera.y % GRID_SIZE; y < canvas.height; y += GRID_SIZE) {
+  for (let y = -camera.y % GRID_SIZE; y < view.height; y += GRID_SIZE) {
     ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
+    ctx.lineTo(view.width, y);
   }
   ctx.stroke();
 }

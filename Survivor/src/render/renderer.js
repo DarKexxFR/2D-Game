@@ -1,7 +1,7 @@
 // Point d'entrée du rendu : enchaîne les couches dans le bon ordre.
 
 import { WAVE_DURATION } from "../config.js";
-import { canvas, ctx } from "../core/canvas.js";
+import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game } from "../core/state.js";
 import { drawEnemies, drawPlayer, drawProjectiles } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
@@ -9,7 +9,8 @@ import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } fro
 
 export function render() {
   const now = performance.now();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  resetTransform();
+  ctx.clearRect(0, 0, view.width, view.height);
 
   ctx.save();
   ctx.translate((Math.random() - 0.5) * game.screenShake, (Math.random() - 0.5) * game.screenShake);
@@ -30,13 +31,14 @@ export function render() {
   drawFloatingTexts();
   ctx.restore();
 
-  drawWaveTimer();
+  // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
+  if (view.scale === 1) drawWaveTimer();
   ctx.restore();
 }
 
 function drawWaveTimer() {
   const pct = Math.min(1, game.waveTimer / WAVE_DURATION);
-  const x = canvas.width / 2 - 150;
+  const x = view.width / 2 - 150;
   ctx.fillStyle = "#003344";
   ctx.fillRect(x, 55, 300, 6);
   ctx.fillStyle = "#00ffff";
@@ -48,10 +50,11 @@ function drawWaveTimer() {
 
 /** Fond étoilé scintillant affiché derrière les menus. */
 export function renderMenuBackground() {
+  resetTransform();
   ctx.fillStyle = "rgba(0,0,0,0.1)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, view.width, view.height);
   ctx.fillStyle = "#fff";
   for (let i = 0; i < 100; i++) {
-    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+    ctx.fillRect(Math.random() * view.width, Math.random() * view.height, 2, 2);
   }
 }

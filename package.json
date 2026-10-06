@@ -1,0 +1,16 @@
+{
+  "name": "survivor-neon",
+  "private": true,
+  "type": "module",
+  "description": "Survivor — jeu de survie 2D (outils de développement uniquement : le jeu n'a aucune dépendance)",
+  "scripts": {
+    "start": "python3 -m http.server 8000 --directory Survivor",
+    "test": "playwright test",
+    "lint": "prettier --check \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\" && node scripts/check-syntax.mjs",
+    "format": "prettier --write \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "prettier": "3.8.1"
+  }
+}

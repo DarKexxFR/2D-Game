@@ -7,6 +7,9 @@ import { onKeyPress } from "./core/input.js";
 import { game, player, resetGame, resetMysteryBox, resetPet, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
+import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
+import { ensureStarterItems } from "./services/inventory.js";
+import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
   activateUltimate,
@@ -20,16 +23,19 @@ import {
 import { updateEffects } from "./systems/effects.js";
 import { updateEnemies } from "./systems/enemies.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
+import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { updatePlayer } from "./systems/player.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
-import { showGameOver } from "./ui/gameOverScreen.js";
+import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBossWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
+import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
+import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { showUpgradeMenu } from "./ui/upgradeMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
@@ -39,8 +45,10 @@ function startGame() {
   playRandomMusic();
   resetGame();
   resetPlayer(account.level);
+  applyEquipment();
   resetPet(account.petLevels.drone || 0);
   resetMysteryBox();
+  player.autoShoot = isTouchDevice; // pas de souris pour viser sur mobile
   hideScreens();
   showHud(true);
   spawnWave();
@@ -56,6 +64,7 @@ function returnToMenu() {
 }
 
 function endGame() {
+  showTouchControls(false);
   addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
   refreshAccountUI();
   const pseudo = getPseudo();
@@ -68,6 +77,13 @@ function endGame() {
     gold: game.runGold,
     isNewRecord,
   });
+
+  setOnlineStatus(isOnlineEnabled() ? "Envoi du score au classement mondial..." : "");
+  if (isOnlineEnabled()) {
+    submitScore({ name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level }).then((status) =>
+      setOnlineStatus(SUBMIT_MESSAGES[status]),
+    );
+  }
 }
 
 // --- MISE À JOUR (un tick = 1/60 s) ---
@@ -117,12 +133,23 @@ function frame(now) {
 
 function init() {
   loadAccount();
+  ensureStarterItems();
   initMainMenu({ onPlay: startGame });
 
   $("btnResume").addEventListener("click", togglePause);
   $("btnQuit").addEventListener("click", returnToMenu);
   $("btnReplay").addEventListener("click", startGame);
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
+  $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
+  $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
+  initOptionsMenu();
+
+  // L'audio ne peut démarrer qu'après une interaction ; petit « clic » sur chaque bouton.
+  document.addEventListener("pointerdown", unlockAudio);
+  document.addEventListener("keydown", unlockAudio);
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("button:not(.touch-btn)")) playSfx("click");
+  });
 
   const pause = () => canTogglePause() && togglePause();
   onKeyPress("p", pause);
@@ -134,9 +161,18 @@ function init() {
     if (game.started) player.autoShoot = !player.autoShoot;
   });
 
+  initTouchControls({
+    onUltimate: () => game.running && !game.paused && activateUltimate(),
+    onPause: pause,
+  });
+
   on("levelUp", showUpgradeMenu);
   on("playerDied", endGame);
-  on("bossWarning", showBossWarning);
+  on("bossWarning", (text) => {
+    showBossWarning(text);
+    playSfx("boss");
+    vibrate([100, 50, 100]);
+  });
 
   showMainMenu();
   requestAnimationFrame(frame);

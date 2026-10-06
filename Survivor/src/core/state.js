@@ -83,6 +83,9 @@ export function resetPlayer(accountLevel) {
     isUltReady: false,
     buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0 },
     autoShoot: false,
+    aimAngle: 0,
+    weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)
+    armor: null,
   });
   player.health = player.maxHealth;
   player.speed = player.baseSpeed;

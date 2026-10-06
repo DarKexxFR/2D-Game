@@ -2,6 +2,7 @@
 // (ou dans src/data/) plutôt qu'en dur dans la logique.
 
 export const STORAGE_KEYS = {
+  settings: "survivor_settings",
   save: "survivor_save_v11",
   pseudo: "survivor_pseudo",
   leaderboard: "survivor_lb_v1",
@@ -120,5 +121,16 @@ export const RARITIES = {
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],
-  volume: 0.3,
+};
+
+// Classement mondial (Supabase). Laisser vide pour désactiver le mode en ligne.
+// Valeurs dans Supabase : Project Settings → API. La clé « anon public » est
+// faite pour être publique ; la sécurité est assurée par les règles RLS (voir supabase/schema.sql).
+export const ONLINE = {
+  supabaseUrl: "https://eibzkrgobawkgjwheyfl.supabase.co",
+  supabaseAnonKey: "sb_publishable__LDgojI-trllPtdOuAmhaA_jhbCP2Kd",
+  table: "scores",
+  leaderboardView: "leaderboard",
+  topCount: 50,
+  timeoutMs: 6000,
 };

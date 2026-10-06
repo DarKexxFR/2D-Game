@@ -12,6 +12,11 @@ export function $(id) {
   return el;
 }
 
+/** À appeler quand des éléments mis en cache ont été recréés dans le DOM. */
+export function forgetCached(...ids) {
+  for (const id of ids) cache.delete(id);
+}
+
 export function setText(id, value) {
   const el = $(id);
   const text = String(value);
@@ -36,6 +41,10 @@ export function setVisible(id, visible) {
     el._visible = visible;
     el.style.display = visible ? "block" : "none";
   }
+}
+
+export function setClass(id, className, enabled) {
+  $(id).classList.toggle(className, enabled);
 }
 
 export function isVisible(id) {

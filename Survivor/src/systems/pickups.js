@@ -2,6 +2,7 @@
 
 import { BUFF_DURATIONS, LIMITS, MAP_BOUNDS } from "../config.js";
 import { player, world } from "../core/state.js";
+import { playSfx } from "../services/sfx.js";
 import { clamp, dist, removeWhere } from "../utils/math.js";
 import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.js";
 import { gainXp, heal } from "./player.js";
@@ -51,6 +52,7 @@ function updateGems() {
     }
     if (d < player.size + 10) {
       g.collected = true;
+      playSfx("pickup");
       gainXp(g.xp);
     }
   }

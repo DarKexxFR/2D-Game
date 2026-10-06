@@ -2,6 +2,7 @@
 // cercles d'impact et tremblement d'écran.
 
 import { LIMITS } from "../config.js";
+import { gfx } from "../core/canvas.js";
 import { game, world } from "../core/state.js";
 import { removeWhere } from "../utils/math.js";
 
@@ -17,7 +18,8 @@ export function addFloatingText(x, y, text, color = "#fff", size = 14, duration 
 
 export function createParticles(x, y, color, count) {
   const particles = world.particles;
-  if (particles.length > LIMITS.particlesLowQuality) count = 2;
+  count = Math.max(1, Math.round(count * gfx.particles));
+  if (particles.length > LIMITS.particlesLowQuality) count = Math.min(count, 2);
   for (let i = 0; i < count; i++) {
     particles.push({
       x,

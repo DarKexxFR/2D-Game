@@ -1,0 +1,260 @@
+/* Coffres, ouverture et écran Équipement */
+
+.shop-section {
+  text-align: left;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #888;
+  margin: 15px 0 8px;
+}
+
+/* --- Coffres --- */
+.chest-list {
+  display: grid;
+  gap: 8px;
+}
+.chest-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: left;
+}
+.chest-premium {
+  border-color: #aa00ff;
+  box-shadow: inset 0 0 20px rgba(170, 0, 255, 0.15);
+}
+.chest-legendary {
+  border-color: #ffaa00;
+  box-shadow: inset 0 0 25px rgba(255, 170, 0, 0.2);
+}
+.chest-info h4 {
+  color: #fff;
+  margin-bottom: 3px;
+}
+.chest-odds {
+  font-size: 11px;
+  color: #999;
+}
+
+/* --- Ouverture --- */
+#chestRevealContent {
+  padding: 12px;
+}
+#chestReveal {
+  border-color: #ffd700;
+}
+.chest-reveal {
+  --rarity: #aaa;
+  padding: 20px 10px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 2px solid var(--rarity);
+  box-shadow:
+    0 0 30px var(--rarity),
+    inset 0 0 30px rgba(0, 0, 0, 0.6);
+  animation: revealPop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.rarity-glow-legendary {
+  animation:
+    revealPop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1),
+    pulseGold 1.2s 0.5s infinite;
+}
+.reveal-icon {
+  font-size: 64px;
+  line-height: 1.2;
+  overflow: visible;
+}
+.reveal-name {
+  color: #fff;
+  font-size: 22px;
+  margin: 6px 0;
+}
+.reveal-stars,
+.item-stars,
+.slot-stars {
+  color: #ffd700;
+  letter-spacing: 2px;
+}
+.reveal-stats {
+  color: #bbb;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.reveal-result {
+  color: #00ff88;
+  font-weight: bold;
+  margin-top: 12px;
+}
+.item-rarity {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+@keyframes revealPop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- Équipement --- */
+.equipped-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.equipped-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #444;
+  background: rgba(0, 0, 0, 0.4);
+  min-height: 90px;
+  justify-content: center;
+}
+.slot-icon {
+  font-size: 28px;
+}
+.slot-name {
+  font-size: 13px;
+  font-weight: bold;
+}
+.slot-stars {
+  font-size: 11px;
+}
+.slot-empty {
+  color: #666;
+  font-size: 12px;
+}
+
+.item-list {
+  max-height: 45vh;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  touch-action: pan-y;
+}
+.item-card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  border-left: 4px solid #aaa;
+  background: rgba(255, 255, 255, 0.04);
+}
+.item-card.locked {
+  opacity: 0.45;
+}
+.item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.item-head h4 {
+  color: #fff;
+  flex: 1;
+}
+.item-icon {
+  font-size: 22px;
+}
+.item-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #aaa;
+  margin: 6px 0 4px;
+}
+.item-desc {
+  font-size: 12px;
+  color: #999;
+}
+.item-stats {
+  font-size: 12px;
+  color: #00ffff;
+  margin-top: 4px;
+}
+.item-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.item-actions button {
+  padding: 8px 4px;
+  font-size: 11px;
+}
+.prestige-btn {
+  background: linear-gradient(180deg, #ffd700, #aa7700);
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .item-actions {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .reveal-icon {
+    font-size: 48px;
+  }
+  .item-list {
+    max-height: 40vh;
+  }
+}
+
+/* --- Coffre gratuit --- */
+.chest-free {
+  border-color: #00ff88;
+}
+.chest-free.ready {
+  box-shadow:
+    0 0 15px rgba(0, 255, 136, 0.5),
+    inset 0 0 20px rgba(0, 255, 136, 0.15);
+  animation: freePulse 1.5s infinite;
+}
+.chest-free .shop-btn {
+  min-width: 110px;
+}
+.chest-free.ready .shop-btn {
+  background: linear-gradient(180deg, #00ff88, #00aa55);
+}
+#btnShop {
+  position: relative;
+  overflow: visible;
+}
+#btnShop.has-free::after {
+  content: "🎁";
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  font-size: 20px;
+  animation: bounceBadge 1s infinite;
+}
+@keyframes freePulse {
+  50% {
+    border-color: #aaffdd;
+  }
+}
+@keyframes bounceBadge {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.btn-grid:has(#btnShop) {
+  overflow: visible;
+}
+.chest-card .shop-btn {
+  flex-shrink: 0;
+}

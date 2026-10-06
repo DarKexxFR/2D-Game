@@ -1,15 +1,11 @@
-// Menu principal, boutique et classement.
+// Menu principal et boutique (familier ; les coffres sont dans chestMenu.js).
 
 import { DRONE, droneCost, droneDamage } from "../config.js";
-import {
-  account,
-  getLeaderboard,
-  loadPseudo,
-  resetProgress,
-  savePseudo,
-  upgradePet,
-} from "../services/storage.js";
-import { $, el, setText, setVisible, setWidth } from "./dom.js";
+import { account, loadPseudo, resetProgress, savePseudo, upgradePet } from "../services/storage.js";
+import { $, setText, setVisible, setWidth } from "./dom.js";
+import { initChestMenu, renderChests } from "./chestMenu.js";
+import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
+import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
 import { showScreen } from "./screens.js";
 
 let pseudo = loadPseudo();
@@ -35,6 +31,9 @@ export function initMainMenu({ onPlay }) {
   $("btnPlay").addEventListener("click", onPlay);
   $("btnShop").addEventListener("click", () => showScreen("shopMenu"));
   $("btnLeaderboard").addEventListener("click", openLeaderboard);
+  $("btnInventory").addEventListener("click", openInventory);
+  initInventoryMenu({ onBack: () => showScreen("mainMenu"), onAccountChange: refreshAccountUI });
+  initChestMenu({ onAccountChange: refreshAccountUI });
   $("btnReset").addEventListener("click", () => {
     if (confirm("Effacer la progression (Niveau, Or) ?\nLe classement et le pseudo seront CONSERVÉS.")) {
       resetProgress();
@@ -42,7 +41,7 @@ export function initMainMenu({ onPlay }) {
     }
   });
   $("btnShopBack").addEventListener("click", () => showScreen("mainMenu"));
-  $("btnLeaderboardBack").addEventListener("click", () => showScreen("mainMenu"));
+  initLeaderboardMenu({ onBack: () => showScreen("mainMenu") });
   $("btnDrone").addEventListener("click", () => {
     if (upgradePet("drone")) refreshAccountUI();
   });
@@ -59,7 +58,9 @@ export function refreshAccountUI() {
   setWidth("acBarFill", account.currentXp / account.nextLevelXp);
   setText("acGoldDisplay", account.gold);
   setText("shopGoldDisplay", account.gold);
+  setText("invGoldDisplay", account.gold);
   refreshShop();
+  renderChests();
 }
 
 function refreshShop() {
@@ -78,29 +79,4 @@ function refreshShop() {
   );
   btn.disabled = !affordable;
   btn.textContent = !affordable ? `PAS D'OR (${cost} 💰)` : level === 0 ? `ACHETER (${cost} 💰)` : "UPGRADE";
-}
-
-function openLeaderboard() {
-  const tbody = $("lbContent");
-  tbody.replaceChildren();
-  const lb = getLeaderboard();
-  if (lb.length === 0) {
-    const row = el("tr");
-    const cell = el("td", "lb-empty", "Aucun score enregistré");
-    cell.colSpan = 4;
-    row.append(cell);
-    tbody.append(row);
-  } else {
-    lb.forEach((entry, i) => {
-      const row = el("tr");
-      row.append(
-        el("td", "lb-rank", i + 1),
-        el("td", "", entry.name),
-        el("td", "", entry.wave),
-        el("td", "", Math.floor(entry.xp)),
-      );
-      tbody.append(row);
-    });
-  }
-  showScreen("leaderboardMenu");
 }

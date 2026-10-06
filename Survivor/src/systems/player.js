@@ -1,10 +1,11 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
 import { MAP_BOUNDS } from "../config.js";
-import { canvas } from "../core/canvas.js";
+import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
-import { keys } from "../core/input.js";
+import { keys, touchMove } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
+import { playSfx, vibrate } from "../services/sfx.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
 
@@ -13,8 +14,8 @@ export function updatePlayer() {
   updateRegen();
   updateDash();
   move();
-  camera.x = player.worldX - canvas.width / 2;
-  camera.y = player.worldY - canvas.height / 2;
+  camera.x = player.worldX - view.width / 2;
+  camera.y = player.worldY - view.height / 2;
 }
 
 function updateBuffs() {
@@ -42,6 +43,7 @@ function updateDash() {
     player.dashTimer = player.dashDuration;
     player.dashCooldownTimer = player.dashCooldown;
     createParticles(player.worldX, player.worldY, "#fff", 10);
+    playSfx("dash");
   }
   if (player.isDashing) {
     player.speed = player.dashSpeed;
@@ -66,6 +68,11 @@ function move() {
     dx *= Math.SQRT1_2;
     dy *= Math.SQRT1_2;
   }
+  if (dx === 0 && dy === 0) {
+    // Joystick tactile (analogique)
+    dx = touchMove.x;
+    dy = touchMove.y;
+  }
   const r = player.size;
   player.worldX = clamp(player.worldX + dx * player.speed, MAP_BOUNDS.minX + r, MAP_BOUNDS.maxX - r);
   player.worldY = clamp(player.worldY + dy * player.speed, MAP_BOUNDS.minY + r, MAP_BOUNDS.maxY - r);
@@ -83,10 +90,14 @@ export function heal(amount) {
 export function takeDamage(amount) {
   if (game.over) return;
   player.health -= amount;
+  playSfx("hurt");
+  vibrate(40);
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
   if (player.health <= 0) {
     game.over = true;
+    playSfx("death");
+    vibrate(300);
     game.running = false;
     emit("playerDied");
   }
@@ -101,6 +112,8 @@ export function gainXp(amount) {
   player.level++;
   player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.3);
   addFloatingText(player.worldX, player.worldY - 50, "LEVEL UP!", "#ffd700", 30, 100);
+  playSfx("levelUp");
+  vibrate([30, 40, 30]);
   createSpawnEffect(player.worldX, player.worldY, "#ffd700");
   emit("levelUp");
 }

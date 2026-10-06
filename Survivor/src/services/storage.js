@@ -27,6 +27,10 @@ export const account = {
   nextLevelXp: ACCOUNT_SCALING.baseXpToLevel,
   gold: 0,
   petLevels: { drone: 0 },
+  // Équipement possédé : { [id]: { level, prestige, copies } }
+  items: {},
+  equipped: { weapon: "blaster", armor: null },
+  lastFreeChest: 0, // horodatage (ms) du dernier coffre gratuit ouvert
 };
 
 export function loadAccount() {
@@ -37,6 +41,9 @@ export function loadAccount() {
   account.nextLevelXp = saved.nextLevelXp || ACCOUNT_SCALING.baseXpToLevel;
   account.gold = saved.gold || 0;
   account.petLevels = { drone: 0, ...saved.petLevels };
+  account.items = saved.items || {};
+  account.equipped = { weapon: "blaster", armor: null, ...saved.equipped };
+  account.lastFreeChest = saved.lastFreeChest || 0;
 }
 
 export function saveAccount() {
@@ -73,11 +80,13 @@ export function resetProgress() {
 
 // --- PSEUDO ---
 
+export const DEFAULT_PSEUDO = "Survivor";
+
 export function loadPseudo() {
   try {
-    return localStorage.getItem(STORAGE_KEYS.pseudo) || "Survivor";
+    return localStorage.getItem(STORAGE_KEYS.pseudo) || DEFAULT_PSEUDO;
   } catch {
-    return "Survivor";
+    return DEFAULT_PSEUDO;
   }
 }
 

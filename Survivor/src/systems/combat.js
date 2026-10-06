@@ -1,10 +1,11 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
-import { canvas } from "../core/canvas.js";
+import { MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
+import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -25,9 +26,9 @@ export function rebuildEnemyGrid() {
 export function isOnScreen(x, y, size, margin = 100) {
   return (
     x + size > camera.x - margin &&
-    x - size < camera.x + canvas.width + margin &&
+    x - size < camera.x + view.width + margin &&
     y + size > camera.y - margin &&
-    y - size < camera.y + canvas.height + margin
+    y - size < camera.y + view.height + margin
   );
 }
 
@@ -56,6 +57,7 @@ export function damageEnemy(enemy, amount) {
 export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
+  playSfx("kill");
 
   game.score += 10;
   game.kills++;
@@ -107,13 +109,20 @@ export function shoot() {
     if (!target) return;
     angle = angleTo(player.worldX, player.worldY, target.x, target.y);
   } else {
-    angle = angleTo(canvas.width / 2, canvas.height / 2, mouse.x, mouse.y);
+    angle = angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y);
   }
   player.lastAttack = game.time;
+  player.aimAngle = angle;
+  playSfx("shoot");
 
-  const count = 1 + (player.inventory["Multi-Tir"] || 0);
+  // Projectiles de l'arme + bonus Multi-Tir
+  const w = player.weapon;
+  const extra = player.inventory["Multi-Tir"] || 0;
+  const count = w.projectiles + extra;
+  const spread = w.spread || player.multishotSpread;
   for (let i = 0; i < count; i++) {
-    createPlayerProjectile(angle + (i - (count - 1) / 2) * player.multishotSpread);
+    const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;
+    createPlayerProjectile(angle + (i - (count - 1) / 2) * spread + jitter);
   }
 }
 
@@ -146,21 +155,24 @@ export function throwKunai() {
 
 function createPlayerProjectile(angle) {
   const ray = player.hasRayGun;
+  const w = player.weapon;
   world.projectiles.push({
     x: player.worldX,
     y: player.worldY,
-    vx: Math.cos(angle) * player.projectileSpeed,
-    vy: Math.sin(angle) * player.projectileSpeed,
-    size: ray ? 8 : 5,
-    damage: player.attack,
-    color: ray ? "#00ff88" : "#ffff00",
-    pierce: player.piercing + (ray ? 2 : 0),
+    vx: Math.cos(angle) * w.speed,
+    vy: Math.sin(angle) * w.speed,
+    size: ray ? Math.max(8, w.size) : w.size,
+    damage: player.attack * w.damage,
+    color: ray ? "#00ff88" : w.color,
+    pierce: player.piercing + w.pierce + (ray ? 2 : 0),
+    explosion: w.explosion || 0,
+    life: w.range || Infinity,
     dead: false,
   });
 }
 
 export function spawnProjectile(props) {
-  world.projectiles.push({ pierce: 0, dead: false, ...props });
+  world.projectiles.push({ pierce: 0, explosion: 0, life: Infinity, dead: false, ...props });
 }
 
 export function updateProjectiles() {
@@ -168,6 +180,7 @@ export function updateProjectiles() {
     proj.x += proj.vx;
     proj.y += proj.vy;
     if (
+      --proj.life <= 0 ||
       proj.x < MAP_BOUNDS.minX ||
       proj.x > MAP_BOUNDS.maxX ||
       proj.y < MAP_BOUNDS.minY ||
@@ -199,6 +212,7 @@ export function updateProjectiles() {
 }
 
 function hitEnemy(proj, enemy) {
+  playSfx("hit");
   let damage = proj.damage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
@@ -217,15 +231,28 @@ function hitEnemy(proj, enemy) {
   const k = angleTo(proj.x, proj.y, enemy.x, enemy.y);
   enemy.x += Math.cos(k) * 10 * player.knockbackMult;
   enemy.y += Math.sin(k) * 10 * player.knockbackMult;
-  addFloatingText(
-    enemy.x,
-    enemy.y,
-    Math.round(damage) + (isCrit ? "!" : ""),
-    isCrit ? "#d000ff" : "#fff",
-    isCrit ? 20 : 14,
-  );
+  if (gfx.damageNumbers)
+    addFloatingText(
+      enemy.x,
+      enemy.y,
+      Math.round(damage) + (isCrit ? "!" : ""),
+      isCrit ? "#d000ff" : "#fff",
+      isCrit ? 20 : 14,
+    );
   if (player.vampirism > 0 && Math.random() < 0.3) heal(damage * player.vampirism);
   damageEnemy(enemy, damage);
+  if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy);
+}
+
+/** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
+function explode(x, y, radius, damage, exclude) {
+  createAoEEffect(x, y, radius);
+  playSfx("explosion");
+  addScreenShake(3);
+  for (const e of enemyGrid.query(x, y, radius).slice()) {
+    if (e === exclude || e.dead || dist(e.x, e.y, x, y) >= radius + e.size) continue;
+    damageEnemy(e, damage);
+  }
 }
 
 // --- CAPACITÉS PASSIVES ---
@@ -236,7 +263,7 @@ export function updateAura() {
   let hit = false;
   for (const e of enemyGrid.query(player.worldX, player.worldY, player.auraRadius).slice()) {
     if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= player.auraRadius) continue;
-    addFloatingText(e.x, e.y, Math.round(player.auraDamage), "#ff6600", 12, 20);
+    if (gfx.damageNumbers) addFloatingText(e.x, e.y, Math.round(player.auraDamage), "#ff6600", 12, 20);
     damageEnemy(e, player.auraDamage);
     hit = true;
   }
@@ -275,6 +302,8 @@ export function activateUltimate() {
   player.ultCharge = 0;
   player.isUltReady = false;
   addScreenShake(20);
+  playSfx("ultimate");
+  vibrate(150);
   createAoEEffect(player.worldX, player.worldY, 400);
   for (const e of enemyGrid.query(player.worldX, player.worldY, ULTIMATE.radius).slice()) {
     if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= ULTIMATE.radius) continue;
