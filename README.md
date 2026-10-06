@@ -4,8 +4,10 @@ Jeu de survie 2D en vagues (style *Vampire Survivors*) en JavaScript pur, rendu 
 
 ## Lancer le jeu
 
-Le code utilise des **modules ES** : il faut passer par un petit serveur local
-(ouvrir `index.html` en double-cliquant ne fonctionne pas).
+**Jouer en ligne :** https://darkexxfr.github.io/2D-Game/Survivor/
+
+**En local :** le code utilise des **modules ES**, il faut donc passer par un petit
+serveur local (ouvrir `index.html` en double-cliquant ne fonctionne pas)
 
 ```bash
 cd Survivor
