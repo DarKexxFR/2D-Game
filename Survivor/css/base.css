@@ -1,0 +1,86 @@
+/* Base : polices, reset, canvas, boutons et utilitaires */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  overflow: hidden;
+}
+
+body {
+  background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  font-family: "Orbitron", sans-serif;
+  color: white;
+}
+
+#gameContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* --- Boutons --- */
+button {
+  background: linear-gradient(180deg, #00ffff, #0088aa);
+  color: #000;
+  border: none;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 900;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-family: "Orbitron";
+}
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+button:disabled {
+  background: #333;
+  color: #888;
+  cursor: not-allowed;
+}
+button.secondary {
+  background: linear-gradient(180deg, #444, #222);
+  color: #ccc;
+}
+button.reset-btn {
+  background: transparent;
+  border: 1px solid #ff3333;
+  color: #ff3333;
+  font-size: 12px;
+  margin-top: 30px;
+}
+
+/* --- Utilitaires --- */
+.c-cyan {
+  color: #00ffff;
+}
+.c-pink {
+  color: #ff0055;
+}
+.c-gold {
+  color: #ffd700;
+  font-weight: bold;
+}
+.mt-15 {
+  margin-top: 15px;
+}
+.mt-20 {
+  margin-top: 20px;
+}

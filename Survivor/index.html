@@ -1,27 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Survivor - Stable Edition</title>
-    <link rel="stylesheet" href="styles.css" />
+    <title>Survivor - Neon Edition</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/hud.css" />
+    <link rel="stylesheet" href="css/menus.css" />
+    <link rel="stylesheet" href="css/animations.css" />
   </head>
   <body>
     <div id="gameContainer">
       <canvas id="gameCanvas"></canvas>
+
+      <!-- ===== HUD EN JEU ===== -->
       <div id="xpContainer"><div id="xpBar"></div></div>
       <div id="levelIndicator">LVL <span id="lvlVal">1</span></div>
       <div id="boxIndicator">▲ BOÎTE MYSTÈRE ▲</div>
+      <div id="bossWarning">⚠️ BOSS ⚠️</div>
 
       <div id="ui">
         <div class="ui-header">
-          <div>VAGUE <span id="wave" style="color: #00ffff">1</span></div>
-          <div>KILLS <span id="kills" style="color: #ff0055">0</span></div>
+          <div>VAGUE <span id="wave" class="c-cyan">1</span></div>
+          <div>KILLS <span id="kills" class="c-pink">0</span></div>
         </div>
         <div id="timerContainer"><div id="timerBar"></div></div>
         <div class="health-bar">
           <div class="health-text" id="healthText">100/100</div>
-          <div class="health-fill" id="playerHealth" style="width: 100%"></div>
+          <div class="health-fill" id="playerHealth"></div>
         </div>
         <div class="ui-divider"></div>
         <div class="stat-grid">
@@ -29,54 +35,21 @@
           <div class="stat-item">DEF: <span id="statDef">0</span></div>
           <div class="stat-item">SPD: <span id="statSpd">3.0</span></div>
           <div class="stat-item">AIMANT: <span id="statMagnet">100</span></div>
-          <div class="stat-item">
-            CRIT: <span id="statCrit" class="stat-crit">5%</span>
-          </div>
-          <div class="stat-item">
-            DMG: <span id="statCdmg" class="stat-crit">150%</span>
-          </div>
+          <div class="stat-item">CRIT: <span id="statCrit" class="stat-crit">5%</span></div>
+          <div class="stat-item">DMG: <span id="statCdmg" class="stat-crit">150%</span></div>
+          <div class="stat-item">TIR AUTO: <span id="autoShootState">OFF</span></div>
         </div>
         <div class="skill-box">
           <div class="skill-label">DASH (ESPACE)</div>
-          <div class="skill-bar">
-            <div
-              class="health-fill"
-              id="dashBar"
-              style="
-                width: 100%;
-                background: #00ffff;
-                box-shadow: 0 0 5px #00ffff;
-              "
-            ></div>
-          </div>
+          <div class="skill-bar"><div class="skill-fill dash-fill" id="dashBar"></div></div>
         </div>
         <div class="skill-box">
-          <div
-            class="skill-label"
-            style="
-              display: flex;
-              justify-content: space-between;
-              color: #ffaa00;
-            "
-          >
-            <span>ULTIME (R)</span
-            ><span id="ultReadyText" style="display: none">PRÊT !</span>
+          <div class="skill-label ult-label">
+            <span>ULTIME (R)</span><span id="ultReadyText">PRÊT !</span>
           </div>
-          <div class="skill-bar">
-            <div
-              class="health-fill"
-              id="ultBar"
-              style="
-                width: 0%;
-                background: #ff6600;
-                box-shadow: 0 0 10px #ff6600;
-              "
-            ></div>
-          </div>
+          <div class="skill-bar"><div class="skill-fill ult-fill" id="ultBar"></div></div>
         </div>
-        <div id="runGoldContainer">
-          💰 <span id="uiRunGold" style="margin-left: 8px">0</span>
-        </div>
+        <div id="runGoldContainer">💰 <span id="uiRunGold">0</span></div>
       </div>
 
       <div id="controls">
@@ -85,101 +58,56 @@
         ESPACE : Dash <br />
         R : Ultime <br />
         E : Boîte <br />
+        A : Tir auto <br />
         P : Pause
       </div>
-      <div id="bossWarning">⚠️ BOSS ⚠️</div>
 
+      <!-- ===== MENU PRINCIPAL ===== -->
       <div id="mainMenu" class="menu-overlay">
-        <h1>
-          SURVIVOR<br /><span
-            style="
-              font-size: 14px;
-              color: #fff;
-              font-family: 'Orbitron';
-              letter-spacing: 2px;
-            "
-            >NEON EDITION</span
-          >
-        </h1>
+        <h1>SURVIVOR<br /><span class="subtitle">NEON EDITION</span></h1>
         <input
           type="text"
           id="playerPseudo"
           class="pseudo-input"
           placeholder="ENTREZ VOTRE PSEUDO"
           maxlength="12"
-          onchange="savePseudo()"
         />
         <div class="account-stats">
           <div class="ac-level">
-            <span
-              >Compte Niv.
-              <span id="acLvlDisplay" style="color: #ffd700; font-weight: bold"
-                >1</span
-              ></span
-            ><span id="acXpDisplay">0/1000 XP</span>
+            <span>Compte Niv. <span id="acLvlDisplay" class="c-gold">1</span></span>
+            <span id="acXpDisplay">0/1000 XP</span>
           </div>
-          <div class="ac-bar-bg">
-            <div class="ac-bar-fill" id="acBarFill"></div>
-          </div>
-          <div style="margin-top: 10px; color: #ffff00; font-weight: bold">
-            💰 BANQUE : <span id="acGoldDisplay">0</span>
-          </div>
+          <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
+          <div class="ac-gold">💰 BANQUE : <span id="acGoldDisplay">0</span></div>
         </div>
         <div class="btn-grid">
-          <button onclick="startGame(false)">JOUER</button>
-          <button onclick="openShop()" class="secondary">BOUTIQUE</button>
+          <button id="btnPlay">JOUER</button>
+          <button id="btnShop" class="secondary">BOUTIQUE</button>
         </div>
-        <button
-          onclick="openLeaderboard()"
-          class="secondary"
-          style="margin-top: 15px"
-        >
-          🏆 CLASSEMENT
-        </button>
-        <button onclick="resetData()" class="reset-btn">
-          ⚠️ RESET PROGRESSION
-        </button>
+        <button id="btnLeaderboard" class="secondary mt-15">🏆 CLASSEMENT</button>
+        <button id="btnReset" class="reset-btn">⚠️ RESET PROGRESSION</button>
       </div>
 
+      <!-- ===== BOUTIQUE ===== -->
       <div id="shopMenu" class="menu-overlay">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
-          "
-        >
-          <h2 style="color: #00ff88; margin: 0">ARMURERIE</h2>
-          <div style="color: #ffff00; font-weight: bold; font-size: 18px">
-            💰 <span id="shopGoldDisplay">0</span>
-          </div>
+        <div class="shop-header">
+          <h2>ARMURERIE</h2>
+          <div class="shop-gold">💰 <span id="shopGoldDisplay">0</span></div>
         </div>
         <div class="shop-item">
-          <div style="text-align: left; width: 65%">
-            <h4 style="color: #fff">
-              Drone de Combat <span id="droneLvlBadge">Lvl 0</span>
-            </h4>
-            <p style="color: #aaa; font-size: 12px">
-              Un drone autonome qui tire des lasers.
-            </p>
-            <div id="droneStats"></div>
+          <div class="shop-item-info">
+            <h4>Drone de Combat <span id="droneLvlBadge" class="lvl-badge">Lvl 0</span></h4>
+            <p>Un drone autonome qui tire des lasers.</p>
+            <div id="droneStats" class="shop-item-stats"></div>
           </div>
-          <div id="btnDroneContainer"></div>
+          <button id="btnDrone" class="shop-btn">ACHETER</button>
         </div>
-        <button
-          class="secondary"
-          onclick="closeShop()"
-          style="margin-top: 20px"
-        >
-          RETOUR
-        </button>
+        <button id="btnShopBack" class="secondary mt-20">RETOUR</button>
       </div>
 
+      <!-- ===== CLASSEMENT ===== -->
       <div id="leaderboardMenu" class="menu-overlay">
-        <h2 style="color: #ffd700">TOP 10 LÉGENDES</h2>
+        <h2>TOP 10 LÉGENDES</h2>
         <table class="lb-table">
           <thead>
             <tr>
@@ -191,84 +119,43 @@
           </thead>
           <tbody id="lbContent"></tbody>
         </table>
-        <button class="secondary" onclick="closeLeaderboard()">RETOUR</button>
+        <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
       </div>
 
+      <!-- ===== AMÉLIORATIONS ===== -->
       <div id="upgradeMenu" class="menu-overlay">
         <h2>CHOISISSEZ !</h2>
         <div id="upgradeOptions"></div>
       </div>
 
+      <!-- ===== PAUSE ===== -->
       <div id="pauseMenu" class="menu-overlay">
         <h2>PAUSE</h2>
         <div class="inv-list" id="pauseInventory"></div>
-        <button onclick="togglePause()">REPRENDRE</button>
-        <button
-          onclick="returnToMenu()"
-          class="secondary"
-          style="margin-top: 15px"
-        >
-          QUITTER
-        </button>
+        <button id="btnResume">REPRENDRE</button>
+        <button id="btnQuit" class="secondary mt-15">QUITTER</button>
       </div>
 
+      <!-- ===== GAME OVER ===== -->
       <div id="gameOver" class="menu-overlay">
         <h1>MORT</h1>
-        <p style="color: #fff; font-size: 20px; margin-bottom: 20px">
-          <span id="finalPseudo"></span>
-        </p>
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #aaa;
-          "
-        >
-          <div>Niveau: <span id="finalLvl" style="color: #fff">1</span></div>
-          <div>Vague: <span id="finalWave" style="color: #fff">0</span></div>
+        <p class="final-pseudo"><span id="finalPseudo"></span></p>
+        <div class="final-stats">
+          <div>Niveau: <span id="finalLvl">1</span></div>
+          <div>Vague: <span id="finalWave">0</span></div>
         </div>
-        <div
-          style="
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #333;
-          "
-        >
-          <p style="font-size: 18px">+<span id="runXpGain">0</span> XP</p>
-          <p
-            style="
-              font-size: 18px;
-              color: #ffff00;
-              margin-top: 5px;
-              font-weight: bold;
-            "
-          >
-            +<span id="runGoldGain">0</span> OR
-          </p>
+        <div class="rewards-box">
+          <p class="reward-xp">+<span id="runXpGain">0</span> XP</p>
+          <p class="reward-gold">+<span id="runGoldGain">0</span> OR</p>
         </div>
-        <div
-          id="newRecordMsg"
-          style="
-            display: none;
-            color: #ffd700;
-            font-weight: bold;
-            margin-top: 15px;
-            animation: pulseGold 1s infinite;
-          "
-        >
-          NOUVEAU RECORD !
-        </div>
+        <div id="newRecordMsg">NOUVEAU RECORD !</div>
         <div class="btn-grid">
-          <button onclick="startGame(true)">REJOUER</button>
-          <button class="secondary" onclick="returnToMenu()">MENU</button>
+          <button id="btnReplay">REJOUER</button>
+          <button id="btnGameOverMenu" class="secondary">MENU</button>
         </div>
       </div>
     </div>
 
-    <script src="game.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>

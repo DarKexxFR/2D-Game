@@ -1,0 +1,317 @@
+/* Fenêtres superposées : menu principal, boutique, classement, pause, fin de partie */
+.menu-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, rgba(15, 10, 30, 0.98), rgba(5, 5, 10, 0.98));
+  padding: 40px;
+  border-radius: 20px;
+  border: 2px solid #444;
+  box-shadow: 0 0 50px black;
+  z-index: 100;
+  pointer-events: auto;
+  min-width: 500px;
+  text-align: center;
+  display: none;
+}
+.menu-overlay h1 {
+  font-family: "Press Start 2P";
+  color: #00ffff;
+  font-size: 35px;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+.menu-overlay h2 {
+  color: #fff;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* --- Menu principal --- */
+#mainMenu {
+  display: block;
+  border-color: #00ccff;
+}
+.subtitle {
+  font-size: 14px;
+  color: #fff;
+  font-family: "Orbitron";
+  letter-spacing: 2px;
+}
+.pseudo-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #555;
+  color: #fff;
+  padding: 15px;
+  font-size: 18px;
+  width: 100%;
+  margin: 10px 0 20px 0;
+  text-align: center;
+  border-radius: 8px;
+}
+.account-stats {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+  text-align: left;
+  border: 1px solid #333;
+}
+.ac-level {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  color: #ddd;
+}
+.ac-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: #111;
+  border-radius: 5px;
+  border: 1px solid #444;
+  overflow: hidden;
+}
+.ac-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  width: 0%;
+  transition: width 0.5s;
+}
+.ac-gold {
+  margin-top: 10px;
+  color: #ffff00;
+  font-weight: bold;
+}
+
+/* --- Boutique --- */
+#shopMenu {
+  border-color: #00ff88;
+}
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+.menu-overlay .shop-header h2 {
+  color: #00ff88;
+  margin: 0;
+}
+.shop-gold {
+  color: #ffff00;
+  font-weight: bold;
+  font-size: 18px;
+}
+.shop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+}
+.shop-item-info {
+  text-align: left;
+  width: 65%;
+}
+.shop-item-info h4 {
+  color: #fff;
+}
+.shop-item-info p,
+.shop-item-stats {
+  color: #aaa;
+  font-size: 12px;
+}
+.lvl-badge {
+  display: none;
+  color: #00ff88;
+  font-size: 12px;
+}
+.shop-btn {
+  width: auto;
+  white-space: nowrap;
+  margin: 0;
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+/* --- Améliorations --- */
+#upgradeMenu {
+  border-color: #ffd700;
+}
+.menu-overlay#upgradeMenu h2 {
+  color: #ffd700;
+}
+.upgrade-option {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  margin: 12px 0;
+  border-radius: 8px;
+  border: 1px solid #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+.upgrade-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(10px);
+  border-color: #fff;
+}
+.rarity-tag {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.rarity-common {
+  border-left: 4px solid #adadad;
+}
+.rarity-rare {
+  border-left: 4px solid #0088ff;
+}
+.rarity-epic {
+  border-left: 4px solid #aa00ff;
+}
+.rarity-legendary {
+  border-left: 4px solid #ffaa00;
+  animation: pulseGold 2s infinite;
+}
+.icon {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 1px solid #555;
+}
+.upg-info h4 {
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+.upg-info p {
+  font-size: 12px;
+  color: #bbb;
+}
+
+/* --- Classement --- */
+.menu-overlay#leaderboardMenu h2 {
+  color: #ffd700;
+}
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+.lb-table th {
+  text-align: left;
+  padding: 10px;
+  color: #00ffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.lb-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #333;
+  color: #ddd;
+}
+.lb-rank {
+  font-weight: bold;
+  color: #ffd700;
+}
+.lb-table td.lb-empty {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+/* --- Pause --- */
+.inv-list {
+  max-height: 200px;
+  overflow-y: auto;
+  text-align: left;
+  margin-bottom: 15px;
+  background: #111;
+  padding: 10px;
+  border-radius: 5px;
+}
+.inv-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+  color: #ccc;
+  font-size: 14px;
+}
+.inv-empty {
+  text-align: center;
+  padding: 10px;
+  color: #666;
+}
+
+/* --- Fin de partie --- */
+.menu-overlay#gameOver h1 {
+  color: #ff3333;
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+.final-pseudo {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+.final-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #aaa;
+}
+.final-stats span {
+  color: #fff;
+}
+.rewards-box {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+.reward-xp {
+  font-size: 18px;
+}
+.reward-gold {
+  font-size: 18px;
+  color: #ffff00;
+  margin-top: 5px;
+  font-weight: bold;
+}
+#newRecordMsg {
+  display: none;
+  color: #ffd700;
+  font-weight: bold;
+  margin-top: 15px;
+  animation: pulseGold 1s infinite;
+}
