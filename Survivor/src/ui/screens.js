@@ -2,7 +2,16 @@
 
 import { setVisible } from "./dom.js";
 
-const SCREENS = ["mainMenu", "shopMenu", "leaderboardMenu", "upgradeMenu", "pauseMenu", "gameOver"];
+const SCREENS = [
+  "mainMenu",
+  "shopMenu",
+  "inventoryMenu",
+  "chestReveal",
+  "leaderboardMenu",
+  "upgradeMenu",
+  "pauseMenu",
+  "gameOver",
+];
 
 export function showScreen(id) {
   for (const s of SCREENS) setVisible(s, s === id);

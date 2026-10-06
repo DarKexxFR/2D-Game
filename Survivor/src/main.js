@@ -8,6 +8,7 @@ import { game, player, resetGame, resetMysteryBox, resetPet, resetPlayer } from 
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
+import { ensureStarterItems } from "./services/inventory.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
   activateUltimate,
@@ -20,6 +21,7 @@ import {
 import { updateEffects } from "./systems/effects.js";
 import { updateEnemies } from "./systems/enemies.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
+import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { updatePlayer } from "./systems/player.js";
@@ -40,6 +42,7 @@ function startGame() {
   playRandomMusic();
   resetGame();
   resetPlayer(account.level);
+  applyEquipment();
   resetPet(account.petLevels.drone || 0);
   resetMysteryBox();
   player.autoShoot = isTouchDevice; // pas de souris pour viser sur mobile
@@ -126,6 +129,7 @@ function frame(now) {
 
 function init() {
   loadAccount();
+  ensureStarterItems();
   initMainMenu({ onPlay: startGame });
 
   $("btnResume").addEventListener("click", togglePause);

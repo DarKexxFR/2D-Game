@@ -1,8 +1,10 @@
-// Menu principal et boutique.
+// Menu principal et boutique (familier ; les coffres sont dans chestMenu.js).
 
 import { DRONE, droneCost, droneDamage } from "../config.js";
 import { account, loadPseudo, resetProgress, savePseudo, upgradePet } from "../services/storage.js";
 import { $, setText, setVisible, setWidth } from "./dom.js";
+import { initChestMenu, renderChests } from "./chestMenu.js";
+import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
 import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
 import { showScreen } from "./screens.js";
 
@@ -29,6 +31,9 @@ export function initMainMenu({ onPlay }) {
   $("btnPlay").addEventListener("click", onPlay);
   $("btnShop").addEventListener("click", () => showScreen("shopMenu"));
   $("btnLeaderboard").addEventListener("click", openLeaderboard);
+  $("btnInventory").addEventListener("click", openInventory);
+  initInventoryMenu({ onBack: () => showScreen("mainMenu"), onAccountChange: refreshAccountUI });
+  initChestMenu({ onAccountChange: refreshAccountUI });
   $("btnReset").addEventListener("click", () => {
     if (confirm("Effacer la progression (Niveau, Or) ?\nLe classement et le pseudo seront CONSERVÉS.")) {
       resetProgress();
@@ -53,7 +58,9 @@ export function refreshAccountUI() {
   setWidth("acBarFill", account.currentXp / account.nextLevelXp);
   setText("acGoldDisplay", account.gold);
   setText("shopGoldDisplay", account.gold);
+  setText("invGoldDisplay", account.gold);
   refreshShop();
+  renderChests();
 }
 
 function refreshShop() {

@@ -34,6 +34,21 @@ boutons **DASH** et **ULT** à droite, bouton **📦** quand vous êtes près de
 Le tir est automatique (vise l'ennemi le plus proche). La vue est dézoomée sur petit écran
 pour voir autant de terrain que sur PC ; portrait et paysage sont tous deux jouables.
 
+## Équipement et coffres
+
+Dans la **Boutique**, l'or du compte permet d'ouvrir des **coffres** (basique, premium, légendaire)
+qui donnent une **arme** ou une **armure** selon des probabilités de rareté.
+
+- **Armes** (remplacent le tir) : Blaster, Mitrailleur, Fusil à pompe, Railgun, Lance-roquettes, Canon plasma.
+- **Armures** (bonus de stats) : Gilet tactique, Combinaison légère, Armure renforcée, Cuirasse lourde, Cape spectrale, Exosquelette.
+- **Niveau** : amélioré avec de l'or (+2 % de puissance par niveau).
+- **Prestige ★1 → ★5** : obtenu en consommant des **doublons** (1, 2, 3 puis 5). Chaque étoile ajoute
+  10 niveaux maximum, +15 % de puissance et rend l'objet plus imposant en jeu
+  (canon plus long et lumineux, armure plus épaisse, pointes en orbite dès ★3, halo doré à ★5).
+- Un doublon d'un objet déjà ★5 est converti en or.
+
+Tout l'équilibrage se trouve dans [`Survivor/src/data/items.js`](Survivor/src/data/items.js).
+
 ## Classement mondial (Supabase)
 
 Les scores de fin de partie sont envoyés à une base [Supabase](https://supabase.com) gratuite.
@@ -58,6 +73,7 @@ Survivor/
 │   ├── base.css            # Reset, polices, boutons, utilitaires
 │   ├── hud.css             # Interface en jeu
 │   ├── menus.css           # Menus / boutique / classement / pause / fin
+│   ├── inventory.css       # Coffres et écran Équipement
 │   ├── touch.css           # Commandes tactiles + petits écrans
 │   └── animations.css      # @keyframes
 └── src/
@@ -70,6 +86,7 @@ Survivor/
     │   └── state.js        # État de la partie (game, player, world...) + reset
     ├── data/
     │   ├── enemies.js      # Types d'ennemis, tables d'apparition, vagues de boss
+    │   ├── items.js        # Armes, armures, coffres, règles de niveau / prestige
     │   └── upgrades.js     # Améliorations de montée de niveau
     ├── systems/            # Logique de jeu (aucun accès au DOM)
     │   ├── player.js       # Déplacement, dash, vie, XP, ultime
@@ -79,6 +96,7 @@ Survivor/
     │   ├── pickups.js      # Gemmes, soins, sanctuaires
     │   ├── mysteryBox.js   # Boîte mystère
     │   ├── pet.js          # Drone de combat
+    │   ├── equipment.js    # Applique l'arme / l'armure équipées au joueur
     │   └── effects.js      # Particules, textes flottants, ondes
     ├── render/             # Dessin sur le canvas (lecture seule de l'état)
     │   ├── renderer.js     # Ordre des couches
@@ -92,6 +110,9 @@ Survivor/
     │   ├── hud.js          # Interface en jeu
     │   ├── mainMenu.js     # Menu principal, boutique
     │   ├── leaderboardMenu.js # Classement mondial / local
+    │   ├── chestMenu.js    # Coffres de la boutique + ouverture
+    │   ├── inventoryMenu.js # Écran Équipement
+    │   ├── itemView.js     # Étoiles, stats et rareté des objets
     │   ├── upgradeMenu.js  # Choix d'amélioration
     │   ├── pauseMenu.js    # Pause + inventaire
     │   ├── gameOverScreen.js
@@ -99,6 +120,7 @@ Survivor/
     ├── services/
     │   ├── storage.js      # Sauvegarde (compte, pseudo, classement local)
     │   ├── onlineLeaderboard.js # Classement mondial (Supabase)
+    │   ├── inventory.js    # Coffres, niveau, prestige, équipement
     │   └── audio.js        # Musique
     └── utils/
         ├── math.js         # clamp, distance, tirage pondéré...

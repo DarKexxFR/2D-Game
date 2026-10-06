@@ -110,30 +110,39 @@ export function shoot() {
     angle = angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y);
   }
   player.lastAttack = game.time;
+  player.aimAngle = angle;
 
-  const count = 1 + (player.inventory["Multi-Tir"] || 0);
+  // Projectiles de l'arme + bonus Multi-Tir
+  const w = player.weapon;
+  const extra = player.inventory["Multi-Tir"] || 0;
+  const count = w.projectiles + extra;
+  const spread = w.spread || player.multishotSpread;
   for (let i = 0; i < count; i++) {
-    createPlayerProjectile(angle + (i - (count - 1) / 2) * player.multishotSpread);
+    const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;
+    createPlayerProjectile(angle + (i - (count - 1) / 2) * spread + jitter);
   }
 }
 
 function createPlayerProjectile(angle) {
   const ray = player.hasRayGun;
+  const w = player.weapon;
   world.projectiles.push({
     x: player.worldX,
     y: player.worldY,
-    vx: Math.cos(angle) * player.projectileSpeed,
-    vy: Math.sin(angle) * player.projectileSpeed,
-    size: ray ? 8 : 5,
-    damage: player.attack,
-    color: ray ? "#00ff88" : "#ffff00",
-    pierce: player.piercing + (ray ? 2 : 0),
+    vx: Math.cos(angle) * w.speed,
+    vy: Math.sin(angle) * w.speed,
+    size: ray ? Math.max(8, w.size) : w.size,
+    damage: player.attack * w.damage,
+    color: ray ? "#00ff88" : w.color,
+    pierce: player.piercing + w.pierce + (ray ? 2 : 0),
+    explosion: w.explosion || 0,
+    life: w.range || Infinity,
     dead: false,
   });
 }
 
 export function spawnProjectile(props) {
-  world.projectiles.push({ pierce: 0, dead: false, ...props });
+  world.projectiles.push({ pierce: 0, explosion: 0, life: Infinity, dead: false, ...props });
 }
 
 export function updateProjectiles() {
@@ -141,6 +150,7 @@ export function updateProjectiles() {
     proj.x += proj.vx;
     proj.y += proj.vy;
     if (
+      --proj.life <= 0 ||
       proj.x < MAP_BOUNDS.minX ||
       proj.x > MAP_BOUNDS.maxX ||
       proj.y < MAP_BOUNDS.minY ||
@@ -199,6 +209,17 @@ function hitEnemy(proj, enemy) {
   );
   if (player.vampirism > 0 && Math.random() < 0.3) heal(damage * player.vampirism);
   damageEnemy(enemy, damage);
+  if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy);
+}
+
+/** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
+function explode(x, y, radius, damage, exclude) {
+  createAoEEffect(x, y, radius);
+  addScreenShake(3);
+  for (const e of enemyGrid.query(x, y, radius).slice()) {
+    if (e === exclude || e.dead || dist(e.x, e.y, x, y) >= radius + e.size) continue;
+    damageEnemy(e, damage);
+  }
 }
 
 // --- CAPACITÉS PASSIVES ---
