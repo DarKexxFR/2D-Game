@@ -12,6 +12,8 @@
   z-index: 100;
   pointer-events: auto;
   min-width: 500px;
+  max-height: calc(100vh - 30px);
+  overflow-y: auto; /* menus longs (Options...) : défilement plutôt que débordement */
   text-align: center;
   display: none;
 }

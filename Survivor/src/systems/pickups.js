@@ -8,6 +8,14 @@ import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.
 import { gainXp, heal } from "./player.js";
 
 const LOOTBOX_HEAL = 25;
+const MAX_LOOTBOXES = 5; // soins au sol en même temps
+const LOOTBOX_SPACING = 160; // distance minimale entre deux soins
+const PICKUP_MARGIN = 40; // les objets restent à l'intérieur de la zone de combat
+
+function insideArena(v, axis) {
+  const [min, max] = axis === "x" ? [MAP_BOUNDS.minX, MAP_BOUNDS.maxX] : [MAP_BOUNDS.minY, MAP_BOUNDS.maxY];
+  return clamp(v, min + PICKUP_MARGIN, max - PICKUP_MARGIN);
+}
 
 export function createGem(x, y, xp) {
   if (world.gems.length > LIMITS.gems) world.gems.shift();
@@ -21,8 +29,23 @@ export function createGem(x, y, xp) {
   });
 }
 
+/** Pose une trousse de soin, sauf s'il y en a déjà trop au sol ou une autre trop proche. */
 export function dropLootBox(x, y) {
-  world.lootBoxes.push({ x, y, size: 15, collected: false });
+  const boxes = world.lootBoxes;
+  if (boxes.length >= MAX_LOOTBOXES) return false;
+  x = insideArena(x, "x");
+  y = insideArena(y, "y");
+  if (boxes.some((b) => dist(b.x, b.y, x, y) < LOOTBOX_SPACING)) return false;
+  boxes.push({ x, y, size: 15, collected: false });
+  return true;
+}
+
+/** Position aléatoire autour d'un point, ramenée à l'intérieur de la zone de combat. */
+export function arenaPointNear(x, y, spread) {
+  return {
+    x: insideArena(x + (Math.random() - 0.5) * spread, "x"),
+    y: insideArena(y + (Math.random() - 0.5) * spread, "y"),
+  };
 }
 
 export function updatePickups() {
@@ -33,7 +56,7 @@ export function updatePickups() {
     addFloatingText(box.x, box.y, `+${LOOTBOX_HEAL} HP`, "#00ff00", 16);
   });
   collect(world.shrines, (s) => {
-    addFloatingText(player.worldX, player.worldY - 50, s.label + " ACTIVÉ!", s.color, 20);
+    addFloatingText(player.worldX, player.worldY - 50, `${s.name} ACTIVÉ !`, s.color, 20);
     createSpawnEffect(player.worldX, player.worldY, s.color);
     player.buffs[s.type] = BUFF_DURATIONS[s.type];
   });

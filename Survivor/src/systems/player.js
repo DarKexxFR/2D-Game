@@ -3,7 +3,7 @@
 import { MAP_BOUNDS } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
-import { keys, touchMove } from "../core/input.js";
+import { isDown, touchMove } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { clamp } from "../utils/math.js";
@@ -42,7 +42,7 @@ function updateRegen() {
 
 function updateDash() {
   if (player.dashCooldownTimer > 0) player.dashCooldownTimer--;
-  if (keys["space"] && player.dashCooldownTimer <= 0 && !player.isDashing) {
+  if (isDown("dash") && player.dashCooldownTimer <= 0 && !player.isDashing) {
     player.isDashing = true;
     player.dashTimer = player.dashDuration;
     player.dashCooldownTimer = player.dashCooldown;
@@ -64,10 +64,10 @@ function updateDash() {
 function move() {
   let dx = 0;
   let dy = 0;
-  if (keys["z"] || keys["w"]) dy = -1;
-  if (keys["s"]) dy = 1;
-  if (keys["q"] || keys["a"]) dx = -1;
-  if (keys["d"]) dx = 1;
+  if (isDown("up")) dy -= 1;
+  if (isDown("down")) dy += 1;
+  if (isDown("left")) dx -= 1;
+  if (isDown("right")) dx += 1;
   if (dx !== 0 && dy !== 0) {
     dx *= Math.SQRT1_2;
     dy *= Math.SQRT1_2;

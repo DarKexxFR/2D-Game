@@ -21,7 +21,7 @@ test("le menu principal s'affiche et la navigation fonctionne", async ({ page })
 test("une partie se joue : ennemis, tir auto, kills", async ({ page }) => {
   await page.goto("/");
   await startGame(page);
-  await page.keyboard.press("a"); // tir automatique
+  await page.keyboard.press("t"); // tir automatique
   await expect
     .poll(() => game(page, ({ state }) => state.game.kills), { timeout: 15_000 })
     .toBeGreaterThan(0);

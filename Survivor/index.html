@@ -68,15 +68,7 @@
         </div>
       </div>
 
-      <div id="controls">
-        SOURIS : Viser <br />
-        ZQSD : Bouger <br />
-        ESPACE : Dash <br />
-        R : Compétence <br />
-        E : Boîte <br />
-        A : Tir auto <br />
-        P : Pause
-      </div>
+      <div id="controls"></div>
 
       <!-- ===== COMMANDES TACTILES ===== -->
       <div id="touchControls">
@@ -290,6 +282,14 @@
             <button data-quality="high">HAUTE</button>
           </div>
           <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+        </div>
+        <div id="optKeysSection" class="option-keys">
+          <span><i data-icon="cog"></i> Touches</span>
+          <p class="option-hint">
+            Clique sur une action puis appuie sur la nouvelle touche (Échap pour annuler).
+          </p>
+          <div id="keyBindingList" class="key-list"></div>
+          <button id="btnResetKeys" class="secondary">TOUCHES PAR DÉFAUT</button>
         </div>
         <div class="option-cloud">
           <span><i data-icon="cloud"></i> Sauvegarde en ligne</span>

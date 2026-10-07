@@ -9,6 +9,7 @@ const DEFAULTS = {
   sfxVolume: 0.6,
   vibration: true,
   quality: isTouch ? "medium" : "high", // low | medium | high
+  keyBindings: null, // touches personnalisées { action: [touches] } (voir core/input.js), null = défaut
 };
 
 export const settings = { ...DEFAULTS };

@@ -13,12 +13,13 @@ import {
 import { biomeForWave } from "../data/biomes.js";
 import { clamp, randomItem, weightedPick } from "../utils/math.js";
 import { addFloatingText, createSpawnEffect } from "./effects.js";
+import { arenaPointNear } from "./pickups.js";
 import { recordWave } from "../services/achievements.js";
 
 const SHRINES = [
-  { type: "frenzy", color: "#ff2244", icon: "rage" },
-  { type: "shield", color: "#0088ff", icon: "shield" },
-  { type: "magnet", color: "#ffee00", icon: "magnet" },
+  { type: "frenzy", name: "FRÉNÉSIE", color: "#ff2244", icon: "rage" },
+  { type: "shield", name: "BOUCLIER", color: "#0088ff", icon: "shield" },
+  { type: "magnet", name: "AIMANT", color: "#ffee00", icon: "magnet" },
 ];
 const SHRINE_CHANCE = 0.001; // par tick
 
@@ -134,12 +135,11 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
   });
 }
 
+const MAX_SHRINES = 3;
+
 function spawnShrine() {
+  if (world.shrines.length >= MAX_SHRINES) return;
   const shrine = randomItem(SHRINES);
-  world.shrines.push({
-    ...shrine,
-    x: player.worldX + (Math.random() - 0.5) * 1000,
-    y: player.worldY + (Math.random() - 0.5) * 1000,
-    size: 25,
-  });
+  // Toujours à l'intérieur de la zone de combat, même si le joueur longe un bord
+  world.shrines.push({ ...shrine, ...arenaPointNear(player.worldX, player.worldY, 1000), size: 25 });
 }
