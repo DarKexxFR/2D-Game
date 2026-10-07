@@ -9,6 +9,7 @@ const SCREENS = [
   "chestReveal",
   "leaderboardMenu",
   "achievementMenu",
+  "dailyMenu",
   "upgradeMenu",
   "pauseMenu",
   "optionsMenu",

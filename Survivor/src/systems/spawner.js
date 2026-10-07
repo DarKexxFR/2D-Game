@@ -106,8 +106,9 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
   if (t.isBoss) createSpawnEffect(x, y, t.color);
 
   const wave = game.wave;
-  const health = t.health * (1 + wave * W.health);
-  const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed));
+  const mod = game.modifier;
+  const health = t.health * (1 + wave * W.health) * (mod.enemyHealth || 1);
+  const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
     x,
     y,
@@ -120,7 +121,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
     baseSpeed: speed,
     size: t.size,
     color: t.color,
-    xp: t.xp * (1 + wave * W.xp),
+    xp: t.xp * (1 + wave * W.xp) * (mod.enemyXp || 1),
     gold: (t.gold || 1) * (1 + player.greed * 0.1),
     attackRange: t.attackRange || 0,
     shootCooldown: Math.max(500, (t.shootCooldown || 0) * 0.95),

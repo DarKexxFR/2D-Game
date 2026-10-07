@@ -43,6 +43,8 @@ export function resetGame() {
     pendingBosses: [],
     isBossWave: false,
     nextWaveTimer: 0,
+    daily: null, // défi du jour en cours (voir services/daily.js), sinon null
+    modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
   });
   for (const list of Object.values(world)) list.length = 0;
 }

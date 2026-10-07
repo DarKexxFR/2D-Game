@@ -95,3 +95,57 @@ revoke all on function public.save_progress(text, jsonb) from public;
 revoke all on function public.load_progress(text) from public;
 grant execute on function public.save_progress(text, jsonb) to anon;
 grant execute on function public.load_progress(text) to anon;
+
+-- =====================================================================
+-- Défi quotidien : classement séparé, un jour (UTC) = un classement.
+-- =====================================================================
+
+create table if not exists public.daily_scores (
+  id bigint generated always as identity primary key,
+  day date not null,
+  name text not null check (char_length(btrim(name)) between 1 and 12),
+  wave int not null check (wave between 1 and 1000),
+  xp bigint not null check (xp between 0 and 100000000),
+  lvl int not null check (lvl between 1 and 1000),
+  created_at timestamptz not null default now(),
+  -- On ne peut envoyer un score que pour aujourd'hui (ou hier, autour de minuit)
+  check (day between (now() at time zone 'utc')::date - 1 and (now() at time zone 'utc')::date)
+);
+
+create index if not exists daily_scores_day_xp_idx on public.daily_scores (day, xp desc);
+
+alter table public.daily_scores enable row level security;
+
+drop policy if exists "Lecture publique" on public.daily_scores;
+create policy "Lecture publique" on public.daily_scores for select to anon using (true);
+
+drop policy if exists "Ajout public" on public.daily_scores;
+create policy "Ajout public" on public.daily_scores for insert to anon with check (true);
+
+revoke all on public.daily_scores from anon;
+grant select, insert on public.daily_scores to anon;
+
+create or replace function public.daily_scores_rate_limit() returns trigger
+language plpgsql as $$
+begin
+  if exists (
+    select 1 from public.daily_scores
+    where lower(name) = lower(new.name)
+      and created_at > now() - interval '10 seconds'
+  ) then
+    raise exception 'Trop de scores envoyés, réessaie plus tard';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists daily_scores_rate_limit on public.daily_scores;
+create trigger daily_scores_rate_limit before insert on public.daily_scores
+  for each row execute function public.daily_scores_rate_limit();
+
+-- Meilleur score de chaque joueur pour chaque jour
+create or replace view public.daily_leaderboard with (security_invoker = true) as
+  select distinct on (day, lower(name)) day, name, wave, xp, lvl, created_at
+  from public.daily_scores
+  order by day, lower(name), xp desc;
+
+grant select on public.daily_leaderboard to anon;

@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   pseudo: "survivor_pseudo",
   leaderboard: "survivor_lb_v1",
   cloudCode: "survivor_cloud_code",
+  dailyBest: "survivor_daily_best",
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.
@@ -119,6 +120,8 @@ export const ONLINE = {
   supabaseAnonKey: "sb_publishable__LDgojI-trllPtdOuAmhaA_jhbCP2Kd",
   table: "scores",
   leaderboardView: "leaderboard",
+  dailyTable: "daily_scores",
+  dailyView: "daily_leaderboard",
   topCount: 50,
   timeoutMs: 6000,
 };

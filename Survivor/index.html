@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/achievements.css" />
+    <link rel="stylesheet" href="css/daily.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -112,6 +113,7 @@
           <button id="btnPlay">JOUER</button>
           <button id="btnShop" class="secondary">BOUTIQUE</button>
         </div>
+        <button id="btnDaily" class="daily-btn mt-15"><i data-icon="target"></i> DÉFI DU JOUR</button>
         <div class="btn-grid">
           <button id="btnInventory" class="secondary"><i data-icon="backpack"></i> ÉQUIPEMENT</button>
           <button id="btnLeaderboard" class="secondary"><i data-icon="trophy"></i> CLASSEMENT</button>
@@ -190,6 +192,34 @@
           </table>
         </div>
         <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== DÉFI DU JOUR ===== -->
+      <div id="dailyMenu" class="menu-overlay">
+        <h2>DÉFI DU JOUR</h2>
+        <p id="dailyDate" class="daily-date"></p>
+        <div class="daily-rules">
+          <div id="dailyHero" class="daily-rule"></div>
+          <div id="dailyWeapon" class="daily-rule"></div>
+          <div id="dailyModifier" class="daily-rule"></div>
+        </div>
+        <p id="dailyBest" class="daily-best"></p>
+        <button id="btnDailyPlay">JOUER LE DÉFI</button>
+        <h3 class="shop-section">CLASSEMENT DU JOUR</h3>
+        <div class="lb-scroll daily-scroll">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>PSEUDO</th>
+                <th>VAGUE</th>
+                <th>XP</th>
+              </tr>
+            </thead>
+            <tbody id="dailyLbContent"></tbody>
+          </table>
+        </div>
+        <button id="btnDailyBack" class="secondary">RETOUR</button>
       </div>
 
       <!-- ===== SUCCÈS ===== -->
