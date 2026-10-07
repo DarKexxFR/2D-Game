@@ -2,12 +2,15 @@
 // Les données sont stockées dans le compte (services/storage.js).
 
 import {
+  CHEST_POOLS,
   CHESTS,
+  DEFAULT_EQUIPPED,
   FREE_CHEST,
   ITEMS,
   MAXED_DUPLICATE_GOLD,
   MAX_PRESTIGE,
   PRESTIGE_COPIES,
+  SLOTS,
   STARTER_ITEMS,
   levelUpCost,
   maxLevel,
@@ -19,10 +22,23 @@ import { account, saveAccount } from "./storage.js";
 export function ensureStarterItems() {
   for (const id of Object.keys(account.items)) if (!ITEMS[id]) delete account.items[id];
   for (const id of STARTER_ITEMS) account.items[id] ??= { level: 1, prestige: 1, copies: 0 };
-  for (const slot of ["weapon", "armor"]) {
+  migrateBoughtDrone();
+  for (const slot of SLOTS) {
     const id = account.equipped[slot];
-    if (id && !account.items[id]) account.equipped[slot] = slot === "weapon" ? STARTER_ITEMS[0] : null;
+    if (id && (!account.items[id] || ITEMS[id].slot !== slot))
+      account.equipped[slot] = DEFAULT_EQUIPPED[slot];
   }
+}
+
+/** L'ancien drone acheté en boutique devient le familier « Drone » au même niveau, équipé. */
+function migrateBoughtDrone() {
+  const level = account.petLevels?.drone || 0;
+  if (level <= 0) return;
+  const owned = (account.items.drone ??= { level: 1, prestige: 1, copies: 0 });
+  owned.level = Math.max(owned.level, Math.min(level, maxLevel(owned.prestige)));
+  account.equipped.pet ??= "drone";
+  account.petLevels.drone = 0;
+  saveAccount();
 }
 
 export function getOwned(id) {
@@ -71,7 +87,8 @@ export function openFreeChest() {
 
 function rollChest(chest) {
   const rarity = weightedPick(Object.keys(chest.odds), (r) => chest.odds[r]);
-  const pool = Object.values(ITEMS).filter((it) => it.rarity === rarity);
+  const slots = CHEST_POOLS[chest.pool || "gear"];
+  const pool = Object.values(ITEMS).filter((it) => it.rarity === rarity && slots.includes(it.slot));
   const item = pool[Math.floor(Math.random() * pool.length)];
 
   let result;
@@ -145,7 +162,10 @@ export function equip(id) {
   return true;
 }
 
-export function unequipArmor() {
-  account.equipped.armor = null;
+/** Retire l'objet d'un emplacement facultatif (armure, familier). */
+export function unequip(slot) {
+  if (DEFAULT_EQUIPPED[slot]) return false;
+  account.equipped[slot] = null;
   saveAccount();
+  return true;
 }

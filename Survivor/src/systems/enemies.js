@@ -15,7 +15,11 @@ const BOSS_BEHAVIORS = {
   miniboss: updateMiniboss,
   boss: updateBoss,
   slime_boss: updateSlimeBoss,
+  hydra: updateHydra,
 };
+
+const HYDRA_HEAD_SPREAD = [-0.8, 0, 0.8]; // angle des 3 têtes autour de la direction du joueur
+const HYDRA_SUMMONS = 6;
 
 export function updateEnemies() {
   const enemies = world.enemies;
@@ -158,6 +162,44 @@ function updateSlimeBoss(e) {
     addScreenShake(10);
     if (dist(player.worldX, player.worldY, e.x, e.y) < 200 && player.buffs.shield <= 0) takeDamage(40);
   }
+}
+
+/**
+ * Positions des 3 têtes de la Nécro-Hydre (partagées entre la logique et le rendu) :
+ * tournées vers le joueur, elles ondulent au bout de leur cou.
+ */
+export function hydraHeads(e) {
+  const facing = angleTo(e.x, e.y, player.worldX, player.worldY);
+  return HYDRA_HEAD_SPREAD.map((spread, i) => {
+    const a = facing + spread + Math.sin(game.time / 400 + i * 2) * 0.15;
+    const reach = e.size * (1.7 + Math.sin(game.time / 300 + i) * 0.1);
+    return { x: e.x + Math.cos(a) * reach, y: e.y + Math.sin(a) * reach, angle: a };
+  });
+}
+
+function updateHydra(e) {
+  const enraged = e.health < e.maxHealth * 0.5;
+  if (enraged && !e.summoned) {
+    // À mi-vie : invoque des rejetons et devient plus agressive
+    e.summoned = true;
+    e.color = "#ff2266";
+    e.speed = e.baseSpeed * 1.3;
+    for (let i = 0; i < HYDRA_SUMMONS; i++) {
+      const a = (Math.PI * 2 * i) / HYDRA_SUMMONS;
+      spawnEnemy("hydra_spawn", e.x + Math.cos(a) * 90, e.y + Math.sin(a) * 90);
+    }
+    addFloatingText(e.x, e.y - e.size, "INVOCATION !", "#ff2266", 24, 60);
+    addScreenShake(8);
+  }
+  if (--e.skillTimer > 0) return;
+  // Les têtes crachent à tour de rôle une salve de 3 projectiles
+  e.headTurn = ((e.headTurn ?? -1) + 1) % HYDRA_HEAD_SPREAD.length;
+  const head = hydraHeads(e)[e.headTurn];
+  const aim = angleTo(head.x, head.y, player.worldX, player.worldY);
+  for (const offset of [-0.15, 0, 0.15]) {
+    fireEnemyProjectile(head.x, head.y, aim + offset, 6, { size: 9, damage: e.damage * 0.6, color: e.color });
+  }
+  e.skillTimer = enraged ? 25 : 45;
 }
 
 // --- PROJECTILES ENNEMIS ---

@@ -132,15 +132,6 @@
         </div>
         <h3 class="shop-section">COFFRES</h3>
         <div id="chestList" class="chest-list"></div>
-        <h3 class="shop-section">FAMILIER</h3>
-        <div class="shop-item">
-          <div class="shop-item-info">
-            <h4>Drone de Combat <span id="droneLvlBadge" class="lvl-badge">Lvl 0</span></h4>
-            <p>Un drone autonome qui tire des lasers.</p>
-            <div id="droneStats" class="shop-item-stats"></div>
-          </div>
-          <button id="btnDrone" class="shop-btn">ACHETER</button>
-        </div>
         <button id="btnShopBack" class="secondary mt-20">RETOUR</button>
       </div>
 
@@ -153,10 +144,14 @@
           </div>
         </div>
         <div class="equipped-slots">
+          <div id="equippedHero" class="equipped-slot"></div>
+          <div id="equippedPet" class="equipped-slot"></div>
           <div id="equippedWeapon" class="equipped-slot"></div>
           <div id="equippedArmor" class="equipped-slot"></div>
         </div>
-        <div class="lb-tabs">
+        <div class="lb-tabs inv-tabs">
+          <button id="invTabHero" class="lb-tab"><i data-icon="ship"></i> HÉROS</button>
+          <button id="invTabPet" class="lb-tab"><i data-icon="paw"></i> FAMILIERS</button>
           <button id="invTabWeapon" class="lb-tab active"><i data-icon="blaster"></i> ARMES</button>
           <button id="invTabArmor" class="lb-tab"><i data-icon="shield"></i> ARMURES</button>
         </div>

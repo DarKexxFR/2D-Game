@@ -72,4 +72,16 @@ export const ICONS = {
   monitor: "M3 4h18v12H3z M8 21h8 M12 16v5",
   play: "M7 4v16l13-8z",
   warning: "M12 3 2 21h20z M12 10v5 M12 18v.5",
+  // --- Héros, familiers et leurs coffres ---
+  ship: "M21 12 6 4l2 8-2 8z M8 12h6 M3 9v6",
+  shuriken: `M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z ${circle(12, 12, 2)}`,
+  titan: "M7 3h10l3 5v6l-3 7H7l-3-7V8z M8 9h8 M9 13h6 M12 9v8",
+  mage: `M12 2 6 14h12z M4 14h16 M8 14l-1 7 M16 14l1 7 ${circle(12, 9.5, 1.3)}`,
+  anchor: `${circle(12, 5, 2)} M12 7v14 M8 11h8 M4 14c0 4 3.5 7 8 7s8-3 8-7 M2 16l2-2 2 2 M18 16l2-2 2 2`,
+  drone: `M12 6l6 6-6 6-6-6z ${circle(12, 12, 1.6)} M3 12a9 9 0 0 1 2-5.6 M21 12a9 9 0 0 1-2 5.6`,
+  medic: "M9 3h6v6h6v6h-6v6H9v-6H3V9h6z",
+  scythe: "M5 21 15 4 M15 4c3 0 6 2 7 5-3-1.5-6-1.5-8.5 0 M8 16h4",
+  heroChest:
+    "M3 10h18v10H3z M3 10V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2 M12 12l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z",
+  paw: `${circle(6, 10, 2)} ${circle(10, 5.5, 2)} ${circle(14, 5.5, 2)} ${circle(18, 10, 2)} M12 11c-3 0-6 4-6 7 0 2 2 3 3.5 2.5 1-.3 1.7-.8 2.5-.8s1.5.5 2.5.8C16 21 18 20 18 18c0-3-3-7-6-7z`,
 };

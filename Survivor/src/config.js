@@ -66,25 +66,11 @@ export const ACCOUNT_SCALING = {
   xpGrowth: 1.2,
 };
 
-export const DRONE = {
-  size: 8,
-  range: 300,
-  baseDamage: 5,
-  damagePerLevel: 3,
-  baseCooldown: 800,
-  cooldownFactor: 0.95,
-  baseCost: 500,
-  projectileSpeed: 8,
-};
-
 export const KUNAI = {
   cooldown: 700,
   projectileSpeed: 14,
   damageMultiplier: 0.75,
 };
-
-export const droneCost = (level) => DRONE.baseCost * Math.max(1, level);
-export const droneDamage = (level) => DRONE.baseDamage + level * DRONE.damagePerLevel;
 
 export const MYSTERY_BOX = {
   x: 0,

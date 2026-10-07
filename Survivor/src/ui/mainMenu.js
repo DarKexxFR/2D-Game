@@ -1,9 +1,7 @@
-// Menu principal et boutique (familier ; les coffres sont dans chestMenu.js).
+// Menu principal et compte (les coffres de la boutique sont dans chestMenu.js).
 
-import { DRONE, droneCost, droneDamage } from "../config.js";
-import { account, loadPseudo, resetProgress, savePseudo, upgradePet } from "../services/storage.js";
-import { $, setText, setVisible, setWidth } from "./dom.js";
-import { setLabel } from "./icons.js";
+import { account, loadPseudo, resetProgress, savePseudo } from "../services/storage.js";
+import { $, setText, setWidth } from "./dom.js";
 import { initChestMenu, renderChests } from "./chestMenu.js";
 import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
 import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
@@ -43,9 +41,6 @@ export function initMainMenu({ onPlay }) {
   });
   $("btnShopBack").addEventListener("click", () => showScreen("mainMenu"));
   initLeaderboardMenu({ onBack: () => showScreen("mainMenu") });
-  $("btnDrone").addEventListener("click", () => {
-    if (upgradePet("drone")) refreshAccountUI();
-  });
 }
 
 export function showMainMenu() {
@@ -60,28 +55,5 @@ export function refreshAccountUI() {
   setText("acGoldDisplay", account.gold);
   setText("shopGoldDisplay", account.gold);
   setText("invGoldDisplay", account.gold);
-  refreshShop();
   renderChests();
-}
-
-function refreshShop() {
-  const level = account.petLevels.drone || 0;
-  const cost = droneCost(level);
-  const affordable = account.gold >= cost;
-  const btn = $("btnDrone");
-
-  setVisible("droneLvlBadge", level > 0);
-  setText("droneLvlBadge", "Lvl " + level);
-  setText(
-    "droneStats",
-    level === 0
-      ? `Dégâts: ${DRONE.baseDamage} | Vitesse: ${DRONE.baseCooldown / 1000}s`
-      : `Actuel: ${droneDamage(level)} Dmg | Coût: ${cost} OR`,
-  );
-  btn.disabled = !affordable;
-  if (level > 0 && affordable) btn.textContent = "UPGRADE";
-  else
-    setLabel(btn, `${affordable ? "ACHETER" : "PAS D'OR"} (${cost} `, "coin", { color: "#ffd700" }).append(
-      ")",
-    );
 }

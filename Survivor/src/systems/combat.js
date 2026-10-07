@@ -65,7 +65,7 @@ export function killEnemy(enemy) {
   game.score += 10;
   game.kills++;
   createGem(enemy.x, enemy.y, enemy.xp);
-  game.runGold += Math.floor(enemy.gold * (1 + player.greed * 0.1));
+  game.runGold += Math.floor(enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus));
   if (Math.random() < 0.05) dropLootBox(enemy.x, enemy.y);
 
   const t = enemy.template;

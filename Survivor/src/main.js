@@ -4,7 +4,7 @@
 import { TICK_MS } from "./config.js";
 import { on } from "./core/events.js";
 import { onKeyPress } from "./core/input.js";
-import { game, player, resetGame, resetMysteryBox, resetPet, resetPlayer } from "./core/state.js";
+import { game, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
@@ -55,7 +55,6 @@ function startGame() {
   resetGame();
   resetPlayer(account.level);
   applyEquipment();
-  resetPet(account.petLevels.drone || 0);
   resetMysteryBox();
   player.autoShoot = isTouchDevice; // pas de souris pour viser sur mobile
   hideScreens();

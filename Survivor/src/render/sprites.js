@@ -351,6 +351,50 @@ const SHAPES = {
     );
   },
 
+  /** Nécro-Hydre : corps hérissé avec un cœur pulsant (les têtes sont dessinées à part). */
+  hydra(c, r, color) {
+    const pts = [];
+    for (let i = 0; i < 14; i++) {
+      const rr = i % 2 ? r * 0.75 : r * 0.98;
+      const a = (TAU * i) / 14;
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    }
+    neonBody(c, () => polygon(c, pts), color, 3, 20);
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 2;
+    for (const k of [0.55, 0.35]) {
+      c.beginPath();
+      c.arc(0, 0, r * k, 0, TAU);
+      c.stroke();
+    }
+    dot(c, 0, 0, r * 0.2, "#39ff14", 16);
+    dot(c, 0, 0, r * 0.08, "#ffffff", 0);
+  },
+
+  /** Tête de l'hydre : crâne de serpent, crocs et yeux verts. */
+  hydraHead(c, r, color) {
+    const path = () =>
+      polygon(c, [
+        [r * 1.2, 0],
+        [r * 0.4, -r * 0.7],
+        [-r * 0.7, -r * 0.6],
+        [-r * 0.9, 0],
+        [-r * 0.7, r * 0.6],
+        [r * 0.4, r * 0.7],
+      ]);
+    neonBody(c, path, color, 2.5, 12);
+    c.strokeStyle = "#ffffff";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(r * 1.05, -r * 0.2);
+    c.lineTo(r * 1.3, -r * 0.05);
+    c.moveTo(r * 1.05, r * 0.2);
+    c.lineTo(r * 1.3, r * 0.05);
+    c.stroke();
+    eye(c, r * 0.35, -r * 0.3, r * 0.16, "#39ff14");
+    eye(c, r * 0.35, r * 0.3, r * 0.16, "#39ff14");
+  },
+
   /** Projectile : halo + cœur blanc. */
   bullet(c, r, color) {
     glow(c, color, r * 3);
