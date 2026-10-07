@@ -227,3 +227,30 @@
     font-size: 16px;
   }
 }
+
+/* Compteur de combo */
+#comboDisplay {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  font-family: "Press Start 2P";
+  font-size: 18px;
+  color: #ff2a6d;
+  text-shadow: 0 0 10px #ff2a6d;
+  pointer-events: none;
+  z-index: 6;
+}
+#comboDisplay.hot {
+  color: #ffd700;
+  text-shadow:
+    0 0 10px #ffd700,
+    0 0 24px #ff2a6d;
+  animation: shake 0.4s infinite;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  #comboDisplay {
+    top: calc(90px + env(safe-area-inset-top));
+    right: 12px;
+    font-size: 12px;
+  }
+}

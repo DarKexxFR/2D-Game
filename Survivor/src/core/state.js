@@ -46,6 +46,10 @@ export function resetGame() {
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
     stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0 }, // pour l'écran de fin
+    combo: 0, // éliminations enchaînées (voir systems/effects.js)
+    comboTimer: 0,
+    slowMo: 0, // ticks de ralenti restants (mort d'un boss)
+    flash: null, // flash plein écran { color, alpha }
   });
   for (const list of Object.values(world)) list.length = 0;
 }

@@ -5,10 +5,19 @@ import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
-import { playSfx } from "../services/sfx.js";
+import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
-import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
+import {
+  addComboKill,
+  addFloatingText,
+  addScreenShake,
+  createAoEEffect,
+  createParticles,
+  createShockwave,
+  flashScreen,
+  slowMotion,
+} from "./effects.js";
 import { createGem, dropLootBox } from "./pickups.js";
 import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
@@ -68,7 +77,8 @@ export function killEnemy(enemy) {
   game.score += 10;
   game.kills++;
   game.stats.kills[enemy.type] = (game.stats.kills[enemy.type] || 0) + 1;
-  if (enemy.template.isBoss) game.stats.bosses++;
+  addComboKill(enemy.x, enemy.y);
+  if (enemy.template.isBoss) bossDefeated(enemy);
   createGem(enemy.x, enemy.y, enemy.xp);
   game.runGold += Math.floor(
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
@@ -99,6 +109,19 @@ export function killEnemy(enemy) {
   if (player.evolutions.bloodHarvest) heal(player.maxHealth * 0.01);
   chargeUltimate();
   createParticles(enemy.x, enemy.y, enemy.color, 8);
+}
+
+/** Mort d'un boss : ralenti, flash, onde de choc et feu d'artifice de particules. */
+function bossDefeated(enemy) {
+  game.stats.bosses++;
+  slowMotion(50);
+  flashScreen("#ffffff", 0.55);
+  createShockwave(enemy.x, enemy.y, 520, enemy.color);
+  createParticles(enemy.x, enemy.y, enemy.color, 40);
+  createParticles(enemy.x, enemy.y, "#ffffff", 20);
+  addScreenShake(25);
+  playSfx("bossDown");
+  vibrate([80, 40, 160]);
 }
 
 export function killAllEnemies() {
@@ -282,7 +305,7 @@ function hitEnemy(proj, enemy) {
 
 /** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
 function explode(x, y, radius, damage, exclude, source) {
-  createAoEEffect(x, y, radius);
+  createShockwave(x, y, radius, "#ffaa33");
   playSfx("explosion");
   addScreenShake(3);
   for (const e of enemyGrid.query(x, y, radius).slice()) {

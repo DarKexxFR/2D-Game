@@ -82,6 +82,69 @@ const SOUNDS = {
   },
   death: { gap: 1000, play: () => tone({ type: "sawtooth", from: 400, to: 40, duration: 1, volume: 0.3 }) },
   click: { gap: 30, play: () => tone({ type: "sine", from: 660, duration: 0.04, volume: 0.08 }) },
+
+  // --- Boss vaincu, combos ---
+  bossDown: {
+    gap: 800,
+    play: () => {
+      noise({ duration: 1.1, volume: 0.5, filter: 500 });
+      [392, 523, 659, 784].forEach((f, i) =>
+        tone({ type: "square", from: f, duration: 0.25, volume: 0.12, delay: 0.25 + i * 0.1 }),
+      );
+    },
+  },
+  combo: {
+    gap: 250,
+    play: () =>
+      [880, 1175].forEach((f, i) =>
+        tone({ type: "square", from: f, duration: 0.08, volume: 0.1, delay: i * 0.06 }),
+      ),
+  },
+
+  // --- Compétences des héros ---
+  skillNinja: {
+    gap: 300,
+    play: () => {
+      noise({ duration: 0.25, volume: 0.2, filter: 5000 });
+      tone({ type: "sine", from: 1800, to: 600, duration: 0.25, volume: 0.12 });
+    },
+  },
+  skillTitan: {
+    gap: 300,
+    play: () => {
+      noise({ duration: 0.9, volume: 0.55, filter: 300 });
+      tone({ type: "sine", from: 70, to: 30, duration: 0.9, volume: 0.45 });
+    },
+  },
+  skillMage: {
+    gap: 300,
+    play: () =>
+      [1047, 1319, 1568, 2093].forEach((f, i) =>
+        tone({ type: "sine", from: f, to: f / 2, duration: 0.3, volume: 0.1, delay: i * 0.05 }),
+      ),
+  },
+  meteor: { gap: 80, play: () => noise({ duration: 0.3, volume: 0.3, filter: 700 }) },
+  skillPirate: {
+    gap: 300,
+    play: () => {
+      noise({ duration: 0.5, volume: 0.6, filter: 1500 });
+      tone({ type: "triangle", from: 150, to: 50, duration: 0.4, volume: 0.35 });
+    },
+  },
+
+  // --- Familiers ---
+  petLaser: {
+    gap: 120,
+    play: () => tone({ type: "sine", from: 1500, to: 2200, duration: 0.05, volume: 0.04 }),
+  },
+  petHeal: {
+    gap: 500,
+    play: () =>
+      [660, 880].forEach((f, i) =>
+        tone({ type: "sine", from: f, duration: 0.12, volume: 0.08, delay: i * 0.08 }),
+      ),
+  },
+  petSlash: { gap: 90, play: () => noise({ duration: 0.08, volume: 0.1, filter: 6000 }) },
 };
 
 export function playSfx(name) {

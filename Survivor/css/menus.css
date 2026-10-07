@@ -367,7 +367,7 @@
 }
 .run-tiles {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-bottom: 10px;
 }
@@ -413,4 +413,9 @@
   font-style: normal;
   text-align: right;
   color: #fff;
+}
+@media (max-width: 760px) {
+  .run-tiles {
+    grid-template-columns: 1fr 1fr;
+  }
 }

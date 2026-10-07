@@ -6,7 +6,14 @@ import { game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, rebuildEnemyGrid, spawnProjectile } from "./combat.js";
-import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
+import {
+  addFloatingText,
+  addScreenShake,
+  createAoEEffect,
+  createParticles,
+  createShockwave,
+  flashScreen,
+} from "./effects.js";
 
 export const SKILLS = {
   shockwave: { name: "Onde de choc", activate: shockwave },
@@ -44,6 +51,8 @@ function enemiesNear(x, y, radius) {
 function shockwave() {
   addScreenShake(20);
   playSfx("ultimate");
+  flashScreen("#ff8800", 0.3);
+  createShockwave(player.worldX, player.worldY, ULTIMATE.radius, "#ff8800");
   createAoEEffect(player.worldX, player.worldY, 400);
   for (const e of enemiesNear(player.worldX, player.worldY, ULTIMATE.radius)) {
     const a = angleTo(player.worldX, player.worldY, e.x, e.y);
@@ -59,7 +68,7 @@ function shockwave() {
 const CLONES = { count: 3, duration: 360, radius: 70, cooldown: 300, damage: 1.2 };
 
 function shadowClones() {
-  playSfx("dash");
+  playSfx("skillNinja");
   addFloatingText(player.worldX, player.worldY - 40, "CLONES D'OMBRE !", "#ff55cc", 22, 60);
   for (let i = 0; i < CLONES.count; i++) {
     world.clones.push({ x: player.worldX, y: player.worldY, slot: i, life: CLONES.duration, lastShot: 0 });
@@ -99,9 +108,10 @@ const QUAKE = { radius: 320, damage: 160, stun: 120 };
 
 function earthquake() {
   addScreenShake(28);
-  playSfx("explosion");
+  playSfx("skillTitan");
+  flashScreen("#ffaa00", 0.35);
   addFloatingText(player.worldX, player.worldY - 40, "SÉISME !", "#ffaa00", 26, 60);
-  for (const r of [120, 220, QUAKE.radius]) createAoEEffect(player.worldX, player.worldY, r);
+  createShockwave(player.worldX, player.worldY, QUAKE.radius, "#ffaa00");
   createParticles(player.worldX, player.worldY, "#ffaa00", 30);
   for (const e of enemiesNear(player.worldX, player.worldY, QUAKE.radius)) {
     e.stun = e.template.isBoss ? QUAKE.stun / 3 : QUAKE.stun;
@@ -114,7 +124,7 @@ function earthquake() {
 const METEORS = { count: 14, spread: 420, radius: 85, damage: 120, fall: 50 };
 
 function meteorRain() {
-  playSfx("ultimate");
+  playSfx("skillMage");
   addFloatingText(player.worldX, player.worldY - 40, "PLUIE DE MÉTÉORES !", "#aa66ff", 22, 60);
   const targets = enemiesNear(player.worldX, player.worldY, METEORS.spread);
   for (let i = 0; i < METEORS.count; i++) {
@@ -132,7 +142,7 @@ function updateMeteors() {
     createAoEEffect(m.x, m.y, METEORS.radius);
     createParticles(m.x, m.y, "#ff8844", 12);
     addScreenShake(4);
-    playSfx("explosion");
+    playSfx("meteor");
     for (const e of enemiesNear(m.x, m.y, METEORS.radius)) damageEnemy(e, METEORS.damage, "skill");
   }
   removeWhere(world.meteors, (m) => m.delay <= 0);
@@ -141,7 +151,7 @@ function updateMeteors() {
 // --- PIRATE : boulet de canon explosif ---
 
 function cannon() {
-  playSfx("explosion");
+  playSfx("skillPirate");
   addScreenShake(12);
   addFloatingText(player.worldX, player.worldY - 40, "FEU !", "#ffd700", 26, 50);
   const a = player.aimAngle;

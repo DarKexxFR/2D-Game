@@ -24,6 +24,7 @@ export function updateHud() {
   setWidth("dashBar", 1 - player.dashCooldownTimer / player.dashCooldown);
   setWidth("xpBar", player.xp / player.xpToNextLevel);
   setText("lvlVal", player.level);
+  updateCombo();
 
   setText("statAtk", Math.round(player.attack));
   setText("statDef", Math.round(player.defense));
@@ -59,6 +60,15 @@ export function showBiomeBanner(biome) {
   banner.classList.add("show");
   clearTimeout(biomeTimeout);
   biomeTimeout = setTimeout(() => banner.classList.remove("show"), 3500);
+}
+
+const COMBO_SHOWN_FROM = 5;
+
+/** Compteur de combo : grossit à chaque élimination, s'efface quand le combo retombe. */
+function updateCombo() {
+  const shown = game.combo >= COMBO_SHOWN_FROM ? game.combo : 0;
+  setText("comboDisplay", shown ? `×${shown} COMBO` : "");
+  setClass("comboDisplay", "hot", shown >= 25);
 }
 
 export function showBossWarning(text) {

@@ -21,7 +21,7 @@ test("statistiques de fin de partie", async ({ page }) => {
   expect(stats.kills.miniboss).toBe(1);
 
   await killPlayer(page);
-  await expect(page.locator(".run-tile")).toHaveCount(3);
+  await expect(page.locator(".run-tile")).toHaveCount(4);
   await expect(page.locator(".run-tile").nth(1)).toContainText("1");
   await expect(page.locator('.dmg-row[data-source="weapon"]')).toContainText("Blaster");
   await expect(page.locator('.dmg-row[data-source="skill"]')).toContainText("Onde de choc");

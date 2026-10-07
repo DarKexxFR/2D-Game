@@ -51,6 +51,7 @@ export function renderRunStats() {
   tiles.append(
     tile(formatDuration(game.time), "Durée"),
     tile(bosses, "Boss vaincus"),
+    tile(`×${game.stats.bestCombo}`, "Meilleur combo"),
     tile(topType ? `${topCount}×` : "—", topType ? ENEMY_NAMES[topType] || topType : "Ennemi favori"),
   );
 

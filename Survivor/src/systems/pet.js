@@ -4,6 +4,7 @@ import { game, pet, player } from "../core/state.js";
 import { angleTo, dist } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, spawnProjectile } from "./combat.js";
 import { addFloatingText, createHealEffect } from "./effects.js";
+import { playSfx } from "../services/sfx.js";
 import { heal } from "./player.js";
 
 const DRONE_RANGE = 300;
@@ -31,6 +32,7 @@ function updateDrone() {
   const target = getNearestEnemy(pet.x, pet.y, DRONE_RANGE);
   if (!target) return;
   pet.lastAction = game.time;
+  playSfx("petLaser");
   const angle = angleTo(pet.x, pet.y, target.x, target.y);
   spawnProjectile({
     x: pet.x,
@@ -50,6 +52,7 @@ function updateMedic() {
   pet.lastAction = game.time;
   if (player.health >= player.maxHealth) return;
   heal(pet.power.heal);
+  playSfx("petHeal");
   createHealEffect(player.worldX, player.worldY);
   addFloatingText(player.worldX, player.worldY - 30, `+${Math.round(pet.power.heal)}`, pet.color, 14, 40);
 }
@@ -63,6 +66,7 @@ function updateReaper() {
     if (e.dead || dist(e.x, e.y, pet.x, pet.y) >= e.size + REAPER_BLADE) continue;
     if (game.time - (e.reaperHit ?? -1e9) < REAPER_HIT_COOLDOWN) continue;
     e.reaperHit = game.time;
+    playSfx("petSlash");
     damageEnemy(e, pet.power.damage, "pet");
   }
 }

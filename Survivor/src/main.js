@@ -159,7 +159,8 @@ let accumulator = 0;
 
 function frame(now) {
   if (game.started) {
-    accumulator += Math.min(now - lastFrame, 250); // évite la « spirale » après un onglet en arrière-plan
+    const timeScale = game.slowMo > 0 ? 0.3 : 1; // ralenti à la mort d'un boss
+    accumulator += Math.min(now - lastFrame, 250) * timeScale; // borne : évite la « spirale » après un onglet en arrière-plan
     while (accumulator >= TICK_MS) {
       update();
       accumulator -= TICK_MS;

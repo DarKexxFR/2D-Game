@@ -32,6 +32,13 @@ export function render() {
   drawFloatingTexts();
   ctx.restore();
 
+  if (game.flash) {
+    ctx.globalAlpha = game.flash.alpha;
+    ctx.fillStyle = game.flash.color;
+    ctx.fillRect(0, 0, view.width, view.height);
+    ctx.globalAlpha = 1;
+  }
+
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1) drawWaveTimer();
   ctx.restore();
