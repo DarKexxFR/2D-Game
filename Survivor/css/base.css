@@ -46,9 +46,13 @@ button {
   width: 100%;
   font-family: "Orbitron";
 }
-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
+/* Seulement avec une vraie souris : sur écran tactile le survol reste « collé » après
+   un appui, et le bouton qui se soulève sort de sous le doigt puis revient, en boucle. */
+@media (hover: hover) {
+  button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
 }
 button:disabled {
   background: #333;
