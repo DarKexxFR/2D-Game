@@ -3,7 +3,8 @@
 import { game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
-import { angleTo, dist, removeWhere } from "../utils/math.js";
+import { MAP_BOUNDS } from "../config.js";
+import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect } from "./effects.js";
 import { isProtected, takeDamage } from "./player.js";
@@ -80,6 +81,9 @@ function moveEnemy(e, distToPlayer) {
     e.x += (mx / len) * e.speed;
     e.y += (my / len) * e.speed;
   }
+  // Un recul (ultime, explosion...) ne doit pas sortir un ennemi de la zone de combat
+  e.x = clamp(e.x, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
+  e.y = clamp(e.y, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
 }
 
 function rangedAttack(e, distToPlayer) {

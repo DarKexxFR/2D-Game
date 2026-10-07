@@ -3,7 +3,7 @@
 
 import { TICK_MS } from "./config.js";
 import { on } from "./core/events.js";
-import { onKeyPress } from "./core/input.js";
+import { onAction } from "./core/input.js";
 import { game, mysteryBox, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
@@ -46,6 +46,7 @@ import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
 import { hydrateIcons } from "./ui/icons.js";
+import { initKeyBindings } from "./ui/keyBindings.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { initUpgradeMenu, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
@@ -195,6 +196,7 @@ function init() {
   $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
   initOptionsMenu();
+  initKeyBindings();
 
   // L'audio ne peut démarrer qu'après une interaction ; petit « clic » sur chaque bouton.
   document.addEventListener("pointerdown", unlockAudio);
@@ -204,12 +206,11 @@ function init() {
   });
 
   const pause = () => canTogglePause() && togglePause();
-  onKeyPress("p", pause);
-  onKeyPress("escape", pause);
-  onKeyPress("r", () => {
+  onAction("pause", pause);
+  onAction("skill", () => {
     if (game.running && !game.paused) activateSkill();
   });
-  onKeyPress("a", () => {
+  onAction("autoShoot", () => {
     if (game.started) player.autoShoot = !player.autoShoot;
   });
 

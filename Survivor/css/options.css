@@ -64,6 +64,43 @@
   color: #777;
 }
 
+/* Touches */
+.option-keys {
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+  text-align: left;
+  color: #ddd;
+  font-size: 14px;
+}
+.key-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin: 8px 0;
+}
+.key-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.key-row button {
+  min-width: 92px;
+  padding: 7px 8px;
+  font-size: 12px;
+  background: linear-gradient(180deg, #333, #1a1a1a);
+  color: #00ffff;
+}
+.key-row button.waiting {
+  color: #ffd700;
+  animation: pulseGold 1s infinite;
+}
+.option-keys > button {
+  padding: 8px;
+  font-size: 12px;
+}
+
 /* Sauvegarde en ligne */
 .option-cloud {
   padding: 12px 0;

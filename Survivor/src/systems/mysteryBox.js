@@ -2,7 +2,7 @@
 // puis finit par s'envoler (« NOUNOURS ! ») après un nombre d'usages aléatoire.
 
 import { MYSTERY_BOX } from "../config.js";
-import { consumeKey, keys } from "../core/input.js";
+import { isDown, releaseAction } from "../core/input.js";
 import { game, mysteryBox as box, player } from "../core/state.js";
 import { dist, weightedPick } from "../utils/math.js";
 import { killAllEnemies } from "./combat.js";
@@ -61,11 +61,11 @@ export function updateMysteryBox() {
   if (!box.active) return;
   if (box.state === "OPENING") updateOpening();
   else if (box.state === "BROKEN") updateBroken();
-  else if (keys["e"] && isPlayerNearBox()) tryOpen();
+  else if (isDown("box") && isPlayerNearBox()) tryOpen();
 }
 
 function tryOpen() {
-  consumeKey("e");
+  releaseAction("box");
   if (game.runGold < box.cost) {
     addFloatingText(box.x, box.y - 50, "PAS ASSEZ D'OR", "#ff0000", 16);
     return;

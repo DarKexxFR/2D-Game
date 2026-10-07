@@ -1,7 +1,7 @@
 // Commandes tactiles : joystick flottant (moitié gauche de l'écran)
 // et boutons d'action (dash, ultime, boîte, pause).
 
-import { keys, touchMove } from "../core/input.js";
+import { setVirtualAction, touchMove } from "../core/input.js";
 import { $, setVisible } from "./dom.js";
 
 const JOYSTICK_RADIUS = 55; // px CSS
@@ -22,8 +22,8 @@ export function initTouchControls({ onUltimate, onPause }) {
   zone.addEventListener("pointerup", endJoystick);
   zone.addEventListener("pointercancel", endJoystick);
 
-  holdButton("btnTouchDash", "space");
-  holdButton("btnTouchBox", "e");
+  holdButton("btnTouchDash", "dash");
+  holdButton("btnTouchBox", "box");
   tapButton("btnTouchUlt", onUltimate);
   tapButton("btnTouchPause", onPause);
 
@@ -81,14 +81,14 @@ function resetJoystick() {
   $("joystickKnob").style.transform = "";
 }
 
-/** Bouton maintenu = touche clavier enfoncée. */
-function holdButton(id, key) {
+/** Bouton maintenu = action enfoncée. */
+function holdButton(id, action) {
   const btn = $(id);
   btn.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    keys[key] = true;
+    setVirtualAction(action, true);
   });
-  const release = () => (keys[key] = false);
+  const release = () => setVirtualAction(action, false);
   btn.addEventListener("pointerup", release);
   btn.addEventListener("pointercancel", release);
   btn.addEventListener("pointerleave", release);
