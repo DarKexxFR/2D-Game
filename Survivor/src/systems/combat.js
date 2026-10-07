@@ -1,6 +1,6 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
+import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
