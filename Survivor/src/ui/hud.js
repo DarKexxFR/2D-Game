@@ -3,6 +3,7 @@
 import { WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player } from "../core/state.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
+import { heroSkill } from "../systems/skills.js";
 import { setClass, setText, setVisible, setWidth } from "./dom.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 
@@ -23,6 +24,7 @@ export function updateHud() {
   setWidth("dashBar", 1 - player.dashCooldownTimer / player.dashCooldown);
   setWidth("xpBar", player.xp / player.xpToNextLevel);
   setText("lvlVal", player.level);
+  updateCombo();
 
   setText("statAtk", Math.round(player.attack));
   setText("statDef", Math.round(player.defense));
@@ -34,6 +36,7 @@ export function updateHud() {
   setText("autoShootState", player.autoShoot ? "ON" : "OFF");
 
   setWidth("ultBar", player.ultCharge / player.maxUltCharge);
+  setText("ultName", heroSkill().name.toUpperCase());
   setVisible("ultReadyText", player.isUltReady);
   setVisible("boxIndicator", mysteryBox.active && player.worldY > -400);
 
@@ -45,6 +48,29 @@ export function updateHud() {
 }
 
 let bossWarningTimeout = null;
+let biomeTimeout;
+
+/** Bandeau « NOUVEAU BIOME » affiché quelques secondes, dans la couleur du biome. */
+export function showBiomeBanner(biome) {
+  const banner = document.getElementById("biomeBanner");
+  banner.textContent = biome.name;
+  banner.style.color = biome.color;
+  banner.classList.remove("show");
+  void banner.offsetWidth; // relance l'animation
+  banner.classList.add("show");
+  clearTimeout(biomeTimeout);
+  biomeTimeout = setTimeout(() => banner.classList.remove("show"), 3500);
+}
+
+const COMBO_SHOWN_FROM = 5;
+
+/** Compteur de combo : grossit à chaque élimination, s'efface quand le combo retombe. */
+function updateCombo() {
+  const shown = game.combo >= COMBO_SHOWN_FROM ? game.combo : 0;
+  setText("comboDisplay", shown ? `×${shown} COMBO` : "");
+  setClass("comboDisplay", "hot", shown >= 25);
+}
+
 export function showBossWarning(text) {
   setText("bossWarning", text);
   setVisible("bossWarning", true);

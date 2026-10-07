@@ -10,6 +10,8 @@ import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 
+const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
+
 export function updatePlayer() {
   updateBuffs();
   updateRegen();
@@ -24,6 +26,7 @@ function updateBuffs() {
   if (b.frenzy > 0) b.frenzy--;
   if (b.shield > 0) b.shield--;
   if (b.magnet > 0) b.magnet--;
+  if (b.slow > 0) b.slow--;
   if (b.overcharge > 0 && --b.overcharge === 0) {
     addFloatingText(player.worldX, player.worldY, "FIN SURCHARGE", "#ccc");
   }
@@ -54,7 +57,7 @@ function updateDash() {
     }
     if (player.dashTimer <= 0) player.isDashing = false;
   } else {
-    player.speed = player.baseSpeed;
+    player.speed = player.baseSpeed * (player.buffs.slow > 0 ? FROST_SLOW : 1);
   }
 }
 
@@ -95,6 +98,15 @@ export function takeDamage(amount) {
   vibrate(40);
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
+  if (player.health <= 0 && player.revives > 0) {
+    // Talent « Seconde chance »
+    player.revives--;
+    player.health = player.maxHealth * 0.5;
+    player.buffs.shield = 120;
+    addFloatingText(player.worldX, player.worldY - 40, "SECONDE CHANCE !", "#00ffcc", 26, 90);
+    addScreenShake(10);
+    return;
+  }
   if (player.health <= 0) {
     game.over = true;
     playSfx("death");
@@ -105,6 +117,7 @@ export function takeDamage(amount) {
 }
 
 export function gainXp(amount) {
+  amount *= 1 + player.xpBonus;
   player.xp += amount;
   game.totalRunXp += amount;
   if (player.xp < player.xpToNextLevel) return;
@@ -126,6 +139,6 @@ export function chargeUltimate() {
   if (player.ultCharge >= player.maxUltCharge) {
     player.ultCharge = player.maxUltCharge;
     player.isUltReady = true;
-    addFloatingText(player.worldX, player.worldY, "ULTIME PRÊT (R)!", "#ffaa00", 30, 60);
+    addFloatingText(player.worldX, player.worldY, "COMPÉTENCE PRÊTE (R) !", "#ffaa00", 30, 60);
   }
 }

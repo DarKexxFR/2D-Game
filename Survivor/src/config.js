@@ -6,6 +6,8 @@ export const STORAGE_KEYS = {
   save: "survivor_save_v11",
   pseudo: "survivor_pseudo",
   leaderboard: "survivor_lb_v1",
+  cloudCode: "survivor_cloud_code",
+  dailyBest: "survivor_daily_best",
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.
@@ -102,6 +104,7 @@ export const RARITIES = {
   rare: { weight: 50, color: "#0088ff" },
   epic: { weight: 15, color: "#aa00ff" },
   legendary: { weight: 3, color: "#ffaa00" },
+  evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
 };
 
 export const MUSIC = {
@@ -117,6 +120,8 @@ export const ONLINE = {
   supabaseAnonKey: "sb_publishable__LDgojI-trllPtdOuAmhaA_jhbCP2Kd",
   table: "scores",
   leaderboardView: "leaderboard",
+  dailyTable: "daily_scores",
+  dailyView: "daily_leaderboard",
   topCount: 50,
   timeoutMs: 6000,
 };

@@ -6,20 +6,31 @@ import { armorStats, heroStats, petStats, weaponStats } from "../data/items.js";
 import { UPGRADES, applyUpgrade } from "../data/upgrades.js";
 import { getEquipped } from "../services/inventory.js";
 
-export function applyEquipment() {
-  const w = getEquipped("weapon") || { id: "blaster", level: 1, prestige: 1 };
+/** Équipement du joueur (héros, arme, armure, familier), chacun { id, level, prestige } ou null. */
+export function equippedLoadout() {
+  return {
+    weapon: getEquipped("weapon"),
+    armor: getEquipped("armor"),
+    hero: getEquipped("hero"),
+    pet: getEquipped("pet"),
+  };
+}
+
+/** Applique un équipement (par défaut celui du joueur ; le défi quotidien impose le sien). */
+export function applyEquipment(loadout = equippedLoadout()) {
+  const w = loadout.weapon || { id: "blaster", level: 1, prestige: 1 };
   player.weapon = weaponStats(w.id, w.level, w.prestige);
   player.attackSpeed = PLAYER_DEFAULTS.attackSpeed * player.weapon.cooldown;
 
-  const a = getEquipped("armor");
+  const a = loadout.armor;
   player.armor = a ? armorStats(a.id, a.level, a.prestige) : null;
   if (player.armor) applyStats(player.armor.stats);
 
-  const h = getEquipped("hero") || { id: "pilot", level: 1, prestige: 1 };
+  const h = loadout.hero || { id: "pilot", level: 1, prestige: 1 };
   player.hero = heroStats(h.id, h.level, h.prestige);
   applyHero(player.hero);
 
-  const p = getEquipped("pet");
+  const p = loadout.pet;
   const pet = p ? petStats(p.id, p.level, p.prestige) : null;
   resetPet(pet);
   if (pet?.id === "collector") {

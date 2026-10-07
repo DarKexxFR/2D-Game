@@ -20,6 +20,8 @@ export const world = {
   visualEffects: [],
   floatingTexts: [],
   ghosts: [],
+  clones: [], // clones d'ombre du Ninja (voir systems/skills.js)
+  meteors: [], // météores du Mage en train de tomber
 };
 
 export function resetGame() {
@@ -41,6 +43,13 @@ export function resetGame() {
     pendingBosses: [],
     isBossWave: false,
     nextWaveTimer: 0,
+    daily: null, // défi du jour en cours (voir services/daily.js), sinon null
+    modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
+    stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0 }, // pour l'écran de fin
+    combo: 0, // éliminations enchaînées (voir systems/effects.js)
+    comboTimer: 0,
+    slowMo: 0, // ticks de ralenti restants (mort d'un boss)
+    flash: null, // flash plein écran { color, alpha }
   });
   for (const list of Object.values(world)) list.length = 0;
 }
@@ -70,6 +79,7 @@ export function resetPlayer(accountLevel) {
     orbitals: 0,
     orbitalAngle: 0,
     inventory: {},
+    evolutions: {}, // évolutions d'armes obtenues (voir data/upgrades.js)
     thorns: 0,
     vampirism: 0,
     explosionChance: 0,
@@ -77,12 +87,15 @@ export function resetPlayer(accountLevel) {
     knockbackMult: 1,
     regen: 0,
     greed: 1,
-    goldBonus: 0, // bonus d'or en % (héros Pirate, familier Collecteur)
+    goldBonus: 0, // bonus d'or en % (héros Pirate, familier Collecteur, talent Fortune)
+    xpBonus: 0, // bonus d'XP en % (talent Sagesse)
+    rerolls: 0, // relances des améliorations restantes (talent Relance)
+    revives: 0, // résurrections restantes (talent Seconde chance)
     executionThreshold: 0,
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0 },
+    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0 },
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

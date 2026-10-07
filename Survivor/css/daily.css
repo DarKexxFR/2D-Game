@@ -1,0 +1,115 @@
+/* Défi du jour */
+.daily-btn {
+  background: linear-gradient(180deg, #ff2a6d, #a0003a);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 42, 109, 0.5);
+}
+#dailyMenu {
+  border-color: #ff2a6d;
+}
+.daily-date {
+  color: #ff7aa8;
+  font-size: 13px;
+  margin: -10px 0 15px;
+}
+.daily-rules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.daily-rule {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: #aaa;
+}
+.daily-rule .ico {
+  font-size: 26px;
+}
+.daily-rule strong {
+  color: #fff;
+  font-size: 13px;
+}
+.daily-best {
+  color: #ffd700;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.daily-scroll {
+  max-height: 28vh;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  .daily-rules {
+    gap: 6px;
+  }
+  .daily-rule {
+    font-size: 11px;
+  }
+}
+
+/* Talents */
+.talent-btn {
+  background: linear-gradient(180deg, #aa66ff, #5a1fa8);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(170, 102, 255, 0.45);
+}
+#talentMenu {
+  border-color: #aa66ff;
+}
+.talent-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #333;
+  border-left: 3px solid #aa66ff;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.talent-card.maxed {
+  border-left-color: #ffd700;
+}
+.talent-card .ico {
+  font-size: 26px;
+  color: #c79bff;
+}
+.talent-card h4 {
+  font-size: 14px;
+  color: #fff;
+}
+.talent-card p {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+}
+.talent-pips {
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+}
+.talent-pips span {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+}
+.talent-pips span.on {
+  background: #aa66ff;
+  box-shadow: 0 0 6px #aa66ff;
+}
+.talent-card button {
+  padding: 8px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#btnReroll:empty {
+  display: none;
+}

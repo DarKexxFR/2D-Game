@@ -193,6 +193,18 @@
   border-left: 4px solid #ffaa00;
   animation: pulseGold 2s infinite;
 }
+.rarity-evolution {
+  border: 1px solid #ff2a6d;
+  border-left: 4px solid #ff2a6d;
+  background: linear-gradient(90deg, rgba(255, 42, 109, 0.18), rgba(255, 215, 0, 0.08));
+  box-shadow: 0 0 18px rgba(255, 42, 109, 0.45);
+  animation: pulseGold 1.2s infinite;
+}
+.upg-recipe {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #ff7aa8;
+}
 .icon {
   width: 45px;
   height: 45px;
@@ -346,4 +358,64 @@
   font-size: 12px;
   color: #888;
   min-height: 15px;
+}
+
+/* Statistiques de fin de partie */
+.run-stats {
+  margin: 12px 0;
+  text-align: left;
+}
+.run-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.run-tile {
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+.run-tile b {
+  display: block;
+  font-size: 16px;
+  color: #fff;
+}
+.run-tile span {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.dmg-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 56px;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #ccc;
+  margin: 4px 0;
+}
+.dmg-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #222;
+  overflow: hidden;
+}
+.dmg-bar div {
+  height: 100%;
+  background: linear-gradient(90deg, #00ffff, #ff00ff);
+  box-shadow: 0 0 6px #00ffff;
+}
+.dmg-row em {
+  font-style: normal;
+  text-align: right;
+  color: #fff;
+}
+@media (max-width: 760px) {
+  .run-tiles {
+    grid-template-columns: 1fr 1fr;
+  }
 }

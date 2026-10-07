@@ -61,6 +61,9 @@ export const ENEMY_TYPES = {
     splitTo: "slime_small",
     splitCount: 3,
   },
+  // Ennemis propres aux biomes (voir data/biomes.js)
+  scorpion: { health: 40, damage: 14, speed: 3, size: 16, color: "#ff6a00", xp: 6, gold: 3 },
+  golem: { health: 160, damage: 20, speed: 1.4, size: 28, color: "#7fdfff", xp: 12, gold: 6 },
   hydra: {
     health: 3000,
     damage: 50,
@@ -74,6 +77,24 @@ export const ENEMY_TYPES = {
   },
   hydra_spawn: { health: 25, damage: 10, speed: 4.5, size: 11, color: "#cc66ff", xp: 4, gold: 2 },
   slime_small: { health: 50, damage: 10, speed: 4.5, size: 18, color: "#88ff88", xp: 5, gold: 2 },
+};
+
+/** Noms affichés (statistiques de fin de partie). */
+export const ENEMY_NAMES = {
+  normal: "Drone-insecte",
+  fast: "Éclaireur",
+  tank: "Blindé",
+  ranged: "Tourelle",
+  kamikaze: "Kamikaze",
+  miniboss: "Crabe blindé",
+  boss: "Œil du néant",
+  slime_boss: "Roi Slime",
+  slime_big: "Gros slime",
+  slime_small: "Petit slime",
+  scorpion: "Scorpion",
+  golem: "Golem de glace",
+  hydra: "Nécro-Hydre",
+  hydra_spawn: "Rejeton",
 };
 
 /** Taille maximale d'un ennemi (slime boss en saut), utile pour la grille spatiale. */

@@ -71,6 +71,7 @@ export const ICONS = {
   vibrate: "M8 3h8v18H8z M11 18h2 M4 8v8 M20 8v8 M1.5 10v4 M22.5 10v4",
   monitor: "M3 4h18v12H3z M8 21h8 M12 16v5",
   play: "M7 4v16l13-8z",
+  cloud: "M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8.5a4.5 4.5 0 0 1-.5 9.5z M12 10v6 M9.5 13.5 12 16l2.5-2.5",
   warning: "M12 3 2 21h20z M12 10v5 M12 18v.5",
   // --- Héros, familiers et leurs coffres ---
   ship: "M21 12 6 4l2 8-2 8z M8 12h6 M3 9v6",

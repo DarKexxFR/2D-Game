@@ -32,6 +32,7 @@ export const account = {
   items: {},
   equipped: { ...DEFAULT_EQUIPPED },
   lastFreeChest: 0, // horodatage (ms) du dernier coffre gratuit ouvert
+  talents: {}, // rang de chaque talent : { [id]: rang }
   achievements: [],
   achievementStats: { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 },
 };
@@ -47,6 +48,7 @@ export function loadAccount() {
   account.items = saved.items || {};
   account.equipped = { ...DEFAULT_EQUIPPED, ...saved.equipped };
   account.lastFreeChest = saved.lastFreeChest || 0;
+  account.talents = { ...saved.talents };
   account.achievements = Array.isArray(saved.achievements) ? saved.achievements : [];
   account.achievementStats = {
     kills: 0,
@@ -58,8 +60,22 @@ export function loadAccount() {
   };
 }
 
+const saveListeners = [];
+
+/** Appelé après chaque sauvegarde locale (utilisé par la sauvegarde en ligne). */
+export function onAccountSave(fn) {
+  saveListeners.push(fn);
+}
+
 export function saveAccount() {
   writeJSON(STORAGE_KEYS.save, account);
+  for (const fn of saveListeners) fn();
+}
+
+/** Remplace la sauvegarde locale par une sauvegarde récupérée (prise en compte au rechargement). */
+export function overwriteLocalSave(save, pseudo) {
+  writeJSON(STORAGE_KEYS.save, save);
+  if (pseudo) savePseudo(pseudo);
 }
 
 export function addAccountRewards(xp, gold) {
@@ -109,4 +125,14 @@ export function saveToLeaderboard(name, wave, xp, lvl) {
   const lb = [...getLeaderboard(), entry].sort((a, b) => b.xp - a.xp).slice(0, LIMITS.leaderboard);
   writeJSON(STORAGE_KEYS.leaderboard, lb);
   return lb.includes(entry);
+}
+
+/** Achète le rang suivant d'un talent. Renvoie true si l'achat a réussi. */
+export function buyTalent(talent, cost) {
+  const rank = account.talents[talent.id] || 0;
+  if (rank >= talent.max || account.gold < cost) return false;
+  account.gold -= cost;
+  account.talents[talent.id] = rank + 1;
+  saveAccount();
+  return true;
 }

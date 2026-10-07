@@ -27,8 +27,13 @@ export function updateEnemies() {
   for (let i = 0; i < count; i++) {
     const e = enemies[i];
     if (e.dead) continue;
+    if (e.stun > 0) {
+      e.stun--; // étourdi par le Séisme du Titan : ne bouge ni n'attaque
+      continue;
+    }
     BOSS_BEHAVIORS[e.type]?.(e);
     const d = dist(player.worldX, player.worldY, e.x, e.y);
+    if (e.type === "scorpion") updateScorpion(e, d);
     moveEnemy(e, d);
     if (e.type === "ranged") rangedAttack(e, d);
     if (d < player.size + e.size) handleContact(e);
@@ -96,14 +101,39 @@ function handleContact(e) {
 
   const dmg = Math.max(1, e.damage - player.defense);
   takeDamage(dmg);
+  if (e.type === "golem") freezePlayer();
   e.lastDamage = game.time;
   const a = angleTo(player.worldX, player.worldY, e.x, e.y);
   e.x += Math.cos(a) * 20;
   e.y += Math.sin(a) * 20;
   if (player.thorns > 0) {
     addFloatingText(e.x, e.y, Math.round(dmg * player.thorns), "#aa00ff", 12);
-    damageEnemy(e, dmg * player.thorns);
+    damageEnemy(e, dmg * player.thorns, "thorns");
   }
+}
+
+// --- ENNEMIS DES BIOMES ---
+
+const SCORPION_LUNGE = { range: 170, duration: 14, speed: 3.2, cooldown: 100 };
+
+/** Scorpion : à portée, il bondit brusquement sur le joueur. */
+function updateScorpion(e, distToPlayer) {
+  e.lungeCooldown = (e.lungeCooldown ?? 0) - 1;
+  if (e.lunge > 0) {
+    if (--e.lunge === 0) e.speed = e.baseSpeed;
+    return;
+  }
+  if (distToPlayer < SCORPION_LUNGE.range && e.lungeCooldown <= 0) {
+    e.lunge = SCORPION_LUNGE.duration;
+    e.lungeCooldown = SCORPION_LUNGE.cooldown;
+    e.speed = e.baseSpeed * SCORPION_LUNGE.speed;
+  }
+}
+
+/** Golem de glace : son contact gèle (ralentit) le joueur. */
+function freezePlayer() {
+  if (player.buffs.slow <= 0) addFloatingText(player.worldX, player.worldY - 30, "GELÉ !", "#9fe8ff", 16, 40);
+  player.buffs.slow = 90;
 }
 
 // --- BOSS ---

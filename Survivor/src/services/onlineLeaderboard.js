@@ -1,52 +1,26 @@
-// Classement mondial via l'API REST de Supabase (aucune bibliothèque nécessaire).
+// Classement mondial (table « scores » de Supabase).
 
 import { ONLINE } from "../config.js";
 import { DEFAULT_PSEUDO } from "./storage.js";
+import { isOnlineEnabled, request } from "./supabase.js";
 
-export function isOnlineEnabled() {
-  return Boolean(ONLINE.supabaseUrl && ONLINE.supabaseAnonKey);
-}
-
-// Les anciennes clés « anon » (JWT, eyJ...) vont aussi dans Authorization ;
-// les nouvelles clés « sb_publishable_... » ne passent que par l'en-tête apikey.
-function authHeaders() {
-  const key = ONLINE.supabaseAnonKey;
-  return key.startsWith("eyJ") ? { apikey: key, Authorization: `Bearer ${key}` } : { apikey: key };
-}
-
-async function request(path, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ONLINE.timeoutMs);
-  try {
-    const res = await fetch(`${ONLINE.supabaseUrl.replace(/\/$/, "")}/rest/v1/${path}`, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        ...authHeaders(),
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
+export { isOnlineEnabled };
 
 /**
  * Envoie le score d'une partie. Renvoie un statut :
  *  "sent", "defaultName" (pseudo par défaut, partagé par tout le monde),
  *  "empty" (partie sans XP), "rateLimited" (anti-spam côté base) ou "error".
  */
-export async function submitScore({ name, wave, xp, lvl }) {
+export async function submitScore({ name, wave, xp, lvl, day }) {
   if (name.trim().toLowerCase() === DEFAULT_PSEUDO.toLowerCase()) return "defaultName";
   if (Math.floor(xp) <= 0) return "empty";
+  // Avec `day`, le score va au classement du défi quotidien
+  const row = { name, wave, xp: Math.floor(xp), lvl, ...(day ? { day } : {}) };
   try {
-    await request(ONLINE.table, {
+    await request(day ? ONLINE.dailyTable : ONLINE.table, {
       method: "POST",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ name, wave, xp: Math.floor(xp), lvl }),
+      body: JSON.stringify(row),
     });
     return "sent";
   } catch (err) {
@@ -69,5 +43,12 @@ export const SUBMIT_MESSAGES = {
 export async function fetchTopScores() {
   const query = `select=name,wave,xp,lvl&order=xp.desc&limit=${ONLINE.topCount}`;
   const res = await request(`${ONLINE.leaderboardView}?${query}`);
+  return res.json();
+}
+
+/** Classement du défi quotidien d'un jour donné (meilleur score de chaque joueur). */
+export async function fetchDailyScores(day) {
+  const query = `select=name,wave,xp,lvl&day=eq.${day}&order=xp.desc&limit=${ONLINE.topCount}`;
+  const res = await request(`${ONLINE.dailyView}?${query}`);
   return res.json();
 }

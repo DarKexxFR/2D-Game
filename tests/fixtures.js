@@ -5,7 +5,7 @@ import { test as base, expect } from "@playwright/test";
 export const test = base.extend({
   // Réponses du faux Supabase, modifiables par test : supabase.scores, supabase.mode...
   supabase: async ({}, use) => {
-    await use({ scores: [], mode: "ok", posts: [] });
+    await use({ scores: [], mode: "ok", posts: [], cloud: {} });
   },
   page: async ({ page, supabase }, use) => {
     const errors = [];
@@ -13,6 +13,17 @@ export const test = base.extend({
     await page.route("https://*.supabase.co/**", (route) => {
       const req = route.request();
       if (supabase.mode === "down") return route.fulfill({ status: 503, body: "down" });
+      // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
+      const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
+      if (rpc === "save_progress") {
+        const { p_code, p_data } = req.postDataJSON();
+        supabase.cloud[p_code] = p_data;
+        return route.fulfill({ status: 204, body: "" });
+      }
+      if (rpc === "load_progress") {
+        const data = supabase.cloud[req.postDataJSON().p_code] ?? null;
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(data) });
+      }
       if (req.method() === "POST") {
         supabase.posts.push(req.postDataJSON());
         if (supabase.mode === "rateLimited") {

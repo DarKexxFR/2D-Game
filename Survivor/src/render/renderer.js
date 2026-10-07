@@ -3,7 +3,7 @@
 import { WAVE_DURATION } from "../config.js";
 import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game } from "../core/state.js";
-import { drawEnemies, drawPlayer, drawProjectiles } from "./entities.js";
+import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 
@@ -26,10 +26,18 @@ export function render() {
   drawPlayer(now);
   drawEnemies();
   drawProjectiles();
+  drawSkillEffects();
   drawParticles();
   drawVisualEffects();
   drawFloatingTexts();
   ctx.restore();
+
+  if (game.flash) {
+    ctx.globalAlpha = game.flash.alpha;
+    ctx.fillStyle = game.flash.color;
+    ctx.fillRect(0, 0, view.width, view.height);
+    ctx.globalAlpha = 1;
+  }
 
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1) drawWaveTimer();

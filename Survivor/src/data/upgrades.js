@@ -192,8 +192,65 @@ export const UPGRADES = [
   },
 ];
 
+// --- ÉVOLUTIONS : amélioration au maximum + amélioration partenaire → super-arme ---
+// Elles sont proposées en priorité à la montée de niveau dès que la recette est complète.
+const count = (p, name) => p.inventory[name] || 0;
+const evolution = ({ id, name, icon, desc, base, baseMax, partner }) => ({
+  id,
+  name,
+  icon,
+  desc,
+  rarity: "evolution",
+  recipe: `${base} niv. ${baseMax} + ${partner}`,
+  canApply: (p) => !p.evolutions[id] && count(p, base) >= baseMax && count(p, partner) >= 1,
+  apply: (p) => (p.evolutions[id] = true),
+});
+
+export const EVOLUTIONS = [
+  evolution({
+    id: "bladeStorm",
+    name: "Tempête de lames",
+    icon: "shuriken",
+    desc: "Des kunai partent dans toutes les directions et transpercent tout.",
+    base: "Kunai",
+    baseMax: 5,
+    partner: "Multi-Tir",
+  }),
+  evolution({
+    id: "inferno",
+    name: "Enfer",
+    icon: "flame",
+    desc: "Aura immense qui brûle deux fois plus vite et plus fort.",
+    base: "Aura de Feu",
+    baseMax: 5,
+    partner: "Explosion",
+  }),
+  evolution({
+    id: "guardianRing",
+    name: "Anneau gardien",
+    icon: "orbit",
+    desc: "Orbes géants, plus rapides, qui frappent 5 fois plus fort.",
+    base: "Orbe Protecteur",
+    baseMax: 6,
+    partner: "Épines",
+  }),
+  evolution({
+    id: "bloodHarvest",
+    name: "Moisson sanglante",
+    icon: "drop",
+    desc: "Chaque ennemi tué rend 1 % de vos PV max.",
+    base: "Vampirisme",
+    baseMax: 5,
+    partner: "Régénération",
+  }),
+];
+
 export function availableUpgrades(p) {
   return UPGRADES.filter((u) => !u.canApply || u.canApply(p));
+}
+
+export function availableEvolutions(p) {
+  return EVOLUTIONS.filter((e) => e.canApply(p));
 }
 
 export function applyUpgrade(upgrade, p) {

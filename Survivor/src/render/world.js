@@ -2,7 +2,8 @@
 
 import { MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
-import { camera, mysteryBox as box, world } from "../core/state.js";
+import { camera, game, mysteryBox as box, world } from "../core/state.js";
+import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { ICONS } from "../data/icons.js";
@@ -37,12 +38,16 @@ function drawIcon(name, x, y, size, color) {
 
 /** Sol : grille néon (lignes fines + lignes principales) en coordonnées écran. */
 export function drawGrid() {
+  const biome = biomeForWave(game.wave);
+  // Teinte du biome par-dessus le fond de la page
+  ctx.fillStyle = biome.tint;
+  ctx.fillRect(0, 0, view.width, view.height);
   const ox = -camera.x % GRID_SIZE;
   const oy = -camera.y % GRID_SIZE;
   const major = GRID_SIZE * MAJOR_EVERY;
   ctx.lineWidth = 1;
   for (const pass of ["minor", "major"]) {
-    ctx.strokeStyle = pass === "minor" ? "rgba(157, 0, 255, 0.12)" : "rgba(0, 220, 255, 0.16)";
+    ctx.strokeStyle = pass === "minor" ? biome.grid : biome.gridMajor;
     ctx.beginPath();
     for (let x = ox; x < view.width; x += GRID_SIZE) {
       const isMajor = Math.round(x + camera.x) % major === 0;
