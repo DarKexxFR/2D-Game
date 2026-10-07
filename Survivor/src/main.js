@@ -9,6 +9,7 @@ import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { ensureStarterItems } from "./services/inventory.js";
+import { recordCompletedRun } from "./services/achievements.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
 import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
 import {
@@ -37,6 +38,7 @@ import { hideScreens } from "./ui/screens.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { showUpgradeMenu } from "./ui/upgradeMenu.js";
+import { initAchievementMenu } from "./ui/achievementMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -66,6 +68,7 @@ function returnToMenu() {
 function endGame() {
   showTouchControls(false);
   addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
+  recordCompletedRun();
   refreshAccountUI();
   const pseudo = getPseudo();
   const isNewRecord = saveToLeaderboard(pseudo, game.wave, game.totalRunXp, player.level);
@@ -135,6 +138,7 @@ function init() {
   loadAccount();
   ensureStarterItems();
   initMainMenu({ onPlay: startGame });
+  initAchievementMenu({ onBack: showMainMenu });
 
   $("btnResume").addEventListener("click", togglePause);
   $("btnQuit").addEventListener("click", returnToMenu);

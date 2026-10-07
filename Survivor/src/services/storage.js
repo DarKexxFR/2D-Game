@@ -31,6 +31,8 @@ export const account = {
   items: {},
   equipped: { weapon: "blaster", armor: null },
   lastFreeChest: 0, // horodatage (ms) du dernier coffre gratuit ouvert
+  achievements: [],
+  achievementStats: { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 },
 };
 
 export function loadAccount() {
@@ -44,6 +46,15 @@ export function loadAccount() {
   account.items = saved.items || {};
   account.equipped = { weapon: "blaster", armor: null, ...saved.equipped };
   account.lastFreeChest = saved.lastFreeChest || 0;
+  account.achievements = Array.isArray(saved.achievements) ? saved.achievements : [];
+  account.achievementStats = {
+    kills: 0,
+    bosses: 0,
+    runs: 0,
+    bestWave: 1,
+    bestLevel: 1,
+    ...saved.achievementStats,
+  };
 }
 
 export function saveAccount() {
