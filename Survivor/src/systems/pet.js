@@ -40,6 +40,7 @@ function updateDrone() {
     size: 4,
     damage: pet.power.damage,
     color: pet.color,
+    source: "pet",
   });
 }
 
@@ -62,6 +63,6 @@ function updateReaper() {
     if (e.dead || dist(e.x, e.y, pet.x, pet.y) >= e.size + REAPER_BLADE) continue;
     if (game.time - (e.reaperHit ?? -1e9) < REAPER_HIT_COOLDOWN) continue;
     e.reaperHit = game.time;
-    damageEnemy(e, pet.power.damage);
+    damageEnemy(e, pet.power.damage, "pet");
   }
 }

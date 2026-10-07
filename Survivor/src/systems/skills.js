@@ -50,7 +50,7 @@ function shockwave() {
     e.x += Math.cos(a) * ULTIMATE.knockback;
     e.y += Math.sin(a) * ULTIMATE.knockback;
     addFloatingText(e.x, e.y, "ULT!", "#ff6600", 24);
-    damageEnemy(e, ULTIMATE.damage);
+    damageEnemy(e, ULTIMATE.damage, "skill");
   }
 }
 
@@ -87,6 +87,7 @@ function updateClones() {
       color: "#ff55cc",
       pierce: 2,
       type: "kunai",
+      source: "skill",
     });
   }
   removeWhere(world.clones, (c) => c.life <= 0);
@@ -104,7 +105,7 @@ function earthquake() {
   createParticles(player.worldX, player.worldY, "#ffaa00", 30);
   for (const e of enemiesNear(player.worldX, player.worldY, QUAKE.radius)) {
     e.stun = e.template.isBoss ? QUAKE.stun / 3 : QUAKE.stun;
-    damageEnemy(e, QUAKE.damage);
+    damageEnemy(e, QUAKE.damage, "skill");
   }
 }
 
@@ -132,7 +133,7 @@ function updateMeteors() {
     createParticles(m.x, m.y, "#ff8844", 12);
     addScreenShake(4);
     playSfx("explosion");
-    for (const e of enemiesNear(m.x, m.y, METEORS.radius)) damageEnemy(e, METEORS.damage);
+    for (const e of enemiesNear(m.x, m.y, METEORS.radius)) damageEnemy(e, METEORS.damage, "skill");
   }
   removeWhere(world.meteors, (m) => m.delay <= 0);
 }
@@ -155,5 +156,6 @@ function cannon() {
     pierce: 99,
     explosion: 130,
     type: "cannon",
+    source: "skill",
   });
 }

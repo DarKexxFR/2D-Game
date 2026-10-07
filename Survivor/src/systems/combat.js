@@ -49,8 +49,11 @@ export function getNearestEnemy(x, y, maxDist = Infinity) {
 
 // --- DÉGÂTS ---
 
-export function damageEnemy(enemy, amount) {
+/** Inflige des dégâts ; `source` sert aux statistiques de fin de partie. */
+export function damageEnemy(enemy, amount, source = "other") {
   if (enemy.dead) return;
+  const dealt = Math.min(amount, Math.max(0, enemy.health));
+  game.stats.damage[source] = (game.stats.damage[source] || 0) + dealt;
   enemy.health -= amount;
   enemy.hitTime = game.time; // flash blanc au rendu
   if (enemy.health <= 0) killEnemy(enemy);
@@ -64,6 +67,8 @@ export function killEnemy(enemy) {
 
   game.score += 10;
   game.kills++;
+  game.stats.kills[enemy.type] = (game.stats.kills[enemy.type] || 0) + 1;
+  if (enemy.template.isBoss) game.stats.bosses++;
   createGem(enemy.x, enemy.y, enemy.xp);
   game.runGold += Math.floor(
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
@@ -87,7 +92,7 @@ export function killEnemy(enemy) {
     for (const e of enemyGrid.query(enemy.x, enemy.y, 60).slice()) {
       if (e.dead || dist(e.x, e.y, enemy.x, enemy.y) >= 60) continue;
       addFloatingText(e.x, e.y, "BOOM", "#ffaa00", 14);
-      damageEnemy(e, player.attack * 2);
+      damageEnemy(e, player.attack * 2, "explosion");
     }
   }
 
@@ -270,18 +275,19 @@ function hitEnemy(proj, enemy) {
       isCrit ? 20 : 14,
     );
   if (player.vampirism > 0 && Math.random() < 0.3) heal(damage * player.vampirism);
-  damageEnemy(enemy, damage);
-  if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy);
+  const source = proj.source || (proj.type === "kunai" ? "kunai" : "weapon");
+  damageEnemy(enemy, damage, source);
+  if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
 }
 
 /** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
-function explode(x, y, radius, damage, exclude) {
+function explode(x, y, radius, damage, exclude, source) {
   createAoEEffect(x, y, radius);
   playSfx("explosion");
   addScreenShake(3);
   for (const e of enemyGrid.query(x, y, radius).slice()) {
     if (e === exclude || e.dead || dist(e.x, e.y, x, y) >= radius + e.size) continue;
-    damageEnemy(e, damage);
+    damageEnemy(e, damage, source);
   }
 }
 
@@ -302,7 +308,7 @@ export function updateAura() {
   for (const e of enemyGrid.query(player.worldX, player.worldY, radius).slice()) {
     if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= radius) continue;
     if (gfx.damageNumbers) addFloatingText(e.x, e.y, Math.round(damage), "#ff6600", 12, 20);
-    damageEnemy(e, damage);
+    damageEnemy(e, damage, "aura");
     hit = true;
   }
   if (hit) createAoEEffect(player.worldX, player.worldY, radius);
@@ -339,7 +345,7 @@ export function updateOrbitals() {
       if (e.dead || dist(e.x, e.y, orb.x, orb.y) >= e.size + o.size) continue;
       e.x += Math.cos(orb.angle) * o.push;
       e.y += Math.sin(orb.angle) * o.push;
-      damageEnemy(e, o.damage);
+      damageEnemy(e, o.damage, "orbit");
     }
   }
 }

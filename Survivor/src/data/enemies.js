@@ -79,6 +79,24 @@ export const ENEMY_TYPES = {
   slime_small: { health: 50, damage: 10, speed: 4.5, size: 18, color: "#88ff88", xp: 5, gold: 2 },
 };
 
+/** Noms affichés (statistiques de fin de partie). */
+export const ENEMY_NAMES = {
+  normal: "Drone-insecte",
+  fast: "Éclaireur",
+  tank: "Blindé",
+  ranged: "Tourelle",
+  kamikaze: "Kamikaze",
+  miniboss: "Crabe blindé",
+  boss: "Œil du néant",
+  slime_boss: "Roi Slime",
+  slime_big: "Gros slime",
+  slime_small: "Petit slime",
+  scorpion: "Scorpion",
+  golem: "Golem de glace",
+  hydra: "Nécro-Hydre",
+  hydra_spawn: "Rejeton",
+};
+
 /** Taille maximale d'un ennemi (slime boss en saut), utile pour la grille spatiale. */
 export const MAX_ENEMY_SIZE = 90;
 

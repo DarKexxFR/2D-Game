@@ -108,7 +108,7 @@ function handleContact(e) {
   e.y += Math.sin(a) * 20;
   if (player.thorns > 0) {
     addFloatingText(e.x, e.y, Math.round(dmg * player.thorns), "#aa00ff", 12);
-    damageEnemy(e, dmg * player.thorns);
+    damageEnemy(e, dmg * player.thorns, "thorns");
   }
 }
 
