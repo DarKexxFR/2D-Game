@@ -1,4 +1,4 @@
-# Survivor — Neon Edition
+# Last Pulse
 
 Jeu de survie 2D en vagues (style *Vampire Survivors*) en JavaScript pur, rendu sur `<canvas>`.
 
@@ -98,7 +98,7 @@ Sans configuration, le jeu fonctionne normalement avec le classement local uniqu
 La clé *anon* est faite pour être publique : les règles de sécurité de la base autorisent
 seulement la lecture et l'ajout de scores (pas de modification ni de suppression), avec des
 limites de valeurs et un envoi maximum toutes les 10 secondes par pseudo.
-Les scores du pseudo par défaut (« Survivor ») et des parties sans XP ne sont pas envoyés.
+Les scores du pseudo par défaut (« Joueur ») et des parties sans XP ne sont pas envoyés.
 
 ## Structure du projet
 
