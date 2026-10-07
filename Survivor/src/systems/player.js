@@ -129,6 +129,6 @@ export function chargeUltimate() {
   if (player.ultCharge >= player.maxUltCharge) {
     player.ultCharge = player.maxUltCharge;
     player.isUltReady = true;
-    addFloatingText(player.worldX, player.worldY, "ULTIME PRÊT (R)!", "#ffaa00", 30, 60);
+    addFloatingText(player.worldX, player.worldY, "COMPÉTENCE PRÊTE (R) !", "#ffaa00", 30, 60);
   }
 }

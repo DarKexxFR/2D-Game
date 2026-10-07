@@ -20,7 +20,6 @@ import {
   saveToLeaderboard,
 } from "./services/storage.js";
 import {
-  activateUltimate,
   rebuildEnemyGrid,
   shoot,
   throwKunai,
@@ -29,6 +28,7 @@ import {
   updateProjectiles,
 } from "./systems/combat.js";
 import { updateEffects } from "./systems/effects.js";
+import { activateSkill, updateSkills } from "./systems/skills.js";
 import { updateEnemies } from "./systems/enemies.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
 import { applyEquipment } from "./systems/equipment.js";
@@ -114,6 +114,7 @@ function update() {
   updatePickups();
   updateProjectiles();
   updateOrbitals();
+  updateSkills();
   updateEnemies();
   updateEffects();
 }
@@ -169,14 +170,14 @@ function init() {
   onKeyPress("p", pause);
   onKeyPress("escape", pause);
   onKeyPress("r", () => {
-    if (game.running && !game.paused) activateUltimate();
+    if (game.running && !game.paused) activateSkill();
   });
   onKeyPress("a", () => {
     if (game.started) player.autoShoot = !player.autoShoot;
   });
 
   initTouchControls({
-    onUltimate: () => game.running && !game.paused && activateUltimate(),
+    onUltimate: () => game.running && !game.paused && activateSkill(),
     onPause: pause,
   });
 

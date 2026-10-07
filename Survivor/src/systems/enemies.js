@@ -27,6 +27,10 @@ export function updateEnemies() {
   for (let i = 0; i < count; i++) {
     const e = enemies[i];
     if (e.dead) continue;
+    if (e.stun > 0) {
+      e.stun--; // étourdi par le Séisme du Titan : ne bouge ni n'attaque
+      continue;
+    }
     BOSS_BEHAVIORS[e.type]?.(e);
     const d = dist(player.worldX, player.worldY, e.x, e.y);
     if (e.type === "scorpion") updateScorpion(e, d);

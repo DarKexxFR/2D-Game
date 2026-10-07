@@ -3,7 +3,7 @@
 import { WAVE_DURATION } from "../config.js";
 import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game } from "../core/state.js";
-import { drawEnemies, drawPlayer, drawProjectiles } from "./entities.js";
+import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 
@@ -26,6 +26,7 @@ export function render() {
   drawPlayer(now);
   drawEnemies();
   drawProjectiles();
+  drawSkillEffects();
   drawParticles();
   drawVisualEffects();
   drawFloatingTexts();

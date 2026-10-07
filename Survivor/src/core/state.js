@@ -20,6 +20,8 @@ export const world = {
   visualEffects: [],
   floatingTexts: [],
   ghosts: [],
+  clones: [], // clones d'ombre du Ninja (voir systems/skills.js)
+  meteors: [], // météores du Mage en train de tomber
 };
 
 export function resetGame() {

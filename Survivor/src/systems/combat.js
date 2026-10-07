@@ -1,11 +1,11 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
+import { KUNAI, MAP_BOUNDS, MYSTERY_BOX } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { MAX_ENEMY_SIZE } from "../data/enemies.js";
-import { playSfx, vibrate } from "../services/sfx.js";
+import { playSfx } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -339,23 +339,5 @@ export function updateOrbitals() {
       e.y += Math.sin(orb.angle) * o.push;
       damageEnemy(e, o.damage);
     }
-  }
-}
-
-export function activateUltimate() {
-  if (!player.isUltReady) return;
-  player.ultCharge = 0;
-  player.isUltReady = false;
-  addScreenShake(20);
-  playSfx("ultimate");
-  vibrate(150);
-  createAoEEffect(player.worldX, player.worldY, 400);
-  for (const e of enemyGrid.query(player.worldX, player.worldY, ULTIMATE.radius).slice()) {
-    if (e.dead || dist(e.x, e.y, player.worldX, player.worldY) >= ULTIMATE.radius) continue;
-    const a = angleTo(player.worldX, player.worldY, e.x, e.y);
-    e.x += Math.cos(a) * ULTIMATE.knockback;
-    e.y += Math.sin(a) * ULTIMATE.knockback;
-    addFloatingText(e.x, e.y, "ULT!", "#ff6600", 24);
-    damageEnemy(e, ULTIMATE.damage);
   }
 }

@@ -73,6 +73,12 @@ export function drawPlayer(now) {
   }
   if (player.buffs.frenzy > 0) fillCircle(x, y, size + 5, "rgba(255, 0, 0, 0.2)");
 
+  for (const c of world.clones) {
+    ctx.globalAlpha = Math.min(0.6, c.life / 40);
+    drawShip(c.x, c.y, size * 0.8, player.aimAngle, "#b04dff", false, now, hull);
+  }
+  ctx.globalAlpha = 1;
+
   drawArmor(x, y, size, now);
   const heroColor = player.hero?.color || "#00ccff";
   const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : heroColor;
@@ -389,6 +395,7 @@ export function drawEnemies() {
     }
 
     if (e.health < e.maxHealth) drawHealthBar(e);
+    if (e.stun > 0) drawStun(e, now);
   }
 }
 
@@ -410,6 +417,34 @@ function drawHydraHeads(e, flash) {
   }
   ctx.shadowBlur = 0;
   for (const h of hydraHeads(e)) drawSprite(ctx, head, h.x, h.y, h.angle);
+}
+
+/** Étoiles qui tournent au-dessus d'un ennemi étourdi. */
+function drawStun(e, now) {
+  for (let i = 0; i < 3; i++) {
+    const a = now / 150 + (TAU * i) / 3;
+    fillCircle(e.x + Math.cos(a) * e.size * 0.7, e.y - e.size - 6 + Math.sin(a) * 4, 2.5, "#ffee00");
+  }
+}
+
+/** Météores du Mage : zone d'impact au sol qui se resserre, puis la boule qui tombe. */
+export function drawSkillEffects() {
+  for (const m of world.meteors) {
+    const t = 1 - m.delay / m.total; // 0 → 1 à l'impact
+    ctx.globalAlpha = 0.25 + t * 0.5;
+    strokeCircle(m.x, m.y, 85 * (1.4 - t * 0.4), "#ff5533", 2);
+    ctx.globalAlpha = 0.1 + t * 0.15;
+    fillCircle(m.x, m.y, 85 * t, "#ff5533");
+    ctx.globalAlpha = 1;
+    const fall = (1 - t) * 420;
+    ctx.strokeStyle = "rgba(255, 170, 60, 0.5)";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(m.x + fall * 0.5 + 40, m.y - fall - 80);
+    ctx.lineTo(m.x + fall * 0.5, m.y - fall);
+    ctx.stroke();
+    drawSprite(ctx, getSprite("bullet", 12, "#ff8844"), m.x + fall * 0.5, m.y - fall);
+  }
 }
 
 /** Barre de vie, seulement une fois blessé ; plus large et lumineuse pour les boss. */

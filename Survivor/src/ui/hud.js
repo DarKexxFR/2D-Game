@@ -3,6 +3,7 @@
 import { WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player } from "../core/state.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
+import { heroSkill } from "../systems/skills.js";
 import { setClass, setText, setVisible, setWidth } from "./dom.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 
@@ -34,6 +35,7 @@ export function updateHud() {
   setText("autoShootState", player.autoShoot ? "ON" : "OFF");
 
   setWidth("ultBar", player.ultCharge / player.maxUltCharge);
+  setText("ultName", heroSkill().name.toUpperCase());
   setVisible("ultReadyText", player.isUltReady);
   setVisible("boxIndicator", mysteryBox.active && player.worldY > -400);
 

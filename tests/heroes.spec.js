@@ -145,3 +145,34 @@ test("Nécro-Hydre : vague 12, tire avec ses têtes et invoque à mi-vie", async
     .toBeGreaterThanOrEqual(6);
   await killPlayer(page);
 });
+
+const SKILL_CHECKS = {
+  pilot: ({ state }) => state.world.enemies.some((e) => e.health < e.maxHealth),
+  ninja: ({ state }) => state.world.clones.length === 3,
+  titan: ({ state }) => state.world.enemies.some((e) => e.stun > 0),
+  mage: ({ state }) => state.world.meteors.length > 0,
+  pirate: ({ state }) => state.world.projectiles.some((p) => p.type === "cannon"),
+};
+
+for (const [hero, check] of Object.entries(SKILL_CHECKS)) {
+  test(`compétence active du héros ${hero}`, async ({ page, isMobile }) => {
+    test.skip(isMobile, "une seule plateforme suffit");
+    await withSave(page, { lastFreeChest: Date.now(), items: owned(["blaster", hero]), equipped: { hero } });
+    await page.goto("/");
+    await startGame(page);
+    await game(page, ({ state, spawner }) => {
+      state.game.spawnTimer = 1e9;
+      state.world.enemies.length = 0;
+      for (let i = 0; i < 5; i++)
+        spawner.spawnEnemy("tank", state.player.worldX + 60 + i * 30, state.player.worldY);
+      for (const e of state.world.enemies) e.health = e.maxHealth = 1e6;
+      state.player.ultCharge = state.player.maxUltCharge;
+      state.player.isUltReady = true;
+    });
+    await page.keyboard.press("r");
+    expect(await game(page, check)).toBe(true);
+    expect(await game(page, ({ state }) => state.player.isUltReady)).toBe(false);
+    await page.waitForTimeout(1500); // l'effet se déroule sans erreur
+    await killPlayer(page);
+  });
+}

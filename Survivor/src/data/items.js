@@ -179,6 +179,7 @@ export const HEROES = {
     desc: "Équilibré, sans point faible.",
     stats: {},
     hull: "arrow",
+    skill: "shockwave",
     color: "#00ccff",
   },
   ninja: {
@@ -189,6 +190,7 @@ export const HEROES = {
     stats: { speed: 0.15, dashCooldown: 0.4, health: -20 },
     startUpgrades: ["Kunai"],
     hull: "dart",
+    skill: "shadowClones",
     color: "#ff55cc",
   },
   titan: {
@@ -199,6 +201,7 @@ export const HEROES = {
     stats: { health: 120, defense: 4, speed: -0.12 },
     size: 26,
     hull: "heavy",
+    skill: "earthquake",
     color: "#ffaa00",
   },
   mage: {
@@ -209,6 +212,7 @@ export const HEROES = {
     stats: { auraDamage: 4 },
     startUpgrades: ["Aura de Feu"],
     hull: "orb",
+    skill: "meteorRain",
     color: "#aa66ff",
   },
   pirate: {
@@ -218,6 +222,7 @@ export const HEROES = {
     desc: "Pille tout : +50 % d'or et +10 % de coups critiques.",
     stats: { gold: 0.5, crit: 0.1 },
     hull: "corsair",
+    skill: "cannon",
     color: "#ffd700",
   },
 };
