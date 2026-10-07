@@ -8,6 +8,7 @@ import { game, player, resetGame, resetMysteryBox, resetPlayer } from "./core/st
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
+import { initCloudSave } from "./services/cloudSave.js";
 import { ensureStarterItems } from "./services/inventory.js";
 import { recordCompletedRun } from "./services/achievements.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
@@ -144,6 +145,7 @@ function frame(now) {
 function init() {
   hydrateIcons();
   loadAccount();
+  initCloudSave();
   ensureStarterItems();
   initMainMenu({ onPlay: startGame });
   initAchievementMenu({ onBack: showMainMenu });

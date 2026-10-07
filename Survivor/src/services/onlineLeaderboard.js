@@ -1,38 +1,10 @@
-// Classement mondial via l'API REST de Supabase (aucune bibliothèque nécessaire).
+// Classement mondial (table « scores » de Supabase).
 
 import { ONLINE } from "../config.js";
 import { DEFAULT_PSEUDO } from "./storage.js";
+import { isOnlineEnabled, request } from "./supabase.js";
 
-export function isOnlineEnabled() {
-  return Boolean(ONLINE.supabaseUrl && ONLINE.supabaseAnonKey);
-}
-
-// Les anciennes clés « anon » (JWT, eyJ...) vont aussi dans Authorization ;
-// les nouvelles clés « sb_publishable_... » ne passent que par l'en-tête apikey.
-function authHeaders() {
-  const key = ONLINE.supabaseAnonKey;
-  return key.startsWith("eyJ") ? { apikey: key, Authorization: `Bearer ${key}` } : { apikey: key };
-}
-
-async function request(path, options = {}) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ONLINE.timeoutMs);
-  try {
-    const res = await fetch(`${ONLINE.supabaseUrl.replace(/\/$/, "")}/rest/v1/${path}`, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        ...authHeaders(),
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
+export { isOnlineEnabled };
 
 /**
  * Envoie le score d'une partie. Renvoie un statut :

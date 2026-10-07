@@ -58,8 +58,22 @@ export function loadAccount() {
   };
 }
 
+const saveListeners = [];
+
+/** Appelé après chaque sauvegarde locale (utilisé par la sauvegarde en ligne). */
+export function onAccountSave(fn) {
+  saveListeners.push(fn);
+}
+
 export function saveAccount() {
   writeJSON(STORAGE_KEYS.save, account);
+  for (const fn of saveListeners) fn();
+}
+
+/** Remplace la sauvegarde locale par une sauvegarde récupérée (prise en compte au rechargement). */
+export function overwriteLocalSave(save, pseudo) {
+  writeJSON(STORAGE_KEYS.save, save);
+  if (pseudo) savePseudo(pseudo);
 }
 
 export function addAccountRewards(xp, gold) {

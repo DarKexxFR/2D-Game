@@ -242,6 +242,26 @@
           </div>
           <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
         </div>
+        <div class="option-cloud">
+          <span><i data-icon="cloud"></i> Sauvegarde en ligne</span>
+          <div id="cloudOff">
+            <p class="option-hint">Garde tes héros et ton or même en changeant d'appareil.</p>
+            <button id="btnCloudEnable">ACTIVER</button>
+          </div>
+          <div id="cloudOn">
+            <p class="option-hint">Ton code secret (note-le, il sert à tout récupérer) :</p>
+            <div class="cloud-code-row">
+              <code id="cloudCode" class="cloud-code"></code>
+              <button id="btnCloudCopy" class="secondary">COPIER</button>
+            </div>
+            <p id="cloudStatus" class="option-hint"></p>
+          </div>
+          <div class="cloud-restore">
+            <input id="cloudRestoreInput" class="pseudo-input" placeholder="XXXX-XXXX-XXXX" maxlength="16" />
+            <button id="btnCloudRestore" class="secondary">RESTAURER</button>
+          </div>
+          <p id="cloudMessage" class="option-hint"></p>
+        </div>
         <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
       </div>
 

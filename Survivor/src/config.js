@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   save: "survivor_save_v11",
   pseudo: "survivor_pseudo",
   leaderboard: "survivor_lb_v1",
+  cloudCode: "survivor_cloud_code",
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.

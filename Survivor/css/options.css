@@ -64,6 +64,47 @@
   color: #777;
 }
 
+/* Sauvegarde en ligne */
+.option-cloud {
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+  text-align: left;
+  color: #ddd;
+  font-size: 14px;
+}
+.option-cloud .option-hint {
+  margin: 6px 0;
+}
+.option-cloud button {
+  padding: 10px;
+  font-size: 13px;
+}
+.cloud-code-row,
+.cloud-restore {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.cloud-code {
+  font-family: "Press Start 2P", monospace;
+  font-size: 13px;
+  color: #00ffcc;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px #00ffcc;
+  user-select: all;
+}
+.cloud-restore .pseudo-input {
+  margin: 0;
+  padding: 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+#cloudMessage:empty {
+  display: none;
+}
+
 @media (max-width: 760px), (max-height: 560px) {
   .option-row {
     grid-template-columns: 110px 1fr 44px;
