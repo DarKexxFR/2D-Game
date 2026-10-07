@@ -6,6 +6,7 @@ import { applyUpgrade, availableUpgrades } from "../data/upgrades.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
 import { $, el } from "./dom.js";
+import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
 
 const CHOICES = 3;
@@ -45,7 +46,9 @@ export function showUpgradeMenu() {
     tag.style.color = RARITIES[u.rarity].color;
     const info = el("div", "upg-info");
     info.append(el("h4", "", u.name), el("p", "", u.desc));
-    card.append(tag, el("div", "icon", u.icon), info);
+    const ico = el("div", "icon");
+    ico.append(icon(u.icon, RARITIES[u.rarity].color));
+    card.append(tag, ico, info);
     card.addEventListener("click", () => {
       applyUpgrade(u, player);
       resume();

@@ -84,3 +84,21 @@ button.reset-btn {
 .mt-20 {
   margin-top: 20px;
 }
+
+/* Icônes néon (SVG, voir src/ui/icons.js) : taille = font-size, couleur = color */
+.ico {
+  display: inline-flex;
+  vertical-align: -0.15em;
+  line-height: 1;
+}
+.ico svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px currentColor);
+  overflow: visible;
+}

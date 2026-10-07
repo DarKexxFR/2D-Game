@@ -27,7 +27,7 @@
       <div id="xpContainer"><div id="xpBar"></div></div>
       <div id="levelIndicator">LVL <span id="lvlVal">1</span></div>
       <div id="boxIndicator">▲ BOÎTE MYSTÈRE ▲</div>
-      <div id="bossWarning">⚠️ BOSS ⚠️</div>
+      <div id="bossWarning">BOSS</div>
       <div id="achievementToast"></div>
 
       <div id="ui">
@@ -60,7 +60,9 @@
           </div>
           <div class="skill-bar"><div class="skill-fill ult-fill" id="ultBar"></div></div>
         </div>
-        <div id="runGoldContainer">💰 <span id="uiRunGold">0</span></div>
+        <div id="runGoldContainer">
+          <i data-icon="coin" data-color="#ffd700"></i> <span id="uiRunGold">0</span>
+        </div>
       </div>
 
       <div id="controls">
@@ -79,7 +81,7 @@
         <div id="joystickBase"><div id="joystickKnob"></div></div>
         <button id="btnTouchPause" class="touch-btn touch-pause">II</button>
         <div class="touch-actions">
-          <button id="btnTouchBox" class="touch-btn touch-box">📦</button>
+          <button id="btnTouchBox" class="touch-btn touch-box"><i data-icon="chest"></i></button>
           <button id="btnTouchUlt" class="touch-btn touch-ult">ULT</button>
           <button id="btnTouchDash" class="touch-btn touch-dash">DASH</button>
         </div>
@@ -101,28 +103,32 @@
             <span id="acXpDisplay">0/1000 XP</span>
           </div>
           <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
-          <div class="ac-gold">💰 BANQUE : <span id="acGoldDisplay">0</span></div>
+          <div class="ac-gold">
+            <i data-icon="coin" data-color="#ffd700"></i> BANQUE : <span id="acGoldDisplay">0</span>
+          </div>
         </div>
         <div class="btn-grid">
           <button id="btnPlay">JOUER</button>
           <button id="btnShop" class="secondary">BOUTIQUE</button>
         </div>
         <div class="btn-grid">
-          <button id="btnInventory" class="secondary">🎒 ÉQUIPEMENT</button>
-          <button id="btnLeaderboard" class="secondary">🏆 CLASSEMENT</button>
+          <button id="btnInventory" class="secondary"><i data-icon="backpack"></i> ÉQUIPEMENT</button>
+          <button id="btnLeaderboard" class="secondary"><i data-icon="trophy"></i> CLASSEMENT</button>
         </div>
         <div class="btn-grid">
-          <button id="btnAchievements" class="secondary">🏅 SUCCÈS</button>
-          <button id="btnOptions" class="secondary">⚙️ OPTIONS</button>
+          <button id="btnAchievements" class="secondary"><i data-icon="medal"></i> SUCCÈS</button>
+          <button id="btnOptions" class="secondary"><i data-icon="cog"></i> OPTIONS</button>
         </div>
-        <button id="btnReset" class="reset-btn">⚠️ RESET PROGRESSION</button>
+        <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
       </div>
 
       <!-- ===== BOUTIQUE ===== -->
       <div id="shopMenu" class="menu-overlay">
         <div class="shop-header">
           <h2>ARMURERIE</h2>
-          <div class="shop-gold">💰 <span id="shopGoldDisplay">0</span></div>
+          <div class="shop-gold">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="shopGoldDisplay">0</span>
+          </div>
         </div>
         <h3 class="shop-section">COFFRES</h3>
         <div id="chestList" class="chest-list"></div>
@@ -142,15 +148,17 @@
       <div id="inventoryMenu" class="menu-overlay">
         <div class="shop-header">
           <h2>ÉQUIPEMENT</h2>
-          <div class="shop-gold">💰 <span id="invGoldDisplay">0</span></div>
+          <div class="shop-gold">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="invGoldDisplay">0</span>
+          </div>
         </div>
         <div class="equipped-slots">
           <div id="equippedWeapon" class="equipped-slot"></div>
           <div id="equippedArmor" class="equipped-slot"></div>
         </div>
         <div class="lb-tabs">
-          <button id="invTabWeapon" class="lb-tab active">🔫 ARMES</button>
-          <button id="invTabArmor" class="lb-tab">🛡️ ARMURES</button>
+          <button id="invTabWeapon" class="lb-tab active"><i data-icon="blaster"></i> ARMES</button>
+          <button id="invTabArmor" class="lb-tab"><i data-icon="shield"></i> ARMURES</button>
         </div>
         <div id="itemList" class="item-list"></div>
         <button id="btnInventoryBack" class="secondary mt-15">RETOUR</button>
@@ -169,8 +177,8 @@
       <div id="leaderboardMenu" class="menu-overlay">
         <h2>CLASSEMENT</h2>
         <div class="lb-tabs">
-          <button id="lbTabGlobal" class="lb-tab active">🌍 MONDIAL</button>
-          <button id="lbTabLocal" class="lb-tab">💾 MES SCORES</button>
+          <button id="lbTabGlobal" class="lb-tab active"><i data-icon="globe"></i> MONDIAL</button>
+          <button id="lbTabLocal" class="lb-tab"><i data-icon="save"></i> MES SCORES</button>
         </div>
         <div class="lb-scroll">
           <table class="lb-table">
@@ -208,7 +216,7 @@
         <div class="inv-list" id="pauseInventory"></div>
         <button id="btnResume">REPRENDRE</button>
         <div class="btn-grid">
-          <button id="btnPauseOptions" class="secondary">⚙️ OPTIONS</button>
+          <button id="btnPauseOptions" class="secondary"><i data-icon="cog"></i> OPTIONS</button>
           <button id="btnQuit" class="secondary">QUITTER</button>
         </div>
       </div>
@@ -217,21 +225,21 @@
       <div id="optionsMenu" class="menu-overlay">
         <h2>OPTIONS</h2>
         <div class="option-row">
-          <label for="optMusic">🎵 Musique</label>
+          <label for="optMusic"><i data-icon="music"></i> Musique</label>
           <input type="range" id="optMusic" min="0" max="100" step="5" />
           <span id="optMusicValue" class="option-value"></span>
         </div>
         <div class="option-row">
-          <label for="optSfx">🔊 Effets</label>
+          <label for="optSfx"><i data-icon="sound"></i> Effets</label>
           <input type="range" id="optSfx" min="0" max="100" step="5" />
           <span id="optSfxValue" class="option-value"></span>
         </div>
         <div class="option-row" id="optVibrationRow">
-          <label for="optVibration">📳 Vibrations</label>
+          <label for="optVibration"><i data-icon="vibrate"></i> Vibrations</label>
           <button id="optVibration" class="toggle-btn"></button>
         </div>
         <div class="option-row option-quality">
-          <span>🖥️ Qualité graphique</span>
+          <span><i data-icon="monitor"></i> Qualité graphique</span>
           <div class="segmented">
             <button data-quality="low">BASSE</button>
             <button data-quality="medium">MOYENNE</button>

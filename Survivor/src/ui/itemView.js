@@ -3,6 +3,7 @@
 import { RARITIES } from "../config.js";
 import { MAX_PRESTIGE, armorStats, weaponStats } from "../data/items.js";
 import { el } from "./dom.js";
+import { icon } from "./icons.js";
 
 export const RARITY_LABELS = { common: "Commun", rare: "Rare", epic: "Épique", legendary: "Légendaire" };
 
@@ -34,6 +35,13 @@ export function statsText(item, level = 1, prestige = 1) {
   if (s.dashCooldown) parts.push(`${pct(-s.dashCooldown)} recharge dash`);
   if (s.regen) parts.push(`+${s.regen.toFixed(1)} PV/s`);
   return parts.join(" · ");
+}
+
+/** Icône d'un objet dans sa couleur, enveloppée dans un conteneur stylé. */
+export function itemIcon(item, className) {
+  const box = el("span", className);
+  box.append(icon(item.icon, item.color));
+  return box;
 }
 
 export function rarityTag(rarity) {

@@ -58,11 +58,11 @@ export async function submitScore({ name, wave, xp, lvl }) {
 }
 
 export const SUBMIT_MESSAGES = {
-  sent: "🌍 Score envoyé au classement mondial",
-  defaultName: "✏️ Choisis un pseudo pour apparaître au classement mondial",
+  sent: "Score envoyé au classement mondial",
+  defaultName: "Choisis un pseudo pour apparaître au classement mondial",
   empty: "",
   rateLimited: "⏱️ Score non envoyé : parties trop rapprochées",
-  error: "⚠️ Classement mondial indisponible",
+  error: "Classement mondial indisponible",
 };
 
 /** Meilleur score de chaque joueur, trié par XP décroissante. */

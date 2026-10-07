@@ -12,7 +12,8 @@ import {
 import { playSfx } from "../services/sfx.js";
 import { account } from "../services/storage.js";
 import { $, el, forgetCached, setClass, setText } from "./dom.js";
-import { RARITY_LABELS, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
+import { setLabel } from "./icons.js";
+import { RARITY_LABELS, itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
 import { showScreen } from "./screens.js";
 
 let lastChestId = null;
@@ -51,7 +52,7 @@ function freeChestCard() {
   card.id = "freeChestCard";
   const info = el("div", "chest-info");
   info.append(
-    el("h4", "", `🎁 Coffre gratuit`),
+    setLabel(el("h4"), " Coffre gratuit", "gift", { before: true, color: "#00ff88" }),
     el("p", "chest-odds", `Un ${chest.name.toLowerCase()} offert toutes les ${FREE_CHEST.intervalHours} h`),
   );
   const btn = el("button", "shop-btn");
@@ -77,8 +78,11 @@ export function renderChests() {
         .map(([r, p]) => `${RARITY_LABELS[r]} ${p}%`)
         .join(" · ");
       const info = el("div", "chest-info");
-      info.append(el("h4", "", `${chest.icon} ${chest.name}`), el("p", "chest-odds", odds));
-      const btn = el("button", "shop-btn", `${chest.cost} 💰`);
+      info.append(
+        setLabel(el("h4"), ` ${chest.name}`, chest.icon, { before: true, color: chest.color }),
+        el("p", "chest-odds", odds),
+      );
+      const btn = setLabel(el("button", "shop-btn"), `${chest.cost} `, "coin", { color: "#ffd700" });
       btn.disabled = account.gold < chest.cost;
       btn.addEventListener("click", () => buy(chest.id));
       card.append(info, btn);
@@ -105,15 +109,15 @@ function showReveal({ item, result, refund }) {
   box.style.setProperty("--rarity", rarityColor(item.rarity));
 
   let message;
-  if (result === "new") message = "✨ NOUVEL OBJET !";
-  else if (result === "gold") message = `★ MAX — converti en ${refund} 💰`;
+  if (result === "new") message = "NOUVEL OBJET !";
+  else if (result === "gold") message = `★ MAX — converti en ${refund} OR`;
   else {
     message = `Doublon +1 (${owned.copies}/${PRESTIGE_COPIES[owned.prestige]} pour ★${owned.prestige + 1})`;
     if (canPrestige(item.id)) message += " — prestige disponible !";
   }
 
   box.append(
-    el("div", "reveal-icon", item.icon),
+    itemIcon(item, "reveal-icon"),
     rarityTag(item.rarity),
     el("h3", "reveal-name", item.name),
     el("div", "reveal-stars", starsText(owned.prestige)),
@@ -128,7 +132,7 @@ function showReveal({ item, result, refund }) {
   again.style.display = chest ? "" : "none";
   if (chest) {
     again.disabled = account.gold < chest.cost;
-    again.textContent = `ENCORE (${chest.cost} 💰)`;
+    setLabel(again, `ENCORE (${chest.cost} `, "coin", { color: "#ffd700" }).append(")");
   }
   showScreen("chestReveal");
 }

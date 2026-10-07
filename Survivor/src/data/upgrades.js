@@ -9,14 +9,14 @@ export const UPGRADES = [
   {
     name: "Force Brute",
     rarity: "common",
-    icon: "⚔️",
+    icon: "sword",
     desc: "+4 Attaque",
     apply: (p) => (p.attack += 4),
   },
   {
     name: "Vitalité",
     rarity: "common",
-    icon: "❤️",
+    icon: "heart",
     desc: "+50 HP Max",
     apply: (p) => {
       p.maxHealth += 50;
@@ -27,7 +27,7 @@ export const UPGRADES = [
   {
     name: "Bottes Légères",
     rarity: "common",
-    icon: "👟",
+    icon: "boot",
     desc: "+10% Vitesse",
     canApply: (p) => p.baseSpeed < STAT_CAPS.speed,
     apply: (p) => (p.baseSpeed *= 1.1),
@@ -35,7 +35,7 @@ export const UPGRADES = [
   {
     name: "Aimant",
     rarity: "common",
-    icon: "🧲",
+    icon: "magnet",
     desc: "+50% Portée",
     canApply: (p) => p.magnetRadius < STAT_CAPS.magnet,
     apply: (p) => (p.magnetRadius *= 1.5),
@@ -43,14 +43,14 @@ export const UPGRADES = [
   {
     name: "Avidité",
     rarity: "common",
-    icon: "💰",
+    icon: "coin",
     desc: "+20% Gain d'Or",
     apply: (p) => (p.greed += 0.2),
   },
   {
     name: "Recul",
     rarity: "common",
-    icon: "🥊",
+    icon: "impact",
     desc: "+50% Force de Recul",
     apply: (p) => (p.knockbackMult += 0.5),
   },
@@ -59,7 +59,7 @@ export const UPGRADES = [
   {
     name: "Aura de Feu",
     rarity: "rare",
-    icon: "🔥",
+    icon: "flame",
     desc: "Dégâts de zone constants",
     apply: (p) => {
       if (p.auraRadius === 0) {
@@ -74,7 +74,7 @@ export const UPGRADES = [
   {
     name: "Mitraillette",
     rarity: "rare",
-    icon: "🔫",
+    icon: "smg",
     desc: "-15% Cooldown Tir",
     canApply: (p) => p.attackSpeed > STAT_CAPS.attackSpeed,
     apply: (p) => (p.attackSpeed *= 0.85),
@@ -82,7 +82,7 @@ export const UPGRADES = [
   {
     name: "Sniper",
     rarity: "rare",
-    icon: "🎯",
+    icon: "target",
     desc: "+20% Crit & Dégâts",
     canApply: (p) => p.critChance < 0.8,
     apply: (p) => {
@@ -93,7 +93,7 @@ export const UPGRADES = [
   {
     name: "Perçage",
     rarity: "rare",
-    icon: "🔩",
+    icon: "pierce",
     desc: "Balles traversent +1 ennemi",
     canApply: (p) => p.piercing < 5,
     apply: (p) => (p.piercing += 1),
@@ -101,7 +101,7 @@ export const UPGRADES = [
   {
     name: "Régénération",
     rarity: "rare",
-    icon: "💖",
+    icon: "heartPlus",
     desc: "+1 HP / sec",
     apply: (p) => (p.regen += 1),
   },
@@ -110,7 +110,7 @@ export const UPGRADES = [
   {
     name: "Orbe Protecteur",
     rarity: "epic",
-    icon: "🔮",
+    icon: "orbit",
     desc: "+1 Projectile Rotatif",
     canApply: (p) => p.orbitals < 6,
     apply: (p) => p.orbitals++,
@@ -118,7 +118,7 @@ export const UPGRADES = [
   {
     name: "Kunai",
     rarity: "epic",
-    icon: "🗡️",
+    icon: "kunai",
     desc: "Lance automatiquement +1 kunai perçant",
     canApply: (p) => (p.inventory.Kunai || 0) < 5,
     apply: () => {},
@@ -126,7 +126,7 @@ export const UPGRADES = [
   {
     name: "Multi-Tir",
     rarity: "epic",
-    icon: "🏹",
+    icon: "multishot",
     desc: "+1 Projectile (Max 5)",
     // Le nombre de projectiles est dérivé de l'inventaire (voir combat.js)
     canApply: (p) => (p.inventory["Multi-Tir"] || 0) < 4,
@@ -135,7 +135,7 @@ export const UPGRADES = [
   {
     name: "Épines",
     rarity: "epic",
-    icon: "🌵",
+    icon: "thorns",
     desc: "Renvoie 50% des dégâts",
     canApply: (p) => p.thorns < 2.0,
     apply: (p) => (p.thorns += 0.5),
@@ -143,7 +143,7 @@ export const UPGRADES = [
   {
     name: "Explosion",
     rarity: "epic",
-    icon: "💣",
+    icon: "bomb",
     desc: "20% chance boum ennemis",
     canApply: (p) => p.explosionChance < 1.0,
     apply: (p) => (p.explosionChance += 0.2),
@@ -153,7 +153,7 @@ export const UPGRADES = [
   {
     name: "Vampirisme",
     rarity: "legendary",
-    icon: "🩸",
+    icon: "drop",
     desc: "2% Vol de Vie par tir",
     canApply: (p) => p.vampirism < 0.2,
     apply: (p) => (p.vampirism += 0.02),
@@ -161,7 +161,7 @@ export const UPGRADES = [
   {
     name: "Berserker",
     rarity: "legendary",
-    icon: "😡",
+    icon: "rage",
     desc: "+30 Dégâts, -20% HP",
     canApply: (p) => p.maxHealth > 100,
     apply: (p) => {
@@ -173,7 +173,7 @@ export const UPGRADES = [
   {
     name: "Divinité",
     rarity: "legendary",
-    icon: "✨",
+    icon: "sparkle",
     desc: "Tout +15%",
     apply: (p) => {
       p.attack *= 1.15;
@@ -185,7 +185,7 @@ export const UPGRADES = [
   {
     name: "Exécution",
     rarity: "legendary",
-    icon: "💀",
+    icon: "skull",
     desc: "Tue instantanément < 20% HP",
     canApply: (p) => p.executionThreshold < 0.6,
     apply: (p) => (p.executionThreshold += 0.2),

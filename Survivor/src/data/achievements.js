@@ -1,7 +1,7 @@
 export const ACHIEVEMENTS = [
   {
     id: "first_kill",
-    icon: "🎯",
+    icon: "target",
     name: "Premier sang",
     description: "Éliminer un premier ennemi.",
     metric: "kills",
@@ -9,7 +9,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "kills_100",
-    icon: "💀",
+    icon: "skull",
     name: "Nettoyage",
     description: "Éliminer 100 ennemis au total.",
     metric: "kills",
@@ -17,7 +17,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "kills_1000",
-    icon: "☠️",
+    icon: "crossbones",
     name: "Exterminateur",
     description: "Éliminer 1 000 ennemis au total.",
     metric: "kills",
@@ -25,7 +25,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "first_boss",
-    icon: "👑",
+    icon: "crown",
     name: "Chasseur de boss",
     description: "Vaincre un boss.",
     metric: "bosses",
@@ -33,7 +33,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "wave_5",
-    icon: "🌊",
+    icon: "wave",
     name: "Toujours debout",
     description: "Atteindre la vague 5.",
     metric: "bestWave",
@@ -41,7 +41,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "wave_10",
-    icon: "⚡",
+    icon: "bolt",
     name: "Force inarrêtable",
     description: "Atteindre la vague 10.",
     metric: "bestWave",
@@ -49,7 +49,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "level_10",
-    icon: "📈",
+    icon: "chartUp",
     name: "Survivant aguerri",
     description: "Atteindre le niveau 10 en une partie.",
     metric: "bestLevel",
@@ -57,7 +57,7 @@ export const ACHIEVEMENTS = [
   },
   {
     id: "runs_10",
-    icon: "🔁",
+    icon: "repeat",
     name: "Persévérance",
     description: "Terminer 10 parties.",
     metric: "runs",

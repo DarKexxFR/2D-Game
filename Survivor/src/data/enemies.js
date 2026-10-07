@@ -80,8 +80,8 @@ export const SPAWN_TABLES = [
 
 // Vagues de boss, testées dans l'ordre.
 export const BOSS_WAVES = [
-  { every: 8, type: "slime_boss", warning: "⚠️ ROI SLIME ⚠️" },
-  { every: 5, type: "boss", warning: "⚠️ BOSS ⚠️" },
+  { every: 8, type: "slime_boss", warning: "ROI SLIME" },
+  { every: 5, type: "boss", warning: "BOSS" },
   { every: 2, type: "miniboss", warning: "" },
 ];
 
