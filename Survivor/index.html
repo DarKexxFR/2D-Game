@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/options.css" />
+    <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -27,6 +28,7 @@
       <div id="levelIndicator">LVL <span id="lvlVal">1</span></div>
       <div id="boxIndicator">▲ BOÎTE MYSTÈRE ▲</div>
       <div id="bossWarning">⚠️ BOSS ⚠️</div>
+      <div id="achievementToast"></div>
 
       <div id="ui">
         <div class="ui-header">
@@ -109,7 +111,10 @@
           <button id="btnInventory" class="secondary">🎒 ÉQUIPEMENT</button>
           <button id="btnLeaderboard" class="secondary">🏆 CLASSEMENT</button>
         </div>
-        <button id="btnOptions" class="secondary mt-15">⚙️ OPTIONS</button>
+        <div class="btn-grid">
+          <button id="btnAchievements" class="secondary">🏅 SUCCÈS</button>
+          <button id="btnOptions" class="secondary">⚙️ OPTIONS</button>
+        </div>
         <button id="btnReset" class="reset-btn">⚠️ RESET PROGRESSION</button>
       </div>
 
@@ -181,6 +186,14 @@
           </table>
         </div>
         <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== SUCCÈS ===== -->
+      <div id="achievementMenu" class="menu-overlay">
+        <h2>SUCCÈS</h2>
+        <p id="achievementCount" class="achievement-count"></p>
+        <div id="achievementList" class="achievement-list"></div>
+        <button id="btnAchievementsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== AMÉLIORATIONS ===== -->

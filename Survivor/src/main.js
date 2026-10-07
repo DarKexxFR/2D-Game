@@ -11,7 +11,13 @@ import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/online
 import { ensureStarterItems } from "./services/inventory.js";
 import { recordCompletedRun } from "./services/achievements.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
-import { account, addAccountRewards, loadAccount, saveToLeaderboard } from "./services/storage.js";
+import {
+  account,
+  addAccountRewards,
+  loadAccount,
+  saveAccount,
+  saveToLeaderboard,
+} from "./services/storage.js";
 import {
   activateUltimate,
   rebuildEnemyGrid,
@@ -57,6 +63,7 @@ function startGame() {
 }
 
 function returnToMenu() {
+  saveAccount(); // garde la progression des succès (kills...) même en quittant une partie
   game.started = false;
   game.running = false;
   game.paused = false;

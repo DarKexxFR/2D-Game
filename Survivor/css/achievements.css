@@ -1,0 +1,110 @@
+/* Menu des succès et notification de déblocage */
+#achievementMenu {
+  border-color: #ffd700;
+}
+.achievement-count {
+  color: #ffd700;
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+.achievement-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  touch-action: pan-y;
+}
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #333;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 0.7;
+}
+.achievement-item.unlocked {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+  opacity: 1;
+}
+.achievement-icon {
+  font-size: 26px;
+  width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.achievement-details {
+  flex: 1;
+  min-width: 0;
+}
+.achievement-details h3 {
+  font-size: 14px;
+  color: #fff;
+}
+.achievement-details p {
+  font-size: 12px;
+  color: #aaa;
+  margin: 2px 0 6px;
+}
+.achievement-progress-text {
+  font-size: 11px;
+  color: #00ffff;
+  margin-bottom: 4px;
+}
+.unlocked .achievement-progress-text {
+  color: #ffd700;
+}
+.achievement-progress-track {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.achievement-progress-bar {
+  height: 100%;
+  background: #00ffff;
+}
+.unlocked .achievement-progress-bar {
+  background: #ffd700;
+}
+
+/* --- Notification en jeu --- */
+#achievementToast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  padding: 10px 18px;
+  border: 2px solid #ffd700;
+  border-radius: 10px;
+  background: rgba(20, 15, 0, 0.92);
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 150;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+#achievementToast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .achievement-list {
+    max-height: 45vh;
+  }
+  #achievementToast {
+    font-size: 12px;
+    white-space: normal;
+    max-width: 90vw;
+    text-align: center;
+  }
+}
