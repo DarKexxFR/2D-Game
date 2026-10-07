@@ -15,6 +15,7 @@ import {
   activateUltimate,
   rebuildEnemyGrid,
   shoot,
+  throwKunai,
   updateAura,
   updateOrbitals,
   updateProjectiles,
@@ -97,6 +98,7 @@ function update() {
   updateAura();
   updateMysteryBox();
   shoot();
+  throwKunai();
   updatePet();
   updatePickups();
   updateProjectiles();

@@ -1,6 +1,6 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
+import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, ULTIMATE } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
@@ -123,6 +123,33 @@ export function shoot() {
   for (let i = 0; i < count; i++) {
     const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;
     createPlayerProjectile(angle + (i - (count - 1) / 2) * spread + jitter);
+  }
+}
+
+export function throwKunai() {
+  const count = player.inventory.Kunai || 0;
+  if (count === 0 || game.time - player.lastKunaiAttack < KUNAI.cooldown) return;
+
+  const target = getNearestEnemy(player.worldX, player.worldY);
+  if (!target) return;
+
+  player.lastKunaiAttack = game.time;
+  const angle = angleTo(player.worldX, player.worldY, target.x, target.y);
+  for (let i = 0; i < count; i++) {
+    const spread = (i - (count - 1) / 2) * player.multishotSpread;
+    const kunaiAngle = angle + spread;
+    world.projectiles.push({
+      x: player.worldX,
+      y: player.worldY,
+      vx: Math.cos(kunaiAngle) * KUNAI.projectileSpeed,
+      vy: Math.sin(kunaiAngle) * KUNAI.projectileSpeed,
+      size: 7,
+      damage: player.attack * KUNAI.damageMultiplier,
+      color: "#ff55cc",
+      pierce: 1,
+      type: "kunai",
+      dead: false,
+    });
   }
 }
 

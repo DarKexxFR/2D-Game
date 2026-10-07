@@ -131,7 +131,24 @@ export function drawEnemies() {
 }
 
 export function drawProjectiles() {
-  for (const p of world.projectiles) fillCircle(p.x, p.y, p.size, p.color, 15);
+  for (const p of world.projectiles) {
+    if (p.type !== "kunai") {
+      fillCircle(p.x, p.y, p.size, p.color, 15);
+      continue;
+    }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(Math.atan2(p.vy, p.vx));
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(-3, -4);
+    ctx.lineTo(-1, 0);
+    ctx.lineTo(-3, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
   for (const p of world.enemyProjectiles) {
     if (isOnScreen(p.x, p.y, p.size)) fillCircle(p.x, p.y, p.size, p.color, 10);
   }
