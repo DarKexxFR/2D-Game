@@ -5,7 +5,7 @@ import { ULTIMATE } from "../config.js";
 import { game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
-import { damageEnemy, enemyGrid, getNearestEnemy, spawnProjectile } from "./combat.js";
+import { damageEnemy, enemyGrid, getNearestEnemy, rebuildEnemyGrid, spawnProjectile } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
 
 export const SKILLS = {
@@ -25,6 +25,7 @@ export function activateSkill() {
   player.ultCharge = 0;
   player.isUltReady = false;
   vibrate(150);
+  rebuildEnemyGrid(); // déclenchée hors du tick : la grille doit refléter les ennemis actuels
   heroSkill().activate();
 }
 

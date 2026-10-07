@@ -51,7 +51,15 @@ test("joystick + dash en multi-touch, ultime et pause", async ({ page, context }
 
 test("les menus tiennent dans l'écran", async ({ page }) => {
   await page.goto("/");
-  for (const btn of ["#btnShop", "#btnInventory", "#btnLeaderboard", "#btnAchievements", "#btnOptions"]) {
+  for (const btn of [
+    "#btnShop",
+    "#btnInventory",
+    "#btnLeaderboard",
+    "#btnAchievements",
+    "#btnOptions",
+    "#btnDaily",
+    "#btnTalents",
+  ]) {
     await page.locator(btn).tap();
     const menu = page.locator(".menu-overlay:visible");
     const box = await menu.boundingBox();

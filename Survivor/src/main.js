@@ -10,6 +10,7 @@ import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { initCloudSave } from "./services/cloudSave.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
+import { applyTalents } from "./data/talents.js";
 import { ensureStarterItems } from "./services/inventory.js";
 import { recordCompletedRun } from "./services/achievements.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
@@ -46,9 +47,10 @@ import { hideScreens } from "./ui/screens.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
 import { hydrateIcons } from "./ui/icons.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
-import { showUpgradeMenu } from "./ui/upgradeMenu.js";
+import { initUpgradeMenu, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
 import { initDailyMenu } from "./ui/dailyMenu.js";
+import { initTalentMenu } from "./ui/talentMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -72,6 +74,7 @@ function startGame(mode = "normal") {
   } else {
     resetPlayer(account.level);
     applyEquipment();
+    applyTalents(player, account.talents);
   }
   applyModifierToPlayer(game.modifier);
   resetMysteryBox();
@@ -180,6 +183,8 @@ function init() {
   ensureStarterItems();
   initMainMenu({ onPlay: () => startGame("normal") });
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });
+  initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initUpgradeMenu();
   initAchievementMenu({ onBack: showMainMenu });
 
   $("btnResume").addEventListener("click", togglePause);

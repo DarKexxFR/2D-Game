@@ -98,6 +98,15 @@ export function takeDamage(amount) {
   vibrate(40);
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
+  if (player.health <= 0 && player.revives > 0) {
+    // Talent « Seconde chance »
+    player.revives--;
+    player.health = player.maxHealth * 0.5;
+    player.buffs.shield = 120;
+    addFloatingText(player.worldX, player.worldY - 40, "SECONDE CHANCE !", "#00ffcc", 26, 90);
+    addScreenShake(10);
+    return;
+  }
   if (player.health <= 0) {
     game.over = true;
     playSfx("death");
@@ -108,6 +117,7 @@ export function takeDamage(amount) {
 }
 
 export function gainXp(amount) {
+  amount *= 1 + player.xpBonus;
   player.xp += amount;
   game.totalRunXp += amount;
   if (player.xp < player.xpToNextLevel) return;

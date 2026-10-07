@@ -82,7 +82,10 @@ export function resetPlayer(accountLevel) {
     knockbackMult: 1,
     regen: 0,
     greed: 1,
-    goldBonus: 0, // bonus d'or en % (héros Pirate, familier Collecteur)
+    goldBonus: 0, // bonus d'or en % (héros Pirate, familier Collecteur, talent Fortune)
+    xpBonus: 0, // bonus d'XP en % (talent Sagesse)
+    rerolls: 0, // relances des améliorations restantes (talent Relance)
+    revives: 0, // résurrections restantes (talent Seconde chance)
     executionThreshold: 0,
     hasRayGun: false,
     ultCharge: 0,

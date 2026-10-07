@@ -28,6 +28,15 @@ function resume() {
   game.paused = false;
 }
 
+export function initUpgradeMenu() {
+  // Talent « Relance » : retire de nouvelles cartes
+  $("btnReroll").addEventListener("click", () => {
+    if (player.rerolls <= 0) return;
+    player.rerolls--;
+    renderChoices(drawUpgrades(CHOICES));
+  });
+}
+
 export function showUpgradeMenu() {
   const picks = drawUpgrades(CHOICES);
   if (picks.length === 0) {
@@ -37,6 +46,12 @@ export function showUpgradeMenu() {
 
   game.running = false;
   game.paused = true;
+  renderChoices(picks);
+  showScreen("upgradeMenu");
+}
+
+function renderChoices(picks) {
+  $("btnReroll").textContent = player.rerolls > 0 ? `RELANCER (${player.rerolls})` : "";
   const options = $("upgradeOptions");
   options.replaceChildren();
 
@@ -56,5 +71,4 @@ export function showUpgradeMenu() {
     });
     options.append(card);
   }
-  showScreen("upgradeMenu");
 }

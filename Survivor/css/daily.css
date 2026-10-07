@@ -1,6 +1,5 @@
 /* Défi du jour */
 .daily-btn {
-  width: 100%;
   background: linear-gradient(180deg, #ff2a6d, #a0003a);
   color: #fff;
   box-shadow: 0 0 14px rgba(255, 42, 109, 0.5);
@@ -53,4 +52,64 @@
   .daily-rule {
     font-size: 11px;
   }
+}
+
+/* Talents */
+.talent-btn {
+  background: linear-gradient(180deg, #aa66ff, #5a1fa8);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(170, 102, 255, 0.45);
+}
+#talentMenu {
+  border-color: #aa66ff;
+}
+.talent-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #333;
+  border-left: 3px solid #aa66ff;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.talent-card.maxed {
+  border-left-color: #ffd700;
+}
+.talent-card .ico {
+  font-size: 26px;
+  color: #c79bff;
+}
+.talent-card h4 {
+  font-size: 14px;
+  color: #fff;
+}
+.talent-card p {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+}
+.talent-pips {
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+}
+.talent-pips span {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+}
+.talent-pips span.on {
+  background: #aa66ff;
+  box-shadow: 0 0 6px #aa66ff;
+}
+.talent-card button {
+  padding: 8px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#btnReroll:empty {
+  display: none;
 }

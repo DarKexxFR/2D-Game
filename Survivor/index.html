@@ -113,7 +113,10 @@
           <button id="btnPlay">JOUER</button>
           <button id="btnShop" class="secondary">BOUTIQUE</button>
         </div>
-        <button id="btnDaily" class="daily-btn mt-15"><i data-icon="target"></i> DÉFI DU JOUR</button>
+        <div class="btn-grid">
+          <button id="btnDaily" class="daily-btn"><i data-icon="target"></i> DÉFI DU JOUR</button>
+          <button id="btnTalents" class="talent-btn"><i data-icon="sparkle"></i> TALENTS</button>
+        </div>
         <div class="btn-grid">
           <button id="btnInventory" class="secondary"><i data-icon="backpack"></i> ÉQUIPEMENT</button>
           <button id="btnLeaderboard" class="secondary"><i data-icon="trophy"></i> CLASSEMENT</button>
@@ -194,6 +197,19 @@
         <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
       </div>
 
+      <!-- ===== TALENTS ===== -->
+      <div id="talentMenu" class="menu-overlay">
+        <div class="shop-header">
+          <h2>TALENTS</h2>
+          <div class="shop-gold">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="talentGoldDisplay">0</span>
+          </div>
+        </div>
+        <p class="option-hint">Bonus permanents pour toutes tes parties (hors défi du jour).</p>
+        <div id="talentList" class="item-list"></div>
+        <button id="btnTalentsBack" class="secondary mt-15">RETOUR</button>
+      </div>
+
       <!-- ===== DÉFI DU JOUR ===== -->
       <div id="dailyMenu" class="menu-overlay">
         <h2>DÉFI DU JOUR</h2>
@@ -234,6 +250,7 @@
       <div id="upgradeMenu" class="menu-overlay">
         <h2>CHOISISSEZ !</h2>
         <div id="upgradeOptions"></div>
+        <button id="btnReroll" class="secondary mt-15"></button>
       </div>
 
       <!-- ===== PAUSE ===== -->
