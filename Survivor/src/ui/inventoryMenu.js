@@ -11,7 +11,7 @@ import {
   levelUpPrice,
   prestigeCopiesNeeded,
   prestigeUp,
-  unequipArmor,
+  unequip,
 } from "../services/inventory.js";
 import { account } from "../services/storage.js";
 import { $, el } from "./dom.js";
@@ -20,14 +20,20 @@ import { itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemVi
 import { showScreen } from "./screens.js";
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary"];
+const TABS = { hero: "invTabHero", pet: "invTabPet", weapon: "invTabWeapon", armor: "invTabArmor" };
+const EQUIPPED_SLOTS = [
+  ["equippedHero", "hero", "Aucun héros"],
+  ["equippedPet", "pet", "Aucun familier"],
+  ["equippedWeapon", "weapon", "Aucune arme"],
+  ["equippedArmor", "armor", "Aucune armure"],
+];
 let activeSlot = "weapon";
 let onChange = () => {};
 
 export function initInventoryMenu({ onBack, onAccountChange }) {
   onChange = onAccountChange;
   $("btnInventoryBack").addEventListener("click", onBack);
-  $("invTabWeapon").addEventListener("click", () => selectSlot("weapon"));
-  $("invTabArmor").addEventListener("click", () => selectSlot("armor"));
+  for (const [slot, tab] of Object.entries(TABS)) $(tab).addEventListener("click", () => selectSlot(slot));
 }
 
 export function openInventory() {
@@ -49,10 +55,8 @@ function act(fn) {
 }
 
 export function renderInventory() {
-  $("invTabWeapon").classList.toggle("active", activeSlot === "weapon");
-  $("invTabArmor").classList.toggle("active", activeSlot === "armor");
-  renderEquippedSlot("equippedWeapon", "weapon", "Aucune arme");
-  renderEquippedSlot("equippedArmor", "armor", "Aucune armure");
+  for (const [slot, tab] of Object.entries(TABS)) $(tab).classList.toggle("active", activeSlot === slot);
+  for (const args of EQUIPPED_SLOTS) renderEquippedSlot(...args);
 
   const items = Object.values(ITEMS)
     .filter((it) => it.slot === activeSlot)
@@ -111,9 +115,9 @@ function itemCard(item) {
   const actions = el("div", "item-actions");
   const isEquipped = account.equipped[item.slot] === item.id;
   const equipBtn = el("button", isEquipped ? "secondary" : "", isEquipped ? "ÉQUIPÉ" : "ÉQUIPER");
-  if (isEquipped && item.slot === "armor") {
+  if (isEquipped && (item.slot === "armor" || item.slot === "pet")) {
     equipBtn.textContent = "RETIRER";
-    equipBtn.addEventListener("click", () => act(() => (unequipArmor(), true)));
+    equipBtn.addEventListener("click", () => act(() => unequip(item.slot)));
   } else {
     equipBtn.disabled = isEquipped;
     equipBtn.addEventListener("click", () => act(() => equip(item.id)));

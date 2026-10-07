@@ -1,6 +1,7 @@
 // Persistance locale (localStorage) : compte, pseudo et classement.
 
-import { ACCOUNT_SCALING, LIMITS, STORAGE_KEYS, droneCost } from "../config.js";
+import { ACCOUNT_SCALING, LIMITS, STORAGE_KEYS } from "../config.js";
+import { DEFAULT_EQUIPPED } from "../data/items.js";
 
 function readJSON(key, fallback) {
   try {
@@ -26,10 +27,10 @@ export const account = {
   currentXp: 0,
   nextLevelXp: ACCOUNT_SCALING.baseXpToLevel,
   gold: 0,
-  petLevels: { drone: 0 },
+  petLevels: { drone: 0 }, // ancien drone acheté en boutique (converti en familier au chargement)
   // Équipement possédé : { [id]: { level, prestige, copies } }
   items: {},
-  equipped: { weapon: "blaster", armor: null },
+  equipped: { ...DEFAULT_EQUIPPED },
   lastFreeChest: 0, // horodatage (ms) du dernier coffre gratuit ouvert
   achievements: [],
   achievementStats: { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 },
@@ -44,7 +45,7 @@ export function loadAccount() {
   account.gold = saved.gold || 0;
   account.petLevels = { drone: 0, ...saved.petLevels };
   account.items = saved.items || {};
-  account.equipped = { weapon: "blaster", armor: null, ...saved.equipped };
+  account.equipped = { ...DEFAULT_EQUIPPED, ...saved.equipped };
   account.lastFreeChest = saved.lastFreeChest || 0;
   account.achievements = Array.isArray(saved.achievements) ? saved.achievements : [];
   account.achievementStats = {
@@ -70,17 +71,6 @@ export function addAccountRewards(xp, gold) {
     account.nextLevelXp = Math.floor(account.nextLevelXp * ACCOUNT_SCALING.xpGrowth);
   }
   saveAccount();
-}
-
-/** Achète ou améliore un familier. Renvoie true si l'achat a réussi. */
-export function upgradePet(id) {
-  const level = account.petLevels[id] || 0;
-  const cost = droneCost(level);
-  if (account.gold < cost) return false;
-  account.gold -= cost;
-  account.petLevels[id] = level + 1;
-  saveAccount();
-  return true;
 }
 
 export function resetProgress() {

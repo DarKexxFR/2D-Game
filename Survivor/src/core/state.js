@@ -1,7 +1,7 @@
 // État mutable de la partie en cours. Les modules importent ces objets
 // et les modifient ; ils ne sont jamais réassignés (seulement réinitialisés).
 
-import { ACCOUNT_SCALING, DRONE, MYSTERY_BOX, PLAYER_DEFAULTS, droneDamage } from "../config.js";
+import { ACCOUNT_SCALING, MYSTERY_BOX, PLAYER_DEFAULTS } from "../config.js";
 
 export const game = { started: false, running: false, paused: false };
 export const camera = { x: 0, y: 0 };
@@ -77,6 +77,7 @@ export function resetPlayer(accountLevel) {
     knockbackMult: 1,
     regen: 0,
     greed: 1,
+    goldBonus: 0, // bonus d'or en % (héros Pirate, familier Collecteur)
     executionThreshold: 0,
     hasRayGun: false,
     ultCharge: 0,
@@ -86,21 +87,25 @@ export function resetPlayer(accountLevel) {
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)
     armor: null,
+    hero: null,
   });
   player.health = player.maxHealth;
   player.speed = player.baseSpeed;
 }
 
-export function resetPet(droneLevel) {
+/** Familier équipé (statistiques de data/items.js petStats) ou null. */
+export function resetPet(stats) {
+  for (const k of Object.keys(pet)) delete pet[k];
   Object.assign(pet, {
-    active: droneLevel > 0,
+    active: !!stats,
+    kind: stats?.id ?? null,
+    color: stats?.color ?? "#00ff88",
+    power: stats?.power ?? {},
     x: 0,
     y: 0,
-    size: DRONE.size,
-    range: DRONE.range,
-    damage: droneDamage(droneLevel),
-    cooldown: DRONE.baseCooldown * Math.pow(DRONE.cooldownFactor, droneLevel),
-    lastShot: 0,
+    size: 11,
+    angle: 0,
+    lastAction: 0,
   });
 }
 

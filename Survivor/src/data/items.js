@@ -4,10 +4,12 @@
 // (augmenté en consommant des doublons). Le prestige débloque des niveaux
 // supplémentaires, multiplie la puissance et rend l'objet plus imposant à l'écran.
 
-export const SLOTS = ["weapon", "armor"];
+export const SLOTS = ["weapon", "armor", "hero", "pet"];
+/** Emplacement toujours occupé → objet par défaut (les autres peuvent rester vides). */
+export const DEFAULT_EQUIPPED = { weapon: "blaster", armor: null, hero: "pilot", pet: null };
 
 export const MAX_PRESTIGE = 5;
-const MAX_ARMOR_SPEED = 0.3; // bonus de vitesse plafonné à +30 %
+const MAX_SPEED_BONUS = 0.3; // bonus de vitesse plafonné à +30 %
 export const LEVELS_PER_PRESTIGE = 10; // ★1 → niveau 10 max, ★5 → niveau 50 max
 export const LEVEL_BONUS = 0.02; // +2 % par niveau
 export const PRESTIGE_BONUS = 0.15; // +15 % par étoile (max ★5 niv. 50 ≈ ×3,2)
@@ -167,16 +169,111 @@ export const ARMORS = {
   },
 };
 
-export const ITEMS = {
-  ...Object.fromEntries(Object.entries(WEAPONS).map(([id, w]) => [id, { ...w, id, slot: "weapon" }])),
-  ...Object.fromEntries(Object.entries(ARMORS).map(([id, a]) => [id, { ...a, id, slot: "armor" }])),
+// --- HÉROS : personnage jouable (forme et couleur du vaisseau + bonus) ---
+// `stats` suit les mêmes règles que les armures ; `startUpgrades` sont données au départ.
+export const HEROES = {
+  pilot: {
+    name: "Pilote",
+    icon: "ship",
+    rarity: "common",
+    desc: "Équilibré, sans point faible.",
+    stats: {},
+    hull: "arrow",
+    color: "#00ccff",
+  },
+  ninja: {
+    name: "Ninja",
+    icon: "shuriken",
+    rarity: "rare",
+    desc: "Très rapide, dash rechargé bien plus vite. Commence avec le Kunai.",
+    stats: { speed: 0.15, dashCooldown: 0.4, health: -20 },
+    startUpgrades: ["Kunai"],
+    hull: "dart",
+    color: "#ff55cc",
+  },
+  titan: {
+    name: "Titan",
+    icon: "titan",
+    rarity: "rare",
+    desc: "Colosse blindé : énormément de PV et de défense, mais lent.",
+    stats: { health: 120, defense: 4, speed: -0.12 },
+    size: 26,
+    hull: "heavy",
+    color: "#ffaa00",
+  },
+  mage: {
+    name: "Mage",
+    icon: "mage",
+    rarity: "epic",
+    desc: "Commence avec une Aura de Feu renforcée.",
+    stats: { auraDamage: 4 },
+    startUpgrades: ["Aura de Feu"],
+    hull: "orb",
+    color: "#aa66ff",
+  },
+  pirate: {
+    name: "Pirate",
+    icon: "anchor",
+    rarity: "legendary",
+    desc: "Pille tout : +50 % d'or et +10 % de coups critiques.",
+    stats: { gold: 0.5, crit: 0.1 },
+    hull: "corsair",
+    color: "#ffd700",
+  },
 };
 
-export const STARTER_ITEMS = ["blaster"];
+// --- FAMILIERS : compagnon qui suit le joueur ---
+export const PETS = {
+  drone: {
+    name: "Drone de combat",
+    icon: "drone",
+    rarity: "common",
+    desc: "Tire des lasers sur l'ennemi le plus proche.",
+    power: { damage: 8, cooldown: 800 },
+    color: "#00ff88",
+  },
+  collector: {
+    name: "Collecteur",
+    icon: "magnet",
+    rarity: "rare",
+    desc: "Attire les gemmes de très loin et rapporte plus d'or.",
+    power: { magnet: 150, gold: 0.15 },
+    color: "#ffee00",
+  },
+  medic: {
+    name: "Médic",
+    icon: "medic",
+    rarity: "rare",
+    desc: "Soigne le joueur toutes les 3 secondes.",
+    power: { heal: 4, cooldown: 3000 },
+    color: "#00ffcc",
+  },
+  reaper: {
+    name: "Faucheuse",
+    icon: "scythe",
+    rarity: "epic",
+    desc: "Tourne autour de vous et tranche les ennemis qu'elle touche.",
+    power: { damage: 10, radius: 80 },
+    color: "#ff3355",
+  },
+};
+
+const withSlot = (table, slot) => Object.entries(table).map(([id, v]) => [id, { ...v, id, slot }]);
+export const ITEMS = Object.fromEntries([
+  ...withSlot(WEAPONS, "weapon"),
+  ...withSlot(ARMORS, "armor"),
+  ...withSlot(HEROES, "hero"),
+  ...withSlot(PETS, "pet"),
+]);
+
+export const STARTER_ITEMS = ["blaster", "pilot"];
 
 // --- COFFRES ---
 /** Coffre gratuit : quel coffre et toutes les combien d'heures. */
 export const FREE_CHEST = { chestId: "basic", intervalHours: 4 };
+
+/** Emplacements tirés par chaque type de coffre. */
+export const CHEST_POOLS = { gear: ["weapon", "armor"], hero: ["hero"], pet: ["pet"] };
 
 export const CHESTS = [
   {
@@ -203,6 +300,24 @@ export const CHESTS = [
     cost: 3000,
     odds: { rare: 40, epic: 45, legendary: 15 },
   },
+  {
+    id: "hero",
+    pool: "hero",
+    name: "Coffre Héros",
+    icon: "heroChest",
+    color: "#ff55cc",
+    cost: 1500,
+    odds: { rare: 65, epic: 27, legendary: 8 },
+  },
+  {
+    id: "pet",
+    pool: "pet",
+    name: "Coffre Familier",
+    icon: "paw",
+    color: "#00ff88",
+    cost: 800,
+    odds: { common: 55, rare: 35, epic: 10 },
+  },
 ];
 
 /** Statistiques effectives d'une arme selon son niveau et son prestige. */
@@ -223,10 +338,30 @@ export function weaponStats(id, level, prestige) {
 /** Bonus effectifs d'une armure (les malus ne grandissent pas avec la puissance). */
 export function armorStats(id, level, prestige) {
   const a = ARMORS[id];
+  return { ...a, id, level, prestige, stats: scaleStats(a.stats, level, prestige) };
+}
+
+/** Bonus effectifs d'un héros (mêmes règles que les armures). */
+export function heroStats(id, level, prestige) {
+  const h = HEROES[id];
+  return { ...h, id, level, prestige, stats: scaleStats(h.stats, level, prestige) };
+}
+
+/** Puissance effective d'un familier : dégâts, soins, portée... (les délais ne changent pas). */
+export function petStats(id, level, prestige) {
+  const p = PETS[id];
+  const mult = powerMult(level, prestige);
+  const power = {};
+  for (const [k, v] of Object.entries(p.power)) power[k] = k === "cooldown" ? v : v * mult;
+  return { ...p, id, level, prestige, power };
+}
+
+/** Les bonus grandissent avec la puissance, les malus non ; vitesse et dash plafonnés. */
+function scaleStats(base, level, prestige) {
   const mult = powerMult(level, prestige);
   const stats = {};
-  for (const [k, v] of Object.entries(a.stats)) stats[k] = v > 0 ? v * mult : v;
+  for (const [k, v] of Object.entries(base)) stats[k] = v > 0 ? v * mult : v;
   if (stats.dashCooldown) stats.dashCooldown = Math.min(0.6, stats.dashCooldown);
-  if (stats.speed) stats.speed = Math.min(MAX_ARMOR_SPEED, stats.speed);
-  return { ...a, id, level, prestige, stats };
+  if (stats.speed) stats.speed = Math.min(MAX_SPEED_BONUS, stats.speed);
+  return stats;
 }

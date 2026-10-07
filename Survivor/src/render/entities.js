@@ -3,6 +3,7 @@
 import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
 import { getOrbitalPositions, isOnScreen } from "../systems/combat.js";
+import { hydraHeads } from "../systems/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
 
@@ -22,6 +23,8 @@ const ENEMY_LOOKS = {
   slime_boss: { sprite: "slime_king", mode: "wobble" },
   slime_big: { sprite: "slime", mode: "wobble" },
   slime_small: { sprite: "slime", mode: "wobble" },
+  hydra: { sprite: "hydra", mode: "hydra", spin: 0.0006 },
+  hydra_spawn: { sprite: "fast", mode: "face" },
 };
 
 let lastX = 0;
@@ -29,13 +32,14 @@ let lastY = 0;
 
 export function drawPlayer(now) {
   const { worldX: x, worldY: y, size } = player;
+  const hull = player.hero?.hull || "arrow";
   const moving = Math.hypot(x - lastX, y - lastY) > 0.5;
   lastX = x;
   lastY = y;
 
   for (const g of world.ghosts) {
     ctx.globalAlpha = g.life / 30;
-    drawShip(g.x, g.y, size, player.aimAngle, "#00ffff", false, now);
+    drawShip(g.x, g.y, size, player.aimAngle, "#00ffff", false, now, hull);
   }
   ctx.globalAlpha = 1;
 
@@ -64,11 +68,12 @@ export function drawPlayer(now) {
   if (player.buffs.frenzy > 0) fillCircle(x, y, size + 5, "rgba(255, 0, 0, 0.2)");
 
   drawArmor(x, y, size, now);
-  const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : "#00ccff";
+  const heroColor = player.hero?.color || "#00ccff";
+  const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : heroColor;
   drawWeapon(x, y, size);
-  drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now);
+  drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
 
-  if (pet.active) drawDrone(pet.x, pet.y, pet.size, now);
+  if (pet.active) PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
 
   for (const orb of getOrbitalPositions()) {
     drawSprite(ctx, getSprite("bullet", 7, "#00ffff"), orb.x, orb.y);
@@ -80,7 +85,55 @@ export function drawPlayer(now) {
 }
 
 /** Vaisseau du joueur, orienté vers la visée, réacteur allumé quand il bouge. */
-function drawShip(x, y, r, angle, color, thrust, now) {
+// Silhouettes des vaisseaux (points en unités de rayon, nez vers la droite).
+const HULLS = {
+  arrow: [
+    [1.25, 0],
+    [-0.35, -0.95],
+    [-0.75, -0.85],
+    [-0.45, 0],
+    [-0.75, 0.85],
+    [-0.35, 0.95],
+  ],
+  dart: [
+    [1.5, 0],
+    [-0.4, -0.5],
+    [-0.95, -0.95],
+    [-0.55, 0],
+    [-0.95, 0.95],
+    [-0.4, 0.5],
+  ],
+  heavy: [
+    [1, -0.4],
+    [1, 0.4],
+    [0.4, 1],
+    [-0.8, 1],
+    [-0.6, 0.35],
+    [-0.6, -0.35],
+    [-0.8, -1],
+    [0.4, -1],
+  ],
+  orb: [
+    [1.25, 0],
+    ...Array.from({ length: 11 }, (_, i) => {
+      const a = 0.5 + (i * (TAU - 1)) / 10;
+      return [Math.cos(a) * 0.85, Math.sin(a) * 0.85];
+    }),
+  ],
+  corsair: [
+    [1.3, 0],
+    [0.3, -0.5],
+    [-0.2, -1.05],
+    [-0.95, -0.7],
+    [-0.6, 0],
+    [-0.95, 0.7],
+    [-0.2, 1.05],
+    [0.3, 0.5],
+  ],
+};
+
+/** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge. */
+function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow") {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -100,18 +153,14 @@ function drawShip(x, y, r, angle, color, thrust, now) {
     ctx.fill();
   }
 
+  const points = HULLS[shape] || HULLS.arrow;
   const hull = () => {
     ctx.beginPath();
-    ctx.moveTo(r * 1.25, 0);
-    ctx.lineTo(-r * 0.35, -r * 0.95);
-    ctx.lineTo(-r * 0.75, -r * 0.85);
-    ctx.lineTo(-r * 0.45, 0);
-    ctx.lineTo(-r * 0.75, r * 0.85);
-    ctx.lineTo(-r * 0.35, r * 0.95);
+    points.forEach(([px, py], i) => (i ? ctx.lineTo(px * r, py * r) : ctx.moveTo(px * r, py * r)));
     ctx.closePath();
   };
   ctx.lineJoin = "round";
-  ctx.fillStyle = "#06223a";
+  ctx.fillStyle = shade(color.startsWith("#") && color.length === 7 ? color : "#00ccff", 0.18);
   hull();
   ctx.fill();
   ctx.shadowBlur = 18;
@@ -123,7 +172,8 @@ function drawShip(x, y, r, angle, color, thrust, now) {
   ctx.shadowBlur = 0;
 
   // Lignes de coque et cockpit
-  ctx.strokeStyle = "rgba(0, 204, 255, 0.5)";
+  ctx.strokeStyle = color;
+  ctx.globalAlpha *= 0.5;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(-r * 0.3, -r * 0.6);
@@ -131,6 +181,7 @@ function drawShip(x, y, r, angle, color, thrust, now) {
   ctx.moveTo(-r * 0.3, r * 0.6);
   ctx.lineTo(r * 0.3, r * 0.2);
   ctx.stroke();
+  ctx.globalAlpha *= 2;
   ctx.fillStyle = "#ffffff";
   ctx.shadowBlur = 10;
   ctx.shadowColor = color;
@@ -141,37 +192,112 @@ function drawShip(x, y, r, angle, color, thrust, now) {
   ctx.restore();
 }
 
-/** Drone de combat : losange avec anneau qui tourne. */
-function drawDrone(x, y, s, now) {
+// --- FAMILIERS ---
+
+/** Ouvre un tracé néon centré (x, y) : couleur, lueur, épaisseur. */
+function beginNeon(x, y, color, line = 2) {
   ctx.save();
-  ctx.translate(x, y + Math.sin(now / 250) * 3);
+  ctx.translate(x, y);
   ctx.shadowBlur = 10;
-  ctx.shadowColor = "#00ff88";
-  ctx.strokeStyle = "#00ff88";
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([4, 4]);
-  ctx.lineDashOffset = now / 30;
-  ctx.beginPath();
-  ctx.arc(0, 0, s * 1.2, 0, TAU);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = "#003322";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, -s * 0.8);
-  ctx.lineTo(s * 0.8, 0);
-  ctx.lineTo(0, s * 0.8);
-  ctx.lineTo(-s * 0.8, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(0, 0, s * 0.22, 0, TAU);
-  ctx.fill();
+  ctx.shadowColor = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = line;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.fillStyle = shade(color, 0.2);
+}
+
+function endNeon() {
   ctx.shadowBlur = 0;
   ctx.restore();
 }
+
+const PET_DRAWERS = {
+  /** Drone : losange avec anneau qui tourne. */
+  drone(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 250) * 3, color, 1.5);
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = now / 30;
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 1.2, 0, TAU);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.8);
+    ctx.lineTo(s * 0.8, 0);
+    ctx.lineTo(0, s * 0.8);
+    ctx.lineTo(-s * 0.8, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    fillCircle(0, 0, s * 0.22, "#ffffff");
+    endNeon();
+  },
+
+  /** Médic : capsule avec croix, halo qui pulse. */
+  medic(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 300) * 3, color);
+    ctx.globalAlpha = 0.25 + Math.sin(now / 200) * 0.15;
+    strokeCircle(0, 0, s * 1.5, color, 1);
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.roundRect(-s, -s, s * 2, s * 2, s * 0.5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.55);
+    ctx.lineTo(0, s * 0.55);
+    ctx.moveTo(-s * 0.55, 0);
+    ctx.lineTo(s * 0.55, 0);
+    ctx.stroke();
+    endNeon();
+  },
+
+  /** Collecteur : aimant en fer à cheval avec étincelles. */
+  collector(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 280) * 3, color, 3);
+    ctx.rotate(Math.sin(now / 500) * 0.3);
+    ctx.beginPath();
+    ctx.arc(0, 0, s, 0, Math.PI);
+    ctx.moveTo(-s, 0);
+    ctx.lineTo(-s, -s * 0.9);
+    ctx.moveTo(s, 0);
+    ctx.lineTo(s, -s * 0.9);
+    ctx.stroke();
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(-s, -s * 0.9);
+    ctx.lineTo(-s, -s * 0.5);
+    ctx.moveTo(s, -s * 0.9);
+    ctx.lineTo(s, -s * 0.5);
+    ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const a = now / 300 + (i * TAU) / 3;
+      fillCircle(Math.cos(a) * s * 1.8, Math.sin(a) * s * 1.8, 1.5, color);
+    }
+    endNeon();
+  },
+
+  /** Faucheuse : lame courbe qui tourne sur elle-même. */
+  reaper(x, y, s, color, now) {
+    beginNeon(x, y, color, 2);
+    ctx.rotate(now / 60);
+    for (let k = 0; k < 2; k++) {
+      ctx.rotate(Math.PI);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(s * 1.4, -s * 0.2, s * 2, s * 0.9);
+      ctx.quadraticCurveTo(s * 1.1, s * 0.3, 0, 0);
+      ctx.fill();
+      ctx.stroke();
+    }
+    fillCircle(0, 0, s * 0.35, "#ffffff");
+    endNeon();
+  },
+};
 
 /** Armure : plus le prestige est haut, plus elle est épaisse, lumineuse et ornée. */
 function drawArmor(x, y, size, now) {
@@ -240,7 +366,10 @@ export function drawEnemies() {
     const sprite = getSprite(look.sprite, base, e.color, flash);
     const t = now + (e.phase || 0) * 1000;
 
-    if (look.mode === "wobble") {
+    if (look.mode === "hydra") {
+      drawHydraHeads(e, flash);
+      drawSprite(ctx, sprite, e.x, e.y, t * look.spin, scale);
+    } else if (look.mode === "wobble") {
       const w = Math.sin(t / 160) * 0.08;
       drawSprite(ctx, sprite, e.x, e.y, 0, scale * (1 + w), scale * (1 - w));
     } else if (look.mode === "spin") {
@@ -253,6 +382,26 @@ export function drawEnemies() {
 
     if (e.health < e.maxHealth) drawHealthBar(e);
   }
+}
+
+/** Cous et têtes de la Nécro-Hydre, dessinés sous le corps. */
+function drawHydraHeads(e, flash) {
+  const head = getSprite("hydraHead", 22, e.color, flash);
+  ctx.strokeStyle = e.color;
+  ctx.lineWidth = 10;
+  ctx.lineCap = "round";
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = e.color;
+  for (const h of hydraHeads(e)) {
+    const mx = (e.x + h.x) / 2 + Math.cos(h.angle + Math.PI / 2) * 12;
+    const my = (e.y + h.y) / 2 + Math.sin(h.angle + Math.PI / 2) * 12;
+    ctx.beginPath();
+    ctx.moveTo(e.x, e.y);
+    ctx.quadraticCurveTo(mx, my, h.x, h.y);
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  for (const h of hydraHeads(e)) drawSprite(ctx, head, h.x, h.y, h.angle);
 }
 
 /** Barre de vie, seulement une fois blessé ; plus large et lumineuse pour les boss. */

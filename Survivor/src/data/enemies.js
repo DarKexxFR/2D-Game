@@ -61,6 +61,18 @@ export const ENEMY_TYPES = {
     splitTo: "slime_small",
     splitCount: 3,
   },
+  hydra: {
+    health: 3000,
+    damage: 50,
+    speed: 1.6,
+    size: 60,
+    color: "#bb33ff",
+    xp: 600,
+    gold: 250,
+    isBoss: true,
+    noExecute: true,
+  },
+  hydra_spawn: { health: 25, damage: 10, speed: 4.5, size: 11, color: "#cc66ff", xp: 4, gold: 2 },
   slime_small: { health: 50, damage: 10, speed: 4.5, size: 18, color: "#88ff88", xp: 5, gold: 2 },
 };
 
@@ -80,6 +92,7 @@ export const SPAWN_TABLES = [
 
 // Vagues de boss, testées dans l'ordre.
 export const BOSS_WAVES = [
+  { every: 12, type: "hydra", warning: "NÉCRO-HYDRE" },
   { every: 8, type: "slime_boss", warning: "ROI SLIME" },
   { every: 5, type: "boss", warning: "BOSS" },
   { every: 2, type: "miniboss", warning: "" },

@@ -7,9 +7,12 @@ test("une ancienne sauvegarde sans équipement est migrée", async ({ page }) =>
   const acc = await game(page, ({ storage }) => JSON.parse(JSON.stringify(storage.account)));
   expect(acc.level).toBe(3);
   expect(acc.gold).toBe(42);
-  expect(acc.petLevels.drone).toBe(2);
   expect(acc.items.blaster).toEqual({ level: 1, prestige: 1, copies: 0 });
-  expect(acc.equipped).toEqual({ weapon: "blaster", armor: null });
+  expect(acc.items.pilot).toEqual({ level: 1, prestige: 1, copies: 0 });
+  // L'ancien drone acheté (niveau 2) devient le familier Drone, équipé
+  expect(acc.items.drone).toEqual({ level: 2, prestige: 1, copies: 0 });
+  expect(acc.petLevels.drone).toBe(0);
+  expect(acc.equipped).toEqual({ weapon: "blaster", armor: null, hero: "pilot", pet: "drone" });
 });
 
 test("ouvrir des coffres donne des objets et des doublons", async ({ page }) => {
@@ -23,7 +26,7 @@ test("ouvrir des coffres donne des objets et des doublons", async ({ page }) => 
   const acc = await game(page, ({ storage }) => JSON.parse(JSON.stringify(storage.account)));
   expect(acc.gold).toBe(1000); // 3 coffres à 3000
   const counted = Object.values(acc.items).reduce((n, it) => n + 1 + it.copies, 0);
-  expect(counted).toBe(1 + 3); // Blaster de départ + 3 objets
+  expect(counted).toBe(2 + 3); // Blaster et Pilote de départ + 3 objets
 });
 
 test("niveau, prestige et équipement depuis l'écran Équipement", async ({ page }) => {
