@@ -70,6 +70,7 @@ export function resetPlayer(accountLevel) {
     orbitals: 0,
     orbitalAngle: 0,
     inventory: {},
+    evolutions: {}, // évolutions d'armes obtenues (voir data/upgrades.js)
     thorns: 0,
     vampirism: 0,
     explosionChance: 0,

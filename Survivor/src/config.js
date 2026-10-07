@@ -103,6 +103,7 @@ export const RARITIES = {
   rare: { weight: 50, color: "#0088ff" },
   epic: { weight: 15, color: "#aa00ff" },
   legendary: { weight: 3, color: "#ffaa00" },
+  evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
 };
 
 export const MUSIC = {

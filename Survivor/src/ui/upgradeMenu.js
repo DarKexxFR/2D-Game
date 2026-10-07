@@ -2,7 +2,7 @@
 
 import { RARITIES } from "../config.js";
 import { game, player } from "../core/state.js";
-import { applyUpgrade, availableUpgrades } from "../data/upgrades.js";
+import { applyUpgrade, availableEvolutions, availableUpgrades } from "../data/upgrades.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
 import { $, el } from "./dom.js";
@@ -13,7 +13,7 @@ const CHOICES = 3;
 
 function drawUpgrades(count) {
   const pool = availableUpgrades(player);
-  const picks = [];
+  const picks = availableEvolutions(player).slice(0, 1); // une évolution prête passe en premier
   while (picks.length < count && pool.length > 0) {
     const pick = weightedPick(pool, (u) => RARITIES[u.rarity]?.weight ?? 10);
     picks.push(pick);
@@ -46,6 +46,7 @@ export function showUpgradeMenu() {
     tag.style.color = RARITIES[u.rarity].color;
     const info = el("div", "upg-info");
     info.append(el("h4", "", u.name), el("p", "", u.desc));
+    if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
     const ico = el("div", "icon");
     ico.append(icon(u.icon, RARITIES[u.rarity].color));
     card.append(tag, ico, info);

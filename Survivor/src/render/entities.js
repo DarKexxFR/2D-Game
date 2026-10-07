@@ -2,7 +2,7 @@
 
 import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
-import { getOrbitalPositions, isOnScreen } from "../systems/combat.js";
+import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../systems/combat.js";
 import { hydraHeads } from "../systems/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
@@ -43,14 +43,18 @@ export function drawPlayer(now) {
   }
   ctx.globalAlpha = 1;
 
-  if (player.auraRadius > 0) {
+  const aura = auraRadius();
+  if (aura > 0) {
+    const inferno = player.evolutions.inferno;
     ctx.beginPath();
-    ctx.arc(x, y, player.auraRadius, 0, TAU);
-    ctx.fillStyle = "rgba(255, 100, 0, 0.08)";
+    ctx.arc(x, y, aura, 0, TAU);
+    ctx.fillStyle = inferno
+      ? `rgba(255, 60, 0, ${0.14 + Math.sin(now / 120) * 0.04})`
+      : "rgba(255, 100, 0, 0.08)";
     ctx.fill();
     ctx.setLineDash([10, 8]);
     ctx.lineDashOffset = -now / 40;
-    ctx.strokeStyle = "rgba(255, 120, 0, 0.45)";
+    ctx.strokeStyle = inferno ? "rgba(255, 220, 0, 0.7)" : "rgba(255, 120, 0, 0.45)";
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.setLineDash([]);
@@ -75,8 +79,10 @@ export function drawPlayer(now) {
 
   if (pet.active) PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
 
+  const orbSize = orbitalStats().size * 0.7;
+  const orbColor = player.evolutions.guardianRing ? "#ffd700" : "#00ffff";
   for (const orb of getOrbitalPositions()) {
-    drawSprite(ctx, getSprite("bullet", 7, "#00ffff"), orb.x, orb.y);
+    drawSprite(ctx, getSprite("bullet", orbSize, orbColor), orb.x, orb.y);
   }
 
   if (player.isUltReady) {
