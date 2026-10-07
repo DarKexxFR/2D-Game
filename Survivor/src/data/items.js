@@ -27,7 +27,7 @@ export const MAXED_DUPLICATE_GOLD = { common: 50, rare: 120, epic: 300, legendar
 export const WEAPONS = {
   blaster: {
     name: "Blaster",
-    icon: "🔫",
+    icon: "blaster",
     rarity: "common",
     desc: "Tir simple et fiable.",
     damage: 1,
@@ -41,7 +41,7 @@ export const WEAPONS = {
   },
   smg: {
     name: "Mitrailleur",
-    icon: "🔥",
+    icon: "smg",
     rarity: "rare",
     desc: "Cadence infernale, balles légères et imprécises.",
     damage: 0.45,
@@ -56,7 +56,7 @@ export const WEAPONS = {
   },
   shotgun: {
     name: "Fusil à pompe",
-    icon: "💥",
+    icon: "shotgun",
     rarity: "rare",
     desc: "Une gerbe de plombs à courte portée.",
     damage: 0.6,
@@ -71,7 +71,7 @@ export const WEAPONS = {
   },
   railgun: {
     name: "Railgun",
-    icon: "⚡",
+    icon: "railgun",
     rarity: "epic",
     desc: "Lent mais transperce tout sur son passage.",
     damage: 3,
@@ -85,7 +85,7 @@ export const WEAPONS = {
   },
   rocket: {
     name: "Lance-roquettes",
-    icon: "🚀",
+    icon: "rocket",
     rarity: "epic",
     desc: "Roquettes explosives qui touchent une zone.",
     damage: 2,
@@ -100,7 +100,7 @@ export const WEAPONS = {
   },
   plasma: {
     name: "Canon plasma",
-    icon: "🌀",
+    icon: "plasma",
     rarity: "legendary",
     desc: "Orbes de plasma perçants qui explosent à l'impact.",
     damage: 1.4,
@@ -119,7 +119,7 @@ export const WEAPONS = {
 export const ARMORS = {
   vest: {
     name: "Gilet tactique",
-    icon: "🦺",
+    icon: "vest",
     rarity: "common",
     desc: "Protection de base.",
     stats: { health: 30, defense: 1 },
@@ -127,7 +127,7 @@ export const ARMORS = {
   },
   suit: {
     name: "Combinaison légère",
-    icon: "🥋",
+    icon: "feather",
     rarity: "rare",
     desc: "Légère et souple : on court plus vite.",
     stats: { health: 20, speed: 0.08 },
@@ -135,7 +135,7 @@ export const ARMORS = {
   },
   plated: {
     name: "Armure renforcée",
-    icon: "🛡️",
+    icon: "shield",
     rarity: "rare",
     desc: "Plaques d'acier : encaisse mieux les coups.",
     stats: { health: 40, defense: 3 },
@@ -143,7 +143,7 @@ export const ARMORS = {
   },
   heavy: {
     name: "Cuirasse lourde",
-    icon: "🏰",
+    icon: "helmet",
     rarity: "epic",
     desc: "Énorme résistance, mais ralentit.",
     stats: { health: 100, defense: 6, speed: -0.05 },
@@ -151,7 +151,7 @@ export const ARMORS = {
   },
   cloak: {
     name: "Cape spectrale",
-    icon: "👻",
+    icon: "ghost",
     rarity: "epic",
     desc: "Vitesse et dash rechargé plus vite.",
     stats: { health: 40, speed: 0.12, dashCooldown: 0.25 },
@@ -159,7 +159,7 @@ export const ARMORS = {
   },
   exo: {
     name: "Exosquelette",
-    icon: "🤖",
+    icon: "robot",
     rarity: "legendary",
     desc: "Technologie ultime : tout est amélioré.",
     stats: { health: 120, defense: 8, speed: 0.1, regen: 2 },
@@ -179,18 +179,27 @@ export const STARTER_ITEMS = ["blaster"];
 export const FREE_CHEST = { chestId: "basic", intervalHours: 4 };
 
 export const CHESTS = [
-  { id: "basic", name: "Coffre basique", icon: "📦", cost: 250, odds: { common: 70, rare: 25, epic: 5 } },
+  {
+    id: "basic",
+    name: "Coffre basique",
+    icon: "chest",
+    color: "#00ccff",
+    cost: 250,
+    odds: { common: 70, rare: 25, epic: 5 },
+  },
   {
     id: "premium",
     name: "Coffre premium",
-    icon: "💎",
+    icon: "gem",
+    color: "#ff44ff",
     cost: 1000,
     odds: { common: 30, rare: 45, epic: 20, legendary: 5 },
   },
   {
     id: "legendary",
     name: "Coffre légendaire",
-    icon: "👑",
+    icon: "crown",
+    color: "#ffd700",
     cost: 3000,
     odds: { rare: 40, epic: 45, legendary: 15 },
   },

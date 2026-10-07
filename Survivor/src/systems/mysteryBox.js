@@ -34,7 +34,7 @@ const REWARDS = [
   },
   {
     weight: 0.08,
-    label: "☢️ NUKE ☢️",
+    label: "» NUKE «",
     color: "#ff0000",
     apply: () => {
       killAllEnemies();
@@ -44,7 +44,7 @@ const REWARDS = [
   },
   {
     weight: 0.02,
-    label: "🔫 RAY GUN 🔫",
+    label: "» RAY GUN «",
     color: "#00ffff",
     apply: () => {
       player.hasRayGun = true;

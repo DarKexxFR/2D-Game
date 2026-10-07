@@ -42,6 +42,7 @@ import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu }
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
+import { hydrateIcons } from "./ui/icons.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
@@ -142,6 +143,7 @@ function frame(now) {
 // --- INITIALISATION ---
 
 function init() {
+  hydrateIcons();
   loadAccount();
   ensureStarterItems();
   initMainMenu({ onPlay: startGame });

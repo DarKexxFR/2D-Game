@@ -15,9 +15,9 @@ import { addFloatingText, createSpawnEffect } from "./effects.js";
 import { recordWave } from "../services/achievements.js";
 
 const SHRINES = [
-  { type: "frenzy", color: "#ff0000", label: "🔴" },
-  { type: "shield", color: "#0000ff", label: "🛡️" },
-  { type: "magnet", color: "#ffff00", label: "🧲" },
+  { type: "frenzy", color: "#ff2244", icon: "rage" },
+  { type: "shield", color: "#0088ff", icon: "shield" },
+  { type: "magnet", color: "#ffee00", icon: "magnet" },
 ];
 const SHRINE_CHANCE = 0.001; // par tick
 
@@ -120,6 +120,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
     shootCooldown: Math.max(500, (t.shootCooldown || 0) * 0.95),
     lastShot: 0,
     lastDamage: 0,
+    phase: Math.random(), // décalage d'animation
     skillTimer: 100,
     isCharging: false,
     dead: false,

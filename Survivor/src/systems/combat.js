@@ -52,6 +52,7 @@ export function getNearestEnemy(x, y, maxDist = Infinity) {
 export function damageEnemy(enemy, amount) {
   if (enemy.dead) return;
   enemy.health -= amount;
+  enemy.hitTime = game.time; // flash blanc au rendu
   if (enemy.health <= 0) killEnemy(enemy);
 }
 

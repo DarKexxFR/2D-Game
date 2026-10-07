@@ -3,6 +3,7 @@
 import { DRONE, droneCost, droneDamage } from "../config.js";
 import { account, loadPseudo, resetProgress, savePseudo, upgradePet } from "../services/storage.js";
 import { $, setText, setVisible, setWidth } from "./dom.js";
+import { setLabel } from "./icons.js";
 import { initChestMenu, renderChests } from "./chestMenu.js";
 import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
 import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
@@ -75,8 +76,12 @@ function refreshShop() {
     "droneStats",
     level === 0
       ? `Dégâts: ${DRONE.baseDamage} | Vitesse: ${DRONE.baseCooldown / 1000}s`
-      : `Actuel: ${droneDamage(level)} Dmg | Coût: ${cost} 💰`,
+      : `Actuel: ${droneDamage(level)} Dmg | Coût: ${cost} OR`,
   );
   btn.disabled = !affordable;
-  btn.textContent = !affordable ? `PAS D'OR (${cost} 💰)` : level === 0 ? `ACHETER (${cost} 💰)` : "UPGRADE";
+  if (level > 0 && affordable) btn.textContent = "UPGRADE";
+  else
+    setLabel(btn, `${affordable ? "ACHETER" : "PAS D'OR"} (${cost} `, "coin", { color: "#ffd700" }).append(
+      ")",
+    );
 }

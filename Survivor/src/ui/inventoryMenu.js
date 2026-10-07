@@ -15,7 +15,8 @@ import {
 } from "../services/inventory.js";
 import { account } from "../services/storage.js";
 import { $, el } from "./dom.js";
-import { rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
+import { setLabel } from "./icons.js";
+import { itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
 import { showScreen } from "./screens.js";
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary"];
@@ -70,7 +71,7 @@ function renderEquippedSlot(id, slot, emptyText) {
   const item = ITEMS[eq.id];
   box.style.borderColor = rarityColor(item.rarity);
   box.replaceChildren(
-    el("span", "slot-icon", item.icon),
+    itemIcon(item, "slot-icon"),
     el("span", "slot-name", item.name),
     el("span", "slot-stars", `${starsText(eq.prestige)} Nv ${eq.level}`),
   );
@@ -83,7 +84,7 @@ function itemCard(item) {
 
   const head = el("div", "item-head");
   head.append(
-    el("span", "item-icon", owned ? item.icon : "❔"),
+    owned ? itemIcon(item, "item-icon") : itemIcon({ icon: "unknown", color: "#666" }, "item-icon"),
     el("h4", "", item.name),
     rarityTag(item.rarity),
   );
@@ -119,7 +120,8 @@ function itemCard(item) {
   }
 
   const price = levelUpPrice(item.id);
-  const lvlBtn = el("button", "secondary", canLevelUp(item.id) ? `NIV ▲ ${price} 💰` : "NIV MAX");
+  const lvlBtn = el("button", "secondary", "NIV MAX");
+  if (canLevelUp(item.id)) setLabel(lvlBtn, `NIV ▲ ${price} `, "coin", { color: "#ffd700" });
   lvlBtn.disabled = !canLevelUp(item.id) || account.gold < price;
   lvlBtn.addEventListener("click", () => act(() => levelUp(item.id)));
 
