@@ -83,7 +83,7 @@ export function resetPlayer(accountLevel) {
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0 },
+    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0 },
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

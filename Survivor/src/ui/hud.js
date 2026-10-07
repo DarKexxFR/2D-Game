@@ -45,6 +45,20 @@ export function updateHud() {
 }
 
 let bossWarningTimeout = null;
+let biomeTimeout;
+
+/** Bandeau « NOUVEAU BIOME » affiché quelques secondes, dans la couleur du biome. */
+export function showBiomeBanner(biome) {
+  const banner = document.getElementById("biomeBanner");
+  banner.textContent = biome.name;
+  banner.style.color = biome.color;
+  banner.classList.remove("show");
+  void banner.offsetWidth; // relance l'animation
+  banner.classList.add("show");
+  clearTimeout(biomeTimeout);
+  biomeTimeout = setTimeout(() => banner.classList.remove("show"), 3500);
+}
+
 export function showBossWarning(text) {
   setText("bossWarning", text);
   setVisible("bossWarning", true);

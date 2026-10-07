@@ -38,7 +38,7 @@ import { updatePlayer } from "./systems/player.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
-import { showBossWarning, showHud, updateHud } from "./ui/hud.js";
+import { showBiomeBanner, showBossWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
@@ -182,6 +182,7 @@ function init() {
 
   on("levelUp", showUpgradeMenu);
   on("playerDied", endGame);
+  on("biomeChange", showBiomeBanner);
   on("bossWarning", (text) => {
     showBossWarning(text);
     playSfx("boss");

@@ -10,6 +10,7 @@ import {
   SPAWN_TABLES,
   WAVE_SCALING as W,
 } from "../data/enemies.js";
+import { biomeForWave } from "../data/biomes.js";
 import { clamp, randomItem, weightedPick } from "../utils/math.js";
 import { addFloatingText, createSpawnEffect } from "./effects.js";
 import { recordWave } from "../services/achievements.js";
@@ -70,9 +71,12 @@ export function spawnWave() {
 
 export function startNextWave() {
   game.nextWaveTimer = 0;
+  const before = biomeForWave(game.wave);
   game.wave++;
   spawnWave();
   addFloatingText(player.worldX, player.worldY - 50, "VAGUE " + game.wave, "#00ffff", 30, 120);
+  const biome = biomeForWave(game.wave);
+  if (biome !== before) emit("biomeChange", biome);
 }
 
 /** Programme la vague suivante (une seule fois, même si plusieurs boss meurent ensemble). */
@@ -85,6 +89,8 @@ export function scheduleNextWave() {
 function pickEnemyType() {
   const table = SPAWN_TABLES.find((t) => game.wave < t.untilWave);
   const entries = Object.entries(table.weights);
+  const extra = biomeForWave(game.wave).enemy;
+  if (extra) entries.push([extra.type, extra.weight]);
   return weightedPick(entries, ([, w]) => w)[0];
 }
 

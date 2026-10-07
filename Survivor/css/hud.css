@@ -197,3 +197,33 @@
   pointer-events: none;
   text-align: right;
 }
+
+/* Bandeau de changement de biome */
+#biomeBanner {
+  position: absolute;
+  top: 19%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  font-family: "Press Start 2P";
+  font-size: 24px;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 12px currentColor,
+    0 0 30px currentColor;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  z-index: 40;
+  transition:
+    opacity 0.5s,
+    transform 0.5s;
+}
+#biomeBanner.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+@media (max-width: 760px) {
+  #biomeBanner {
+    font-size: 16px;
+  }
+}

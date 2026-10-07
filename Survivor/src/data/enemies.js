@@ -61,6 +61,9 @@ export const ENEMY_TYPES = {
     splitTo: "slime_small",
     splitCount: 3,
   },
+  // Ennemis propres aux biomes (voir data/biomes.js)
+  scorpion: { health: 40, damage: 14, speed: 3, size: 16, color: "#ff6a00", xp: 6, gold: 3 },
+  golem: { health: 160, damage: 20, speed: 1.4, size: 28, color: "#7fdfff", xp: 12, gold: 6 },
   hydra: {
     health: 3000,
     damage: 50,

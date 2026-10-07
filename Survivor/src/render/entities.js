@@ -25,6 +25,8 @@ const ENEMY_LOOKS = {
   slime_small: { sprite: "slime", mode: "wobble" },
   hydra: { sprite: "hydra", mode: "hydra", spin: 0.0006 },
   hydra_spawn: { sprite: "fast", mode: "face" },
+  scorpion: { sprite: "scorpion", mode: "face" },
+  golem: { sprite: "golem", mode: "face" },
 };
 
 let lastX = 0;

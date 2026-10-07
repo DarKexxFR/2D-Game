@@ -10,6 +10,8 @@ import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 
+const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
+
 export function updatePlayer() {
   updateBuffs();
   updateRegen();
@@ -24,6 +26,7 @@ function updateBuffs() {
   if (b.frenzy > 0) b.frenzy--;
   if (b.shield > 0) b.shield--;
   if (b.magnet > 0) b.magnet--;
+  if (b.slow > 0) b.slow--;
   if (b.overcharge > 0 && --b.overcharge === 0) {
     addFloatingText(player.worldX, player.worldY, "FIN SURCHARGE", "#ccc");
   }
@@ -54,7 +57,7 @@ function updateDash() {
     }
     if (player.dashTimer <= 0) player.isDashing = false;
   } else {
-    player.speed = player.baseSpeed;
+    player.speed = player.baseSpeed * (player.buffs.slow > 0 ? FROST_SLOW : 1);
   }
 }
 

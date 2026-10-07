@@ -219,6 +219,108 @@ const SHAPES = {
     eye(c, 0, 0, r * 0.28, "#ff0040");
   },
 
+  /** Scorpion du désert : corps segmenté, pinces et dard recourbé. */
+  scorpion(c, r, color) {
+    c.strokeStyle = color;
+    c.lineWidth = 2;
+    glow(c, color, 6);
+    for (const s of [-1, 1]) {
+      // Pattes
+      for (const k of [-0.4, 0, 0.4]) {
+        c.beginPath();
+        c.moveTo(k * r, s * r * 0.4);
+        c.lineTo(k * r - r * 0.2, s * r * 0.95);
+        c.stroke();
+      }
+      // Pinces
+      c.beginPath();
+      c.moveTo(r * 0.5, s * r * 0.3);
+      c.quadraticCurveTo(r * 1.1, s * r * 0.75, r * 1.3, s * r * 0.35);
+      c.lineTo(r * 1.05, s * r * 0.25);
+      c.stroke();
+    }
+    // Queue recourbée au-dessus du dos
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(-r * 0.6, 0);
+    c.quadraticCurveTo(-r * 1.4, 0, -r * 1.1, -r * 0.7);
+    c.quadraticCurveTo(-r * 0.7, -r * 1.1, -r * 0.2, -r * 0.75);
+    c.stroke();
+    noGlow(c);
+    dot(c, -r * 0.2, -r * 0.75, r * 0.15, "#ffee00", 10);
+    for (const [x, rr] of [
+      [-0.35, 0.38],
+      [0.05, 0.45],
+      [0.45, 0.4],
+    ]) {
+      neonBody(
+        c,
+        () => {
+          c.beginPath();
+          c.ellipse(x * r, 0, r * 0.28, r * rr, 0, 0, TAU);
+        },
+        color,
+        2,
+        8,
+      );
+    }
+    eye(c, r * 0.6, -r * 0.14, r * 0.1, "#ffee00");
+    eye(c, r * 0.6, r * 0.14, r * 0.1, "#ffee00");
+  },
+
+  /** Golem de glace : bloc de roche hérissé de cristaux. */
+  golem(c, r, color) {
+    // Cristaux sur le dos
+    for (const [a, len] of [
+      [-2.3, 1.35],
+      [-1.6, 1.5],
+      [-0.9, 1.3],
+      [2.4, 1.25],
+    ]) {
+      neonBody(
+        c,
+        () =>
+          polygon(c, [
+            [Math.cos(a - 0.18) * r * 0.75, Math.sin(a - 0.18) * r * 0.75],
+            [Math.cos(a) * r * len, Math.sin(a) * r * len],
+            [Math.cos(a + 0.18) * r * 0.75, Math.sin(a + 0.18) * r * 0.75],
+          ]),
+        "#e8fbff",
+        1.5,
+        10,
+      );
+    }
+    neonBody(
+      c,
+      () =>
+        polygon(c, [
+          [r * 0.95, -r * 0.3],
+          [r * 0.85, r * 0.45],
+          [r * 0.3, r * 0.95],
+          [-r * 0.55, r * 0.85],
+          [-r * 0.95, r * 0.2],
+          [-r * 0.8, -r * 0.6],
+          [-r * 0.1, -r * 0.95],
+          [r * 0.6, -r * 0.75],
+        ]),
+      color,
+      3,
+      14,
+    );
+    // Fissures
+    c.strokeStyle = shade(color.startsWith("#") ? color : "#7fdfff", 0.75);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(-r * 0.5, -r * 0.3);
+    c.lineTo(-r * 0.1, r * 0.1);
+    c.lineTo(-r * 0.3, r * 0.5);
+    c.moveTo(r * 0.1, -r * 0.6);
+    c.lineTo(r * 0.2, -r * 0.2);
+    c.stroke();
+    eye(c, r * 0.55, -r * 0.22, r * 0.13, "#00e5ff");
+    eye(c, r * 0.55, r * 0.22, r * 0.13, "#00e5ff");
+  },
+
   /** Kamikaze : boule à pointes autour d'un cœur instable. */
   kamikaze(c, r, color) {
     const pts = [];
