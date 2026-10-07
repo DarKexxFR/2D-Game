@@ -1,8 +1,8 @@
 {
-  "name": "survivor-neon",
+  "name": "last-pulse",
   "private": true,
   "type": "module",
-  "description": "Survivor — jeu de survie 2D (outils de développement uniquement : le jeu n'a aucune dépendance)",
+  "description": "Last Pulse — jeu de survie 2D (outils de développement uniquement : le jeu n'a aucune dépendance)",
   "scripts": {
     "start": "python3 -m http.server 8000 --directory Survivor",
     "test": "playwright test",

@@ -97,7 +97,7 @@ export function resetProgress() {
 
 // --- PSEUDO ---
 
-export const DEFAULT_PSEUDO = "Survivor";
+export const DEFAULT_PSEUDO = "Joueur";
 
 export function loadPseudo() {
   try {
