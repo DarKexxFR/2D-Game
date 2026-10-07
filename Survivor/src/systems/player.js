@@ -8,6 +8,7 @@ import { camera, game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
+import { recordPlayerLevel } from "../services/achievements.js";
 
 export function updatePlayer() {
   updateBuffs();
@@ -110,6 +111,7 @@ export function gainXp(amount) {
 
   player.xp -= player.xpToNextLevel;
   player.level++;
+  recordPlayerLevel(player.level);
   player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.3);
   addFloatingText(player.worldX, player.worldY - 50, "LEVEL UP!", "#ffd700", 30, 100);
   playSfx("levelUp");

@@ -8,6 +8,7 @@ const SCREENS = [
   "inventoryMenu",
   "chestReveal",
   "leaderboardMenu",
+  "achievementMenu",
   "upgradeMenu",
   "pauseMenu",
   "optionsMenu",

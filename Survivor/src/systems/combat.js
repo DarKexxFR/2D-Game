@@ -12,6 +12,7 @@ import { addFloatingText, addScreenShake, createAoEEffect, createParticles } fro
 import { createGem, dropLootBox } from "./pickups.js";
 import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
+import { recordKill } from "../services/achievements.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -57,6 +58,7 @@ export function damageEnemy(enemy, amount) {
 export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
+  recordKill(enemy.template.isBoss);
   playSfx("kill");
 
   game.score += 10;

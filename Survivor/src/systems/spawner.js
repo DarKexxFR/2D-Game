@@ -12,6 +12,7 @@ import {
 } from "../data/enemies.js";
 import { clamp, randomItem, weightedPick } from "../utils/math.js";
 import { addFloatingText, createSpawnEffect } from "./effects.js";
+import { recordWave } from "../services/achievements.js";
 
 const SHRINES = [
   { type: "frenzy", color: "#ff0000", label: "🔴" },
@@ -59,6 +60,7 @@ function spawnPendingBosses() {
 export function spawnWave() {
   game.waveTimer = 0;
   game.isBossWave = false;
+  recordWave(game.wave);
   const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
   if (!boss) return;
   game.isBossWave = true;
