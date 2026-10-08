@@ -7,7 +7,7 @@ import { heroSkill } from "../systems/skills.js";
 import { setClass, setText, setVisible, setWidth } from "./dom.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 
-const HUD_ELEMENTS = ["ui", "xpContainer", "levelIndicator"];
+const HUD_ELEMENTS = ["ui", "xpContainer", "levelIndicator", "miniMap"];
 
 export function showHud(visible) {
   for (const id of HUD_ELEMENTS) setVisible(id, visible);

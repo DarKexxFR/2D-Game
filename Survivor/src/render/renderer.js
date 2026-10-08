@@ -5,6 +5,7 @@ import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game } from "../core/state.js";
 import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
+import { drawMiniMap } from "./miniMap.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 
 export { renderMenuBackground } from "./menuScene.js";
@@ -44,6 +45,7 @@ export function render() {
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1) drawWaveTimer();
   ctx.restore();
+  drawMiniMap();
 }
 
 function drawWaveTimer() {

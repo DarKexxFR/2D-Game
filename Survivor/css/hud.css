@@ -1,4 +1,18 @@
 /* Interface en jeu */
+#miniMap {
+  position: absolute;
+  top: 112px;
+  right: 16px;
+  width: 132px;
+  height: 132px;
+  display: none;
+  pointer-events: none;
+  z-index: 8;
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  border-radius: 4px;
+  background: rgba(4, 12, 22, 0.9);
+}
+
 #ui {
   position: absolute;
   top: 20px;
@@ -12,6 +26,13 @@
   z-index: 10;
   display: none;
 }
+
+@media (max-width: 760px) {
+  #miniMap {
+    display: none !important;
+  }
+}
+
 .ui-header {
   display: flex;
   justify-content: space-between;
