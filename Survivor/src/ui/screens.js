@@ -14,6 +14,7 @@ const SCREENS = [
   "upgradeMenu",
   "pauseMenu",
   "optionsMenu",
+  "reviveMenu",
   "gameOver",
 ];
 

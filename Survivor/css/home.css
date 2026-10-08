@@ -354,6 +354,17 @@ button.dock-btn {
   color: #ccc;
 }
 
+.home-legal {
+  grid-column: 1 / -1;
+  justify-self: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  text-decoration: none;
+}
+.home-legal:hover {
+  color: #00ffff;
+}
+
 /* Pendant l'accueil, l'aide des touches ne doit pas gêner la barre du bas */
 body[data-screen="mainMenu"] #controls {
   display: none;

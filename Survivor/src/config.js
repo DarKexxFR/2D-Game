@@ -107,6 +107,17 @@ export const RARITIES = {
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
 };
 
+// Publicités récompensées (vidéo facultative contre un bonus). provider "demo" = fausse
+// pub interne en attendant une vraie régie (CrazyGames, Poki, AdSense...), "none" = désactivé.
+export const ADS = {
+  provider: "demo",
+  demoDurationMs: 5000, // durée de la fausse pub
+  reviveHealth: 0.5, // part des PV rendus en revivant
+  reviveDecisionMs: 10000, // temps pour choisir avant l'abandon automatique
+  reviveClearRadius: 300, // les ennemis proches sont repoussés au retour
+  adChestsPerDay: 3, // coffres bonus contre une pub, par jour
+};
+
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],

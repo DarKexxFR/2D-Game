@@ -1,13 +1,19 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { MAP_BOUNDS } from "../config.js";
+import { ADS, MAP_BOUNDS } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, touchMove } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
-import { clamp } from "../utils/math.js";
-import { addFloatingText, addScreenShake, createParticles, createSpawnEffect } from "./effects.js";
+import { angleTo, clamp, dist } from "../utils/math.js";
+import {
+  addFloatingText,
+  addScreenShake,
+  createParticles,
+  createShockwave,
+  createSpawnEffect,
+} from "./effects.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
@@ -114,6 +120,28 @@ export function takeDamage(amount) {
     game.running = false;
     emit("playerDied");
   }
+}
+
+/** Retour en jeu après une pub récompensée : PV partiels, bouclier et ennemis repoussés. */
+export function reviveFromAd() {
+  game.adReviveUsed = true;
+  game.over = false;
+  game.running = true;
+  game.paused = false;
+  player.health = player.maxHealth * ADS.reviveHealth;
+  player.buffs.shield = 180;
+  const { worldX: x, worldY: y } = player;
+  for (const e of world.enemies) {
+    const d = dist(e.x, e.y, x, y);
+    if (d >= ADS.reviveClearRadius) continue;
+    const a = angleTo(x, y, e.x, e.y);
+    e.x = x + Math.cos(a) * ADS.reviveClearRadius;
+    e.y = y + Math.sin(a) * ADS.reviveClearRadius;
+  }
+  world.enemyProjectiles.length = 0;
+  createShockwave(x, y, ADS.reviveClearRadius, "#ffd700");
+  addFloatingText(x, y - 40, "DE RETOUR !", "#ffd700", 26, 90);
+  addScreenShake(10);
 }
 
 export function gainXp(amount) {

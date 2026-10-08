@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/daily.css" />
+    <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -158,6 +159,9 @@
             <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
             <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
           </nav>
+          <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
+            >Conditions générales · Confidentialité</a
+          >
         </div>
       </div>
 
@@ -351,11 +355,26 @@
           </div>
           <p id="cloudMessage" class="option-hint"></p>
         </div>
+        <a class="option-legal" href="legal.html" target="_blank" rel="noopener"
+          >Conditions générales et confidentialité</a
+        >
         <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
         <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== GAME OVER ===== -->
+      <!-- ===== REVIVRE (pub récompensée) ===== -->
+      <div id="reviveMenu" class="menu-overlay">
+        <h1>K.O. !</h1>
+        <p class="revive-text">
+          Regarde une courte publicité pour revenir avec <b>50 % de tes PV</b>. Une seule fois par partie.
+        </p>
+        <p id="reviveTimer" class="revive-timer"></p>
+        <button id="btnReviveAd" class="revive-btn"><i data-icon="play"></i> REVIVRE (PUB)</button>
+        <button id="btnReviveGiveUp" class="secondary mt-15">ABANDONNER</button>
+        <p id="reviveMessage" class="revive-message"></p>
+      </div>
+
       <div id="gameOver" class="menu-overlay">
         <h1>MORT</h1>
         <p class="final-pseudo"><span id="finalPseudo"></span></p>

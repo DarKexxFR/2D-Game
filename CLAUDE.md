@@ -38,7 +38,7 @@ Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
 | `data/` | Données pures : `items.js` (armes, armures, HEROES, PETS, CHESTS), `upgrades.js` (+ EVOLUTIONS), `enemies.js`, `biomes.js`, `talents.js`, `achievements.js`, `icons.js` (tracés SVG) |
 | `systems/` | Logique de jeu par tick : `player`, `enemies`, `combat`, `spawner`, `pickups`, `skills`, `pet`, `equipment`, `effects`, `mysteryBox` |
 | `render/` | Dessin : `renderer.js` (ordre des couches), `entities.js`, `world.js`, `effects.js`, `sprites.js` (sprites néon en cache), `menuScene.js` (scène animée de l'accueil) |
-| `services/` | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js`, `daily.js`, `audio.js` / `sfx.js` |
+| `services/` | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js`, `daily.js`, `ads.js` (pubs récompensées), `audio.js` / `sfx.js` |
 | `ui/` | Menus DOM : `screens.js` (un seul écran visible), `mainMenu.js`, `hud.js`, `dom.js` (écritures DOM en cache), `icons.js`… |
 | `main.js` | Point d'entrée : initialisation et boucle principale |
 | `../assets/` | Logo (`logo-mark.svg` = symbole en favicon ; `logo-wordmark.svg` = logo texte, non utilisé : le titre de l'accueil reste en texte, au choix du propriétaire), favicons, icône d'app, musiques |
@@ -56,6 +56,14 @@ Principes :
 - **Icônes** : `<i data-icon="nom">` dans le HTML (remplacé par `hydrateIcons`), ou
   `icon(nom, couleur)` en JS. Taille = `font-size`, couleur = `color`.
 - **Équilibrage** : les valeurs vivent dans `config.js` ou `data/`, jamais en dur dans la logique.
+- **Pubs récompensées** : `services/ads.js` → `showRewardedAd(placement)` renvoie `true` si la pub
+  est vue en entier. Régie choisie par `ADS.provider` dans `config.js` (`"demo"` = fausse pub
+  interne, `"none"` = désactivé) ; une vraie régie = un adaptateur de plus dans `PROVIDERS`.
+  Utilisées pour revivre (1 fois par partie, jamais en défi du jour) et le coffre bonus (limité par jour).
+  Dans les tests, `killPlayer` / `declineRevive` refusent l'offre « revivre ».
+- **Pages légales** : `Survivor/legal.html` (CGU + confidentialité). À mettre à jour à chaque nouvelle
+  donnée collectée ou nouvelle régie pub. Les champs « éditeur » et « contact » sont à compléter
+  par le propriétaire (ne pas inventer).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -102,7 +110,7 @@ Principes :
 Fait : classement mondial, mobile + tir auto, coffres / équipement / prestige, coffre
 gratuit, options, succès, refonte néon, héros / familiers / Nécro-Hydre, sauvegarde en
 ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stats de fin,
-touches configurables, nouvel accueil, logo officiel.
+touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU.
 
 En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
 
@@ -114,6 +122,8 @@ En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
    reçoit des instantanés (~15-20/s) interpolés. Transport conseillé : WebRTC (pair à pair),
    Supabase Realtime seulement pour la signalisation (quotas de messages).
 4. Finitions : ping, déconnexions, classement coop.
+
+Pubs : brancher une vraie régie (CrazyGames / Poki / AdSense) quand le propriétaire l'aura choisie.
 
 Autres idées en attente : sons et musique, niveaux de difficulté, quêtes hebdomadaires,
 skins, PWA installable, tutoriel, manette.

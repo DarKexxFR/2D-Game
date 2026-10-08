@@ -98,5 +98,11 @@ export async function startGame(page, { invincible = true, levelUps = false } = 
 
 export async function killPlayer(page) {
   await game(page, ({ player }) => player.takeDamage(1e12));
+  await declineRevive(page);
   await expect(page.locator("#gameOver")).toBeVisible();
+}
+
+/** À la mort, refuse l'offre « revivre avec une pub » si elle s'affiche. */
+export async function declineRevive(page) {
+  if (await page.locator("#reviveMenu").isVisible()) await page.locator("#btnReviveGiveUp").click();
 }
