@@ -272,6 +272,7 @@
   color: #002211;
   font-size: 14px;
   font-weight: 900;
+  text-align: center;
   box-shadow: 0 0 10px #00ff88;
   animation: bounceBadge 1s infinite;
 }
@@ -284,9 +285,6 @@
   50% {
     transform: translateY(-4px);
   }
-}
-.btn-grid:has(#btnShop) {
-  overflow: visible;
 }
 .chest-card .shop-btn {
   flex-shrink: 0;

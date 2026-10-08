@@ -147,7 +147,7 @@ const HULLS = {
 };
 
 /** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge. */
-function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow") {
+export function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow") {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -312,6 +312,11 @@ const PET_DRAWERS = {
     endNeon();
   },
 };
+
+/** Dessine un familier hors partie (écran d'accueil). */
+export function drawPet(kind, x, y, size, color, now) {
+  PET_DRAWERS[kind]?.(x, y, size, color, now);
+}
 
 /** Armure : plus le prestige est haut, plus elle est épaisse, lumineuse et ornée. */
 function drawArmor(x, y, size, now) {

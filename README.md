@@ -113,6 +113,7 @@ Survivor/
 │   ├── base.css            # Reset, polices, boutons, utilitaires
 │   ├── hud.css             # Interface en jeu
 │   ├── menus.css           # Menus / boutique / classement / pause / fin
+│   ├── home.css            # Écran d'accueil
 │   ├── inventory.css       # Coffres et écran Équipement
 │   ├── options.css         # Menu Options
 │   ├── touch.css           # Commandes tactiles + petits écrans
@@ -141,6 +142,7 @@ Survivor/
     │   └── effects.js      # Particules, textes flottants, ondes
     ├── render/             # Dessin sur le canvas (lecture seule de l'état)
     │   ├── renderer.js     # Ordre des couches
+    │   ├── menuScene.js    # Scène animée de l'accueil (héros, ligne de pouls)
     │   ├── world.js        # Grille, bordure, boîte, sanctuaires, butin
     │   ├── entities.js     # Joueur, drone, ennemis, projectiles
     │   ├── effects.js      # Particules, ondes, textes

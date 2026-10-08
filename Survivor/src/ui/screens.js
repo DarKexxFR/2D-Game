@@ -19,6 +19,7 @@ const SCREENS = [
 
 export function showScreen(id) {
   for (const s of SCREENS) setVisible(s, s === id);
+  document.body.dataset.screen = id || "";
 }
 
 export function hideScreens() {
