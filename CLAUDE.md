@@ -41,7 +41,7 @@ Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
 | `services/` | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js`, `daily.js`, `audio.js` / `sfx.js` |
 | `ui/` | Menus DOM : `screens.js` (un seul écran visible), `mainMenu.js`, `hud.js`, `dom.js` (écritures DOM en cache), `icons.js`… |
 | `main.js` | Point d'entrée : initialisation et boucle principale |
-| `../assets/` | Logo (`logo-wordmark.svg` = titre de l'accueil, `logo-mark.svg` = symbole), favicons, icône d'app, musiques |
+| `../assets/` | Logo (`logo-mark.svg` = symbole en favicon ; `logo-wordmark.svg` = logo texte, non utilisé : le titre de l'accueil reste en texte, au choix du propriétaire), favicons, icône d'app, musiques |
 
 Principes :
 
