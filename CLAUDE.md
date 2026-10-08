@@ -62,8 +62,9 @@ Principes :
   Utilisées pour revivre (1 fois par partie, jamais en défi du jour) et le coffre bonus (limité par jour).
   Dans les tests, `killPlayer` / `declineRevive` refusent l'offre « revivre ».
 - **Pages légales** : `Survivor/legal.html` (CGU + confidentialité). À mettre à jour à chaque nouvelle
-  donnée collectée ou nouvelle régie pub. Les champs « éditeur » et « contact » sont à compléter
-  par le propriétaire (ne pas inventer).
+  donnée collectée ou nouvelle régie pub. Éditeur : pseudo DarKexxFR (site non commercial) ;
+  contact choisi par le propriétaire. À repasser en version professionnelle (identité, statut)
+  si le jeu génère des revenus (vraie régie pub).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
