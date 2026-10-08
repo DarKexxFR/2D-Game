@@ -157,3 +157,10 @@
     font-size: 11px;
   }
 }
+
+.option-legal {
+  display: block;
+  margin-top: 22px;
+  color: #00ffff;
+  font-size: 13px;
+}

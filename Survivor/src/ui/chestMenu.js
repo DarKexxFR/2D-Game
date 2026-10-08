@@ -1,11 +1,15 @@
 // Coffres de la boutique et écran d'ouverture.
 
+import { ADS } from "../config.js";
 import { CHESTS, FREE_CHEST, PRESTIGE_COPIES } from "../data/items.js";
+import { adsEnabled, showRewardedAd } from "../services/ads.js";
 import {
   canPrestige,
   freeChestRemainingMs,
   getOwned,
+  adChestsLeft,
   isFreeChestReady,
+  openAdChest,
   openChest,
   openFreeChest,
 } from "../services/inventory.js";
@@ -72,10 +76,45 @@ function freeChestCard() {
   return card;
 }
 
+/** Coffre bonus : un coffre basique de plus en regardant une pub (quelques fois par jour). */
+function adChestCard() {
+  const chest = CHESTS.find((c) => c.id === FREE_CHEST.chestId);
+  const left = adChestsLeft();
+  const card = el("div", "chest-card chest-ad");
+  card.id = "adChestCard";
+  const info = el("div", "chest-info");
+  info.append(
+    setLabel(el("h4"), " Coffre bonus", "play", { before: true, color: "#ffd700" }),
+    el(
+      "p",
+      "chest-odds",
+      `Un ${chest.name.toLowerCase()} en regardant une pub · ${left}/${ADS.adChestsPerDay} aujourd'hui`,
+    ),
+  );
+  const btn = setLabel(el("button", "shop-btn"), left > 0 ? " PUB" : " DEMAIN", "play", { before: true });
+  btn.id = "btnAdChest";
+  btn.disabled = left === 0;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const rewarded = await showRewardedAd("chest");
+    const outcome = rewarded ? openAdChest() : null;
+    if (!outcome) {
+      renderChests();
+      return;
+    }
+    lastChestId = null;
+    onChange();
+    showReveal(outcome);
+  });
+  card.append(info, btn);
+  return card;
+}
+
 export function renderChests() {
   const list = $("chestList");
   list.replaceChildren(
     freeChestCard(),
+    ...(adsEnabled() ? [adChestCard()] : []),
     ...CHESTS.map((chest) => {
       const card = el("div", `chest-card chest-${chest.id}`);
       const odds = Object.entries(chest.odds)

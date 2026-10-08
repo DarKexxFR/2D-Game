@@ -1,4 +1,4 @@
-import { test, expect, game, startGame, withSave } from "./fixtures.js";
+import { test, expect, game, killPlayer, startGame, withSave } from "./fixtures.js";
 
 test("menu des succès : liste, progression et retour", async ({ page }) => {
   await withSave(page, { achievementStats: { kills: 40 }, achievements: [] });
@@ -32,8 +32,7 @@ test("un kill débloque « Premier sang », notifié et sauvegardé", async ({ p
 test("fin de partie : la partie est comptée et la progression conservée", async ({ page }) => {
   await page.goto("/");
   await startGame(page);
-  await game(page, ({ player }) => player.takeDamage(1e12));
-  await expect(page.locator("#gameOver")).toBeVisible();
+  await killPlayer(page);
   await page.reload();
   expect(await game(page, ({ storage }) => storage.account.achievementStats.runs)).toBe(1);
 });

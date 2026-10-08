@@ -36,7 +36,7 @@ import { updateMysteryBox } from "./systems/mysteryBox.js";
 import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
-import { updatePlayer } from "./systems/player.js";
+import { reviveFromAd, updatePlayer } from "./systems/player.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
@@ -52,6 +52,7 @@ import { initUpgradeMenu, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
 import { initDailyMenu } from "./ui/dailyMenu.js";
 import { initTalentMenu } from "./ui/talentMenu.js";
+import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -220,7 +221,8 @@ function init() {
   });
 
   on("levelUp", showUpgradeMenu);
-  on("playerDied", endGame);
+  initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
+  on("playerDied", () => (canOfferRevive() ? showReviveOffer() : endGame()));
   on("biomeChange", showBiomeBanner);
   on("bossWarning", (text) => {
     showBossWarning(text);

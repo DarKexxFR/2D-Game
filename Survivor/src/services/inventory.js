@@ -15,7 +15,9 @@ import {
   levelUpCost,
   maxLevel,
 } from "../data/items.js";
+import { ADS } from "../config.js";
 import { weightedPick } from "../utils/math.js";
+import { todayKey } from "./daily.js";
 import { account, saveAccount } from "./storage.js";
 
 /** Garantit les objets de départ (et nettoie les objets inconnus d'anciennes sauvegardes). */
@@ -82,6 +84,23 @@ export function isFreeChestReady() {
 export function openFreeChest() {
   if (!isFreeChestReady()) return null;
   account.lastFreeChest = Date.now();
+  return rollChest(CHESTS.find((c) => c.id === FREE_CHEST.chestId));
+}
+
+// --- COFFRE BONUS (contre une publicité) ---
+
+/** Coffres bonus encore disponibles aujourd'hui. */
+export function adChestsLeft(day = todayKey()) {
+  const used = account.adChests.day === day ? account.adChests.count : 0;
+  return Math.max(0, ADS.adChestsPerDay - used);
+}
+
+/** Ouvre un coffre bonus (à appeler une fois la pub regardée en entier). */
+export function openAdChest() {
+  const day = todayKey();
+  if (adChestsLeft(day) === 0) return null;
+  const used = account.adChests.day === day ? account.adChests.count : 0;
+  account.adChests = { day, count: used + 1 };
   return rollChest(CHESTS.find((c) => c.id === FREE_CHEST.chestId));
 }
 

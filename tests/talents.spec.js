@@ -1,5 +1,5 @@
 // Talents : achat avec l'or, effets en partie, relance des améliorations et seconde chance.
-import { expect, game, test, withSave } from "./fixtures.js";
+import { expect, game, killPlayer, test, withSave } from "./fixtures.js";
 
 test("acheter des talents puis en profiter en partie", async ({ page }) => {
   await withSave(page, { gold: 20_000, lastFreeChest: Date.now() });
@@ -43,8 +43,7 @@ test("acheter des talents puis en profiter en partie", async ({ page }) => {
   }));
   expect(after.over).toBe(false);
   expect(after.hp).toBeCloseTo(after.max / 2);
-  await game(page, ({ player }) => player.takeDamage(1e12));
-  await expect(page.locator("#gameOver")).toBeVisible();
+  await killPlayer(page);
 });
 
 test("le défi du jour ignore les talents", async ({ page }) => {

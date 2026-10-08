@@ -1,0 +1,94 @@
+/* Publicités récompensées : fausse pub de démo, écran « revivre », coffre bonus */
+#adOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.92);
+}
+.ad-box {
+  width: min(100%, 440px);
+  padding: 28px 24px;
+  border: 1px solid #555;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #1d1d2b, #0b0b12);
+  text-align: center;
+}
+.ad-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffd700;
+  color: #1a1200;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+.ad-title {
+  margin: 22px 0 8px;
+  font-size: 24px;
+  font-weight: 900;
+}
+.ad-text {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ad-bar {
+  height: 6px;
+  margin: 22px 0 8px;
+  border-radius: 3px;
+  background: #222;
+}
+.ad-bar-fill {
+  width: 0;
+  height: 100%;
+  background: #ffd700;
+}
+.ad-timer {
+  color: #ddd;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.ad-close {
+  font-size: 12px;
+}
+
+/* Écran « revivre » à la mort */
+#reviveMenu {
+  border-color: #ff2a6d;
+  max-width: 460px;
+}
+#reviveMenu h1 {
+  color: #ff2a6d;
+  margin-bottom: 12px;
+}
+.revive-text {
+  color: #ddd;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.revive-timer {
+  color: #ff7aa8;
+  font-size: 13px;
+}
+.revive-message {
+  min-height: 1.4em;
+  margin-top: 10px;
+  color: #ffaa00;
+  font-size: 13px;
+}
+button.revive-btn {
+  margin-top: 20px;
+  background: linear-gradient(180deg, #ffe066, #ffb800);
+  color: #1a1200;
+  font-size: 18px;
+}
+
+/* Coffre bonus contre une pub */
+.chest-ad .shop-btn {
+  background: linear-gradient(180deg, #ffe066, #ffb800);
+  color: #1a1200;
+}

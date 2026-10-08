@@ -1,5 +1,5 @@
 // Parcours principal sur PC : menus, partie, pause, amélioration, mort, rejouer.
-import { expect, game, killPlayer, startGame, test } from "./fixtures.js";
+import { declineRevive, expect, game, killPlayer, startGame, test } from "./fixtures.js";
 
 test.beforeEach(async ({ isMobile }) => test.skip(isMobile, "parcours clavier/souris"));
 
@@ -79,6 +79,7 @@ test("les récompenses de fin ne sont comptées qu'une fois", async ({ page }) =
     player.takeDamage(1e12);
     player.takeDamage(1e12); // coups simultanés
   });
+  await declineRevive(page);
   await expect(page.locator("#runGoldGain")).toHaveText("123");
   expect(await game(page, ({ storage }) => storage.account.gold)).toBe(123);
 });

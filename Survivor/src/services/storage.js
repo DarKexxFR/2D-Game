@@ -32,6 +32,7 @@ export const account = {
   items: {},
   equipped: { ...DEFAULT_EQUIPPED },
   lastFreeChest: 0, // horodatage (ms) du dernier coffre gratuit ouvert
+  adChests: { day: "", count: 0 }, // coffres bonus ouverts grâce à une pub, par jour
   talents: {}, // rang de chaque talent : { [id]: rang }
   achievements: [],
   achievementStats: { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 },
@@ -48,6 +49,7 @@ export function loadAccount() {
   account.items = saved.items || {};
   account.equipped = { ...DEFAULT_EQUIPPED, ...saved.equipped };
   account.lastFreeChest = saved.lastFreeChest || 0;
+  account.adChests = { day: "", count: 0, ...saved.adChests };
   account.talents = { ...saved.talents };
   account.achievements = Array.isArray(saved.achievements) ? saved.achievements : [];
   account.achievementStats = {

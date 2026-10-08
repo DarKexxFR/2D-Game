@@ -43,6 +43,7 @@ export function resetGame() {
     pendingBosses: [],
     isBossWave: false,
     nextWaveTimer: 0,
+    adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
     stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0 }, // pour l'écran de fin

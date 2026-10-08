@@ -18,3 +18,16 @@ export function playRandomMusic() {
 export function stopMusic() {
   bgMusic.pause();
 }
+
+let pausedForAd = false;
+
+/** Coupe la musique le temps d'une publicité, puis la relance si elle jouait. */
+export function pauseMusicForAd() {
+  pausedForAd = !bgMusic.paused;
+  bgMusic.pause();
+}
+
+export function resumeMusicAfterAd() {
+  if (pausedForAd) bgMusic.play().catch(() => {});
+  pausedForAd = false;
+}
