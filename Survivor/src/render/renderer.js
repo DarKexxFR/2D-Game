@@ -7,6 +7,8 @@ import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./en
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 
+export { renderMenuBackground } from "./menuScene.js";
+
 export function render() {
   const now = performance.now();
   resetTransform();
@@ -54,15 +56,4 @@ function drawWaveTimer() {
   ctx.shadowColor = "#00ffff";
   ctx.fillRect(x, 55, 300 * pct, 6);
   ctx.shadowBlur = 0;
-}
-
-/** Fond étoilé scintillant affiché derrière les menus. */
-export function renderMenuBackground() {
-  resetTransform();
-  ctx.fillStyle = "rgba(0,0,0,0.1)";
-  ctx.fillRect(0, 0, view.width, view.height);
-  ctx.fillStyle = "#fff";
-  for (let i = 0; i < 100; i++) {
-    ctx.fillRect(Math.random() * view.width, Math.random() * view.height, 2, 2);
-  }
 }

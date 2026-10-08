@@ -196,11 +196,6 @@ body.touch #levelIndicator {
     font-size: 16px; /* 16px minimum : évite le zoom auto d'iOS */
     margin: 5px 0 10px;
   }
-  .account-stats {
-    margin: 10px 0;
-    padding: 10px;
-    font-size: 13px;
-  }
   .upgrade-option {
     padding: 10px;
     margin: 8px 0;

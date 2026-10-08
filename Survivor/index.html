@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/menus.css" />
+    <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/options.css" />
@@ -84,42 +85,77 @@
       </div>
 
       <!-- ===== MENU PRINCIPAL ===== -->
-      <div id="mainMenu" class="menu-overlay">
-        <h1>LAST PULSE</h1>
-        <input
-          type="text"
-          id="playerPseudo"
-          class="pseudo-input"
-          placeholder="ENTREZ VOTRE PSEUDO"
-          maxlength="12"
-        />
-        <div class="account-stats">
-          <div class="ac-level">
-            <span>Compte Niv. <span id="acLvlDisplay" class="c-gold">1</span></span>
-            <span id="acXpDisplay">0/1000 XP</span>
+      <div id="mainMenu">
+        <div class="home">
+          <header class="home-top">
+            <div class="home-profile">
+              <div class="home-level" title="Niveau du compte"><span id="acLvlDisplay">1</span></div>
+              <div class="home-id">
+                <input
+                  type="text"
+                  id="playerPseudo"
+                  class="home-pseudo"
+                  placeholder="TON PSEUDO"
+                  maxlength="12"
+                  aria-label="Pseudo"
+                />
+                <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
+                <span id="acXpDisplay" class="home-xp">0/1000 XP</span>
+              </div>
+            </div>
+            <div class="home-res">
+              <div class="home-gold" title="Or en banque">
+                <i data-icon="coin" data-color="#ffd700"></i><span id="acGoldDisplay">0</span>
+              </div>
+              <button id="btnOptions" class="home-icon-btn" aria-label="Options">
+                <i data-icon="cog"></i>
+              </button>
+            </div>
+          </header>
+
+          <div class="home-title">
+            <h1>LAST PULSE</h1>
+            <p class="home-tagline">Tant que ça bat, tu tiens.</p>
           </div>
-          <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
-          <div class="ac-gold">
-            <i data-icon="coin" data-color="#ffd700"></i> BANQUE : <span id="acGoldDisplay">0</span>
+
+          <div class="home-side home-left">
+            <button id="btnDaily" class="home-tile tile-daily">
+              <i data-icon="target"></i>
+              <span class="tile-text"><b>DÉFI DU JOUR</b><small id="dailyTileSub">Nouveau défi</small></span>
+            </button>
+            <button id="btnTalents" class="home-tile tile-talents">
+              <i data-icon="sparkle"></i>
+              <span class="tile-text"><b>TALENTS</b><small id="talentTileSub">Bonus permanents</small></span>
+            </button>
           </div>
+
+          <button id="heroStage" class="home-stage" aria-label="Changer de héros">
+            <span class="home-hero-label">
+              <b id="homeHeroName">PILOTE</b>
+              <small id="homeHeroSub">Toucher pour changer</small>
+            </span>
+          </button>
+
+          <div class="home-side home-right">
+            <button id="btnShop" class="home-tile tile-shop">
+              <i data-icon="gift"></i>
+              <span class="tile-text"><b>BOUTIQUE</b><small id="shopTileSub">Coffres</small></span>
+            </button>
+            <button id="btnInventory" class="home-tile tile-inv">
+              <i data-icon="backpack"></i>
+              <span class="tile-text"><b>ÉQUIPEMENT</b><small>Héros, armes, pets</small></span>
+            </button>
+          </div>
+
+          <div class="home-play">
+            <button id="btnPlay" class="play-btn"><i data-icon="play"></i> JOUER</button>
+          </div>
+
+          <nav class="home-dock">
+            <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
+            <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
+          </nav>
         </div>
-        <div class="btn-grid">
-          <button id="btnPlay">JOUER</button>
-          <button id="btnShop" class="secondary">BOUTIQUE</button>
-        </div>
-        <div class="btn-grid">
-          <button id="btnDaily" class="daily-btn"><i data-icon="target"></i> DÉFI DU JOUR</button>
-          <button id="btnTalents" class="talent-btn"><i data-icon="sparkle"></i> TALENTS</button>
-        </div>
-        <div class="btn-grid">
-          <button id="btnInventory" class="secondary"><i data-icon="backpack"></i> ÉQUIPEMENT</button>
-          <button id="btnLeaderboard" class="secondary"><i data-icon="trophy"></i> CLASSEMENT</button>
-        </div>
-        <div class="btn-grid">
-          <button id="btnAchievements" class="secondary"><i data-icon="medal"></i> SUCCÈS</button>
-          <button id="btnOptions" class="secondary"><i data-icon="cog"></i> OPTIONS</button>
-        </div>
-        <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
       </div>
 
       <!-- ===== BOUTIQUE ===== -->
@@ -312,6 +348,7 @@
           </div>
           <p id="cloudMessage" class="option-hint"></p>
         </div>
+        <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
         <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
       </div>
 

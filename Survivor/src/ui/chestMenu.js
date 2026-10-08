@@ -39,6 +39,10 @@ function formatRemaining(ms) {
 function updateFreeChest() {
   const ready = isFreeChestReady();
   setClass("btnShop", "has-free", ready);
+  setText(
+    "shopTileSub",
+    ready ? "Coffre gratuit prêt !" : `Gratuit dans ${formatRemaining(freeChestRemainingMs())}`,
+  );
   const btn = $("btnFreeChest");
   if (!btn) return;
   btn.disabled = !ready;
