@@ -37,13 +37,12 @@ test("niveau, prestige et équipement depuis l'écran Équipement", async ({ pag
   });
   await page.goto("/");
   await page.locator("#btnInventory").click();
-  const blaster = page.locator(".item-card", { hasText: "Blaster" });
-  await blaster.locator(".prestige-btn").click();
-  await blaster.locator("button", { hasText: "NIV" }).click();
-  await page
-    .locator(".item-card", { hasText: "Mitrailleur" })
-    .locator("button", { hasText: "ÉQUIPER" })
-    .click();
+  await page.locator(".item-card", { hasText: "Blaster" }).click();
+  await expect(page.locator("#itemDetail")).toContainText("Blaster");
+  await page.locator("#itemDetail .prestige-btn").click();
+  await page.locator("#itemDetail button", { hasText: "NIV" }).click();
+  await page.locator(".item-card", { hasText: "Mitrailleur" }).click();
+  await page.locator("#itemDetail button", { hasText: "ÉQUIPER" }).click();
   await expect(page.locator("#equippedWeapon")).toContainText("Mitrailleur");
   const acc = await game(page, ({ storage }) => JSON.parse(JSON.stringify(storage.account)));
   expect(acc.items.blaster).toEqual({ level: 2, prestige: 2, copies: 0 });
@@ -51,7 +50,17 @@ test("niveau, prestige et équipement depuis l'écran Équipement", async ({ pag
   expect(acc.gold).toBe(5000 - 40);
 });
 
-for (const weapon of ["blaster", "smg", "shotgun", "railgun", "rocket", "plasma"]) {
+for (const weapon of [
+  "blaster",
+  "smg",
+  "shotgun",
+  "railgun",
+  "rocket",
+  "plasma",
+  "flamer",
+  "disc",
+  "tesla",
+]) {
   test(`l'arme ${weapon} fonctionne en jeu`, async ({ page, isMobile }) => {
     test.skip(isMobile, "une seule plateforme suffit");
     await withSave(page, {

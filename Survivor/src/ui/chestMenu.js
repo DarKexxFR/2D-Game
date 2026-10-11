@@ -1,7 +1,7 @@
 // Coffres de la boutique et écran d'ouverture.
 
 import { ADS } from "../config.js";
-import { CHESTS, FREE_CHEST, PRESTIGE_COPIES } from "../data/items.js";
+import { CHEST_GROUPS, CHESTS, FREE_CHEST, PRESTIGE_COPIES } from "../data/items.js";
 import { adsEnabled, showRewardedAd } from "../services/ads.js";
 import {
   canPrestige,
@@ -16,7 +16,7 @@ import {
 import { playSfx } from "../services/sfx.js";
 import { account } from "../services/storage.js";
 import { $, el, forgetCached, setClass, setText } from "./dom.js";
-import { setLabel } from "./icons.js";
+import { icon, setLabel } from "./icons.js";
 import { RARITY_LABELS, itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
 import { showScreen } from "./screens.js";
 
@@ -54,15 +54,21 @@ function updateFreeChest() {
   setClass("freeChestCard", "ready", ready);
 }
 
+/** Carte « récompense » (coffre gratuit, coffre bonus) : icône, texte, bouton. */
+function rewardCard(id, className, iconName, color, title, text, btn) {
+  const card = el("div", `chest-card reward-card ${className}`);
+  card.id = id;
+  card.style.setProperty("--chest", color);
+  const ico = el("span", "reward-icon");
+  ico.append(icon(iconName, color));
+  const info = el("div", "chest-info");
+  info.append(el("h4", "", title), el("p", "chest-odds", text));
+  card.append(ico, info, btn);
+  return card;
+}
+
 function freeChestCard() {
   const chest = CHESTS.find((c) => c.id === FREE_CHEST.chestId);
-  const card = el("div", "chest-card chest-free");
-  card.id = "freeChestCard";
-  const info = el("div", "chest-info");
-  info.append(
-    setLabel(el("h4"), " Coffre gratuit", "gift", { before: true, color: "#00ff88" }),
-    el("p", "chest-odds", `Un ${chest.name.toLowerCase()} offert toutes les ${FREE_CHEST.intervalHours} h`),
-  );
   const btn = el("button", "shop-btn");
   btn.id = "btnFreeChest";
   btn.addEventListener("click", () => {
@@ -72,25 +78,21 @@ function freeChestCard() {
     onChange();
     showReveal(outcome);
   });
-  card.append(info, btn);
-  return card;
+  return rewardCard(
+    "freeChestCard",
+    "chest-free",
+    "gift",
+    "#00ff88",
+    "Coffre gratuit",
+    `Un ${chest.name.toLowerCase()} offert toutes les ${FREE_CHEST.intervalHours} h`,
+    btn,
+  );
 }
 
 /** Coffre bonus : un coffre basique de plus en regardant une pub (quelques fois par jour). */
 function adChestCard() {
   const chest = CHESTS.find((c) => c.id === FREE_CHEST.chestId);
   const left = adChestsLeft();
-  const card = el("div", "chest-card chest-ad");
-  card.id = "adChestCard";
-  const info = el("div", "chest-info");
-  info.append(
-    setLabel(el("h4"), " Coffre bonus", "play", { before: true, color: "#ffd700" }),
-    el(
-      "p",
-      "chest-odds",
-      `Un ${chest.name.toLowerCase()} en regardant une pub · ${left}/${ADS.adChestsPerDay} aujourd'hui`,
-    ),
-  );
   const btn = setLabel(el("button", "shop-btn"), left > 0 ? " PUB" : " DEMAIN", "play", { before: true });
   btn.id = "btnAdChest";
   btn.disabled = left === 0;
@@ -106,32 +108,62 @@ function adChestCard() {
     onChange();
     showReveal(outcome);
   });
-  card.append(info, btn);
+  return rewardCard(
+    "adChestCard",
+    "chest-ad",
+    "play",
+    "#ffd700",
+    "Coffre bonus",
+    `Un ${chest.name.toLowerCase()} contre une pub · ${left}/${ADS.adChestsPerDay} aujourd'hui`,
+    btn,
+  );
+}
+
+const POOL_LABELS = { gear: "Armes & armures", hero: "Héros", pet: "Familiers" };
+
+/** Tuile d'un coffre payant : grande icône, contenu, chances en barre colorée, prix. */
+function chestTile(chest) {
+  const card = el("div", `chest-card chest-tile chest-${chest.id}`);
+  card.style.setProperty("--chest", chest.color);
+  const ico = el("span", "chest-icon");
+  ico.append(icon(chest.icon, chest.color));
+
+  const bar = el("div", "odds-bar");
+  const legend = el("div", "odds-legend");
+  for (const [rarity, pct] of Object.entries(chest.odds)) {
+    const seg = el("span");
+    seg.style.flex = pct;
+    seg.style.background = rarityColor(rarity);
+    bar.append(seg);
+    const chip = el("span", "odds-chip", `${RARITY_LABELS[rarity]} ${pct}%`);
+    chip.style.setProperty("--r", rarityColor(rarity));
+    legend.append(chip);
+  }
+
+  const btn = setLabel(el("button", "shop-btn"), `${chest.cost} `, "coin", { color: "#ffd700" });
+  btn.disabled = account.gold < chest.cost;
+  btn.addEventListener("click", () => buy(chest.id));
+  card.append(
+    ico,
+    el("h4", "", chest.name),
+    el("p", "chest-pool", POOL_LABELS[chest.pool || "gear"]),
+    bar,
+    legend,
+    btn,
+  );
   return card;
 }
 
 export function renderChests() {
-  const list = $("chestList");
-  list.replaceChildren(
-    freeChestCard(),
-    ...(adsEnabled() ? [adChestCard()] : []),
-    ...CHESTS.map((chest) => {
-      const card = el("div", `chest-card chest-${chest.id}`);
-      const odds = Object.entries(chest.odds)
-        .map(([r, p]) => `${RARITY_LABELS[r]} ${p}%`)
-        .join(" · ");
-      const info = el("div", "chest-info");
-      info.append(
-        setLabel(el("h4"), ` ${chest.name}`, chest.icon, { before: true, color: chest.color }),
-        el("p", "chest-odds", odds),
-      );
-      const btn = setLabel(el("button", "shop-btn"), `${chest.cost} `, "coin", { color: "#ffd700" });
-      btn.disabled = account.gold < chest.cost;
-      btn.addEventListener("click", () => buy(chest.id));
-      card.append(info, btn);
-      return card;
-    }),
-  );
+  const free = el("div", "reward-row");
+  free.append(freeChestCard(), ...(adsEnabled() ? [adChestCard()] : []));
+  const sections = [el("h3", "shop-section", "Récompenses"), free];
+  for (const group of CHEST_GROUPS) {
+    const grid = el("div", `chest-grid cols-${group.ids.length}`);
+    grid.append(...group.ids.map((id) => chestTile(CHESTS.find((c) => c.id === id))));
+    sections.push(el("h3", "shop-section", group.title), grid);
+  }
+  $("chestList").replaceChildren(...sections);
   // Les éléments viennent d'être recréés : on vide le cache de $() pour eux.
   forgetCached("btnFreeChest", "freeChestCard");
   updateFreeChest();

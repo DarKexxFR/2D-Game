@@ -23,7 +23,9 @@ export function statsText(item, level = 1, prestige = 1) {
     const w = weaponStats(item.id, level, prestige);
     const parts = [`DMG ×${w.damage.toFixed(2)}`, `Cadence ×${(1 / w.cooldown).toFixed(1)}`];
     if (w.projectiles > 1) parts.push(`${w.projectiles} projectiles`);
-    if (w.pierce) parts.push(`Perce ${w.pierce}`);
+    if (w.pierce && !w.returns) parts.push(`Perce ${w.pierce}`);
+    if (w.returns) parts.push("Revient");
+    if (w.chain) parts.push(`${w.chain} rebonds`);
     if (w.explosion) parts.push(`Explosion ${w.explosion}`);
     return parts.join(" · ");
   }
@@ -37,6 +39,8 @@ export function statsText(item, level = 1, prestige = 1) {
   if (s.regen) parts.push(`+${s.regen.toFixed(1)} PV/s`);
   if (s.crit) parts.push(`${pct(s.crit)} CRIT`);
   if (s.gold) parts.push(`${pct(s.gold)} OR`);
+  if (s.magnet) parts.push(`+${Math.round(s.magnet)} aimant`);
+  if (s.thorns) parts.push(`${pct(s.thorns)} épines`);
   if (s.auraDamage) parts.push(`+${s.auraDamage.toFixed(1)} dégâts d'aura`);
   return parts.join(" · ") || "Aucun bonus";
 }
@@ -47,6 +51,8 @@ function petText(p) {
   if (p.heal) parts.push(`+${p.heal.toFixed(1)} PV / ${p.cooldown / 1000}s`);
   if (p.magnet) parts.push(`+${Math.round(p.magnet)} aimant`);
   if (p.gold) parts.push(`${pct(p.gold)} OR`);
+  if (p.freeze) parts.push(`gel ${(p.freeze / 60).toFixed(1)}s`);
+  if (p.shield) parts.push(`bouclier ${(p.shield / 60).toFixed(1)}s / ${p.cooldown / 1000}s`);
   return parts.join(" · ");
 }
 

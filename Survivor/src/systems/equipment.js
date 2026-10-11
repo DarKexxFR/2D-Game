@@ -48,13 +48,15 @@ function applyStats(s) {
   player.speed = player.baseSpeed;
   player.dashCooldown = Math.round(player.dashCooldown * (1 - (s.dashCooldown || 0)));
   player.regen += s.regen || 0;
+  player.magnetRadius += s.magnet || 0;
+  player.thorns += s.thorns || 0;
+  player.critChance += s.crit || 0;
+  player.goldBonus += s.gold || 0;
 }
 
 function applyHero(hero) {
   applyStats(hero.stats);
   if (hero.size) player.size = hero.size;
-  player.critChance += hero.stats.crit || 0;
-  player.goldBonus += hero.stats.gold || 0;
   for (const name of hero.startUpgrades || []) {
     applyUpgrade(
       UPGRADES.find((u) => u.name === name),

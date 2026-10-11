@@ -63,6 +63,17 @@
 #talentMenu {
   border-color: #aa66ff;
 }
+.talent-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  text-align: left;
+}
+@media (max-width: 760px) {
+  .talent-list {
+    grid-template-columns: 1fr;
+  }
+}
 .talent-card {
   display: grid;
   grid-template-columns: auto 1fr auto;

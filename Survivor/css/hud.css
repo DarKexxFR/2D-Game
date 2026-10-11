@@ -166,7 +166,9 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 40px;
-  font-family: "Press Start 2P";
+  font-family: "Orbitron"; /* Press Start 2P n'a pas de majuscules accentuées (NÉCRO-HYDRE) */
+  font-weight: 900;
+  letter-spacing: 6px;
   color: #ff0000;
   display: none;
   animation: shake 0.5s infinite;
@@ -252,5 +254,62 @@
     top: calc(90px + env(safe-area-inset-top));
     right: 12px;
     font-size: 12px;
+  }
+}
+
+/* Barre de vie du boss */
+#bossBar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(460px, 44vw);
+  pointer-events: none;
+  z-index: 6;
+  display: none;
+  text-align: center;
+}
+.boss-bar-name {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 0 8px #ff0040;
+  margin-bottom: 4px;
+}
+.boss-bar-track {
+  height: 10px;
+  border: 1px solid rgba(255, 0, 64, 0.7);
+  border-radius: 5px;
+  background: rgba(20, 0, 8, 0.8);
+  box-shadow: 0 0 12px rgba(255, 0, 64, 0.4);
+}
+#bossBarFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff0040, #ff6a8e);
+  box-shadow: 0 0 10px #ff0040;
+  transition: width 0.15s;
+}
+#bossBar.enraged .boss-bar-name {
+  color: #ff6a8e;
+  animation: shake 0.5s infinite;
+}
+#bossWarning.gold {
+  color: #ffd700;
+  text-shadow: 4px 4px 0 #6a4a00;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  #bossBar {
+    top: calc(126px + env(safe-area-inset-top));
+    width: 72vw;
+  }
+  .boss-bar-name {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .boss-bar-track {
+    height: 7px;
   }
 }

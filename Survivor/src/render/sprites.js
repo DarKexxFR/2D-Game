@@ -497,6 +497,226 @@ const SHAPES = {
     eye(c, r * 0.35, r * 0.3, r * 0.16, "#39ff14");
   },
 
+  /** Colosse de givre : bloc massif, épaules de cristal, cœur gelé. */
+  colossus(c, r, color) {
+    // Épaules et pics de glace
+    for (const s of [-1, 1]) {
+      for (const [a, len] of [
+        [1.1, 1.45],
+        [1.6, 1.3],
+        [2.1, 1.4],
+      ]) {
+        const ang = s * a;
+        neonBody(
+          c,
+          () =>
+            polygon(c, [
+              [Math.cos(ang - 0.15) * r * 0.8, Math.sin(ang - 0.15) * r * 0.8],
+              [Math.cos(ang) * r * len, Math.sin(ang) * r * len],
+              [Math.cos(ang + 0.15) * r * 0.8, Math.sin(ang + 0.15) * r * 0.8],
+            ]),
+          "#e8fbff",
+          2,
+          12,
+        );
+      }
+    }
+    neonBody(c, () => regular(c, 8, r * 0.95, TAU / 16), color, 4, 22);
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 2;
+    regular(c, 8, r * 0.65, TAU / 16);
+    c.stroke();
+    // Bras-marteaux
+    for (const s of [-1, 1]) {
+      neonBody(
+        c,
+        () => {
+          c.beginPath();
+          c.roundRect(r * 0.35, s * r * 0.95 - r * 0.2, r * 0.75, r * 0.4, r * 0.1);
+        },
+        "#bdf3ff",
+        2.5,
+        12,
+      );
+    }
+    neonBody(c, () => regular(c, 4, r * 0.32, 0), "#00e5ff", 2.5, 18);
+    dot(c, 0, 0, r * 0.12, "#ffffff", 14);
+    eye(c, r * 0.55, -r * 0.2, r * 0.09, "#00e5ff");
+    eye(c, r * 0.55, r * 0.2, r * 0.09, "#00e5ff");
+  },
+
+  /** Faucheur du vide : capuche, faux géante et yeux rouges. */
+  void_reaper(c, r, color) {
+    // Faux
+    c.strokeStyle = "#dddddd";
+    c.lineWidth = 3;
+    glow(c, "#ffffff", 8);
+    c.beginPath();
+    c.moveTo(-r * 0.9, r * 0.9);
+    c.lineTo(r * 1.1, -r * 0.9);
+    c.stroke();
+    noGlow(c);
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.moveTo(r * 1.1, -r * 0.9);
+        c.quadraticCurveTo(r * 0.4, -r * 1.6, -r * 0.6, -r * 1.2);
+        c.quadraticCurveTo(r * 0.3, -r * 1.15, r * 0.95, -r * 0.7);
+        c.closePath();
+      },
+      color,
+      2.5,
+      16,
+    );
+    // Capuche / manteau en lambeaux
+    const pts = [[r * 0.9, 0]];
+    for (let i = 1; i < 12; i++) {
+      const a = (TAU * i) / 12;
+      const rr = i % 2 ? r * 0.75 : r * 1.0;
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    }
+    neonBody(c, () => polygon(c, pts), color, 3, 22);
+    c.fillStyle = "#08000a";
+    c.beginPath();
+    c.ellipse(r * 0.2, 0, r * 0.5, r * 0.42, 0, 0, TAU);
+    c.fill();
+    eye(c, r * 0.4, -r * 0.16, r * 0.1, "#ff0040");
+    eye(c, r * 0.4, r * 0.16, r * 0.1, "#ff0040");
+  },
+
+  /** Spectre (sbire du Faucheur) : petit fantôme. */
+  phantom(c, r, color) {
+    const path = () => {
+      c.beginPath();
+      c.moveTo(r, 0);
+      c.quadraticCurveTo(r, -r, 0, -r);
+      c.quadraticCurveTo(-r * 0.9, -r, -r * 0.9, -r * 0.3);
+      c.lineTo(-r * 1.3, -r * 0.5);
+      c.lineTo(-r * 1.05, 0);
+      c.lineTo(-r * 1.3, r * 0.5);
+      c.lineTo(-r * 0.9, r * 0.3);
+      c.quadraticCurveTo(-r * 0.9, r, 0, r);
+      c.quadraticCurveTo(r, r, r, 0);
+      c.closePath();
+    };
+    c.globalAlpha = 0.85;
+    neonBody(c, path, color, 2, 14);
+    c.globalAlpha = 1;
+    dot(c, r * 0.4, -r * 0.3, r * 0.15, "#ffffff", 6);
+    dot(c, r * 0.4, r * 0.3, r * 0.15, "#ffffff", 6);
+  },
+
+  /** Voleur doré : petit sac d'or sur pattes, scintillant. */
+  goblin(c, r, color) {
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.ellipse(-r * 0.2, 0, r * 0.85, r * 0.75, 0, 0, TAU);
+      },
+      color,
+      2.5,
+      18,
+    );
+    c.strokeStyle = color;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-r * 0.95, -r * 0.35);
+    c.lineTo(-r * 1.3, -r * 0.6);
+    c.moveTo(-r * 0.95, r * 0.35);
+    c.lineTo(-r * 1.3, r * 0.6);
+    c.stroke();
+    c.font = `900 ${r * 1.1}px Orbitron`;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillStyle = "#fff6b0";
+    c.fillText("$", -r * 0.2, r * 0.05);
+    eye(c, r * 0.55, -r * 0.25, r * 0.13, "#ffffff");
+    eye(c, r * 0.55, r * 0.25, r * 0.13, "#ffffff");
+  },
+
+  /** Coffre de boss : coffre doré cerclé, serrure lumineuse. */
+  bossChest(c, r, color) {
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.roundRect(-r, -r * 0.35, r * 2, r * 1.1, r * 0.15);
+      },
+      color,
+      3,
+      18,
+    );
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.moveTo(-r, -r * 0.35);
+        c.lineTo(-r, -r * 0.55);
+        c.quadraticCurveTo(0, -r * 1.25, r, -r * 0.55);
+        c.lineTo(r, -r * 0.35);
+        c.closePath();
+      },
+      color,
+      3,
+      18,
+    );
+    c.strokeStyle = shade("#ffd700", 0.7);
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-r * 0.55, -r * 0.9);
+    c.lineTo(-r * 0.55, r * 0.75);
+    c.moveTo(r * 0.55, -r * 0.9);
+    c.lineTo(r * 0.55, r * 0.75);
+    c.stroke();
+    dot(c, 0, -r * 0.2, r * 0.2, "#ffffff", 16);
+  },
+
+  /** Tourelle de l'Ingénieur. */
+  turret(c, r, color) {
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.rect(r * 0.2, -r * 0.2, r * 1.1, r * 0.4);
+      },
+      color,
+      2,
+      8,
+    );
+    neonBody(c, () => regular(c, 6, r * 0.8), color, 2.5, 12);
+    dot(c, 0, 0, r * 0.25, "#ffffff", 8);
+  },
+
+  /** Disque laser : anneau à dents. */
+  disc(c, r, color) {
+    const pts = [];
+    for (let i = 0; i < 12; i++) {
+      const rr = i % 2 ? r * 0.75 : r * 1.05;
+      const a = (TAU * i) / 12;
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    }
+    neonBody(c, () => polygon(c, pts), color, 2, 14);
+    dot(c, 0, 0, r * 0.3, "#ffffff", 8);
+  },
+
+  /** Faux du Faucheur : lame en croissant. */
+  scythe(c, r, color) {
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.arc(0, 0, r, -1.9, 1.9);
+        c.arc(-r * 0.35, 0, r * 0.8, 1.6, -1.6, true);
+        c.closePath();
+      },
+      color,
+      2.5,
+      14,
+    );
+  },
+
   /** Projectile : halo + cœur blanc. */
   bullet(c, r, color) {
     glow(c, color, r * 3);

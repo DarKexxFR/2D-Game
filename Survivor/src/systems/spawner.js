@@ -7,6 +7,7 @@ import {
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
   ENEMY_TYPES,
+  GOBLIN,
   SPAWN_TABLES,
   WAVE_SCALING as W,
 } from "../data/enemies.js";
@@ -64,7 +65,10 @@ export function spawnWave() {
   game.isBossWave = false;
   recordWave(game.wave);
   const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
-  if (!boss) return;
+  if (!boss) {
+    if (game.wave >= GOBLIN.fromWave && Math.random() < GOBLIN.chance) spawnGoblin();
+    return;
+  }
   game.isBossWave = true;
   if (boss.warning) emit("bossWarning", boss.warning);
   game.pendingBosses.push({ type: boss.type, delay: BOSS_SPAWN_DELAY });
@@ -130,9 +134,20 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
     lastDamage: 0,
     phase: Math.random(), // décalage d'animation
     skillTimer: 100,
+    attackTimer: 90, // première attaque des boss à cycle d'attaques
     isCharging: false,
     dead: false,
   });
+}
+
+/** Voleur doré : apparaît non loin du joueur et s'enfuit avec son or. */
+export function spawnGoblin() {
+  const a = Math.random() * Math.PI * 2;
+  const x = player.worldX + Math.cos(a) * GOBLIN.spawnDistance;
+  const y = player.worldY + Math.sin(a) * GOBLIN.spawnDistance;
+  spawnEnemy("goblin", x, y);
+  createSpawnEffect(x, y, "#ffd700");
+  emit("goblin");
 }
 
 const MAX_SHRINES = 3;

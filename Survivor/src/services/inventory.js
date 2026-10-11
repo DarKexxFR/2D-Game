@@ -17,6 +17,7 @@ import {
 } from "../data/items.js";
 import { ADS } from "../config.js";
 import { weightedPick } from "../utils/math.js";
+import { addStat, recordBest } from "./achievements.js";
 import { todayKey } from "./daily.js";
 import { account, saveAccount } from "./storage.js";
 
@@ -25,6 +26,8 @@ export function ensureStarterItems() {
   for (const id of Object.keys(account.items)) if (!ITEMS[id]) delete account.items[id];
   for (const id of STARTER_ITEMS) account.items[id] ??= { level: 1, prestige: 1, copies: 0 };
   migrateBoughtDrone();
+  // Succès de prestige : tient compte des objets déjà améliorés avant leur ajout
+  recordBest("maxPrestige", Math.max(1, ...Object.values(account.items).map((o) => o.prestige || 1)));
   for (const slot of SLOTS) {
     const id = account.equipped[slot];
     if (id && (!account.items[id] || ITEMS[id].slot !== slot))
@@ -107,8 +110,11 @@ export function openAdChest() {
 function rollChest(chest) {
   const rarity = weightedPick(Object.keys(chest.odds), (r) => chest.odds[r]);
   const slots = CHEST_POOLS[chest.pool || "gear"];
-  const pool = Object.values(ITEMS).filter((it) => it.rarity === rarity && slots.includes(it.slot));
+  const inSlots = Object.values(ITEMS).filter((it) => slots.includes(it.slot));
+  const ofRarity = inSlots.filter((it) => it.rarity === rarity);
+  const pool = ofRarity.length > 0 ? ofRarity : inSlots; // sécurité si une rareté n'a aucun objet
   const item = pool[Math.floor(Math.random() * pool.length)];
+  addStat("chests");
 
   let result;
   let refund = 0;
@@ -167,6 +173,7 @@ export function prestigeUp(id) {
   const o = account.items[id];
   o.copies -= prestigeCopiesNeeded(id);
   o.prestige++;
+  recordBest("maxPrestige", o.prestige);
   saveAccount();
   return true;
 }

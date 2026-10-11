@@ -25,6 +25,7 @@ export const ENEMY_TYPES = {
     xp: 50,
     gold: 20,
     isBoss: true,
+    chest: 0.25, // chance de lâcher un coffre d'augmentation
   },
   boss: {
     health: 1200,
@@ -35,6 +36,7 @@ export const ENEMY_TYPES = {
     xp: 200,
     gold: 100,
     isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
     noExecute: true,
   },
   slime_boss: {
@@ -46,6 +48,7 @@ export const ENEMY_TYPES = {
     xp: 400,
     gold: 150,
     isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
     noExecute: true,
     splitTo: "slime_big",
     splitCount: 4,
@@ -73,11 +76,52 @@ export const ENEMY_TYPES = {
     xp: 600,
     gold: 250,
     isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
     noExecute: true,
   },
   hydra_spawn: { health: 25, damage: 10, speed: 4.5, size: 11, color: "#cc66ff", xp: 4, gold: 2 },
   slime_small: { health: 50, damage: 10, speed: 4.5, size: 18, color: "#88ff88", xp: 5, gold: 2 },
+  colossus: {
+    health: 2600,
+    damage: 50,
+    speed: 1.3,
+    size: 70,
+    color: "#9fe8ff",
+    xp: 500,
+    gold: 200,
+    isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
+    noExecute: true,
+  },
+  void_reaper: {
+    health: 3600,
+    damage: 55,
+    speed: 2.3,
+    size: 48,
+    color: "#ff3d7f",
+    xp: 800,
+    gold: 300,
+    isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
+    noExecute: true,
+  },
+  phantom: { health: 30, damage: 12, speed: 4, size: 13, color: "#ff7ab0", xp: 4, gold: 2 },
+  // Voleur doré : s'enfuit, lâche de l'or quand on le touche (voir systems/enemies.js)
+  goblin: {
+    health: 90,
+    damage: 0,
+    speed: 3.4,
+    size: 16,
+    color: "#ffd700",
+    xp: 60,
+    gold: 150,
+    noExecute: true,
+    chest: 1,
+  },
 };
+
+/** Voleur doré : apparition en début de vague, durée avant fuite, or lâché par coup. */
+export const GOBLIN = { fromWave: 3, chance: 0.3, lifetime: 900, goldPerHit: 3, spawnDistance: 380 };
 
 /** Noms affichés (statistiques de fin de partie). */
 export const ENEMY_NAMES = {
@@ -95,6 +139,10 @@ export const ENEMY_NAMES = {
   golem: "Golem de glace",
   hydra: "Nécro-Hydre",
   hydra_spawn: "Rejeton",
+  colossus: "Colosse de givre",
+  void_reaper: "Faucheur du vide",
+  phantom: "Spectre",
+  goblin: "Voleur doré",
 };
 
 /** Taille maximale d'un ennemi (slime boss en saut), utile pour la grille spatiale. */
@@ -113,9 +161,11 @@ export const SPAWN_TABLES = [
 
 // Vagues de boss, testées dans l'ordre.
 export const BOSS_WAVES = [
+  { every: 15, type: "void_reaper", warning: "FAUCHEUR DU VIDE" },
   { every: 12, type: "hydra", warning: "NÉCRO-HYDRE" },
+  { every: 10, type: "colossus", warning: "COLOSSE DE GIVRE" },
   { every: 8, type: "slime_boss", warning: "ROI SLIME" },
-  { every: 5, type: "boss", warning: "BOSS" },
+  { every: 5, type: "boss", warning: "ŒIL DU NÉANT" },
   { every: 2, type: "miniboss", warning: "" },
 ];
 

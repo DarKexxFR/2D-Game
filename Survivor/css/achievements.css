@@ -2,20 +2,44 @@
 #achievementMenu {
   border-color: #ffd700;
 }
-.achievement-count {
-  color: #ffd700;
-  font-size: 13px;
-  margin-bottom: 15px;
+.ach-total {
+  width: min(320px, 70%);
+  height: 6px;
+  border-radius: 3px;
+  background: #222;
+}
+#achievementTotalBar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  box-shadow: 0 0 8px #ffd700;
 }
 .achievement-list {
-  max-height: 50vh;
+  max-height: 52vh;
   overflow-y: auto;
-  display: grid;
-  gap: 8px;
   text-align: left;
   touch-action: pan-y;
+  padding-right: 4px;
+}
+.ach-group-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid color-mix(in srgb, var(--group) 40%, transparent);
+  padding-bottom: 4px;
+  color: var(--group);
+}
+.ach-group-title small {
+  color: #888;
+  letter-spacing: 1px;
+}
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
 .achievement-item {
+  --group: #ffd700;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -23,11 +47,11 @@
   border: 1px solid #333;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
-  opacity: 0.7;
+  opacity: 0.75;
 }
 .achievement-item.unlocked {
-  border-color: #ffd700;
-  background: rgba(255, 215, 0, 0.08);
+  border-color: color-mix(in srgb, var(--group) 70%, transparent);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--group) 14%, transparent), rgba(0, 0, 0, 0.3));
   opacity: 1;
 }
 .achievement-icon {
@@ -35,30 +59,43 @@
   width: 36px;
   text-align: center;
   flex-shrink: 0;
+  overflow: visible;
 }
 .achievement-details {
   flex: 1;
   min-width: 0;
 }
+.achievement-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
 .achievement-details h3 {
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
 }
+.ach-reward {
+  flex-shrink: 0;
+  color: #ffd700;
+  font-size: 11px;
+  font-weight: bold;
+}
 .achievement-details p {
-  font-size: 12px;
+  font-size: 11px;
   color: #aaa;
   margin: 2px 0 6px;
 }
 .achievement-progress-text {
-  font-size: 11px;
+  font-size: 10px;
   color: #00ffff;
   margin-bottom: 4px;
 }
 .unlocked .achievement-progress-text {
-  color: #ffd700;
+  color: var(--group);
 }
 .achievement-progress-track {
-  height: 6px;
+  height: 5px;
   background: #222;
   border-radius: 3px;
   overflow: hidden;
@@ -68,7 +105,7 @@
   background: #00ffff;
 }
 .unlocked .achievement-progress-bar {
-  background: #ffd700;
+  background: var(--group);
 }
 
 /* --- Notification en jeu --- */
@@ -99,7 +136,10 @@
 
 @media (max-width: 760px), (max-height: 560px) {
   .achievement-list {
-    max-height: 45vh;
+    max-height: 50vh;
+  }
+  .ach-grid {
+    grid-template-columns: 1fr;
   }
   #achievementToast {
     font-size: 12px;

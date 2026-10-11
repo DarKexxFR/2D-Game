@@ -35,6 +35,10 @@
       <div id="levelIndicator">LVL <span id="lvlVal">1</span></div>
       <div id="boxIndicator">▲ BOÎTE MYSTÈRE ▲</div>
       <div id="bossWarning">BOSS</div>
+      <div id="bossBar">
+        <div id="bossBarName" class="boss-bar-name"></div>
+        <div class="boss-bar-track"><div id="bossBarFill"></div></div>
+      </div>
       <div id="biomeBanner"></div>
       <div id="comboDisplay"></div>
       <div id="achievementToast"></div>
@@ -166,31 +170,32 @@
       </div>
 
       <!-- ===== BOUTIQUE ===== -->
-      <div id="shopMenu" class="menu-overlay">
-        <div class="shop-header">
-          <h2>ARMURERIE</h2>
-          <div class="shop-gold">
+      <div id="shopMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
+          <h2>BOUTIQUE</h2>
+          <p class="menu-sub">Coffres d’équipement, de héros et de familiers</p>
+          <div class="gold-pill">
             <i data-icon="coin" data-color="#ffd700"></i> <span id="shopGoldDisplay">0</span>
           </div>
         </div>
-        <h3 class="shop-section">COFFRES</h3>
         <div id="chestList" class="chest-list"></div>
         <button id="btnShopBack" class="secondary mt-20">RETOUR</button>
       </div>
 
       <!-- ===== ÉQUIPEMENT ===== -->
-      <div id="inventoryMenu" class="menu-overlay">
-        <div class="shop-header">
+      <div id="inventoryMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
           <h2>ÉQUIPEMENT</h2>
-          <div class="shop-gold">
+          <p class="menu-sub">Touche un objet pour le voir, l’équiper ou l’améliorer</p>
+          <div class="gold-pill">
             <i data-icon="coin" data-color="#ffd700"></i> <span id="invGoldDisplay">0</span>
           </div>
         </div>
         <div class="equipped-slots">
-          <div id="equippedHero" class="equipped-slot"></div>
-          <div id="equippedPet" class="equipped-slot"></div>
-          <div id="equippedWeapon" class="equipped-slot"></div>
-          <div id="equippedArmor" class="equipped-slot"></div>
+          <button id="equippedHero" class="equipped-slot"></button>
+          <button id="equippedPet" class="equipped-slot"></button>
+          <button id="equippedWeapon" class="equipped-slot"></button>
+          <button id="equippedArmor" class="equipped-slot"></button>
         </div>
         <div class="lb-tabs inv-tabs">
           <button id="invTabHero" class="lb-tab"><i data-icon="ship"></i> HÉROS</button>
@@ -198,7 +203,10 @@
           <button id="invTabWeapon" class="lb-tab active"><i data-icon="blaster"></i> ARMES</button>
           <button id="invTabArmor" class="lb-tab"><i data-icon="shield"></i> ARMURES</button>
         </div>
-        <div id="itemList" class="item-list"></div>
+        <div class="inv-body">
+          <div id="itemList" class="item-grid"></div>
+          <div id="itemDetail" class="item-detail"></div>
+        </div>
         <button id="btnInventoryBack" class="secondary mt-15">RETOUR</button>
       </div>
 
@@ -235,15 +243,15 @@
       </div>
 
       <!-- ===== TALENTS ===== -->
-      <div id="talentMenu" class="menu-overlay">
-        <div class="shop-header">
+      <div id="talentMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
           <h2>TALENTS</h2>
-          <div class="shop-gold">
+          <p class="menu-sub">Bonus permanents pour toutes tes parties (hors défi du jour)</p>
+          <div class="gold-pill">
             <i data-icon="coin" data-color="#ffd700"></i> <span id="talentGoldDisplay">0</span>
           </div>
         </div>
-        <p class="option-hint">Bonus permanents pour toutes tes parties (hors défi du jour).</p>
-        <div id="talentList" class="item-list"></div>
+        <div id="talentList" class="talent-list"></div>
         <button id="btnTalentsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
@@ -276,16 +284,20 @@
       </div>
 
       <!-- ===== SUCCÈS ===== -->
-      <div id="achievementMenu" class="menu-overlay">
-        <h2>SUCCÈS</h2>
-        <p id="achievementCount" class="achievement-count"></p>
+      <div id="achievementMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
+          <h2>SUCCÈS</h2>
+          <p id="achievementCount" class="menu-sub"></p>
+          <div class="ach-total"><div id="achievementTotalBar"></div></div>
+        </div>
         <div id="achievementList" class="achievement-list"></div>
         <button id="btnAchievementsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== AMÉLIORATIONS ===== -->
       <div id="upgradeMenu" class="menu-overlay">
-        <h2>CHOISISSEZ !</h2>
+        <h2 id="upgradeTitle">CHOISISSEZ !</h2>
+        <p id="upgradeSubtitle" class="menu-sub"></p>
         <div id="upgradeOptions"></div>
         <button id="btnReroll" class="secondary mt-15"></button>
       </div>

@@ -115,6 +115,52 @@ export const WEAPONS = {
     explosion: 45,
     color: "#ff00ff",
   },
+  flamer: {
+    name: "Lance-flammes",
+    icon: "flamer",
+    rarity: "rare",
+    desc: "Un torrent de flammes à courte portée qui traverse les ennemis.",
+    damage: 0.3,
+    cooldown: 0.2,
+    projectiles: 2,
+    spread: 0.14,
+    inaccuracy: 0.35,
+    speed: 8,
+    size: 6,
+    pierce: 2,
+    range: 24,
+    color: "#ff7a1a",
+  },
+  disc: {
+    name: "Disque laser",
+    icon: "disc",
+    rarity: "epic",
+    desc: "Un disque tranchant qui revient vers vous en touchant tout sur son passage.",
+    damage: 1.5,
+    cooldown: 1.4,
+    projectiles: 1,
+    spread: 0,
+    speed: 11,
+    size: 10,
+    pierce: 99,
+    returns: 30, // ticks avant le retour
+    color: "#00ff88",
+  },
+  tesla: {
+    name: "Arc Tesla",
+    icon: "tesla",
+    rarity: "legendary",
+    desc: "Éclairs qui rebondissent d'ennemi en ennemi.",
+    damage: 1.1,
+    cooldown: 0.75,
+    projectiles: 1,
+    spread: 0,
+    speed: 15,
+    size: 5,
+    pierce: 0,
+    chain: 4, // rebonds
+    color: "#66ccff",
+  },
 };
 
 // --- ARMURES : bonus de statistiques ---
@@ -166,6 +212,30 @@ export const ARMORS = {
     desc: "Technologie ultime : tout est amélioré.",
     stats: { health: 120, defense: 8, speed: 0.1, regen: 2 },
     color: "#ffd700",
+  },
+  magcoat: {
+    name: "Manteau aimanté",
+    icon: "magnet",
+    rarity: "common",
+    desc: "Attire les gemmes de plus loin.",
+    stats: { health: 15, magnet: 60 },
+    color: "#ffee55",
+  },
+  spiked: {
+    name: "Carapace à épines",
+    icon: "thorns",
+    rarity: "epic",
+    desc: "Renvoie une partie des coups au corps-à-corps.",
+    stats: { health: 50, defense: 3, thorns: 0.6 },
+    color: "#ff5577",
+  },
+  quantum: {
+    name: "Noyau quantique",
+    icon: "atom",
+    rarity: "legendary",
+    desc: "Régénération, coups critiques et vitesse.",
+    stats: { health: 90, crit: 0.1, regen: 2.5, speed: 0.08 },
+    color: "#00ffcc",
   },
 };
 
@@ -225,6 +295,28 @@ export const HEROES = {
     skill: "cannon",
     color: "#ffd700",
   },
+  engineer: {
+    name: "Ingénieur",
+    icon: "wrench",
+    rarity: "epic",
+    desc: "Robuste, commence avec un Orbe Protecteur. Déploie des tourelles.",
+    stats: { health: 30, defense: 2 },
+    startUpgrades: ["Orbe Protecteur"],
+    hull: "engineer",
+    skill: "turrets",
+    color: "#00ff88",
+  },
+  spectre: {
+    name: "Spectre",
+    icon: "spectre",
+    rarity: "legendary",
+    desc: "Rapide et critique, vole la vie. Aspire les ennemis dans le vide.",
+    stats: { speed: 0.1, crit: 0.08 },
+    startUpgrades: ["Vampirisme"],
+    hull: "spectre",
+    skill: "voidNova",
+    color: "#8a6cff",
+  },
 };
 
 // --- FAMILIERS : compagnon qui suit le joueur ---
@@ -260,6 +352,30 @@ export const PETS = {
     desc: "Tourne autour de vous et tranche les ennemis qu'elle touche.",
     power: { damage: 10, radius: 80 },
     color: "#ff3355",
+  },
+  frost: {
+    name: "Cristal de givre",
+    icon: "snowflake",
+    rarity: "rare",
+    desc: "Gèle sur place les 3 ennemis les plus proches toutes les 2,5 s.",
+    power: { damage: 5, freeze: 50, cooldown: 2500 },
+    color: "#9fe8ff",
+  },
+  guardian: {
+    name: "Gardien",
+    icon: "guardian",
+    rarity: "epic",
+    desc: "Vous protège d'un bouclier toutes les 10 secondes.",
+    power: { shield: 90, cooldown: 10000 },
+    color: "#4d9bff",
+  },
+  dragon: {
+    name: "Dragonnet",
+    icon: "dragon",
+    rarity: "legendary",
+    desc: "Crache une gerbe de boules de feu explosives.",
+    power: { damage: 9, cooldown: 1300 },
+    color: "#ff5a1f",
   },
 };
 
@@ -321,8 +437,14 @@ export const CHESTS = [
     icon: "paw",
     color: "#00ff88",
     cost: 800,
-    odds: { common: 55, rare: 35, epic: 10 },
+    odds: { common: 50, rare: 35, epic: 12, legendary: 3 },
   },
+];
+
+/** Regroupement des coffres dans la boutique. */
+export const CHEST_GROUPS = [
+  { title: "Armes & armures", ids: ["basic", "premium", "legendary"] },
+  { title: "Héros & familiers", ids: ["hero", "pet"] },
 ];
 
 /** Statistiques effectives d'une arme selon son niveau et son prestige. */

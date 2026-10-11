@@ -6,6 +6,7 @@ import { game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, rebuildEnemyGrid, spawnProjectile } from "./combat.js";
+import { heal } from "./player.js";
 import {
   addFloatingText,
   addScreenShake,
@@ -21,6 +22,8 @@ export const SKILLS = {
   earthquake: { name: "Séisme", activate: earthquake },
   meteorRain: { name: "Pluie de météores", activate: meteorRain },
   cannon: { name: "Coup de canon", activate: cannon },
+  turrets: { name: "Tourelles", activate: turrets },
+  voidNova: { name: "Nova du vide", activate: voidNova },
 };
 
 export function heroSkill() {
@@ -39,6 +42,7 @@ export function activateSkill() {
 export function updateSkills() {
   updateClones();
   updateMeteors();
+  updateTurrets();
 }
 
 /** Ennemis dans un rayon autour d'un point (copie : on peut les tuer pendant le parcours). */
@@ -168,4 +172,67 @@ function cannon() {
     type: "cannon",
     source: "skill",
   });
+}
+
+// --- INGÉNIEUR : tourelles automatiques ---
+
+const TURRETS = { count: 2, duration: 480, offset: 70, range: 420, cooldown: 220, damage: 0.9 };
+
+function turrets() {
+  playSfx("skillTitan");
+  addFloatingText(player.worldX, player.worldY - 40, "TOURELLES !", "#00ff88", 22, 60);
+  for (let i = 0; i < TURRETS.count; i++) {
+    const a = player.aimAngle + Math.PI / 2 + Math.PI * i;
+    const x = player.worldX + Math.cos(a) * TURRETS.offset;
+    const y = player.worldY + Math.sin(a) * TURRETS.offset;
+    world.turrets.push({ x, y, life: TURRETS.duration, lastShot: 0, angle: 0 });
+    createShockwave(x, y, 50, "#00ff88");
+  }
+}
+
+function updateTurrets() {
+  for (const t of world.turrets) {
+    t.life--;
+    if (game.time - t.lastShot < TURRETS.cooldown) continue;
+    const target = getNearestEnemy(t.x, t.y, TURRETS.range);
+    if (!target) continue;
+    t.lastShot = game.time;
+    t.angle = angleTo(t.x, t.y, target.x, target.y);
+    spawnProjectile({
+      x: t.x,
+      y: t.y,
+      vx: Math.cos(t.angle) * 13,
+      vy: Math.sin(t.angle) * 13,
+      size: 5,
+      damage: player.attack * TURRETS.damage,
+      color: "#00ff88",
+      pierce: 1,
+      source: "skill",
+    });
+  }
+  removeWhere(world.turrets, (t) => t.life <= 0);
+}
+
+// --- SPECTRE : nova du vide (aspire, blesse et soigne) ---
+
+const NOVA = { radius: 380, pull: 0.65, damage: 140, attackMult: 3, healPerHit: 3, maxHeal: 0.3 };
+
+function voidNova() {
+  playSfx("ultimate");
+  addScreenShake(16);
+  flashScreen("#8a6cff", 0.35);
+  addFloatingText(player.worldX, player.worldY - 40, "NOVA DU VIDE !", "#8a6cff", 24, 60);
+  const { worldX: x, worldY: y } = player;
+  createShockwave(x, y, NOVA.radius, "#8a6cff");
+  let healed = 0;
+  for (const e of enemiesNear(x, y, NOVA.radius)) {
+    // Aspiré vers le joueur (les boss bougent moins)
+    const pull = e.template.isBoss ? NOVA.pull / 4 : NOVA.pull;
+    e.x += (x - e.x) * pull;
+    e.y += (y - e.y) * pull;
+    createParticles(e.x, e.y, "#8a6cff", 3);
+    damageEnemy(e, NOVA.damage + player.attack * NOVA.attackMult, "skill");
+    healed += NOVA.healPerHit;
+  }
+  heal(Math.min(healed, player.maxHealth * NOVA.maxHeal));
 }

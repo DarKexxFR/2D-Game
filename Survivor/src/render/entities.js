@@ -27,6 +27,10 @@ const ENEMY_LOOKS = {
   hydra_spawn: { sprite: "fast", mode: "face" },
   scorpion: { sprite: "scorpion", mode: "face" },
   golem: { sprite: "golem", mode: "face" },
+  colossus: { sprite: "colossus", mode: "face" },
+  void_reaper: { sprite: "void_reaper", mode: "face" },
+  phantom: { sprite: "phantom", mode: "face" },
+  goblin: { sprite: "goblin", mode: "flee" },
 };
 
 let lastX = 0;
@@ -133,6 +137,29 @@ const HULLS = {
       const a = 0.5 + (i * (TAU - 1)) / 10;
       return [Math.cos(a) * 0.85, Math.sin(a) * 0.85];
     }),
+  ],
+  engineer: [
+    [1.1, -0.3],
+    [1.1, 0.3],
+    [0.5, 0.95],
+    [-0.5, 0.95],
+    [-0.9, 0.5],
+    [-0.65, 0],
+    [-0.9, -0.5],
+    [-0.5, -0.95],
+    [0.5, -0.95],
+  ],
+  spectre: [
+    [1.35, 0],
+    [0.2, -0.45],
+    [-0.3, -1.1],
+    [-0.15, -0.35],
+    [-0.95, -0.25],
+    [-0.7, 0],
+    [-0.95, 0.25],
+    [-0.15, 0.35],
+    [-0.3, 1.1],
+    [0.2, 0.45],
   ],
   corsair: [
     [1.3, 0],
@@ -313,6 +340,82 @@ const PET_DRAWERS = {
   },
 };
 
+Object.assign(PET_DRAWERS, {
+  /** Cristal de givre : losange de glace entouré de flocons. */
+  frost(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 260) * 3, color, 2);
+    ctx.rotate(now / 900);
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 1.2);
+    ctx.lineTo(s * 0.6, 0);
+    ctx.lineTo(0, s * 1.2);
+    ctx.lineTo(-s * 0.6, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 6; i++) {
+      const a = (TAU * i) / 6;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * s * 1.4, Math.sin(a) * s * 1.4);
+      ctx.lineTo(Math.cos(a) * s * 1.8, Math.sin(a) * s * 1.8);
+      ctx.stroke();
+    }
+    endNeon();
+  },
+
+  /** Gardien : bouclier volant avec anneau. */
+  guardian(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 300) * 3, color, 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.lineTo(s * 0.9, -s * 0.6);
+    ctx.lineTo(s * 0.75, s * 0.4);
+    ctx.lineTo(0, s * 1.1);
+    ctx.lineTo(-s * 0.75, s * 0.4);
+    ctx.lineTo(-s * 0.9, -s * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = 0.4 + Math.sin(now / 200) * 0.2;
+    strokeCircle(0, 0, s * 1.6, color, 1);
+    ctx.globalAlpha = 1;
+    fillCircle(0, 0, s * 0.25, "#ffffff");
+    endNeon();
+  },
+
+  /** Dragonnet : petite tête de dragon aux ailes battantes, tournée vers sa cible. */
+  dragon(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 220) * 3, color, 2);
+    ctx.rotate(pet.active ? pet.angle : 0);
+    const flap = Math.sin(now / 90) * 0.4;
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.rotate(side * (0.4 + flap));
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.2, 0);
+      ctx.lineTo(-s * 1.1, side * s * 1.4);
+      ctx.lineTo(-s * 0.5, side * s * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.moveTo(s * 1.3, 0);
+    ctx.lineTo(s * 0.2, -s * 0.6);
+    ctx.lineTo(-s * 0.9, 0);
+    ctx.lineTo(s * 0.2, s * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    fillCircle(s * 0.5, -s * 0.2, s * 0.14, "#ffee00");
+    fillCircle(s * 0.5, s * 0.2, s * 0.14, "#ffee00");
+    endNeon();
+  },
+});
+
 /** Dessine un familier hors partie (écran d'accueil). */
 export function drawPet(kind, x, y, size, color, now) {
   PET_DRAWERS[kind]?.(x, y, size, color, now);
@@ -395,13 +498,24 @@ export function drawEnemies() {
       const pulse = e.type === "kamikaze" ? 1 + Math.sin(t / 60) * 0.08 : 1;
       drawSprite(ctx, sprite, e.x, e.y, t * look.spin, scale * pulse);
     } else {
-      const angle = Math.atan2(player.worldY - e.y, player.worldX - e.x);
+      let angle = Math.atan2(player.worldY - e.y, player.worldX - e.x);
+      if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
+    if (e.enraged) drawFury(e, now);
 
     if (e.health < e.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
+}
+
+/** Boss en furie : double halo rouge qui pulse. */
+function drawFury(e, now) {
+  ctx.globalAlpha = 0.5 + Math.sin(now / 90) * 0.3;
+  strokeCircle(e.x, e.y, e.size * 1.25 + Math.sin(now / 120) * 4, e.color, 2);
+  ctx.globalAlpha = 0.25;
+  strokeCircle(e.x, e.y, e.size * 1.45 + Math.sin(now / 90) * 6, e.color, 1);
+  ctx.globalAlpha = 1;
 }
 
 /** Cous et têtes de la Nécro-Hydre, dessinés sous le corps. */
@@ -478,6 +592,10 @@ export function drawProjectiles() {
       drawKunai(p);
       continue;
     }
+    if (p.type === "disc") {
+      drawSprite(ctx, getSprite("disc", roundSize(p.size), p.color), p.x, p.y, performance.now() / 40);
+      continue;
+    }
     // Traînée puis projectile lumineux
     ctx.strokeStyle = p.color;
     ctx.globalAlpha = 0.35;
@@ -491,6 +609,10 @@ export function drawProjectiles() {
   }
   for (const p of world.enemyProjectiles) {
     if (!isOnScreen(p.x, p.y, p.size)) continue;
+    if (p.scythe) {
+      drawSprite(ctx, getSprite("scythe", roundSize(p.size), p.color), p.x, p.y, performance.now() / 50);
+      continue;
+    }
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
   }
 }

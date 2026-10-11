@@ -12,7 +12,7 @@ import { initCloudSave } from "./services/cloudSave.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
 import { applyTalents } from "./data/talents.js";
 import { ensureStarterItems } from "./services/inventory.js";
-import { recordCompletedRun } from "./services/achievements.js";
+import { addStat, recordBest, recordCompletedRun } from "./services/achievements.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
 import {
   account,
@@ -32,6 +32,7 @@ import {
 import { updateEffects } from "./systems/effects.js";
 import { activateSkill, updateSkills } from "./systems/skills.js";
 import { updateEnemies } from "./systems/enemies.js";
+import { updateHazards } from "./systems/hazards.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
 import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
@@ -40,7 +41,7 @@ import { reviveFromAd, updatePlayer } from "./systems/player.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
-import { showBiomeBanner, showBossWarning, showHud, updateHud } from "./ui/hud.js";
+import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { hideScreens } from "./ui/screens.js";
@@ -48,7 +49,7 @@ import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchC
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
-import { initUpgradeMenu, showUpgradeMenu } from "./ui/upgradeMenu.js";
+import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
 import { initDailyMenu } from "./ui/dailyMenu.js";
 import { initTalentMenu } from "./ui/talentMenu.js";
@@ -65,6 +66,7 @@ function startGame(mode = "normal") {
   playRandomMusic();
   restoreRandom();
   resetGame();
+  resetUpgradeMenu();
   if (mode === "daily") {
     const daily = dailyChallenge();
     game.daily = daily;
@@ -108,6 +110,8 @@ function endGame() {
   restoreRandom();
   showTouchControls(false);
   addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
+  recordBest("bestCombo", game.stats.bestCombo);
+  if (game.daily) addStat("dailyRuns");
   recordCompletedRun();
   refreshAccountUI();
   const pseudo = getPseudo();
@@ -151,6 +155,7 @@ function update() {
   updateOrbitals();
   updateSkills();
   updateEnemies();
+  updateHazards();
   updateEffects();
 }
 
@@ -221,6 +226,11 @@ function init() {
   });
 
   on("levelUp", showUpgradeMenu);
+  on("bossChest", showBossChest);
+  on("goblin", () => {
+    showGoblinWarning();
+    playSfx("combo");
+  });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
   on("playerDied", () => (canOfferRevive() ? showReviveOffer() : endGame()));
   on("biomeChange", showBiomeBanner);
