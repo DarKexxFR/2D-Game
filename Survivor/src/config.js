@@ -107,6 +107,13 @@ export const RARITIES = {
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
 };
 
+// Coffre lâché par un boss : une augmentation au choix (raretés hautes favorisées) + de l'or.
+export const BOSS_CHEST = {
+  weights: { rare: 40, epic: 40, legendary: 20 },
+  gold: 40,
+  goldPerWave: 8,
+};
+
 // Publicités récompensées (vidéo facultative contre un bonus). provider "demo" = fausse
 // pub interne en attendant une vraie régie (CrazyGames, Poki, AdSense...), "none" = désactivé.
 export const ADS = {

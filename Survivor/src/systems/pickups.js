@@ -1,7 +1,9 @@
 // Objets ramassables : gemmes d'XP, trousses de soin et sanctuaires (buffs).
 
 import { BUFF_DURATIONS, LIMITS, MAP_BOUNDS } from "../config.js";
-import { player, world } from "../core/state.js";
+import { emit } from "../core/events.js";
+import { game, player, world } from "../core/state.js";
+import { addStat } from "../services/achievements.js";
 import { playSfx } from "../services/sfx.js";
 import { clamp, dist, removeWhere } from "../utils/math.js";
 import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.js";
@@ -40,6 +42,12 @@ export function dropLootBox(x, y) {
   return true;
 }
 
+/** Coffre d'augmentation lâché par un boss : s'ouvre quand on marche dessus. */
+export function dropBossChest(x, y) {
+  world.bossChests.push({ x: insideArena(x, "x"), y: insideArena(y, "y"), size: 24, collected: false });
+  addFloatingText(x, y - 40, "COFFRE !", "#ffd700", 22, 80);
+}
+
 /** Position aléatoire autour d'un point, ramenée à l'intérieur de la zone de combat. */
 export function arenaPointNear(x, y, spread) {
   return {
@@ -59,6 +67,13 @@ export function updatePickups() {
     addFloatingText(player.worldX, player.worldY - 50, `${s.name} ACTIVÉ !`, s.color, 20);
     createSpawnEffect(player.worldX, player.worldY, s.color);
     player.buffs[s.type] = BUFF_DURATIONS[s.type];
+  });
+  collect(world.bossChests, (chest) => {
+    game.stats.bossChests++;
+    addStat("bossChests");
+    createSpawnEffect(chest.x, chest.y, "#ffd700");
+    playSfx("levelUp");
+    emit("bossChest");
   });
 }
 

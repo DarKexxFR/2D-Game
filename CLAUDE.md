@@ -36,7 +36,7 @@ Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
 | `config.js` | Constantes et équilibrage (`STORAGE_KEYS`, `TICK_MS`, `MAP_BOUNDS`, `PLAYER_DEFAULTS`, config Supabase…) |
 | `core/` | `state.js` (état global : `game`, `player`, `world`, `camera`, `pet`), `canvas.js` (`ctx`, `view`, qualité), `input.js` (actions clavier/souris/tactile), `events.js` (bus `emit` / `on`) |
 | `data/` | Données pures : `items.js` (armes, armures, HEROES, PETS, CHESTS), `upgrades.js` (+ EVOLUTIONS), `enemies.js`, `biomes.js`, `talents.js`, `achievements.js`, `icons.js` (tracés SVG) |
-| `systems/` | Logique de jeu par tick : `player`, `enemies`, `combat`, `spawner`, `pickups`, `skills`, `pet`, `equipment`, `effects`, `mysteryBox` |
+| `systems/` | Logique de jeu par tick : `player`, `enemies`, `combat`, `spawner`, `pickups`, `skills`, `pet`, `equipment`, `effects`, `mysteryBox`, `hazards` (attaques de zone des boss) |
 | `render/` | Dessin : `renderer.js` (ordre des couches), `entities.js`, `world.js`, `effects.js`, `sprites.js` (sprites néon en cache), `menuScene.js` (scène animée de l'accueil) |
 | `services/` | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js`, `daily.js`, `ads.js` (pubs récompensées), `audio.js` / `sfx.js` |
 | `ui/` | Menus DOM : `screens.js` (un seul écran visible), `mainMenu.js`, `hud.js`, `dom.js` (écritures DOM en cache), `icons.js`… |
@@ -65,6 +65,15 @@ Principes :
   donnée collectée ou nouvelle régie pub. Éditeur : pseudo DarKexxFR (site non commercial) ;
   contact choisi par le propriétaire. À repasser en version professionnelle (identité, statut)
   si le jeu génère des revenus (vraie régie pub).
+- **Boss** : chaque boss enchaîne un cycle d'attaques **annoncées** (`systems/hazards.js` : zone ronde,
+  laser, onde de choc ; le dash et le bouclier protègent) et passe en « furie » sous 50 % de vie.
+  `e.rooted` immobilise un boss pendant une attaque. Le Roi Slime est volontairement laissé tel quel.
+  Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
+  amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
+- **Succès** : `data/achievements.js` (catégorie, statistique suivie, seuil, or gagné) ; les statistiques
+  se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
+- **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
+  `.menu-wide` pour les écrans larges (boutique, équipement, talents, succès), sur le modèle du défi du jour.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -111,7 +120,9 @@ Principes :
 Fait : classement mondial, mobile + tir auto, coffres / équipement / prestige, coffre
 gratuit, options, succès, refonte néon, héros / familiers / Nécro-Hydre, sauvegarde en
 ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stats de fin,
-touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU.
+touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
+(boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
+coffres de boss, 29 succès avec récompenses, Voleur doré.
 
 En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
 

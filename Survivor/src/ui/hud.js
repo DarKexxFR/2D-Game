@@ -1,7 +1,8 @@
 // Interface en jeu (panneau de stats, barres d'XP / dash / ultime).
 
 import { WAVE_DURATION } from "../config.js";
-import { game, mysteryBox, player } from "../core/state.js";
+import { game, mysteryBox, player, world } from "../core/state.js";
+import { ENEMY_NAMES } from "../data/enemies.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { heroSkill } from "../systems/skills.js";
 import { setClass, setText, setVisible, setWidth } from "./dom.js";
@@ -11,7 +12,10 @@ const HUD_ELEMENTS = ["ui", "xpContainer", "levelIndicator"];
 
 export function showHud(visible) {
   for (const id of HUD_ELEMENTS) setVisible(id, visible);
-  if (!visible) setVisible("boxIndicator", false);
+  if (!visible) {
+    setVisible("boxIndicator", false);
+    setVisible("bossBar", false);
+  }
   showTouchControls(visible);
 }
 
@@ -25,6 +29,7 @@ export function updateHud() {
   setWidth("xpBar", player.xp / player.xpToNextLevel);
   setText("lvlVal", player.level);
   updateCombo();
+  updateBossBar();
 
   setText("statAtk", Math.round(player.attack));
   setText("statDef", Math.round(player.defense));
@@ -71,7 +76,26 @@ function updateCombo() {
   setClass("comboDisplay", "hot", shown >= 25);
 }
 
-export function showBossWarning(text) {
+/** Barre de vie du boss le plus imposant encore en vie, en haut de l'écran. */
+function updateBossBar() {
+  let boss = null;
+  for (const e of world.enemies) {
+    if (!e.dead && e.template.isBoss && (!boss || e.maxHealth > boss.maxHealth)) boss = e;
+  }
+  setVisible("bossBar", !!boss);
+  if (!boss) return;
+  setText("bossBarName", (ENEMY_NAMES[boss.type] || "Boss") + (boss.enraged ? " · FURIE" : ""));
+  setWidth("bossBarFill", boss.health / boss.maxHealth);
+  setClass("bossBar", "enraged", !!boss.enraged);
+}
+
+/** Annonce du Voleur doré (même bandeau que les boss, en or). */
+export function showGoblinWarning() {
+  showBossWarning("VOLEUR DORÉ !", true);
+}
+
+export function showBossWarning(text, gold = false) {
+  setClass("bossWarning", "gold", gold);
   setText("bossWarning", text);
   setVisible("bossWarning", true);
   clearTimeout(bossWarningTimeout);

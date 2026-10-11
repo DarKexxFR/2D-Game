@@ -4,6 +4,7 @@
 import { LIMITS } from "../config.js";
 import { gfx } from "../core/canvas.js";
 import { game, world } from "../core/state.js";
+import { recordBest } from "../services/achievements.js";
 import { playSfx } from "../services/sfx.js";
 import { removeWhere } from "../utils/math.js";
 
@@ -68,6 +69,7 @@ export function addComboKill(x, y) {
   game.combo++;
   game.comboTimer = COMBO_WINDOW;
   game.stats.bestCombo = Math.max(game.stats.bestCombo, game.combo);
+  if (COMBO_MILESTONES.includes(game.combo)) recordBest("bestCombo", game.combo);
   if (COMBO_MILESTONES.includes(game.combo)) {
     addFloatingText(x, y - 30, `COMBO ×${game.combo} !`, "#ff2a6d", 22 + Math.min(game.combo, 100) / 10, 70);
     playSfx("combo");
@@ -106,4 +108,7 @@ export function updateEffects() {
 
   for (const g of world.ghosts) g.life--;
   removeWhere(world.ghosts, (g) => g.life <= 0);
+
+  for (const b of world.bolts) b.life--;
+  removeWhere(world.bolts, (b) => b.life <= 0);
 }

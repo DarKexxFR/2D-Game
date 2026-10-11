@@ -22,6 +22,10 @@ export const world = {
   ghosts: [],
   clones: [], // clones d'ombre du Ninja (voir systems/skills.js)
   meteors: [], // météores du Mage en train de tomber
+  turrets: [], // tourelles de l'Ingénieur
+  hazards: [], // attaques de zone des boss (voir systems/hazards.js)
+  bossChests: [], // coffres d'augmentation lâchés par les boss
+  bolts: [], // éclairs de l'Arc Tesla (purement visuels)
 };
 
 export function resetGame() {
@@ -46,7 +50,7 @@ export function resetGame() {
     adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
-    stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0 }, // pour l'écran de fin
+    stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0, bossChests: 0 }, // pour l'écran de fin
     combo: 0, // éliminations enchaînées (voir systems/effects.js)
     comboTimer: 0,
     slowMo: 0, // ticks de ralenti restants (mort d'un boss)
@@ -119,7 +123,7 @@ export function resetPet(stats) {
     y: 0,
     size: 11,
     angle: 0,
-    lastAction: 0,
+    lastAction: -Infinity, // premier effet dès le début de la partie
   });
 }
 

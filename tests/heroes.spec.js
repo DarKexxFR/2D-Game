@@ -29,15 +29,16 @@ test("écran Équipement : onglets Héros / Familiers, équiper puis retirer un 
   await page.goto("/");
   await page.locator("#btnInventory").click();
   await page.locator("#invTabHero").click();
-  await page.locator(".item-card", { hasText: "Titan" }).locator("button", { hasText: "ÉQUIPER" }).click();
+  await page.locator(".item-card", { hasText: "Titan" }).click();
+  await page.locator("#itemDetail button", { hasText: "ÉQUIPER" }).click();
   await expect(page.locator("#equippedHero")).toContainText("Titan");
 
   await page.locator("#invTabPet").click();
-  const medic = page.locator(".item-card", { hasText: "Médic" });
-  await medic.locator("button", { hasText: "ÉQUIPER" }).click();
+  await page.locator(".item-card", { hasText: "Médic" }).click();
+  await page.locator("#itemDetail button", { hasText: "ÉQUIPER" }).click();
   await expect(page.locator("#equippedPet")).toContainText("Médic");
-  await medic.locator("button", { hasText: "RETIRER" }).click();
-  await expect(page.locator("#equippedPet")).toContainText("Aucun familier");
+  await page.locator("#itemDetail button", { hasText: "RETIRER" }).click();
+  await expect(page.locator("#equippedPet")).toContainText("Aucun");
   const eq = await game(page, ({ storage }) => ({ ...storage.account.equipped }));
   expect(eq).toMatchObject({ hero: "titan", pet: null });
 });
@@ -77,7 +78,7 @@ test("les héros appliquent leurs bonus en partie", async ({ page, isMobile }) =
   expect(new Set(Object.values(results).map((r) => r.hull)).size).toBe(5);
 });
 
-for (const pet of ["drone", "collector", "medic", "reaper"]) {
+for (const pet of ["drone", "collector", "medic", "reaper", "frost", "guardian", "dragon"]) {
   test(`le familier ${pet} agit en jeu`, async ({ page, isMobile }) => {
     test.skip(isMobile, "une seule plateforme suffit");
     await withSave(page, {
@@ -99,6 +100,10 @@ for (const pet of ["drone", "collector", "medic", "reaper"]) {
       await expect
         .poll(() => game(page, ({ state }) => state.player.health), { timeout: 8000 })
         .toBeGreaterThan(10);
+    } else if (pet === "guardian") {
+      await expect
+        .poll(() => game(page, ({ state }) => state.player.buffs.shield), { timeout: 12_000 })
+        .toBeGreaterThan(0);
     } else if (pet === "collector") {
       expect(await game(page, ({ state }) => state.player.magnetRadius)).toBeGreaterThan(200);
     } else {
@@ -152,6 +157,8 @@ const SKILL_CHECKS = {
   titan: ({ state }) => state.world.enemies.some((e) => e.stun > 0),
   mage: ({ state }) => state.world.meteors.length > 0,
   pirate: ({ state }) => state.world.projectiles.some((p) => p.type === "cannon"),
+  engineer: ({ state }) => state.world.turrets.length === 2,
+  spectre: ({ state }) => state.world.enemies.some((e) => e.health < e.maxHealth),
 };
 
 for (const [hero, check] of Object.entries(SKILL_CHECKS)) {

@@ -2,9 +2,10 @@
 
 import { WAVE_DURATION } from "../config.js";
 import { ctx, resetTransform, view } from "../core/canvas.js";
-import { camera, game } from "../core/state.js";
+import { camera, game, world } from "../core/state.js";
 import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
+import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 
 export { renderMenuBackground } from "./menuScene.js";
@@ -25,9 +26,13 @@ export function render() {
   drawMysteryBox();
   drawShrines(now);
   drawPickups();
+  drawHazards(now); // au sol, sous les entités
+  drawBossChests(now);
+  drawTurrets(now);
   drawPlayer(now);
   drawEnemies();
   drawProjectiles();
+  drawBolts();
   drawSkillEffects();
   drawParticles();
   drawVisualEffects();
@@ -41,6 +46,7 @@ export function render() {
     ctx.globalAlpha = 1;
   }
 
+  drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1) drawWaveTimer();
   ctx.restore();
@@ -56,4 +62,37 @@ function drawWaveTimer() {
   ctx.shadowColor = "#00ffff";
   ctx.fillRect(x, 55, 300 * pct, 6);
   ctx.shadowBlur = 0;
+}
+
+/** Flèche dorée au bord de l'écran qui pointe vers le Voleur doré quand il est hors champ. */
+function drawGoblinPointer(now) {
+  const g = world.enemies.find((e) => e.type === "goblin" && !e.dead);
+  if (!g) return;
+  const sx = g.x - camera.x;
+  const sy = g.y - camera.y;
+  const margin = 40;
+  if (sx > 0 && sx < view.width && sy > 0 && sy < view.height) return;
+  const cx = view.width / 2;
+  const cy = view.height / 2;
+  const a = Math.atan2(sy - cy, sx - cx);
+  // Point sur le bord de l'écran dans la direction du voleur
+  const k = Math.min(
+    (cx - margin) / Math.abs(Math.cos(a) || 1e-6),
+    (cy - margin) / Math.abs(Math.sin(a) || 1e-6),
+  );
+  ctx.save();
+  ctx.translate(cx + Math.cos(a) * k, cy + Math.sin(a) * k);
+  ctx.rotate(a);
+  ctx.globalAlpha = 0.7 + Math.sin(now / 120) * 0.3;
+  ctx.fillStyle = "#ffd700";
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = "#ffd700";
+  ctx.beginPath();
+  ctx.moveTo(16, 0);
+  ctx.lineTo(-8, -11);
+  ctx.lineTo(-3, 0);
+  ctx.lineTo(-8, 11);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }

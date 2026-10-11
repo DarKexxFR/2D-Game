@@ -4,7 +4,7 @@ import { KUNAI, MAP_BOUNDS, MYSTERY_BOX } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
-import { MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { GOBLIN, MAX_ENEMY_SIZE } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
@@ -18,7 +18,7 @@ import {
   flashScreen,
   slowMotion,
 } from "./effects.js";
-import { createGem, dropLootBox } from "./pickups.js";
+import { createGem, dropBossChest, dropLootBox } from "./pickups.js";
 import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
 import { recordKill } from "../services/achievements.js";
@@ -65,13 +65,14 @@ export function damageEnemy(enemy, amount, source = "other") {
   game.stats.damage[source] = (game.stats.damage[source] || 0) + dealt;
   enemy.health -= amount;
   enemy.hitTime = game.time; // flash blanc au rendu
+  if (enemy.type === "goblin") stealGold(enemy);
   if (enemy.health <= 0) killEnemy(enemy);
 }
 
 export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
-  recordKill(enemy.template.isBoss);
+  recordKill(enemy.type, enemy.template.isBoss);
   playSfx("kill");
 
   game.score += 10;
@@ -84,6 +85,7 @@ export function killEnemy(enemy) {
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
   );
   if (Math.random() < 0.05) dropLootBox(enemy.x, enemy.y);
+  if (enemy.template.chest && Math.random() < enemy.template.chest) dropBossChest(enemy.x, enemy.y);
 
   const t = enemy.template;
   if (game.isBossWave && t.isBoss && !world.enemies.some((e) => !e.dead && e.template.isBoss)) {
@@ -109,6 +111,15 @@ export function killEnemy(enemy) {
   if (player.evolutions.bloodHarvest) heal(player.maxHealth * 0.01);
   chargeUltimate();
   createParticles(enemy.x, enemy.y, enemy.color, 8);
+}
+
+/** Chaque coup sur le Voleur doré fait tomber un peu d'or (au plus toutes les 0,2 s). */
+function stealGold(enemy) {
+  if (game.time - (enemy.lastSteal ?? -1e9) < 200) return;
+  enemy.lastSteal = game.time;
+  game.runGold += GOBLIN.goldPerHit;
+  addFloatingText(enemy.x, enemy.y - 20, `+${GOBLIN.goldPerHit}`, "#ffd700", 13, 30);
+  createParticles(enemy.x, enemy.y, "#ffd700", 3);
 }
 
 /** Mort d'un boss : ralenti, flash, onde de choc et feu d'artifice de particules. */
@@ -225,6 +236,10 @@ function createPlayerProjectile(angle) {
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
     explosion: w.explosion || 0,
     life: w.range || Infinity,
+    returns: w.returns || 0,
+    chain: w.chain || 0,
+    type: w.returns ? "disc" : undefined,
+    age: 0,
     dead: false,
   });
 }
@@ -235,6 +250,8 @@ export function spawnProjectile(props) {
 
 export function updateProjectiles() {
   for (const proj of world.projectiles) {
+    if (proj.returns && ++proj.age >= proj.returns) steerBack(proj);
+    if (proj.dead) continue;
     proj.x += proj.vx;
     proj.y += proj.vy;
     if (
@@ -301,6 +318,48 @@ function hitEnemy(proj, enemy) {
   const source = proj.source || (proj.type === "kunai" ? "kunai" : "weapon");
   damageEnemy(enemy, damage, source);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
+  if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
+}
+
+/** Disque laser : après un moment il revient vers le joueur et peut retoucher les ennemis. */
+function steerBack(proj) {
+  if (proj.age === proj.returns) proj.hits?.clear();
+  const d = dist(proj.x, proj.y, player.worldX, player.worldY);
+  if (d < player.size + 10) {
+    proj.dead = true;
+    return;
+  }
+  const speed = Math.hypot(proj.vx, proj.vy);
+  const a = angleTo(proj.x, proj.y, player.worldX, player.worldY);
+  proj.vx += (Math.cos(a) * speed - proj.vx) * 0.15;
+  proj.vy += (Math.sin(a) * speed - proj.vy) * 0.15;
+}
+
+const CHAIN_RANGE = 170;
+
+/** Arc Tesla : l'éclair saute vers les ennemis proches pas encore touchés. */
+function chainLightning(from, damage, jumps, color, source) {
+  const hit = new Set([from]);
+  const points = [{ x: from.x, y: from.y }];
+  let current = from;
+  for (let j = 0; j < jumps; j++) {
+    let next = null;
+    let best = CHAIN_RANGE;
+    for (const e of enemyGrid.query(current.x, current.y, CHAIN_RANGE)) {
+      if (e.dead || hit.has(e)) continue;
+      const d = dist(e.x, e.y, current.x, current.y);
+      if (d < best) {
+        best = d;
+        next = e;
+      }
+    }
+    if (!next) break;
+    hit.add(next);
+    points.push({ x: next.x, y: next.y });
+    damageEnemy(next, damage, source);
+    current = next;
+  }
+  if (points.length > 1) world.bolts.push({ points, color, life: 10 });
 }
 
 /** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
