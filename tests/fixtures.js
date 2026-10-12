@@ -5,7 +5,8 @@ import { test as base, expect } from "@playwright/test";
 export const test = base.extend({
   // Réponses du faux Supabase, modifiables par test : supabase.scores, supabase.mode...
   supabase: async ({}, use) => {
-    await use({ scores: [], mode: "ok", posts: [], cloud: {} });
+    // accounts : sauvegardes liées à un compte (par adresse) ; emails : codes demandés
+    await use({ scores: [], mode: "ok", posts: [], cloud: {}, accounts: {}, emails: [] });
   },
   page: async ({ page, supabase }, use) => {
     const errors = [];
@@ -13,6 +14,8 @@ export const test = base.extend({
     await page.route("https://*.supabase.co/**", (route) => {
       const req = route.request();
       if (supabase.mode === "down") return route.fulfill({ status: 503, body: "down" });
+      const auth = fakeAuth(route, req, supabase);
+      if (auth) return auth;
       // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
       const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
       if (rpc === "save_progress") {
@@ -47,6 +50,75 @@ export const test = base.extend({
 });
 
 export { expect };
+
+/** Code à 6 chiffres accepté par le faux Supabase pour toute adresse e-mail. */
+export const EMAIL_CODE = "123456";
+/** Adresse du faux compte Google. */
+export const GOOGLE_EMAIL = "joueur@gmail.com";
+
+const json = (body, status = 200) => ({
+  status,
+  contentType: "application/json",
+  body: JSON.stringify(body),
+});
+
+/** Faux compte : le jeton porte l'adresse (« tok-adresse »), l'identifiant en découle. */
+function fakeSession(email) {
+  return {
+    access_token: `tok-${email}`,
+    refresh_token: `ref-${email}`,
+    expires_in: 3600,
+    token_type: "bearer",
+    user: {
+      id: `id-${email}`,
+      email,
+      app_metadata: { provider: email === GOOGLE_EMAIL ? "google" : "email" },
+    },
+  };
+}
+
+const userFromToken = (req) => req.headers().authorization?.match(/^Bearer tok-(.+)$/)?.[1] ?? null;
+
+/** Authentification simulée (/auth/v1/...) et sauvegardes liées au compte (RPC). */
+function fakeAuth(route, req, supabase) {
+  const url = new URL(req.url());
+  const path = url.pathname;
+  if (path.endsWith("/auth/v1/authorize")) {
+    // « Google » : renvoie directement sur le jeu avec la session dans l'URL
+    const s = fakeSession(GOOGLE_EMAIL);
+    const hash = `access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=3600`;
+    return route.fulfill({
+      status: 302,
+      headers: { location: `${url.searchParams.get("redirect_to")}#${hash}` },
+    });
+  }
+  if (path.endsWith("/auth/v1/otp")) {
+    supabase.emails.push(req.postDataJSON().email);
+    return route.fulfill(json({}));
+  }
+  if (path.endsWith("/auth/v1/verify")) {
+    const { email, token } = req.postDataJSON();
+    return route.fulfill(
+      token === EMAIL_CODE ? json(fakeSession(email)) : json({ msg: "Code invalide" }, 403),
+    );
+  }
+  if (path.endsWith("/auth/v1/user")) {
+    const email = userFromToken(req);
+    return route.fulfill(email ? json(fakeSession(email).user) : json({}, 401));
+  }
+  if (path.endsWith("/auth/v1/token")) {
+    return route.fulfill(json(fakeSession(req.postDataJSON().refresh_token.replace(/^ref-/, ""))));
+  }
+  if (path.endsWith("/auth/v1/logout")) return route.fulfill({ status: 204, body: "" });
+  const rpc = path.match(/\/rpc\/(\w+_account_progress)$/)?.[1];
+  if (!rpc) return null;
+  const user = userFromToken(req);
+  if (!user) return route.fulfill(json({ message: "Non connecté" }, 401));
+  if (rpc === "load_account_progress") return route.fulfill(json(supabase.accounts[user] ?? null));
+  if (rpc === "save_account_progress") supabase.accounts[user] = req.postDataJSON().p_data;
+  if (rpc === "delete_account_progress") delete supabase.accounts[user];
+  return route.fulfill({ status: 204, body: "" });
+}
 
 /** Exécute une fonction avec les modules du jeu chargés : run(page, ({ state, player }) => ...). */
 export async function game(page, fn, arg) {

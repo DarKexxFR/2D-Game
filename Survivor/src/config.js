@@ -8,6 +8,8 @@ export const STORAGE_KEYS = {
   leaderboard: "survivor_lb_v1",
   cloudCode: "survivor_cloud_code",
   dailyBest: "survivor_daily_best",
+  auth: "survivor_auth", // session de connexion (Google ou e-mail), facultative
+  accountSync: "survivor_account_sync", // dernière version échangée avec le compte (anti-écrasement)
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.

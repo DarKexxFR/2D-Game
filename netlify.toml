@@ -1,0 +1,11 @@
+# Hébergement de last-pulse.com (Netlify). Le jeu est servi tel quel depuis Survivor/ :
+# aucune étape de construction. L'ancienne adresse GitHub Pages sert de passerelle (src/transfer.js).
+[build]
+  publish = "Survivor"
+  command = ""
+
+# Les modules du jeu changent à chaque mise à jour : le navigateur revérifie avant de réutiliser son cache.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
