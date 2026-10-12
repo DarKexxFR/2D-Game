@@ -112,7 +112,7 @@ alter table public.account_saves enable row level security;
 revoke all on public.account_saves from anon, authenticated;
 
 create or replace function public.save_account_progress(p_data jsonb) returns void
-language plpgsql security definer set search_path = public as $
+language plpgsql security definer set search_path = public as $$
 begin
   if auth.uid() is null then
     raise exception 'Non connecté';
@@ -127,18 +127,18 @@ begin
   end if;
   insert into account_saves (user_id, data, updated_at) values (auth.uid(), p_data, now())
   on conflict (user_id) do update set data = excluded.data, updated_at = now();
-end $;
+end $$;
 
 create or replace function public.load_account_progress() returns jsonb
-language sql security definer set search_path = public stable as $
+language sql security definer set search_path = public stable as $$
   select data from account_saves where user_id = auth.uid();
-$;
+$$;
 
 -- Droit à l'effacement : le joueur supprime lui-même sa sauvegarde en ligne.
 create or replace function public.delete_account_progress() returns void
-language sql security definer set search_path = public as $
+language sql security definer set search_path = public as $$
   delete from account_saves where user_id = auth.uid();
-$;
+$$;
 
 revoke all on function public.save_account_progress(jsonb) from public;
 revoke all on function public.load_account_progress() from public;
