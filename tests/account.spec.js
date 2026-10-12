@@ -1,6 +1,6 @@
-// Connexion facultative (Google ou code par e-mail) et sauvegarde liée au compte :
+// Connexion facultative (Google, Discord ou code par e-mail) et sauvegarde liée au compte :
 // la progression n'est jamais écrasée sans le choix du joueur.
-import { EMAIL_CODE, GOOGLE_EMAIL, expect, game, test, withSave } from "./fixtures.js";
+import { DISCORD_EMAIL, EMAIL_CODE, GOOGLE_EMAIL, expect, game, test, withSave } from "./fixtures.js";
 
 /** Sauvegarde « d'un autre appareil » déjà présente sur le compte. */
 const remoteSave = (gold, level = 5) => ({
@@ -53,6 +53,17 @@ test("Google : première connexion, la progression de l'appareil part sur le com
   await page.locator("#btnSignOut").click();
   await expect(page.locator("#accountOut")).toBeVisible();
   expect(await game(page, ({ storage }) => storage.account.gold)).toBe(600);
+});
+
+test("Discord : connexion, la progression de l'appareil part sur le compte", async ({ page, supabase }) => {
+  await withSave(page, { gold: 321, level: 3, lastFreeChest: Date.now() });
+  await page.goto("/");
+  await page.locator("#btnOptions").click();
+  await page.locator("#btnDiscord").click();
+  await page.waitForURL((url) => !url.hash);
+  await expect.poll(() => supabase.accounts[DISCORD_EMAIL]?.account.gold).toBe(321);
+  await page.locator("#btnOptions").click();
+  await expect(page.locator("#accountWho")).toContainText(`${DISCORD_EMAIL} (Discord)`);
 });
 
 test("e-mail : un mauvais code est refusé, le bon connecte", async ({ page, supabase }) => {

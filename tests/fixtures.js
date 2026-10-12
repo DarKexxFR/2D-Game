@@ -53,8 +53,10 @@ export { expect };
 
 /** Code à 6 chiffres accepté par le faux Supabase pour toute adresse e-mail. */
 export const EMAIL_CODE = "123456";
-/** Adresse du faux compte Google. */
+/** Adresses des faux comptes Google et Discord. */
 export const GOOGLE_EMAIL = "joueur@gmail.com";
+export const DISCORD_EMAIL = "joueur@discord.test";
+const OAUTH_EMAILS = { google: GOOGLE_EMAIL, discord: DISCORD_EMAIL };
 
 const json = (body, status = 200) => ({
   status,
@@ -72,7 +74,9 @@ function fakeSession(email) {
     user: {
       id: `id-${email}`,
       email,
-      app_metadata: { provider: email === GOOGLE_EMAIL ? "google" : "email" },
+      app_metadata: {
+        provider: Object.keys(OAUTH_EMAILS).find((p) => OAUTH_EMAILS[p] === email) || "email",
+      },
     },
   };
 }
@@ -84,8 +88,8 @@ function fakeAuth(route, req, supabase) {
   const url = new URL(req.url());
   const path = url.pathname;
   if (path.endsWith("/auth/v1/authorize")) {
-    // « Google » : renvoie directement sur le jeu avec la session dans l'URL
-    const s = fakeSession(GOOGLE_EMAIL);
+    // « Google » / « Discord » : renvoie directement sur le jeu avec la session dans l'URL
+    const s = fakeSession(OAUTH_EMAILS[url.searchParams.get("provider")]);
     const hash = `access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=3600`;
     return route.fulfill({
       status: 302,
