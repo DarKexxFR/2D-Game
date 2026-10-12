@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, MAP_BOUNDS } from "../config.js";
+import { ADS, MAP_BOUNDS, SURVIVAL } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, touchMove } from "../core/input.js";
@@ -93,8 +93,14 @@ export function isProtected() {
   return player.isDashing || player.buffs.shield > 0;
 }
 
+/** Efficacité des soins : réduite par la « corruption » au fil des vagues. */
+export function healFactor(wave = game.wave) {
+  const over = Math.max(0, wave - SURVIVAL.healFatigueFrom);
+  return Math.max(SURVIVAL.minHealFactor, 1 - over * SURVIVAL.healFatiguePerWave);
+}
+
 export function heal(amount) {
-  player.health = Math.min(player.maxHealth, player.health + amount);
+  player.health = Math.min(player.maxHealth, player.health + amount * healFactor());
 }
 
 export function takeDamage(amount) {

@@ -39,6 +39,17 @@ export const STAT_CAPS = {
   magnet: 600,
 };
 
+// Survie en fin de partie. La défense réduit les dégâts de contact en pourcentage, avec des
+// rendements décroissants (défense / (défense + armorCurve)). À partir de la vague
+// `healFatigueFrom`, les soins perdent de leur efficacité (« corruption ») jusqu'à `minHealFactor`.
+export const SURVIVAL = {
+  armorCurve: 40,
+  healFatigueFrom: 12,
+  healFatiguePerWave: 0.04,
+  minHealFactor: 0.35,
+  harvestCooldown: 200, // ms entre deux soins de la Moisson sanglante (max 5 % des PV / s)
+};
+
 export const PLAYER_DEFAULTS = {
   size: 20,
   baseSpeed: 4.7,

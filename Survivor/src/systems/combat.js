@@ -1,6 +1,6 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX } from "../config.js";
+import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
@@ -108,7 +108,14 @@ export function killEnemy(enemy) {
     }
   }
 
-  if (player.evolutions.bloodHarvest) heal(player.maxHealth * 0.01);
+  // Moisson sanglante : soin plafonné dans le temps (sinon des dizaines de kills/s = invincible)
+  if (
+    player.evolutions.bloodHarvest &&
+    game.time - (player.lastHarvest ?? -1e9) >= SURVIVAL.harvestCooldown
+  ) {
+    player.lastHarvest = game.time;
+    heal(player.maxHealth * 0.01);
+  }
   chargeUltimate();
   createParticles(enemy.x, enemy.y, enemy.color, 8);
 }
