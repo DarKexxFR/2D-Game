@@ -1,4 +1,4 @@
-// Section « Compte » des Options : connexion facultative (Google ou code par e-mail),
+// Section « Compte » des Options : connexion facultative (Google, Discord ou code par e-mail),
 // état de la synchronisation et choix de la progression à garder en cas de conflit.
 
 import {
@@ -6,7 +6,7 @@ import {
   initAuth,
   onAuthChange,
   sendEmailCode,
-  signInWithGoogle,
+  signInWith,
   signOut,
   verifyEmailCode,
 } from "../services/auth.js";
@@ -29,13 +29,13 @@ const STATUS = {
   conflict: "",
   off: "",
 };
-const PROVIDERS = { google: "Google", email: "e-mail" };
+const PROVIDERS = { google: "Google", discord: "Discord", email: "e-mail" };
 
 let pendingEmail = "";
 let onConflict = () => {};
 
 /**
- * Au démarrage : session (retour de Google compris), puis comparaison avec le compte.
+ * Au démarrage : session (retour de Google / Discord compris), puis comparaison avec le compte.
  * `onConflictFound` ouvre les Options quand le joueur doit choisir entre deux progressions.
  */
 export async function initAccount({ onConflictFound }) {
@@ -62,7 +62,8 @@ async function runSync() {
 }
 
 function bindButtons() {
-  $("btnGoogle").addEventListener("click", signInWithGoogle);
+  $("btnGoogle").addEventListener("click", () => signInWith("google"));
+  $("btnDiscord").addEventListener("click", () => signInWith("discord"));
   $("btnEmailCode").addEventListener("click", askCode);
   $("btnEmailVerify").addEventListener("click", verifyCode);
   $("accountCode").addEventListener("keydown", (e) => e.key === "Enter" && verifyCode());

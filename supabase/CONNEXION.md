@@ -1,4 +1,4 @@
-# Activer la connexion (Google et e-mail)
+# Activer la connexion (Google, Discord et e-mail)
 
 La connexion est facultative : tant que ces étapes ne sont pas faites, le jeu marche comme
 avant, et seuls les boutons de connexion échouent (« Envoi impossible pour le moment »).
@@ -51,8 +51,21 @@ heure**, pour tout le projet. Pour de vrais joueurs, brancher un SMTP (Resend, B
 
 Le _Client secret_ Google reste dans Supabase : il ne doit **jamais** être mis dans le dépôt.
 
-## 5. Vérifier
+## 5. Connexion Discord
 
-Ouvrir le jeu → Options → Compte → « Continuer avec Google » (ou recevoir un code par e-mail).
+1. [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** →
+   nom « Last Pulse ».
+2. **OAuth2** → **Redirects** → **Add Redirect** : l'adresse de rappel affichée par Supabase dans
+   **Authentication → Providers → Discord** (la même que pour Google :
+   `https://<projet>.supabase.co/auth/v1/callback`) → **Save Changes**.
+3. Copier le **Client ID** et le **Client Secret** (bouton « Reset Secret » s'il n'est pas affiché)
+   dans Supabase → **Authentication → Providers → Discord**, puis activer.
+
+Comme pour Google, le _Client Secret_ Discord reste dans Supabase, **jamais** dans le dépôt.
+
+## 6. Vérifier
+
+Ouvrir le jeu → Options → Compte → « Continuer avec Google » / « Continuer avec Discord » (ou
+recevoir un code par e-mail).
 Une fois connecté, « Progression sauvegardée sur ton compte » s'affiche, et la ligne apparaît dans
 la table `account_saves`.

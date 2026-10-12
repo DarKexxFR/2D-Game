@@ -35,17 +35,17 @@ Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
 
 ## Architecture (`Survivor/src/`)
 
-| Dossier      | Rôle                                                                                                                                                                                                                                                                                               |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config.js`  | Constantes et équilibrage (`STORAGE_KEYS`, `TICK_MS`, `MAP_BOUNDS`, `PLAYER_DEFAULTS`, config Supabase…)                                                                                                                                                                                           |
-| `core/`      | `state.js` (état global : `game`, `player`, `world`, `camera`, `pet`), `canvas.js` (`ctx`, `view`, qualité), `input.js` (actions clavier/souris/tactile), `events.js` (bus `emit` / `on`)                                                                                                          |
-| `data/`      | Données pures : `items.js` (armes, armures, HEROES, PETS, CHESTS), `upgrades.js` (+ EVOLUTIONS), `enemies.js`, `biomes.js`, `talents.js`, `achievements.js`, `icons.js` (tracés SVG)                                                                                                               |
-| `systems/`   | Logique de jeu par tick : `player`, `enemies`, `combat`, `spawner`, `pickups`, `skills`, `pet`, `equipment`, `effects`, `mysteryBox`, `hazards` (attaques de zone des boss)                                                                                                                        |
-| `render/`    | Dessin : `renderer.js` (ordre des couches), `entities.js`, `world.js`, `effects.js`, `sprites.js` (sprites néon en cache), `menuScene.js` (scène animée de l'accueil)                                                                                                                              |
-| `services/`  | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js` (code secret), `auth.js` (connexion Google / e-mail), `accountSync.js` (sauvegarde du compte), `daily.js`, `ads.js` (pubs récompensées), `audio.js` / `sfx.js` |
-| `ui/`        | Menus DOM : `screens.js` (un seul écran visible), `mainMenu.js`, `hud.js`, `dom.js` (écritures DOM en cache), `icons.js`…                                                                                                                                                                          |
-| `main.js`    | Point d'entrée : initialisation et boucle principale                                                                                                                                                                                                                                               |
-| `../assets/` | Logo (`logo-mark.svg` = symbole en favicon ; `logo-wordmark.svg` = logo texte, non utilisé : le titre de l'accueil reste en texte, au choix du propriétaire), favicons, icône d'app, musiques                                                                                                      |
+| Dossier      | Rôle                                                                                                                                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config.js`  | Constantes et équilibrage (`STORAGE_KEYS`, `TICK_MS`, `MAP_BOUNDS`, `PLAYER_DEFAULTS`, config Supabase…)                                                                                                                                                                                                     |
+| `core/`      | `state.js` (état global : `game`, `player`, `world`, `camera`, `pet`), `canvas.js` (`ctx`, `view`, qualité), `input.js` (actions clavier/souris/tactile), `events.js` (bus `emit` / `on`)                                                                                                                    |
+| `data/`      | Données pures : `items.js` (armes, armures, HEROES, PETS, CHESTS), `upgrades.js` (+ EVOLUTIONS), `enemies.js`, `biomes.js`, `talents.js`, `achievements.js`, `icons.js` (tracés SVG)                                                                                                                         |
+| `systems/`   | Logique de jeu par tick : `player`, `enemies`, `combat`, `spawner`, `pickups`, `skills`, `pet`, `equipment`, `effects`, `mysteryBox`, `hazards` (attaques de zone des boss)                                                                                                                                  |
+| `render/`    | Dessin : `renderer.js` (ordre des couches), `entities.js`, `world.js`, `effects.js`, `sprites.js` (sprites néon en cache), `menuScene.js` (scène animée de l'accueil)                                                                                                                                        |
+| `services/`  | Persistance et réseau : `storage.js` (compte), `settings.js`, `inventory.js`, `supabase.js`, `onlineLeaderboard.js`, `cloudSave.js` (code secret), `auth.js` (connexion Google / Discord / e-mail), `accountSync.js` (sauvegarde du compte), `daily.js`, `ads.js` (pubs récompensées), `audio.js` / `sfx.js` |
+| `ui/`        | Menus DOM : `screens.js` (un seul écran visible), `mainMenu.js`, `hud.js`, `dom.js` (écritures DOM en cache), `icons.js`…                                                                                                                                                                                    |
+| `main.js`    | Point d'entrée : initialisation et boucle principale                                                                                                                                                                                                                                                         |
+| `../assets/` | Logo (`logo-mark.svg` = symbole en favicon ; `logo-wordmark.svg` = logo texte, non utilisé : le titre de l'accueil reste en texte, au choix du propriétaire), favicons, icône d'app, musiques                                                                                                                |
 
 Principes :
 
@@ -82,12 +82,12 @@ Principes :
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
 - **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
   `.menu-wide` pour les écrans larges (boutique, équipement, talents, succès), sur le modèle du défi du jour.
-- **Compte (facultatif)** : connexion Google ou code à 6 chiffres par e-mail, via l'API REST
+- **Compte (facultatif)** : connexion Google, Discord ou code à 6 chiffres par e-mail, via l'API REST
   d'authentification de Supabase (pas de bibliothèque). `accountSync.js` ne doit **jamais** écraser
   une progression en silence : il retient la dernière version échangée par appareil
   (`survivor_account_sync`) et demande au joueur de choisir quand l'appareil et le compte ont tous
-  deux avancé. Réglages côté Google / Supabase : `supabase/CONNEXION.md`. Les tests simulent
-  l'authentification dans `fixtures.js` (`EMAIL_CODE`, `GOOGLE_EMAIL`).
+  deux avancé. Réglages côté Google / Discord / Supabase : `supabase/CONNEXION.md`. Les tests simulent
+  l'authentification dans `fixtures.js` (`EMAIL_CODE`, `GOOGLE_EMAIL`, `DISCORD_EMAIL`).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -137,7 +137,7 @@ ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stat
 touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
 coffres de boss, 29 succès avec récompenses, Voleur doré, difficulté croissante (élites,
-montée exponentielle), connexion facultative Google / e-mail.
+montée exponentielle), connexion facultative Google / Discord / e-mail.
 
 En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
 

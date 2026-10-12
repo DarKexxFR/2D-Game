@@ -1,8 +1,8 @@
-// Connexion facultative (Google ou code reçu par e-mail) via l'API d'authentification
+// Connexion facultative (Google, Discord ou code reçu par e-mail) via l'API d'authentification
 // de Supabase, sans bibliothèque. On peut toujours jouer sans compte ; la connexion sert
 // à retrouver sa progression sur tous ses appareils (voir services/accountSync.js).
 //
-// Google : redirection vers Google puis retour sur le jeu avec la session dans l'URL (#access_token=...).
+// Google / Discord : redirection vers le service puis retour sur le jeu avec la session dans l'URL (#access_token=...).
 // E-mail : Supabase envoie un code à 6 chiffres (ou un lien, selon le modèle d'e-mail) à saisir dans le jeu.
 
 import { STORAGE_KEYS } from "../config.js";
@@ -31,7 +31,7 @@ export function currentUser() {
   return session?.user ?? null;
 }
 
-/** Réponse de Supabase (verify, token, retour de Google) → notre format de session. */
+/** Réponse de Supabase (verify, token, retour de Google ou Discord) → notre format de session. */
 function toSession(data, user = data.user) {
   return {
     accessToken: data.access_token,
@@ -46,7 +46,7 @@ function toSession(data, user = data.user) {
 }
 
 /**
- * Au démarrage : récupère la session revenue de Google (ou d'un lien reçu par e-mail) dans l'URL,
+ * Au démarrage : récupère la session revenue de Google / Discord (ou d'un lien reçu par e-mail) dans l'URL,
  * sinon celle enregistrée. Renvoie true si le joueur vient de se connecter par redirection.
  */
 export async function initAuth() {
@@ -74,13 +74,14 @@ export async function initAuth() {
   }
 }
 
-/** Adresse de retour après Google ou un lien e-mail : la page du jeu elle-même. */
+/** Adresse de retour après Google, Discord ou un lien e-mail : la page du jeu elle-même. */
 function returnUrl() {
   return location.origin + location.pathname;
 }
 
-export function signInWithGoogle() {
-  location.assign(authUrl(`authorize?provider=google&redirect_to=${encodeURIComponent(returnUrl())}`));
+/** Connexion par un service externe (« google », « discord ») activé dans Supabase. */
+export function signInWith(provider) {
+  location.assign(authUrl(`authorize?provider=${provider}&redirect_to=${encodeURIComponent(returnUrl())}`));
 }
 
 /** Envoie un code de connexion par e-mail (le compte est créé au besoin). */

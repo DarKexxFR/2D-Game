@@ -186,7 +186,8 @@
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-button.google-btn {
+button.google-btn,
+button.discord-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,7 +197,13 @@ button.google-btn {
   background: #ffffff;
   color: #1f1f1f;
 }
-.google-btn svg {
+button.discord-btn {
+  margin-top: 8px;
+  background: #5865f2;
+  color: #ffffff;
+}
+.google-btn svg,
+.discord-btn svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
