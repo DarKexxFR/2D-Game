@@ -3,7 +3,7 @@
 import { game, player, world } from "../core/state.js";
 import { GOBLIN, MAX_ENEMY_SIZE } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
-import { MAP_BOUNDS } from "../config.js";
+import { MAP_BOUNDS, SURVIVAL } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -116,7 +116,9 @@ function handleContact(e) {
   }
   if (isProtected() || game.time - e.lastDamage <= CONTACT_DAMAGE_COOLDOWN) return;
 
-  const dmg = Math.max(1, e.damage - player.defense);
+  // Défense : réduction en pourcentage à rendements décroissants (elle ne peut plus tout annuler)
+  const reduction = player.defense / (player.defense + SURVIVAL.armorCurve);
+  const dmg = Math.max(1, e.damage * (1 - reduction));
   takeDamage(dmg);
   if (e.type === "golem") freezePlayer();
   e.lastDamage = game.time;

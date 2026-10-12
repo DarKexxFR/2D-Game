@@ -238,7 +238,7 @@ export const EVOLUTIONS = [
     id: "bloodHarvest",
     name: "Moisson sanglante",
     icon: "drop",
-    desc: "Chaque ennemi tué rend 1 % de vos PV max.",
+    desc: "Les éliminations rendent jusqu'à 5 % de vos PV max par seconde.",
     base: "Vampirisme",
     baseMax: 5,
     partner: "Régénération",

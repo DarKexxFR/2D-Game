@@ -1,11 +1,12 @@
 // Gestion des vagues, apparition des ennemis, des boss et des sanctuaires.
 
-import { MAP_BOUNDS, NEXT_WAVE_DELAY, WAVE_DURATION } from "../config.js";
+import { MAP_BOUNDS, NEXT_WAVE_DELAY, SURVIVAL, WAVE_DURATION } from "../config.js";
 import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import {
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
+  ELITE,
   ENEMY_TYPES,
   GOBLIN,
   SPAWN_TABLES,
@@ -80,6 +81,7 @@ export function startNextWave() {
   game.wave++;
   spawnWave();
   addFloatingText(player.worldX, player.worldY - 50, "VAGUE " + game.wave, "#00ffff", 30, 120);
+  announceDifficulty(game.wave);
   const biome = biomeForWave(game.wave);
   if (biome !== before) emit("biomeChange", biome);
 }
@@ -99,8 +101,35 @@ function pickEnemyType() {
   return weightedPick(entries, ([, w]) => w)[0];
 }
 
+/** Annonce les paliers de difficulté (montée exponentielle, corruption des soins). */
+function announceDifficulty(wave) {
+  if (wave === W.rampFrom) {
+    addFloatingText(player.worldX, player.worldY - 90, "LA NUÉE S'ENRAGE !", "#ff2a6d", 24, 150);
+  }
+  if (wave === SURVIVAL.healFatigueFrom) {
+    addFloatingText(player.worldX, player.worldY - 120, "CORRUPTION : SOINS RÉDUITS", "#aa66ff", 22, 150);
+  }
+}
+
+/** Multiplicateurs de PV et de dégâts d'une vague : linéaires, puis exponentiels après `rampFrom`. */
+export function waveMultipliers(wave) {
+  const ramp = Math.max(0, wave - W.rampFrom);
+  return {
+    health: (1 + wave * W.health) * W.healthRamp ** ramp,
+    damage: (1 + wave * W.damage) * W.damageRamp ** ramp,
+  };
+}
+
+/** Chance qu'un ennemi ordinaire apparaisse en élite à cette vague. */
+export function eliteChance(wave) {
+  if (wave < ELITE.fromWave) return 0;
+  return Math.min(ELITE.maxChance, (wave - ELITE.fromWave + 1) * ELITE.chancePerWave);
+}
+
 export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
   const t = ENEMY_TYPES[type];
+  // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
+  const elite = x === null && !t.isBoss && type !== "goblin" && Math.random() < eliteChance(game.wave);
   if (x === null || y === null) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
@@ -112,7 +141,9 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
 
   const wave = game.wave;
   const mod = game.modifier;
-  const health = t.health * (1 + wave * W.health) * (mod.enemyHealth || 1);
+  const mult = waveMultipliers(wave);
+  const eliteMult = (k) => (elite ? ELITE[k] : 1);
+  const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health");
   const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
     x,
@@ -121,13 +152,14 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
     template: t,
     health,
     maxHealth: health,
-    damage: t.damage * (1 + wave * W.damage),
+    damage: t.damage * mult.damage * eliteMult("damage"),
     speed,
     baseSpeed: speed,
-    size: t.size,
+    size: t.size * eliteMult("size"),
+    elite,
     color: t.color,
-    xp: t.xp * (1 + wave * W.xp) * (mod.enemyXp || 1),
-    gold: (t.gold || 1) * (1 + player.greed * 0.1),
+    xp: t.xp * (1 + wave * W.xp) * (mod.enemyXp || 1) * (elite ? ELITE.rewards : 1),
+    gold: (t.gold || 1) * (1 + player.greed * 0.1) * (elite ? ELITE.rewards : 1),
     attackRange: t.attackRange || 0,
     shootCooldown: Math.max(500, (t.shootCooldown || 0) * 0.95),
     lastShot: 0,

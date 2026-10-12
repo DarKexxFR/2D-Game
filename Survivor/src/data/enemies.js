@@ -120,6 +120,17 @@ export const ENEMY_TYPES = {
   },
 };
 
+/** Ennemis d'élite : plus gros, plus résistants, plus forts ; de plus en plus fréquents. */
+export const ELITE = {
+  fromWave: 8,
+  chancePerWave: 0.015, // +1,5 % par vague après fromWave
+  maxChance: 0.35,
+  health: 4,
+  damage: 1.5,
+  size: 1.3,
+  rewards: 3, // XP et or multipliés
+};
+
 /** Voleur doré : apparition en début de vague, durée avant fuite, or lâché par coup. */
 export const GOBLIN = { fromWave: 3, chance: 0.3, lifetime: 900, goldPerHit: 3, spawnDistance: 380 };
 
@@ -176,7 +187,12 @@ export const WAVE_SCALING = {
   health: 0.35,
   damage: 0.15,
   speed: 0.03,
-  maxSpeedMult: 1.4,
+  maxSpeedMult: 1.8,
+  // À partir de `rampFrom`, PV et dégâts grimpent en plus de façon exponentielle (×1,07 / ×1,06
+  // par vague) : le joueur finit toujours par être débordé, même avec un très bon build.
+  rampFrom: 10,
+  healthRamp: 1.07,
+  damageRamp: 1.06,
   xp: 0.1,
   baseMobs: 30,
   mobsPerWave: 4,

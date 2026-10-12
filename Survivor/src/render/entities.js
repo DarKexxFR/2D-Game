@@ -503,10 +503,23 @@ export function drawEnemies() {
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
     if (e.enraged) drawFury(e, now);
+    if (e.elite) drawElite(e, now);
 
     if (e.health < e.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
+}
+
+/** Élite : couronne de points dorés qui tourne autour de l'ennemi. */
+function drawElite(e, now) {
+  const r = e.size + 6;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = "#ffd700";
+  for (let i = 0; i < 6; i++) {
+    const a = now / 400 + (TAU * i) / 6;
+    fillCircle(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 2.2, "#ffd700");
+  }
+  ctx.shadowBlur = 0;
 }
 
 /** Boss en furie : double halo rouge qui pulse. */

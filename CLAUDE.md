@@ -70,6 +70,10 @@ Principes :
   `e.rooted` immobilise un boss pendant une attaque. Le Roi Slime est volontairement laissé tel quel.
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
+- **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
+  (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
+  la vague 12 (`SURVIVAL` dans `config.js`). Objectif : même le meilleur build finit par mourir
+  (vers la vague 30). Mesuré avec un banc d'essai (build fixe, morts par minute selon la vague).
 - **Succès** : `data/achievements.js` (catégorie, statistique suivie, seuil, or gagné) ; les statistiques
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
 - **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
