@@ -39,7 +39,10 @@ export function initMainMenu({ onPlay }) {
   initInventoryMenu({ onBack: showMainMenu, onAccountChange: refreshAccountUI });
   initChestMenu({ onAccountChange: refreshAccountUI });
   $("btnReset").addEventListener("click", () => {
-    if (confirm("Effacer la progression (Niveau, Or) ?\nLe classement et le pseudo seront CONSERVÉS.")) {
+    const warning =
+      "Effacer la progression (Niveau, Or) ?\nLe classement et le pseudo seront CONSERVÉS.\n" +
+      "Si tu es connecté à un compte, sa sauvegarde sera aussi remise à zéro.";
+    if (confirm(warning)) {
       resetProgress();
       location.reload();
     }

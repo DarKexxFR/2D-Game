@@ -164,3 +164,124 @@
   color: #00ffff;
   font-size: 13px;
 }
+
+/* --- Compte (connexion facultative) --- */
+.option-account {
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+  text-align: left;
+  color: #ddd;
+  font-size: 14px;
+}
+.option-account .option-hint {
+  margin: 6px 0;
+}
+.optional-tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid #555;
+  border-radius: 999px;
+  color: #999;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+button.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px;
+  font-size: 13px;
+  background: #ffffff;
+  color: #1f1f1f;
+}
+.google-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.account-or {
+  margin: 12px 0 4px;
+  color: #888;
+  font-size: 11px;
+  text-align: center;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+#codeStep,
+#accountIn,
+#accountConflict {
+  display: none;
+}
+.account-row .pseudo-input {
+  margin: 4px 0 8px;
+  padding: 10px;
+  font-size: 16px; /* 16px minimum : évite le zoom auto d'iOS */
+}
+.account-row button,
+#accountIn button {
+  padding: 10px;
+  font-size: 13px;
+}
+#accountIn .btn-grid {
+  margin-top: 10px;
+  gap: 10px;
+}
+.account-who b {
+  color: #00ff88;
+  word-break: break-all;
+}
+.account-conflict {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #ffaa00;
+  border-radius: 10px;
+  background: rgba(255, 170, 0, 0.08);
+  color: #ffd27a;
+  font-size: 13px;
+}
+.conflict-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+button.conflict-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 6px;
+  border: 1px solid #00ffff;
+  background: rgba(0, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 400;
+  font-size: 11px;
+}
+button.conflict-card b {
+  color: #00ffff;
+  font-size: 12px;
+}
+button.link-btn {
+  margin-top: 8px;
+  padding: 4px;
+  background: none;
+  color: #ff7a7a;
+  font-size: 11px;
+  font-weight: 400;
+  text-decoration: underline;
+}
+#accountMessage:empty,
+#accountStatus:empty {
+  display: none;
+}
+/* Petit lien : le soulèvement au survol le ferait sortir de sous la souris (tremblement) */
+@media (hover: hover) {
+  button.link-btn:hover:not(:disabled) {
+    transform: none;
+    color: #ff4d4d;
+  }
+}
+.account-who {
+  margin-top: 8px;
+}

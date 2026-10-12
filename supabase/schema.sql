@@ -97,6 +97,57 @@ grant execute on function public.save_progress(text, jsonb) to anon;
 grant execute on function public.load_progress(text) to anon;
 
 -- =====================================================================
+-- Sauvegarde liée au compte (connexion Google ou code par e-mail, facultative).
+-- Une ligne par joueur connecté. Pas d'accès direct à la table : uniquement
+-- les fonctions ci-dessous, qui utilisent l'identité du joueur (auth.uid()).
+-- =====================================================================
+
+create table if not exists public.account_saves (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.account_saves enable row level security;
+revoke all on public.account_saves from anon, authenticated;
+
+create or replace function public.save_account_progress(p_data jsonb) returns void
+language plpgsql security definer set search_path = public as $
+begin
+  if auth.uid() is null then
+    raise exception 'Non connecté';
+  end if;
+  if octet_length(p_data::text) > 200000 then
+    raise exception 'Sauvegarde trop volumineuse';
+  end if;
+  if exists (
+    select 1 from account_saves where user_id = auth.uid() and updated_at > now() - interval '2 seconds'
+  ) then
+    raise exception 'Trop de sauvegardes, réessaie plus tard';
+  end if;
+  insert into account_saves (user_id, data, updated_at) values (auth.uid(), p_data, now())
+  on conflict (user_id) do update set data = excluded.data, updated_at = now();
+end $;
+
+create or replace function public.load_account_progress() returns jsonb
+language sql security definer set search_path = public stable as $
+  select data from account_saves where user_id = auth.uid();
+$;
+
+-- Droit à l'effacement : le joueur supprime lui-même sa sauvegarde en ligne.
+create or replace function public.delete_account_progress() returns void
+language sql security definer set search_path = public as $
+  delete from account_saves where user_id = auth.uid();
+$;
+
+revoke all on function public.save_account_progress(jsonb) from public;
+revoke all on function public.load_account_progress() from public;
+revoke all on function public.delete_account_progress() from public;
+grant execute on function public.save_account_progress(jsonb) to authenticated;
+grant execute on function public.load_account_progress() to authenticated;
+grant execute on function public.delete_account_progress() to authenticated;
+
+-- =====================================================================
 -- Défi quotidien : classement séparé, un jour (UTC) = un classement.
 -- =====================================================================
 
