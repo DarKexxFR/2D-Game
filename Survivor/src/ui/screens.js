@@ -13,6 +13,7 @@ const SCREENS = [
   "dailyMenu",
   "bossRushMenu",
   "talentMenu",
+  "skinMenu",
   "upgradeMenu",
   "pauseMenu",
   "optionsMenu",

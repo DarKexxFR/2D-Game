@@ -5,6 +5,7 @@
 import { ctx, resetTransform, toViewCoords, view } from "../core/canvas.js";
 import { HEROES, PETS } from "../data/items.js";
 import { getEquipped } from "../services/inventory.js";
+import { currentSkin, shipLook } from "../services/skins.js";
 import { drawPet, drawShip } from "./entities.js";
 
 const TAU = Math.PI * 2;
@@ -198,21 +199,22 @@ function drawRings({ x, y, r }, sinceBeat) {
 function drawHero({ x, y, r }, sinceBeat, now) {
   const heroId = getEquipped("hero")?.id || "pilot";
   const hero = HEROES[heroId] || HEROES.pilot;
+  const look = shipLook(hero, currentSkin(), now);
   const beat = 1 + 0.12 * Math.exp(-sinceBeat / 110);
   const bob = Math.sin(now / 700) * r * 0.08;
 
   // Socle lumineux
   ctx.save();
   ctx.globalAlpha = 0.35;
-  ctx.fillStyle = hero.color;
-  ctx.shadowColor = hero.color;
+  ctx.fillStyle = look.color;
+  ctx.shadowColor = look.color;
   ctx.shadowBlur = 25;
   ctx.beginPath();
   ctx.ellipse(x, y + r * 1.75, r * 1.5, r * 0.32, 0, 0, TAU);
   ctx.fill();
   ctx.restore();
 
-  drawShip(x, y + bob, r * beat, -Math.PI / 2, hero.color, true, now, hero.hull);
+  drawShip(x, y + bob, r * beat, -Math.PI / 2, look.color, true, now, look.hull);
 
   const petId = getEquipped("pet")?.id;
   const pet = PETS[petId];

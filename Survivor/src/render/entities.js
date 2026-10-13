@@ -6,6 +6,8 @@ import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../sy
 import { hydraHeads } from "../systems/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
+import { drawTrail } from "./trail.js";
+import { currentSkin, shipLook } from "../services/skins.js";
 
 const TAU = Math.PI * 2;
 const HIT_FLASH_MS = 80;
@@ -40,16 +42,18 @@ let lastY = 0;
 
 export function drawPlayer(now) {
   const { worldX: x, worldY: y, size } = player;
-  const hull = player.hero?.hull || "arrow";
+  const look = shipLook(player.hero, currentSkin(), now);
+  const hull = look.hull;
   const moving = Math.hypot(x - lastX, y - lastY) > 0.5;
   lastX = x;
   lastY = y;
 
   for (const g of world.ghosts) {
     ctx.globalAlpha = g.life / 30;
-    drawShip(g.x, g.y, size, player.aimAngle, "#00ffff", false, now, hull);
+    drawShip(g.x, g.y, size, player.aimAngle, look.color, false, now, hull);
   }
   ctx.globalAlpha = 1;
+  drawTrail(ctx, world.trail);
 
   const aura = auraRadius();
   if (aura > 0) {
@@ -86,8 +90,7 @@ export function drawPlayer(now) {
   ctx.globalAlpha = 1;
 
   drawArmor(x, y, size, now);
-  const heroColor = player.hero?.color || "#00ccff";
-  const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : heroColor;
+  const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : look.color;
   drawWeapon(x, y, size);
   drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
 
@@ -189,6 +192,55 @@ const HULLS = {
     [-0.3, 1.1],
     [0.2, 0.45],
   ],
+  // Formes supplémentaires des skins (data/skins.js)
+  manta: [
+    [1.1, 0],
+    [0.2, -0.4],
+    [-0.4, -1.15],
+    [-0.85, -0.9],
+    [-0.5, 0],
+    [-0.85, 0.9],
+    [-0.4, 1.15],
+    [0.2, 0.4],
+  ],
+  needle: [
+    [1.55, 0],
+    [0, -0.32],
+    [-0.9, -0.62],
+    [-0.65, 0],
+    [-0.9, 0.62],
+    [0, 0.32],
+  ],
+  trident: [
+    [1.3, -0.12],
+    [0.45, -0.22],
+    [1.05, -0.8],
+    [-0.2, -0.95],
+    [-0.9, -0.4],
+    [-0.6, 0],
+    [-0.9, 0.4],
+    [-0.2, 0.95],
+    [1.05, 0.8],
+    [0.45, 0.22],
+    [1.3, 0.12],
+  ],
+  phoenix: [
+    [1.25, 0],
+    [0.5, -0.28],
+    [0.15, -1.2],
+    [-0.3, -0.5],
+    [-1.05, -0.95],
+    [-0.7, 0],
+    [-1.05, 0.95],
+    [-0.3, 0.5],
+    [0.15, 1.2],
+    [0.5, 0.28],
+  ],
+  star: Array.from({ length: 10 }, (_, i) => {
+    const a = (i * TAU) / 10;
+    const r = i % 2 ? 0.5 : 1.15;
+    return [Math.cos(a) * r, Math.sin(a) * r];
+  }),
   corsair: [
     [1.3, 0],
     [0.3, -0.5],
@@ -201,64 +253,64 @@ const HULLS = {
   ],
 };
 
-/** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge. */
-export function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow") {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle);
+/** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge (`c` : autre canvas). */
+export function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow", c = ctx) {
+  c.save();
+  c.translate(x, y);
+  c.rotate(angle);
 
   if (thrust) {
     const len = r * (0.9 + Math.sin(now / 30) * 0.25);
-    const flame = ctx.createLinearGradient(-r * 0.5, 0, -r * 0.5 - len, 0);
+    const flame = c.createLinearGradient(-r * 0.5, 0, -r * 0.5 - len, 0);
     flame.addColorStop(0, "#ffffff");
     flame.addColorStop(0.3, color);
     flame.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = flame;
-    ctx.beginPath();
-    ctx.moveTo(-r * 0.45, -r * 0.3);
-    ctx.lineTo(-r * 0.5 - len, 0);
-    ctx.lineTo(-r * 0.45, r * 0.3);
-    ctx.closePath();
-    ctx.fill();
+    c.fillStyle = flame;
+    c.beginPath();
+    c.moveTo(-r * 0.45, -r * 0.3);
+    c.lineTo(-r * 0.5 - len, 0);
+    c.lineTo(-r * 0.45, r * 0.3);
+    c.closePath();
+    c.fill();
   }
 
   const points = HULLS[shape] || HULLS.arrow;
   const hull = () => {
-    ctx.beginPath();
-    points.forEach(([px, py], i) => (i ? ctx.lineTo(px * r, py * r) : ctx.moveTo(px * r, py * r)));
-    ctx.closePath();
+    c.beginPath();
+    points.forEach(([px, py], i) => (i ? c.lineTo(px * r, py * r) : c.moveTo(px * r, py * r)));
+    c.closePath();
   };
-  ctx.lineJoin = "round";
-  ctx.fillStyle = shade(color.startsWith("#") && color.length === 7 ? color : "#00ccff", 0.18);
+  c.lineJoin = "round";
+  c.fillStyle = shade(color.startsWith("#") && color.length === 7 ? color : "#00ccff", 0.18);
   hull();
-  ctx.fill();
-  ctx.shadowBlur = 18;
-  ctx.shadowColor = color;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
+  c.fill();
+  c.shadowBlur = 18;
+  c.shadowColor = color;
+  c.strokeStyle = color;
+  c.lineWidth = 3;
   hull();
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  c.stroke();
+  c.shadowBlur = 0;
 
   // Lignes de coque et cockpit
-  ctx.strokeStyle = color;
-  ctx.globalAlpha *= 0.5;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(-r * 0.3, -r * 0.6);
-  ctx.lineTo(r * 0.3, -r * 0.2);
-  ctx.moveTo(-r * 0.3, r * 0.6);
-  ctx.lineTo(r * 0.3, r * 0.2);
-  ctx.stroke();
-  ctx.globalAlpha *= 2;
-  ctx.fillStyle = "#ffffff";
-  ctx.shadowBlur = 10;
-  ctx.shadowColor = color;
-  ctx.beginPath();
-  ctx.ellipse(r * 0.35, 0, r * 0.28, r * 0.16, 0, 0, TAU);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.restore();
+  c.strokeStyle = color;
+  c.globalAlpha *= 0.5;
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(-r * 0.3, -r * 0.6);
+  c.lineTo(r * 0.3, -r * 0.2);
+  c.moveTo(-r * 0.3, r * 0.6);
+  c.lineTo(r * 0.3, r * 0.2);
+  c.stroke();
+  c.globalAlpha *= 2;
+  c.fillStyle = "#ffffff";
+  c.shadowBlur = 10;
+  c.shadowColor = color;
+  c.beginPath();
+  c.ellipse(r * 0.35, 0, r * 0.28, r * 0.16, 0, 0, TAU);
+  c.fill();
+  c.shadowBlur = 0;
+  c.restore();
 }
 
 // --- FAMILIERS ---

@@ -22,6 +22,7 @@ import { createGem, dropBossChest, dropLootBox } from "./pickups.js";
 import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
 import { recordKill } from "../services/achievements.js";
+import { currentSkin, resolveColor } from "../services/skins.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -173,7 +174,8 @@ export function shoot() {
   const w = player.weapon;
   const extra = player.inventory["Multi-Tir"] || 0;
   const count = w.projectiles + extra;
-  const spread = w.spread || player.multishotSpread;
+  // Arme en couronne (évolution « Tourbillon ») : projectiles répartis tout autour
+  const spread = w.ring ? (Math.PI * 2) / count : w.spread || player.multishotSpread;
   for (let i = 0; i < count; i++) {
     const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;
     createPlayerProjectile(angle + (i - (count - 1) / 2) * spread + jitter);
@@ -241,7 +243,7 @@ function createPlayerProjectile(angle) {
     vy: Math.sin(angle) * w.speed,
     size: ray ? Math.max(8, w.size) : w.size,
     damage: player.attack * w.damage,
-    color: ray ? "#00ff88" : w.color,
+    color: ray ? "#00ff88" : resolveColor(currentSkin().shot, w.color),
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
     explosion: w.explosion || 0,
     life: w.range || w.lifetime || Infinity,

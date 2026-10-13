@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/versus.css" />
+    <link rel="stylesheet" href="css/skins.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -189,6 +190,10 @@
               <i data-icon="backpack"></i>
               <span class="tile-text"><b>ÉQUIPEMENT</b><small>Héros, armes, pets</small></span>
             </button>
+            <button id="btnSkins" class="home-tile tile-skins">
+              <i data-icon="palette"></i>
+              <span class="tile-text"><b>SKINS</b><small>Vaisseau, tirs, traînée</small></span>
+            </button>
           </div>
 
           <div class="home-play">
@@ -291,6 +296,28 @@
         </div>
         <div id="talentList" class="talent-list"></div>
         <button id="btnTalentsBack" class="secondary mt-15">RETOUR</button>
+      </div>
+
+      <!-- ===== SKINS ===== -->
+      <div id="skinMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
+          <h2>SKINS</h2>
+          <p class="menu-sub">Personnalise ton vaisseau : forme, couleurs, tirs et traînée</p>
+          <div class="gold-pill">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="skinGoldDisplay">0</span>
+          </div>
+        </div>
+        <div class="skin-layout">
+          <div class="skin-stage">
+            <canvas id="skinPreview" aria-label="Aperçu du vaisseau"></canvas>
+            <div id="skinBuyBar" class="skin-buy">
+              <span id="skinBuyText"></span>
+              <button id="btnSkinBuy">ACHETER</button>
+            </div>
+          </div>
+          <div id="skinParts" class="skin-parts"></div>
+        </div>
+        <button id="btnSkinsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== DÉFI DU JOUR ===== -->
