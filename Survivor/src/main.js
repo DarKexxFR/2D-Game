@@ -94,6 +94,7 @@ import {
 } from "./ui/versusMenu.js";
 import { initVersusTouch } from "./ui/versusTouch.js";
 import { initDuelMenu, openDuel, setDuelStatus } from "./ui/duelMenu.js";
+import { initTutorial, startTutorial, stopTutorial, updateTutorial } from "./ui/tutorial.js";
 import { initDuelPicks, requestDuelPick, resetDuelPicks, tickDuelPick } from "./ui/duelPicks.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
@@ -114,6 +115,8 @@ function startGame(mode = "normal") {
   resetUpgradeMenu();
   setAutoPick(false);
   setupRun(mode);
+  if (mode === "normal") startTutorial();
+  else stopTutorial();
   hideScreens();
   showHud(true);
 }
@@ -160,6 +163,7 @@ function startDuel(online = null, names = []) {
   resetUpgradeMenu();
   resetDuelPicks();
   resetOnline();
+  stopTutorial();
   prizeGiven = false;
   if (online) {
     startOnlineVersus(online, names);
@@ -243,6 +247,7 @@ function returnToMenu() {
   game.started = false;
   game.running = false;
   game.paused = false;
+  stopTutorial();
   if (versus.online) leaveRoom();
   clearTimeout(overTimer);
   stopVersus();
@@ -255,6 +260,7 @@ function returnToMenu() {
 
 function endGame() {
   restoreRandom();
+  stopTutorial();
   showTouchControls(false);
   addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
   recordBest("bestCombo", game.stats.bestCombo);
@@ -344,6 +350,7 @@ function update() {
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
   simulate();
+  updateTutorial();
 }
 
 /** Un tick de la partie chargée. */
@@ -418,6 +425,7 @@ function init() {
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
   initOptionsMenu();
   initKeyBindings();
+  initTutorial();
   // Connexion facultative : vérifie la progression du compte sans bloquer le démarrage
   initAccount({ onConflictFound: () => !game.started && openLogin("mainMenu") });
 

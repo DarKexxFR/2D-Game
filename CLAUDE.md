@@ -138,6 +138,11 @@ Principes :
   locale). Elles suivent les statistiques des succès (`trackQuest` / `trackQuestBest` appelés par
   `services/achievements.js`) ; « atteindre » = record de la semaine. Or à récupérer à la main, bonus quand
   les 3 sont récupérées (`WEEKLY` dans `config.js`). État dans `account.weekly`, donc synchronisé avec le compte.
+- **Tutoriel** (`ui/tutorial.js`, réglages `TUTORIAL` dans `config.js`) : bulles pendant la première partie
+  normale (se déplacer, tir auto, dash, XP, compétence quand la jauge est pleine, boîte mystère si on passe
+  à côté), qui avancent quand le joueur fait l'action ; textes PC ou tactile, touches lues dans les réglages.
+  Bouton « PASSER » ; fait ou passé = `account.tutorialDone` (synchronisé avec le compte ; vrai d'office
+  pour une ancienne sauvegarde qui a déjà des parties). « REVOIR » dans les Options le repropose.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -189,9 +194,9 @@ touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo
 coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
-évolutions d'armes (une par arme), quêtes hebdomadaires.
+évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
 Autres idées en attente : sons et musique, niveaux de difficulté,
-PWA installable, tutoriel, manette.
+PWA installable, manette.

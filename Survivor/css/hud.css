@@ -159,6 +159,44 @@
   margin-left: 8px;
 }
 
+/* --- Tutoriel de première partie (ui/tutorial.js) --- */
+.tutorial-bubble {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 24px));
+  padding: 12px 16px;
+  background: rgba(5, 10, 25, 0.88);
+  border: 2px solid #00ffff;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.35);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 40;
+  display: none;
+  pointer-events: none; /* le jeu reste jouable sous la bulle, sauf le bouton PASSER */
+}
+.tutorial-tag {
+  display: block;
+  margin-bottom: 4px;
+  color: #00ffff;
+  font-family: "Press Start 2P";
+  font-size: 10px;
+}
+.tutorial-bubble p {
+  margin: 0;
+}
+.tutorial-bubble button {
+  width: auto;
+  margin: 8px auto 0;
+  padding: 6px 14px;
+  font-size: 11px;
+  pointer-events: auto;
+}
+
 /* --- Indicateurs --- */
 #bossWarning {
   position: absolute;

@@ -161,6 +161,19 @@ body.touch #levelIndicator {
   #bossWarning {
     font-size: 20px;
   }
+  /* En haut : le bas de l'écran appartient au joystick et aux boutons */
+  .tutorial-bubble {
+    top: calc(140px + env(safe-area-inset-top));
+    bottom: auto;
+    width: min(420px, calc(100vw - 24px));
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .tutorial-bubble button {
+    margin-top: 6px;
+    padding: 5px 12px;
+    font-size: 10px;
+  }
 
   .menu-overlay {
     min-width: 0;
@@ -233,4 +246,14 @@ body.touch #levelIndicator {
 .inv-list,
 .lb-scroll {
   touch-action: pan-y;
+}
+
+/* Paysage sur téléphone : la bulle descend entre le joystick et les boutons */
+@media (max-height: 560px) {
+  .tutorial-bubble {
+    top: auto;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    width: min(500px, 60vw);
+    padding: 6px 10px;
+  }
 }
