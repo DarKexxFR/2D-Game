@@ -99,3 +99,34 @@ test("coffre gratuit : disponible, puis compte à rebours, puis de nouveau dispo
   await game(page, ({ storage }) => (storage.account.lastFreeChest -= 4 * 3600 * 1000));
   await expect(page.locator("#btnFreeChest")).toHaveText("OUVRIR !");
 });
+
+test("disque laser : disparaît (en fondu) au bout de sa durée de vie", async ({ page, isMobile }) => {
+  test.skip(isMobile, "une seule plateforme suffit");
+  await withSave(page, {
+    items: { disc: { level: 1, prestige: 0, copies: 0 } },
+    equipped: { weapon: "disc" },
+  });
+  await page.goto("/");
+  await startGame(page);
+  await game(page, ({ state }) => {
+    state.game.spawnTimer = 1e9;
+    state.world.enemies.length = 0;
+    state.player.autoShoot = false; // tir vers la souris : un disque part même sans ennemi
+  });
+  await expect.poll(() => game(page, ({ state }) => state.world.projectiles.length)).toBeGreaterThan(0);
+  const disc = await game(page, ({ state }) => {
+    state.player.lastAttack = Infinity; // plus de nouveau tir : on suit les disques déjà lancés
+    for (const p of state.world.projectiles) p.tracked = true;
+    const p = state.world.projectiles[0];
+    return { type: p.type, life: p.life, fade: p.fade };
+  });
+  expect(disc.type).toBe("disc");
+  expect(disc.life).toBeLessThanOrEqual(180);
+  expect(disc.fade).toBeGreaterThan(0);
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.projectiles.filter((p) => p.tracked).length), {
+      timeout: 10_000,
+    })
+    .toBe(0);
+  await killPlayer(page);
+});

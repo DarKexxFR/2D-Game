@@ -48,7 +48,7 @@ import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu }
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { currentScreen, hideScreens, showScreen } from "./ui/screens.js";
 import { initRouter } from "./ui/router.js";
-import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
+import { initTouchControls, showTouchControls } from "./ui/touchControls.js";
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
 import { closeOptions, initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
@@ -125,7 +125,7 @@ function startGame(mode = "normal") {
   applyModifierToPlayer(game.modifier);
   resetMysteryBox();
   if (game.modifier.noMysteryBox) mysteryBox.active = false;
-  player.autoShoot = isTouchDevice; // pas de souris pour viser sur mobile
+  player.autoShoot = true; // tir automatique par défaut (la touche T le coupe pour viser à la souris)
   hideScreens();
   showHud(true);
   spawnWave();

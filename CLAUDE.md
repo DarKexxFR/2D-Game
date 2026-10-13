@@ -112,6 +112,9 @@ Principes :
   lui et envoie sa position (`systems/versusOnline.js`). Arène de taille fixe, zoomée pour tenir à l'écran.
   Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du propriétaire :
   du **duel** en ligne, pas de coop.
+- **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
+  Entrée / Espace, carte surlignée), y compris en duel ; Entrée / Espace sont ignorés juste après
+  l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
 - **Boss Rush** : `game.rush` (sinon `null`), ordre et réglages dans `BOSS_RUSH` (`data/enemies.js`).
   Pas de petits ennemis ni de minuteur ; `game.wave` prend la vague habituelle du boss (PV, biome).
   Record = statistique de succès `bestBossRush` ; hors classements.

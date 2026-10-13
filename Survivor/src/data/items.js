@@ -144,6 +144,8 @@ export const WEAPONS = {
     size: 10,
     pierce: 99,
     returns: 30, // ticks avant le retour
+    lifetime: 180, // ticks (3 s) avant de disparaître
+    fade: 30, // ticks de fondu à la fin de sa vie
     color: "#00ff88",
   },
   tesla: {
