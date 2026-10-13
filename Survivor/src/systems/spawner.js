@@ -4,9 +4,11 @@ import { MAP_BOUNDS, NEXT_WAVE_DELAY, SURVIVAL, WAVE_DURATION } from "../config.
 import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import {
+  BOSS_RUSH,
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
   ELITE,
+  ENEMY_NAMES,
   ENEMY_TYPES,
   GOBLIN,
   SPAWN_TABLES,
@@ -16,7 +18,7 @@ import { biomeForWave } from "../data/biomes.js";
 import { clamp, randomItem, weightedPick } from "../utils/math.js";
 import { addFloatingText, createSpawnEffect } from "./effects.js";
 import { arenaPointNear } from "./pickups.js";
-import { recordWave } from "../services/achievements.js";
+import { recordBest, recordWave } from "../services/achievements.js";
 
 const SHRINES = [
   { type: "frenzy", name: "FRÉNÉSIE", color: "#ff2244", icon: "rage" },
@@ -26,6 +28,12 @@ const SHRINES = [
 const SHRINE_CHANCE = 0.001; // par tick
 
 export function updateSpawning() {
+  if (game.rush) {
+    // Boss Rush : ni petits ennemis ni limite de temps, seulement les boss l'un après l'autre
+    if (game.nextWaveTimer > 0 && --game.nextWaveTimer === 0) startNextWave();
+    spawnPendingBosses();
+    return;
+  }
   updateWaveTimer();
   spawnMobs();
   spawnPendingBosses();
@@ -64,6 +72,7 @@ function spawnPendingBosses() {
 export function spawnWave() {
   game.waveTimer = 0;
   game.isBossWave = false;
+  if (game.rush) return spawnRushBoss();
   recordWave(game.wave);
   const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
   if (!boss) {
@@ -75,12 +84,28 @@ export function spawnWave() {
   game.pendingBosses.push({ type: boss.type, delay: BOSS_SPAWN_DELAY });
 }
 
+/**
+ * Boss Rush : prochain boss de la liste. `game.wave` prend la vague habituelle du boss (PV,
+ * dégâts, biome) ; chaque tour complet de la liste ajoute `cycleWaves` vagues.
+ */
+function spawnRushBoss() {
+  const rush = game.rush;
+  const { order, cycleWaves } = BOSS_RUSH;
+  const entry = order[rush.stage % order.length];
+  game.wave = entry.wave + Math.floor(rush.stage / order.length) * cycleWaves;
+  rush.stage++;
+  game.isBossWave = true;
+  emit("bossWarning", `BOSS ${rush.stage} · ${entry.warning}`);
+  game.pendingBosses.push({ type: entry.type, delay: BOSS_RUSH.spawnDelay });
+}
+
 export function startNextWave() {
   game.nextWaveTimer = 0;
   const before = biomeForWave(game.wave);
   game.wave++;
   spawnWave();
-  addFloatingText(player.worldX, player.worldY - 50, "VAGUE " + game.wave, "#00ffff", 30, 120);
+  const label = game.rush ? "BOSS " + game.rush.stage : "VAGUE " + game.wave;
+  addFloatingText(player.worldX, player.worldY - 50, label, "#00ffff", 30, 120);
   announceDifficulty(game.wave);
   const biome = biomeForWave(game.wave);
   if (biome !== before) emit("biomeChange", biome);
@@ -89,8 +114,28 @@ export function startNextWave() {
 /** Programme la vague suivante (une seule fois, même si plusieurs boss meurent ensemble). */
 export function scheduleNextWave() {
   if (game.nextWaveTimer > 0) return;
+  if (game.rush) return scheduleNextRushBoss();
   addFloatingText(player.worldX, player.worldY - 100, "BOSS VAINCU - VAGUE SUIVANTE!", "#00ff00", 24, 100);
   game.nextWaveTimer = NEXT_WAVE_DELAY;
+}
+
+/** Boss Rush : boss vaincu, un peu de répit et de soin avant le suivant. */
+function scheduleNextRushBoss() {
+  const rush = game.rush;
+  rush.defeated++;
+  recordBest("bestBossRush", rush.defeated);
+  player.health = Math.min(player.maxHealth, player.health + player.maxHealth * BOSS_RUSH.heal);
+  const next = BOSS_RUSH.order[rush.stage % BOSS_RUSH.order.length];
+  addFloatingText(player.worldX, player.worldY - 100, "BOSS VAINCU !", "#00ff00", 26, 100);
+  addFloatingText(
+    player.worldX,
+    player.worldY - 130,
+    `PROCHAIN : ${ENEMY_NAMES[next.type]}`,
+    "#ffd700",
+    16,
+    120,
+  );
+  game.nextWaveTimer = BOSS_RUSH.breather;
 }
 
 function pickEnemyType() {

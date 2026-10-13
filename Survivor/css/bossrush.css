@@ -1,0 +1,81 @@
+/* Boss Rush */
+#bossRushMenu {
+  border-color: #ffd700;
+}
+.rush-sub {
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 520px;
+  margin: -6px auto 14px;
+}
+.rush-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.rush-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  color: #fff;
+}
+.rush-list li b {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  color: #888;
+}
+button.rush-play {
+  background: linear-gradient(180deg, #ffd700, #b38600);
+  color: #1a1000;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
+}
+button.dock-rush {
+  border-color: rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  .rush-list {
+    gap: 5px;
+  }
+  .rush-list li {
+    padding: 6px 2px;
+    font-size: 10px;
+  }
+}
+/* Boutons du bas de l'accueil : sur une ligne tant que la largeur le permet */
+.home-dock button.dock-btn {
+  white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .home-dock {
+    gap: 6px;
+  }
+  .home-dock button.dock-btn {
+    padding: 10px 4px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .home-dock .dock-btn .ico {
+    display: none;
+  }
+}
+/* Très petit écran (iPhone SE) : les quatre boutons passent sur deux lignes */
+@media (max-width: 360px) {
+  .home-dock {
+    flex-wrap: wrap;
+  }
+  .home-dock button.dock-btn {
+    flex: 1 1 40%;
+    font-size: 11px;
+  }
+}

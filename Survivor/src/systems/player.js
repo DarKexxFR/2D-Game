@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, MAP_BOUNDS, SURVIVAL } from "../config.js";
+import { ADS, MAP_BOUNDS, STUN, SURVIVAL } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, touchMove } from "../core/input.js";
@@ -33,6 +33,8 @@ function updateBuffs() {
   if (b.shield > 0) b.shield--;
   if (b.magnet > 0) b.magnet--;
   if (b.slow > 0) b.slow--;
+  if (b.stunImmune > 0) b.stunImmune--;
+  if (b.stun > 0 && --b.stun === 0) b.stunImmune = STUN.immunity;
   if (b.overcharge > 0 && --b.overcharge === 0) {
     addFloatingText(player.worldX, player.worldY, "FIN SURCHARGE", "#ccc");
   }
@@ -48,7 +50,7 @@ function updateRegen() {
 
 function updateDash() {
   if (player.dashCooldownTimer > 0) player.dashCooldownTimer--;
-  if (isDown("dash") && player.dashCooldownTimer <= 0 && !player.isDashing) {
+  if (isDown("dash") && player.dashCooldownTimer <= 0 && !player.isDashing && !isStunned()) {
     player.isDashing = true;
     player.dashTimer = player.dashDuration;
     player.dashCooldownTimer = player.dashCooldown;
@@ -68,6 +70,7 @@ function updateDash() {
 }
 
 function move() {
+  if (isStunned()) return; // étourdi : le vaisseau ne répond plus
   let dx = 0;
   let dy = 0;
   if (isDown("up")) dy -= 1;
@@ -91,6 +94,21 @@ function move() {
 /** Le joueur est-il invulnérable aux coups « normaux » (contact, projectiles) ? */
 export function isProtected() {
   return player.isDashing || player.buffs.shield > 0;
+}
+
+export function isStunned() {
+  return player.buffs.stun > 0;
+}
+
+/** Étourdit le joueur (sauf s'il vient de l'être : courte insensibilité ensuite). */
+export function stunPlayer(ticks) {
+  const b = player.buffs;
+  if (b.stun > 0 || b.stunImmune > 0 || game.over) return false;
+  b.stun = Math.min(ticks, STUN.maxTicks);
+  player.isDashing = false;
+  addFloatingText(player.worldX, player.worldY - 34, "ÉTOURDI !", "#ffe94d", 18, 50);
+  vibrate([60, 30, 60]);
+  return true;
 }
 
 /** Efficacité des soins : réduite par la « corruption » au fil des vagues. */

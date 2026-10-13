@@ -13,6 +13,21 @@ export function drawHazards(now) {
   ctx.globalAlpha = 1;
 }
 
+/** Éclair au centre d'une zone qui étourdit : prévient le joueur. */
+function drawStunMark(x, y, r, color) {
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.25, y - r);
+  ctx.lineTo(x - r * 0.45, y + r * 0.1);
+  ctx.lineTo(x, y + r * 0.1);
+  ctx.lineTo(x - r * 0.25, y + r);
+  ctx.lineTo(x + r * 0.45, y - r * 0.15);
+  ctx.lineTo(x, y - r * 0.15);
+  ctx.closePath();
+  ctx.fill();
+}
+
 const DRAWERS = {
   /** Zone ronde : disque qui se remplit depuis le centre jusqu'à l'impact, puis flaque. */
   circle(h, now) {
@@ -24,6 +39,7 @@ const DRAWERS = {
       fillCircle(h.x, h.y, h.radius * t, h.color);
       ctx.globalAlpha = 0.6 + Math.sin(now / 60) * 0.3;
       strokeCircle(h.x, h.y, h.radius, h.color, 2);
+      if (h.stun) drawStunMark(h.x, h.y, Math.min(26, h.radius * 0.4), h.color);
       return;
     }
     // Flaque qui bouillonne

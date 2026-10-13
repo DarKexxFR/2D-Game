@@ -10,6 +10,7 @@ const SCREENS = [
   "leaderboardMenu",
   "achievementMenu",
   "dailyMenu",
+  "bossRushMenu",
   "talentMenu",
   "upgradeMenu",
   "pauseMenu",

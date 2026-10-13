@@ -8,7 +8,7 @@ import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
 import { addBeam, addCircle, addRing } from "./hazards.js";
-import { isProtected, takeDamage } from "./player.js";
+import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
@@ -20,6 +20,8 @@ const BOSS_BEHAVIORS = {
   hydra: updateHydra,
   colossus: updateColossus,
   void_reaper: updateVoidReaper,
+  storm_titan: updateStormTitan,
+  prism: updatePrism,
   goblin: updateGoblin,
 };
 
@@ -399,6 +401,128 @@ function updateVoidReaper(e) {
   }
 }
 
+const STORM_CYCLE = ["strikes", "orbs", "chain", "strikes", "overload", "orbs"];
+const STORM_BLUE = "#9be7ff";
+
+/**
+ * Titan de l'orage : pluie d'éclairs autour du joueur, boules de foudre, arcs électriques et
+ * surcharge. Tous ses coups étourdissent (le dash et le bouclier protègent).
+ */
+function updateStormTitan(e) {
+  enrage(e, "#fff7b0", 1.3, "TEMPÊTE !");
+  const speed = e.enraged ? 0.7 : 1;
+  if (e.overloadIn > 0 && --e.overloadIn === 0) {
+    addRing(e.x, e.y, 600, e.damage * 0.5, { color: STORM_BLUE, speed: 7 });
+  }
+  if (--e.attackTimer > 0) return;
+  const attack = nextAttack(e, STORM_CYCLE);
+  if (attack === "strikes") {
+    const count = e.enraged ? 7 : 5;
+    for (let k = 0; k < count; k++) {
+      // Le premier éclair vise le joueur, les autres tombent autour
+      const off = k === 0 ? 0 : 70 + Math.random() * 150;
+      const a = Math.random() * Math.PI * 2;
+      addCircle(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 70, e.damage * 0.7, {
+        delay: 55 + k * 8,
+        color: "#ffe94d",
+        stun: 50,
+      });
+    }
+    addFloatingText(e.x, e.y - e.size - 10, "FOUDRE !", "#ffe94d", 18, 40);
+    e.attackTimer = 110 * speed;
+  } else if (attack === "orbs") {
+    const count = e.enraged ? 14 : 10;
+    const offset = Math.random();
+    for (let k = 0; k < count; k++) {
+      fireEnemyProjectile(e.x, e.y, offset + (Math.PI * 2 * k) / count, 3.6, {
+        size: 12,
+        damage: e.damage * 0.5,
+        color: STORM_BLUE,
+        stun: 40,
+        life: 220,
+      });
+    }
+    e.attackTimer = 80 * speed;
+  } else if (attack === "chain") {
+    const base = aim(e);
+    for (const off of e.enraged ? [-0.6, -0.3, 0, 0.3, 0.6] : [-0.4, 0, 0.4]) {
+      addBeam(e.x, e.y, base + off, e.damage * 0.6, {
+        length: 800,
+        width: 30,
+        delay: 50,
+        active: 22,
+        color: STORM_BLUE,
+        stun: 45,
+      });
+    }
+    e.rooted = 70;
+    e.attackTimer = 100 * speed;
+  } else {
+    // Surcharge : grosse décharge autour du Titan, puis onde électrique
+    addCircle(e.x, e.y, 240, e.damage, { delay: 70, color: "#ffe94d", stun: 70 });
+    addFloatingText(e.x, e.y - e.size - 10, "SURCHARGE !", "#ffe94d", 20, 50);
+    e.rooted = 80;
+    e.overloadIn = 70;
+    e.attackTimer = 130 * speed;
+  }
+}
+
+const PRISM_CYCLE = ["sweep", "shards", "grid", "sweep", "grid", "shards"];
+
+/** Sentinelle prismatique : lasers qui balaient l'arène, éclats qui se diffractent, damier de zones. */
+function updatePrism(e) {
+  enrage(e, "#ff4dd2", 1.25, "RÉFRACTION !");
+  const speed = e.enraged ? 0.75 : 1;
+  if (--e.attackTimer > 0) return;
+  const attack = nextAttack(e, PRISM_CYCLE);
+  if (attack === "sweep") {
+    const count = e.enraged ? 3 : 2;
+    const base = aim(e) + Math.PI / 2; // commence de côté : le balayage arrive vers le joueur
+    const spin = (Math.random() < 0.5 ? -1 : 1) * 0.012;
+    const active = e.enraged ? 180 : 150;
+    for (let k = 0; k < count; k++) {
+      addBeam(e.x, e.y, base + (Math.PI * 2 * k) / count, e.damage * 0.6, {
+        length: 900,
+        width: 30,
+        delay: 60,
+        active,
+        color: e.color,
+        spin,
+      });
+    }
+    addFloatingText(e.x, e.y - e.size - 10, "BALAYAGE !", e.color, 18, 40);
+    e.rooted = 60 + active;
+    e.attackTimer = 60 + active + 20;
+  } else if (attack === "shards") {
+    const base = aim(e);
+    const count = e.enraged ? 7 : 5;
+    for (let k = 0; k < count; k++) {
+      fireEnemyProjectile(e.x, e.y, base + (k - (count - 1) / 2) * 0.28, 6, {
+        size: 14,
+        damage: e.damage * 0.6,
+        color: e.color,
+        splitIn: 50,
+        splitCount: 6,
+        splitColor: "#ff4dd2",
+      });
+    }
+    e.attackTimer = 90 * speed;
+  } else {
+    // Damier 3×3 centré sur le joueur : les cases « noires » puis les « blanches »
+    const cell = 140;
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        const first = (i + j) % 2 === 0;
+        addCircle(player.worldX + i * cell, player.worldY + j * cell, 72, e.damage * 0.8, {
+          delay: first ? 60 : 105,
+          color: first ? "#b07dff" : e.color,
+        });
+      }
+    }
+    e.attackTimer = 140 * speed;
+  }
+}
+
 function updateSlimeBoss(e) {
   e.skillTimer--;
   if (!e.isCharging) {
@@ -509,10 +633,16 @@ function updateEnemyProjectiles() {
       continue;
     }
 
-    // Les gros projectiles du miniboss éclatent en 4 après un délai
+    // Les gros projectiles (crabe, Sentinelle) éclatent après un délai
     if (p.splitIn !== undefined && --p.splitIn <= 0) {
-      for (let k = 0; k < 4; k++) {
-        fireEnemyProjectile(p.x, p.y, (Math.PI / 2) * k, 5, { size: 8, damage: p.damage, color: "#ff6600" });
+      const count = p.splitCount ?? 4;
+      const offset = p.splitCount ? Math.atan2(p.vy, p.vx) : 0;
+      for (let k = 0; k < count; k++) {
+        fireEnemyProjectile(p.x, p.y, offset + (Math.PI * 2 * k) / count, 5, {
+          size: 8,
+          damage: p.damage,
+          color: p.splitColor ?? "#ff6600",
+        });
       }
       p.dead = true;
       continue;
@@ -523,6 +653,7 @@ function updateEnemyProjectiles() {
       if (!isProtected()) {
         takeDamage(p.damage);
         if (p.slow) freezePlayer(p.slow);
+        if (p.stun) stunPlayer(p.stun);
       }
       p.dead = true;
     } else if (d > 700) {

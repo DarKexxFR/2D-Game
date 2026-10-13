@@ -16,12 +16,14 @@ async function spawnAlone(page, type, dx = 300) {
   );
 }
 
-test("calendrier des boss : Colosse à la vague 10, Faucheur à la vague 15", async ({ page }) => {
+test("calendrier des boss : Titan à la vague 7, Sentinelle à la 9, Colosse à la 10, Faucheur à la 15", async ({
+  page,
+}) => {
   await page.goto("/");
   await startGame(page);
   const bosses = await game(page, ({ state, spawner }) => {
     const out = {};
-    for (const wave of [5, 8, 10, 12, 15]) {
+    for (const wave of [5, 7, 8, 9, 10, 12, 14, 15, 18]) {
       state.game.pendingBosses.length = 0;
       state.game.wave = wave - 1;
       spawner.startNextWave();
@@ -29,11 +31,21 @@ test("calendrier des boss : Colosse à la vague 10, Faucheur à la vague 15", as
     }
     return out;
   });
-  expect(bosses).toEqual({ 5: "boss", 8: "slime_boss", 10: "colossus", 12: "hydra", 15: "void_reaper" });
+  expect(bosses).toEqual({
+    5: "boss",
+    7: "storm_titan",
+    8: "slime_boss",
+    9: "prism",
+    10: "colossus",
+    12: "hydra",
+    14: "storm_titan",
+    15: "void_reaper",
+    18: "prism",
+  });
   await killPlayer(page);
 });
 
-for (const type of ["miniboss", "boss", "colossus", "void_reaper", "hydra"]) {
+for (const type of ["miniboss", "boss", "colossus", "void_reaper", "hydra", "storm_titan", "prism"]) {
   test(`le boss ${type} enchaîne ses attaques et passe en furie`, async ({ page }) => {
     await page.goto("/");
     await startGame(page);
@@ -58,7 +70,7 @@ for (const type of ["miniboss", "boss", "colossus", "void_reaper", "hydra"]) {
       const e = state.world.enemies.find((x) => x.template.isBoss);
       e.health = e.maxHealth * 0.4;
     });
-    if (["boss", "colossus", "void_reaper"].includes(type)) {
+    if (["boss", "colossus", "void_reaper", "storm_titan", "prism"].includes(type)) {
       await expect.poll(() => game(page, ({ state }) => state.world.enemies[0].enraged)).toBe(true);
       await expect(page.locator("#bossBarName")).toContainText("FURIE");
     }
@@ -87,6 +99,58 @@ test("les attaques de zone blessent, sauf pendant le dash ou sous bouclier", asy
     return { hurt, shieldedLoss: shielded - p.health };
   });
   expect(hits).toEqual({ hurt: 50, shieldedLoss: 0 });
+  await killPlayer(page);
+});
+
+test("les éclairs du Titan étourdissent : ni déplacement ni dash, puis courte insensibilité", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  const r = await page.evaluate(async () => {
+    const s = await import("/src/core/state.js");
+    const h = await import("/src/systems/hazards.js");
+    const p = s.player;
+    s.game.spawnTimer = 1e9;
+    s.world.enemies.length = 0;
+    s.game.running = false; // le test fait avancer la logique lui-même
+    h.addCircle(p.worldX, p.worldY, 80, 10, { delay: 1, stun: 50 });
+    h.updateHazards();
+    return { stun: p.buffs.stun };
+  });
+  expect(r.stun).toBe(50);
+  // Étourdi : les touches de déplacement et de dash n'ont aucun effet
+  const moved = await game(page, ({ state, player, input }) => {
+    const p = state.player;
+    const x = p.worldX;
+    input.setVirtualAction("right", true);
+    input.setVirtualAction("dash", true);
+    p.dashCooldownTimer = 0;
+    for (let i = 0; i < 10; i++) player.updatePlayer();
+    input.setVirtualAction("right", false);
+    input.setVirtualAction("dash", false);
+    return { dx: p.worldX - x, dashing: p.isDashing, stunned: player.isStunned() };
+  });
+  expect(moved).toEqual({ dx: 0, dashing: false, stunned: true });
+  // À la fin de l'étourdissement, un nouvel éclair ne l'étourdit pas tout de suite
+  const after = await page.evaluate(async () => {
+    const s = await import("/src/core/state.js");
+    const pl = await import("/src/systems/player.js");
+    const h = await import("/src/systems/hazards.js");
+    const p = s.player;
+    for (let i = 0; i < 60; i++) pl.updatePlayer();
+    const free = !pl.isStunned();
+    h.addCircle(p.worldX, p.worldY, 80, 10, { delay: 1, stun: 50 });
+    h.updateHazards();
+    // Le bouclier protège aussi de l'étourdissement
+    p.buffs.stunImmune = 0;
+    p.buffs.shield = 100;
+    h.addCircle(p.worldX, p.worldY, 80, 10, { delay: 1, stun: 50 });
+    h.updateHazards();
+    return { free, restunned: p.buffs.stun > 0 };
+  });
+  expect(after).toEqual({ free: true, restunned: false });
+  await game(page, ({ state }) => (state.game.running = true));
   await killPlayer(page);
 });
 

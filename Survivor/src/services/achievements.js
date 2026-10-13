@@ -19,6 +19,11 @@ function unlocked() {
 
 const statValue = (metric) => stats()[metric] ?? 0;
 
+/** Valeur actuelle d'une statistique (record du Boss Rush...). */
+export function getStat(metric) {
+  return statValue(metric);
+}
+
 function checkAchievements() {
   const currentUnlocked = unlocked();
   let changed = false;
