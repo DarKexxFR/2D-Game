@@ -124,3 +124,31 @@ test("fenêtre de connexion : #modal=connexion, depuis l'accueil ou les options"
   await expect(page.locator("#optionsMenu")).toBeVisible();
   await expect(page).toHaveURL(/#modal=option$/);
 });
+
+test("duel : #jeu pendant le duel, #modal=fin-duel à la fin, le retour ramène à l'accueil", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#btnVersus").click();
+  await expect(page.locator("#versusHud")).toBeVisible();
+  await expect(page).toHaveURL(/#jeu$/);
+
+  await page.goBack();
+  await expect(page.locator("#pauseMenu")).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/#jeu$/);
+
+  await page.evaluate(async () => {
+    const v = await import("/src/systems/versus.js");
+    const [p1, p2] = v.versus.fighters;
+    v.versus.lives[0] = 1;
+    p1.buffs.shield = 0;
+    p1.isDashing = false;
+    v.hitFighter(p2, p1, 1e9);
+  });
+  await expect(page.locator("#versusOver")).toBeVisible();
+  await expect(page).toHaveURL(/#modal=fin-duel$/);
+  await page.goBack();
+  await expect(page.locator("#mainMenu")).toBeVisible();
+  await expect(page.locator("#versusHud")).toBeHidden();
+});

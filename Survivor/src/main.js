@@ -194,7 +194,7 @@ function navigate(id) {
   } else if (screen === "pauseMenu") togglePause();
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
-  else if (screen === "gameOver") returnToMenu();
+  else if (screen === "gameOver" || screen === "versusOver") returnToMenu();
   // amélioration et revivre : le choix reste à faire, l'adresse est simplement remise
 }
 

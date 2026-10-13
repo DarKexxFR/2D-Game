@@ -21,6 +21,7 @@ const ROUTES = {
   pauseMenu: "pause",
   reviveMenu: "revivre",
   gameOver: "fin",
+  versusOver: "fin-duel",
 };
 const PLAYING = "#jeu";
 
