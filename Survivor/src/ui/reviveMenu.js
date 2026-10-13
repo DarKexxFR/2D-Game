@@ -62,7 +62,7 @@ async function watchAd() {
   // Pub fermée ou indisponible : on laisse encore un peu de temps pour réessayer
   $("btnReviveAd").disabled = false;
   deadline = performance.now() + ADS.reviveDecisionMs;
-  setText("reviveMessage", "Publicité interrompue : pas de récompense.");
+  setText("reviveMessage", "Publicité interrompue ou indisponible : pas de récompense.");
 }
 
 function giveUp() {

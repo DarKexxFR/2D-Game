@@ -9,6 +9,7 @@ import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { initCloudSave } from "./services/cloudSave.js";
+import { initAds } from "./services/ads.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
 import { applyTalents } from "./data/talents.js";
 import { ensureStarterItems } from "./services/inventory.js";
@@ -189,6 +190,7 @@ function init() {
   hydrateIcons();
   loadAccount();
   initCloudSave();
+  initAds();
   ensureStarterItems();
   initMainMenu({ onPlay: () => startGame("normal") });
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });

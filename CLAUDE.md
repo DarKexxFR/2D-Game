@@ -62,7 +62,9 @@ Principes :
 - **Équilibrage** : les valeurs vivent dans `config.js` ou `data/`, jamais en dur dans la logique.
 - **Pubs récompensées** : `services/ads.js` → `showRewardedAd(placement)` renvoie `true` si la pub
   est vue en entier. Régie choisie par `ADS.provider` dans `config.js` (`"demo"` = fausse pub
-  interne, `"none"` = désactivé) ; une vraie régie = un adaptateur de plus dans `PROVIDERS`.
+  interne, `"adsense"` = AdSense H5 Games Ads, `"none"` = désactivé) ; une vraie régie = un adaptateur
+  de plus dans `PROVIDERS`. AdSense : étapes et conditions dans `PUBS.md` (bêta fermée, domaine
+  last-pulse.com, `Survivor/ads.txt`).
   Utilisées pour revivre (1 fois par partie, jamais en défi du jour) et le coffre bonus (limité par jour).
   Dans les tests, `killPlayer` / `declineRevive` refusent l'offre « revivre ».
 - **Pages légales** : `Survivor/legal.html` (CGU + confidentialité). À mettre à jour à chaque nouvelle
@@ -150,7 +152,7 @@ En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
    Supabase Realtime seulement pour la signalisation (quotas de messages).
 4. Finitions : ping, déconnexions, classement coop.
 
-Pubs : brancher une vraie régie (CrazyGames / Poki / AdSense) quand le propriétaire l'aura choisie.
+Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
 Autres idées en attente : sons et musique, niveaux de difficulté, quêtes hebdomadaires,
 skins, PWA installable, tutoriel, manette.
