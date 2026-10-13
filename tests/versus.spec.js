@@ -1,4 +1,5 @@
 // Duel 1 contre 1 sur le même écran : 3 vies chacun, 3 améliorations à chaque mort.
+// (le duel en ligne est testé dans versus-online.spec.js)
 import { expect, test } from "./fixtures.js";
 
 /** Exécute `fn(versusModule, arg)` dans la page. */
@@ -16,6 +17,7 @@ function duel(page, fn, arg) {
 async function openDuel(page) {
   await page.goto("/");
   await page.locator("#btnVersus").click();
+  await page.locator("#btnDuelLocal").click();
   await expect(page.locator("#versusHud")).toBeVisible();
 }
 

@@ -1,13 +1,26 @@
 // Rendu du duel : arène, traînées de dash, les deux vaisseaux avec leur nom et leur barre de vie.
 
 import { VERSUS } from "../config.js";
-import { ctx } from "../core/canvas.js";
+import { ctx, view } from "../core/canvas.js";
 import { game } from "../core/state.js";
 import { arenaBounds, versus, withFighter } from "../systems/versus.js";
 import { drawShip, drawPlayer } from "./entities.js";
 import { drawText, strokeCircle } from "./draw.js";
 
 const HIT_FLASH_MS = 120;
+
+/** Duel en ligne : centre l'arène (taille fixe) sous le bandeau et la réduit si l'écran est petit. */
+export function applyVersusView() {
+  const a = VERSUS.arena;
+  const b = arenaBounds();
+  const zoom = Math.min(
+    1,
+    (view.width - a.margin * 2) / (b.maxX - b.minX),
+    (view.height - a.top - a.margin) / (b.maxY - b.minY),
+  );
+  ctx.translate(view.width / 2, view.height / 2 + (a.top - a.margin) / 2);
+  ctx.scale(zoom, zoom);
+}
 
 export function drawVersus(now) {
   drawArena(now);

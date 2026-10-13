@@ -20,6 +20,7 @@ const SCREENS = [
   "reviveMenu",
   "gameOver",
   "versusOver",
+  "duelMenu",
 ];
 
 let current = null;

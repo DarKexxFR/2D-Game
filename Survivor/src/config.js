@@ -169,6 +169,22 @@ export const VERSUS = {
   colors: ["#00ffff", "#ff2a6d"],
 };
 
+// Duel en ligne (voir services/netplay.js) : Supabase Realtime sert de salon (code de salle et
+// mise en relation), puis les deux navigateurs se parlent en direct (WebRTC). Si la connexion directe
+// échoue (réseau strict), les messages passent par Supabase, moins souvent.
+export const NET = {
+  codeLength: 4,
+  arena: { width: 1200, height: 700 }, // arène fixe : la même pour les deux joueurs, zoomée pour tenir à l'écran
+  snapshotsPerSecond: 20, // état envoyé par l'hôte (connexion directe)
+  inputsPerSecond: 30, // position envoyée par l'invité (connexion directe)
+  relayPerSecond: 8, // les deux, quand les messages passent par Supabase (quotas)
+  p2pTimeoutMs: 7000, // au-delà, on passe par Supabase
+  joinTimeoutMs: 8000, // pas de réponse de l'hôte : code inconnu
+  lostAfterMs: 6000, // plus aucun message de l'adversaire : partie interrompue
+  heartbeatMs: 25000, // battement de cœur exigé par Supabase Realtime
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
+};
+
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],

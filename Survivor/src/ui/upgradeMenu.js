@@ -23,7 +23,7 @@ const RARITY_NAMES = {
 
 /** Choix en attente (un coffre ramassé pendant qu'un autre choix est affiché, par exemple). */
 const queue = [];
-// Choix affiché : { kind: "level" | "chest" | "versus", target (joueur qui reçoit), title, subtitle }
+// Choix affiché : { kind: "level" | "chest" | "versus" | "remote", target (joueur qui reçoit), title, subtitle }
 let current = null;
 
 function drawUpgrades(count, req = current) {
@@ -82,6 +82,24 @@ export function showVersusUpgrades(target, count, name) {
   }
 }
 
+/** Duel en ligne (hôte) : tire les cartes proposées à l'invité. */
+export function drawVersusChoices(target) {
+  return drawUpgrades(CHOICES, { kind: "versus", target });
+}
+
+/**
+ * Duel en ligne (invité) : affiche des cartes tirées par l'hôte ; `onPick(carte)` envoie le choix.
+ * La partie n'est pas mise en pause ici : c'est l'hôte qui l'arrête pour les deux joueurs.
+ */
+export function showRemoteChoices(picks, { title, subtitle, target, onPick }) {
+  current = { kind: "remote", target, onPick };
+  setText("upgradeTitle", title);
+  setText("upgradeSubtitle", subtitle);
+  setClass("upgradeMenu", "boss-chest", false);
+  renderChoices(picks);
+  showScreen("upgradeMenu");
+}
+
 function request(req) {
   if (current) queue.push(req);
   else open(req);
@@ -132,6 +150,12 @@ function renderChoices(picks) {
     ico.append(icon(u.icon, RARITIES[u.rarity].color));
     card.append(tag, ico, info);
     card.addEventListener("click", () => {
+      if (current.onPick) {
+        const send = current.onPick;
+        current = null;
+        hideScreens();
+        return send(u);
+      }
       applyUpgrade(u, p);
       if (u.rarity === "evolution" && current.kind !== "versus") addStat("evolutions");
       resume();

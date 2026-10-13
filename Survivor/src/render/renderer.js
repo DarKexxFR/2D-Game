@@ -7,7 +7,7 @@ import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./en
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
-import { drawVersus } from "./versus.js";
+import { applyVersusView, drawVersus } from "./versus.js";
 import { versus } from "../systems/versus.js";
 
 export { renderMenuBackground } from "./menuScene.js";
@@ -23,7 +23,9 @@ export function render() {
 
   // Tout ce qui suit est dessiné directement en coordonnées monde.
   ctx.save();
-  ctx.translate(-camera.x, -camera.y);
+  if (versus.online)
+    applyVersusView(); // arène commune aux deux joueurs, zoomée pour tenir à l'écran
+  else ctx.translate(-camera.x, -camera.y);
   drawMapBorder();
   drawMysteryBox();
   drawShrines(now);

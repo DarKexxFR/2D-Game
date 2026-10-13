@@ -90,14 +90,14 @@
       <div id="versusHud">
         <div class="vs-row">
           <div class="vs-panel vs-p1">
-            <b>JOUEUR 1</b>
+            <b id="vsName1">JOUEUR 1</b>
             <span id="vsLives1" class="vs-lives"></span>
             <div class="vs-bar"><div id="vsHealth1" class="vs-fill"></div></div>
             <small>Améliorations : <span id="vsUpgrades1">0</span></small>
           </div>
           <div class="vs-center">VS</div>
           <div class="vs-panel vs-p2">
-            <b>JOUEUR 2</b>
+            <b id="vsName2">JOUEUR 2</b>
             <span id="vsLives2" class="vs-lives"></span>
             <div class="vs-bar"><div id="vsHealth2" class="vs-fill"></div></div>
             <small>Améliorations : <span id="vsUpgrades2">0</span></small>
@@ -532,6 +532,33 @@
         <button id="btnReviveAd" class="revive-btn"><i data-icon="play"></i> REVIVRE (PUB)</button>
         <button id="btnReviveGiveUp" class="secondary mt-15">ABANDONNER</button>
         <p id="reviveMessage" class="revive-message"></p>
+      </div>
+
+      <!-- ===== DUEL : SUR CET ÉCRAN OU EN LIGNE ===== -->
+      <div id="duelMenu" class="menu-overlay">
+        <h2>DUEL 1 CONTRE 1</h2>
+        <p class="menu-sub">3 vies chacun · celui qui meurt choisit 3 améliorations</p>
+        <button id="btnDuelLocal">SUR CET ÉCRAN</button>
+        <div class="duel-online">
+          <h3>EN LIGNE</h3>
+          <button id="btnDuelHost" class="duel-host">CRÉER UNE PARTIE</button>
+          <div class="duel-join">
+            <input
+              type="text"
+              id="duelCode"
+              placeholder="CODE"
+              maxlength="4"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              aria-label="Code de la partie"
+            />
+            <button id="btnDuelJoin" class="secondary">REJOINDRE</button>
+          </div>
+          <p id="duelRoomCode" class="duel-code"></p>
+          <p id="duelStatus" class="duel-status"></p>
+        </div>
+        <button id="btnDuelBack" class="secondary">RETOUR</button>
       </div>
 
       <div id="versusOver" class="menu-overlay">
