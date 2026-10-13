@@ -634,7 +634,10 @@ export function drawProjectiles() {
       continue;
     }
     if (p.type === "disc") {
+      // Fondu pendant les derniers ticks de sa durée de vie
+      if (p.fade) ctx.globalAlpha = Math.min(1, p.life / p.fade);
       drawSprite(ctx, getSprite("disc", roundSize(p.size), p.color), p.x, p.y, performance.now() / 40);
+      ctx.globalAlpha = 1;
       continue;
     }
     // Traînée puis projectile lumineux

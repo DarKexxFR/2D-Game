@@ -219,6 +219,24 @@
   transform: translateX(10px);
   border-color: #fff;
 }
+/* Carte choisie au clavier (lueur intérieure : la liste coupe ce qui déborde) */
+.upgrade-option.selected {
+  background: rgba(0, 255, 255, 0.08);
+  box-shadow: inset 0 0 14px rgba(0, 255, 255, 0.45);
+  border-color: #00ffff;
+}
+/* Numéro de la carte (touche 1 / 2 / 3) */
+.upg-key {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #888;
+}
+.upgrade-option.selected .upg-key {
+  color: #00ffff;
+}
 .rarity-tag {
   position: absolute;
   top: 6px;

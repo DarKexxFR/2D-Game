@@ -3,14 +3,16 @@
 // ou après une mort en duel (le joueur qui meurt choisit plusieurs améliorations).
 
 import { BOSS_CHEST, RARITIES } from "../config.js";
+import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
 import { applyUpgrade, availableEvolutions, availableUpgrades } from "../data/upgrades.js";
 import { addStat } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
-import { $, el, setClass, setText } from "./dom.js";
+import { $, el, isVisible, setClass, setText } from "./dom.js";
 import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
+import { isTouchDevice } from "./touchControls.js";
 
 const CHOICES = 3;
 const RARITY_NAMES = {
@@ -25,6 +27,10 @@ const RARITY_NAMES = {
 const queue = [];
 // Choix affiché : { kind: "level" | "chest" | "versus" | "remote", target (joueur qui reçoit), title, subtitle }
 let current = null;
+// Choix au clavier : carte surlignée, et heure d'affichage (un dash en cours ne doit pas valider)
+let selected = 0;
+let shownAt = 0;
+const CONFIRM_DELAY_MS = 350;
 
 function drawUpgrades(count, req = current) {
   const chest = req.kind === "chest";
@@ -57,6 +63,42 @@ export function initUpgradeMenu() {
     current.target.rerolls--;
     renderChoices(drawUpgrades(CHOICES));
   });
+  document.addEventListener("keydown", onKey);
+}
+
+/**
+ * Choix sans souris : 1 / 2 / 3 prennent directement une carte, flèches (ou ZQSD) déplacent la
+ * sélection, Entrée / Espace la valident. Marche aussi pour le duel (touches des deux joueurs).
+ */
+function onKey(e) {
+  if (!current || !isVisible("upgradeMenu") || e.target.matches?.("input, textarea")) return;
+  const cards = [...$("upgradeOptions").children];
+  if (cards.length === 0) return;
+  const key = e.code === "Space" ? "space" : e.key.toLowerCase();
+  const digit = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+  const is = (action) => bindingsOf(action).includes(key);
+  if (digit) {
+    const card = cards[Number(digit[1]) - 1];
+    if (!card) return;
+    e.preventDefault();
+    if (!e.repeat) card.click();
+  } else if (is("up") || is("left") || key === "arrowup" || key === "arrowleft") {
+    e.preventDefault();
+    select((selected - 1 + cards.length) % cards.length);
+  } else if (is("down") || is("right") || key === "arrowdown" || key === "arrowright") {
+    e.preventDefault();
+    select((selected + 1) % cards.length);
+  } else if (key === "enter" || key === "space" || is("dash")) {
+    e.preventDefault();
+    if (!e.repeat && performance.now() - shownAt >= CONFIRM_DELAY_MS) cards[selected]?.click();
+  }
+}
+
+/** Surligne la carte `index` (`show` : rendre la sélection visible, même sur écran tactile). */
+function select(index, show = true) {
+  selected = index;
+  const cards = $("upgradeOptions").children;
+  for (let i = 0; i < cards.length; i++) cards[i].classList.toggle("selected", show && i === index);
 }
 
 /** Nouvelle partie : oublie les choix en attente de la précédente. */
@@ -137,8 +179,9 @@ function renderChoices(picks) {
   $("btnReroll").textContent = p.rerolls > 0 ? `RELANCER (${p.rerolls})` : "";
   const options = $("upgradeOptions");
   options.replaceChildren();
+  shownAt = performance.now();
 
-  for (const u of picks) {
+  for (const [i, u] of picks.entries()) {
     const card = el("div", `upgrade-option rarity-${u.rarity}`);
     const tag = el("span", "rarity-tag", RARITY_NAMES[u.rarity] || u.rarity);
     tag.style.color = RARITIES[u.rarity].color;
@@ -148,7 +191,9 @@ function renderChoices(picks) {
     if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
     const ico = el("div", "icon");
     ico.append(icon(u.icon, RARITIES[u.rarity].color));
-    card.append(tag, ico, info);
+    const key = el("span", "upg-key", String(i + 1));
+    card.append(tag, key, ico, info);
+    card.addEventListener("mouseenter", () => select(i));
     card.addEventListener("click", () => {
       if (current.onPick) {
         const send = current.onPick;
@@ -162,4 +207,6 @@ function renderChoices(picks) {
     });
     options.append(card);
   }
+  // Première carte surlignée d'office au clavier ; sur écran tactile, seulement si on utilise un clavier
+  select(0, !isTouchDevice);
 }

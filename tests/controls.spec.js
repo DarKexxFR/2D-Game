@@ -44,10 +44,11 @@ test("réassigner une touche dans les Options", async ({ page, isMobile }) => {
   await page.reload();
   await startGame(page);
   await expect(page.locator("#controls")).toContainText("F : Tir auto");
+  expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(true); // tir auto par défaut
   await page.keyboard.press("f");
-  expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(true);
+  expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(false);
   await page.keyboard.press("t");
-  expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(true);
+  expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(false);
   await killPlayer(page);
 
   await page.locator("#btnGameOverMenu").click();
