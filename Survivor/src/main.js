@@ -13,7 +13,8 @@ import { initAds } from "./services/ads.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
 import { applyTalents } from "./data/talents.js";
 import { ensureStarterItems } from "./services/inventory.js";
-import { addStat, recordBest, recordCompletedRun } from "./services/achievements.js";
+import { addStat, getStat, recordBest, recordCompletedRun } from "./services/achievements.js";
+import { BOSS_RUSH } from "./data/enemies.js";
 import { playSfx, unlockAudio, vibrate } from "./services/sfx.js";
 import {
   account,
@@ -55,6 +56,7 @@ import { closeLogin, initAccount, openLogin } from "./ui/accountMenu.js";
 import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
+import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
@@ -68,7 +70,10 @@ import { showVersusUpgrades } from "./ui/upgradeMenu.js";
 
 let lastMode = "normal"; // « REJOUER » relance le même mode
 
-/** Lance une partie ; mode "daily" = défi du jour (équipement, modificateur et graine imposés). */
+/**
+ * Lance une partie ; mode "daily" = défi du jour (équipement, modificateur et graine imposés),
+ * "rush" = Boss Rush (les boss à la suite, avec l'équipement et les talents du joueur).
+ */
 function startGame(mode = "normal") {
   lastMode = mode;
   stopVersus();
@@ -90,6 +95,10 @@ function startGame(mode = "normal") {
     resetPlayer(account.level);
     applyEquipment();
     applyTalents(player, account.talents);
+  }
+  if (mode === "rush") {
+    game.rush = { stage: 0, defeated: 0, bestBefore: getStat("bestBossRush") };
+    game.modifier = BOSS_RUSH.modifier;
   }
   applyModifierToPlayer(game.modifier);
   resetMysteryBox();
@@ -143,6 +152,21 @@ function endGame() {
   recordCompletedRun();
   refreshAccountUI();
   const pseudo = getPseudo();
+  const rush = game.rush;
+  if (rush) {
+    // Boss Rush : record de boss vaincus, hors classements (les vagues n'y sont pas comparables)
+    showGameOver({
+      pseudo,
+      level: player.level,
+      wave: rush.defeated,
+      waveLabel: "Boss vaincus",
+      xp: game.totalRunXp,
+      gold: game.runGold,
+      isNewRecord: rush.defeated > rush.bestBefore,
+    });
+    setOnlineStatus("");
+    return;
+  }
   const isNewRecord = saveToLeaderboard(pseudo, game.wave, game.totalRunXp, player.level);
   showGameOver({
     pseudo,
@@ -174,6 +198,7 @@ const MENUS = {
   leaderboardMenu: openLeaderboard,
   achievementMenu: openAchievements,
   dailyMenu: openDaily,
+  bossRushMenu: openBossRush,
   talentMenu: openTalents,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
 };
@@ -260,6 +285,7 @@ function init() {
   ensureStarterItems();
   initMainMenu({ onPlay: () => startGame("normal") });
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });
+  initBossRushMenu({ onPlay: () => startGame("rush"), onBack: showMainMenu });
   initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
   initAchievementMenu({ onBack: showMainMenu });

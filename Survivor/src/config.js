@@ -52,6 +52,12 @@ export const SURVIVAL = {
   harvestCooldown: 200, // ms entre deux soins de la Moisson sanglante (max 5 % des PV / s)
 };
 
+/**
+ * Étourdissement du joueur (éclairs du Titan de l'orage) : ni déplacement, ni dash, ni compétence.
+ * Après un étourdissement, le joueur y est insensible un moment (pas d'enchaînement sans fin).
+ */
+export const STUN = { maxTicks: 75, immunity: 150 };
+
 export const PLAYER_DEFAULTS = {
   size: 20,
   baseSpeed: 4.7,

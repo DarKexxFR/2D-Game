@@ -51,7 +51,7 @@ export function render() {
 
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
-  if (view.scale === 1 && !versus.active) drawWaveTimer();
+  if (view.scale === 1 && !versus.active && !game.rush) drawWaveTimer();
   ctx.restore();
 }
 

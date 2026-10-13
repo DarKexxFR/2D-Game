@@ -74,6 +74,27 @@ export const ACHIEVEMENTS = [
     1,
     800,
   ),
+  a("boss", "boss_storm", "bolt", "Paratonnerre", "Vaincre le Titan de l'orage.", "kill_storm_titan", 1, 450),
+  a(
+    "boss",
+    "boss_prism",
+    "gem",
+    "Briseur de prisme",
+    "Vaincre la Sentinelle prismatique.",
+    "kill_prism",
+    1,
+    500,
+  ),
+  a(
+    "boss",
+    "boss_rush",
+    "crown",
+    "Marathon de boss",
+    "Vaincre les 8 boss d'affilée en Boss Rush.",
+    "bestBossRush",
+    8,
+    1500,
+  ),
   a("boss", "boss_chests", "chest", "Pilleur de boss", "Ouvrir 10 coffres de boss.", "bossChests", 10, 600),
 
   // --- SURVIE ---

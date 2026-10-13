@@ -51,6 +51,7 @@ test("chaque menu de l'accueil a son lien", async ({ page }) => {
     classement: "#leaderboardMenu",
     succes: "#achievementMenu",
     defi: "#dailyMenu",
+    "boss-rush": "#bossRushMenu",
     talents: "#talentMenu",
   };
   for (const [slug, screen] of Object.entries(links)) {

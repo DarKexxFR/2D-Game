@@ -20,7 +20,10 @@ export function showHud(visible) {
 }
 
 export function updateHud() {
-  setText("wave", game.wave);
+  // Boss Rush : numéro du boss au lieu de la vague, et pas de minuteur
+  setText("waveLabel", game.rush ? "BOSS" : "VAGUE");
+  setText("wave", game.rush ? game.rush.stage : game.wave);
+  setVisible("timerContainer", !game.rush);
   setText("kills", game.kills);
   setText("healthText", `${Math.round(Math.max(0, player.health))}/${Math.round(player.maxHealth)}`);
   setWidth("playerHealth", player.health / player.maxHealth);

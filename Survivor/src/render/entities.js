@@ -29,6 +29,8 @@ const ENEMY_LOOKS = {
   golem: { sprite: "golem", mode: "face" },
   colossus: { sprite: "colossus", mode: "face" },
   void_reaper: { sprite: "void_reaper", mode: "face" },
+  storm_titan: { sprite: "storm_titan", mode: "face" },
+  prism: { sprite: "prism", mode: "spin", spin: 0.0012 },
   phantom: { sprite: "phantom", mode: "face" },
   goblin: { sprite: "goblin", mode: "flee" },
 };
@@ -99,6 +101,32 @@ export function drawPlayer(now) {
 
   if (player.isUltReady) {
     strokeCircle(x, y, size + 18 + Math.sin(now / 100) * 4, "rgba(255, 170, 0, 0.6)", 3);
+  }
+  if (player.buffs.stun > 0) drawPlayerStun(x, y, size, now);
+}
+
+/** Joueur étourdi : arcs électriques autour du vaisseau et étoiles au-dessus. */
+function drawPlayerStun(x, y, size, now) {
+  ctx.strokeStyle = "#ffe94d";
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = "#ffe94d";
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const a = now / 90 + (TAU * i) / 3;
+    const r = size + 6;
+    ctx.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+    for (let k = 1; k <= 3; k++) {
+      const b = a + k * 0.25;
+      const rr = r + (k % 2 ? 6 : -2);
+      ctx.lineTo(x + Math.cos(b) * rr, y + Math.sin(b) * rr);
+    }
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  for (let i = 0; i < 3; i++) {
+    const a = now / 150 + (TAU * i) / 3;
+    fillCircle(x + Math.cos(a) * size * 0.8, y - size - 10 + Math.sin(a) * 4, 3, "#ffe94d");
   }
 }
 
