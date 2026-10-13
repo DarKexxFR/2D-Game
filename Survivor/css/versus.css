@@ -1,0 +1,176 @@
+/* Duel 1 contre 1 : bandeau des deux joueurs, commandes tactiles partagées, écran du vainqueur */
+
+#versusHud {
+  display: none;
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 24px));
+  z-index: 10;
+  pointer-events: none;
+  font-family: "Orbitron", sans-serif;
+}
+.vs-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.vs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(10, 5, 20, 0.8);
+  border: 1px solid currentColor;
+  font-size: 12px;
+}
+.vs-panel b {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.vs-panel small {
+  color: #bbb;
+  font-size: 10px;
+}
+.vs-p1 {
+  color: #00ffff;
+}
+.vs-p2 {
+  color: #ff2a6d;
+  text-align: right;
+}
+.vs-lives {
+  font-size: 16px;
+  letter-spacing: 3px;
+  font-family: sans-serif;
+}
+.vs-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.vs-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 4px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.vs-p2 .vs-fill {
+  margin-left: auto;
+}
+.vs-center {
+  font-family: "Press Start 2P", monospace;
+  font-size: 18px;
+  color: #aa66ff;
+  text-shadow: 0 0 10px #aa66ff;
+}
+.vs-hint {
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 10px;
+  color: #999;
+}
+
+body.versus #controls {
+  display: none;
+}
+
+#versusOver h1 {
+  font-size: clamp(24px, 6vw, 44px);
+  text-shadow: 0 0 18px currentColor;
+}
+
+/* --- Tactile : une moitié d'écran par joueur (gauche / droite, ou bas / haut en portrait) --- */
+#versusTouch {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+.vs-zone {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+}
+.vs-zone2 {
+  left: 50%;
+}
+@media (orientation: portrait) {
+  .vs-zone {
+    width: 100%;
+    height: 50%;
+  }
+  .vs-zone1 {
+    top: 50%;
+  }
+  .vs-zone2 {
+    left: 0;
+    top: 0;
+  }
+}
+.vs-stick {
+  display: none;
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  margin: -55px 0 0 -55px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+.vs-stick.active {
+  display: block;
+}
+.vs-stick div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  box-shadow: 0 0 15px currentColor;
+}
+.vs-stick1 {
+  color: #00ffff;
+}
+.vs-stick2 {
+  color: #ff2a6d;
+}
+#versusTouch .touch-pause {
+  pointer-events: auto;
+  right: auto;
+  left: 50%;
+  margin-left: -22px;
+  top: auto;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+}
+@media (orientation: portrait) {
+  #versusTouch .touch-pause {
+    bottom: auto;
+    top: 50%;
+    margin-top: -22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .vs-panel {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  .vs-center {
+    font-size: 12px;
+  }
+}

@@ -1,6 +1,7 @@
 // Menu pause avec l'inventaire des améliorations de la partie.
 
 import { game, player } from "../core/state.js";
+import { fighterName, versus } from "../systems/versus.js";
 import { $, el, isVisible } from "./dom.js";
 import { hideScreens, showScreen } from "./screens.js";
 
@@ -21,14 +22,23 @@ export function togglePause() {
 function renderInventory() {
   const list = $("pauseInventory");
   list.replaceChildren();
-  const names = Object.keys(player.inventory).sort();
-  if (names.length === 0) {
+  if (versus.active) {
+    versus.fighters.forEach((f, i) => renderItems(list, f.inventory, fighterName(i) + " · "));
+    if (list.children.length === 0) list.append(el("div", "inv-empty", "Inventaire vide"));
+    return;
+  }
+  renderItems(list, player.inventory);
+}
+
+function renderItems(list, inventory, prefix = "") {
+  const names = Object.keys(inventory).sort();
+  if (names.length === 0 && !prefix) {
     list.append(el("div", "inv-empty", "Inventaire vide"));
     return;
   }
   for (const name of names) {
     const row = el("div", "inv-item");
-    row.append(el("span", "", name), el("span", "inv-count", "x" + player.inventory[name]));
+    row.append(el("span", "", prefix + name), el("span", "inv-count", "x" + inventory[name]));
     list.append(row);
   }
 }
