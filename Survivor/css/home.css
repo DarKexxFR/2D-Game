@@ -132,6 +132,33 @@ button.home-icon-btn {
 .home-icon-btn .ico {
   font-size: 22px;
 }
+/* Bouton « Se connecter » (devient « Compte » une fois connecté) */
+button.home-login-btn {
+  flex-shrink: 0;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.55);
+  background: rgba(0, 40, 25, 0.7);
+  color: #00ff88;
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.18);
+}
+.home-login-btn .ico {
+  font-size: 18px;
+}
+button.home-login-btn.connected {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(20, 10, 35, 0.7);
+  color: #ddd;
+  box-shadow: none;
+}
 
 /* --- Titre --- */
 .home-title {
@@ -401,6 +428,18 @@ body[data-screen="mainMenu"] #controls {
   .home-gold {
     padding: 6px 12px 6px 8px;
     font-size: 14px;
+  }
+  /* Peu de place : le bouton de connexion ne garde que son icône */
+  button.home-login-btn {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  #btnLoginLabel {
+    display: none;
+  }
+  .home-login-btn .ico {
+    font-size: 22px;
   }
   .home-title h1 {
     font-size: 28px;

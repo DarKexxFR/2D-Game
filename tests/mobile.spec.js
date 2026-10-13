@@ -57,6 +57,7 @@ test("les menus tiennent dans l'écran", async ({ page }) => {
     "#btnLeaderboard",
     "#btnAchievements",
     "#btnOptions",
+    "#btnLogin",
     "#btnDaily",
     "#btnTalents",
   ]) {

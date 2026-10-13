@@ -85,7 +85,8 @@ Principes :
 - **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
   `.menu-wide` pour les écrans larges (boutique, équipement, talents, succès), sur le modèle du défi du jour.
 - **Compte (facultatif)** : connexion Google, Discord ou code à 6 chiffres par e-mail, via l'API REST
-  d'authentification de Supabase (pas de bibliothèque). `accountSync.js` ne doit **jamais** écraser
+  d'authentification de Supabase (pas de bibliothèque). Fenêtre `loginMenu` (`ui/accountMenu.js`,
+  `openLogin`), ouverte par le bouton « Se connecter » de l'accueil ou depuis les Options. `accountSync.js` ne doit **jamais** écraser
   une progression en silence : il retient la dernière version échangée par appareil
   (`survivor_account_sync`) et demande au joueur de choisir quand l'appareil et le compte ont tous
   deux avancé. Réglages côté Google / Discord / Supabase : `supabase/CONNEXION.md`. Les tests simulent

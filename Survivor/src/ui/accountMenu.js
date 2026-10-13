@@ -1,5 +1,6 @@
-// Section « Compte » des Options : connexion facultative (Google, Discord ou code par e-mail),
-// état de la synchronisation et choix de la progression à garder en cas de conflit.
+// Fenêtre « Connexion » (écran `loginMenu`) : connexion facultative (Google, Discord ou code par
+// e-mail), état de la synchronisation et choix de la progression à garder en cas de conflit.
+// Ouverte depuis le bouton « Se connecter » de l'accueil ou depuis les Options.
 
 import {
   currentUser,
@@ -20,6 +21,7 @@ import {
 } from "../services/accountSync.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { $, el, setText, setVisible } from "./dom.js";
+import { showScreen } from "./screens.js";
 
 const STATUS = {
   checking: "Vérification de ta progression...",
@@ -33,15 +35,29 @@ const PROVIDERS = { google: "Google", discord: "Discord", email: "e-mail" };
 
 let pendingEmail = "";
 let onConflict = () => {};
+let returnTo = "mainMenu";
+
+/** Ouvre la fenêtre de connexion ; RETOUR ramène à l'écran `from`. */
+export function openLogin(from = "mainMenu") {
+  returnTo = from;
+  showScreen("loginMenu");
+}
 
 /**
  * Au démarrage : session (retour de Google / Discord compris), puis comparaison avec le compte.
- * `onConflictFound` ouvre les Options quand le joueur doit choisir entre deux progressions.
+ * `onConflictFound` ouvre la fenêtre de connexion quand le joueur doit choisir entre deux progressions.
  */
 export async function initAccount({ onConflictFound }) {
   onConflict = onConflictFound;
-  setVisible("accountSection", isOnlineEnabled());
-  if (!isOnlineEnabled()) return;
+  $("btnLoginBack").addEventListener("click", () => showScreen(returnTo));
+  if (!isOnlineEnabled()) {
+    // Sans serveur, pas de compte : les boutons d'accès disparaissent
+    $("btnLogin").style.display = "none";
+    $("optAccountRow").style.display = "none";
+    return;
+  }
+  $("btnLogin").addEventListener("click", () => openLogin("mainMenu"));
+  $("btnOptionsAccount").addEventListener("click", () => openLogin("optionsMenu"));
   initAccountSync();
   onAuthChange(render);
   onAccountSyncChange(render);
@@ -147,6 +163,12 @@ function fillConflictCard(id, title, s) {
 
 function render() {
   const user = currentUser();
+  // Accès depuis l'accueil et les Options : « Se connecter », ou « Compte » une fois connecté
+  setText("btnLoginLabel", user ? "COMPTE" : "SE CONNECTER");
+  setText("btnOptionsAccount", user ? "MON COMPTE" : "SE CONNECTER");
+  $("btnLogin").classList.toggle("connected", !!user);
+  $("btnLogin").setAttribute("aria-label", user ? "Mon compte" : "Se connecter");
+  setText("loginTitle", user ? "MON COMPTE" : "CONNEXION");
   setVisible("accountOut", !user);
   setVisible("accountIn", !!user);
   setVisible("emailStep", !user && !pendingEmail);
