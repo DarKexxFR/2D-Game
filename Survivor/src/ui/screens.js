@@ -16,6 +16,7 @@ const SCREENS = [
   "optionsMenu",
   "reviveMenu",
   "gameOver",
+  "versusOver",
 ];
 
 export function showScreen(id) {
