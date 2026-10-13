@@ -130,12 +130,18 @@ export const BOSS_CHEST = {
 // Publicités récompensées (vidéo facultative contre un bonus). provider "demo" = fausse
 // pub interne en attendant une vraie régie (CrazyGames, Poki, AdSense...), "none" = désactivé.
 export const ADS = {
-  provider: "demo",
+  provider: "demo", // "demo" (fausse pub), "adsense" (H5 Games Ads, voir PUBS.md) ou "none"
   demoDurationMs: 5000, // durée de la fausse pub
   reviveHealth: 0.5, // part des PV rendus en revivant
   reviveDecisionMs: 10000, // temps pour choisir avant l'abandon automatique
   reviveClearRadius: 300, // les ennemis proches sont repoussés au retour
   adChestsPerDay: 3, // coffres bonus contre une pub, par jour
+  // AdSense H5 Games Ads (pubs récompensées) : à activer seulement une fois la bêta acceptée par Google
+  adsense: {
+    client: "ca-pub-8968329181870538", // identifiant d'éditeur « ca-pub-… » (AdSense → Compte → Informations)
+    testMode: true, // pubs de test Google : repasser à false pour la mise en ligne
+    loadTimeoutMs: 8000, // abandon si la régie ne répond pas (bloqueur de pubs, réseau)
+  },
 };
 
 export const MUSIC = {

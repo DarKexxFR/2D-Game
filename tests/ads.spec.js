@@ -92,3 +92,78 @@ test("conditions générales accessibles depuis l'accueil et les options", async
   await expect(page.locator("h1")).toHaveText("Conditions générales d'utilisation");
   await expect(page.locator("#pubs")).toBeVisible();
 });
+
+/**
+ * Remplace le script AdSense par une fausse régie : `window.__adResult` décide de l'issue
+ * ("viewed", "dismissed" ou "notReady"). Comme le vrai script, elle traite la file adsbygoogle.
+ */
+async function fakeAdSense(page, result) {
+  await page.route("https://pagead2.googlesyndication.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `
+        const queue = window.adsbygoogle || [];
+        const handle = (o) => {
+          if (o.type !== "reward") return;
+          window.__adBreaks = (window.__adBreaks || 0) + 1;
+          setTimeout(() => {
+            if (window.__adResult === "notReady") return o.adBreakDone({ breakStatus: "notReady" });
+            o.beforeReward(() => {
+              if (window.__adResult === "viewed") o.adViewed();
+              else o.adDismissed();
+              o.adBreakDone({ breakStatus: window.__adResult });
+            });
+          }, 50);
+        };
+        window.adsbygoogle = { push: handle };
+        queue.forEach(handle);`,
+    }),
+  );
+  await page.addInitScript((r) => (window.__adResult = r), result);
+}
+
+test("AdSense : pub vue en entier, on revit", async ({ page }) => {
+  await fakeAdSense(page, "viewed");
+  await page.goto("/");
+  await expect(page.locator('meta[name="google-adsense-account"]')).toHaveAttribute(
+    "content",
+    /^ca-pub-\d+$/,
+  );
+  await startGame(page);
+  await fastAds(page, { provider: "adsense" });
+  await kill(page);
+  await page.locator("#btnReviveAd").click();
+  await expect(page.locator("#reviveMenu")).toBeHidden();
+  const s = await game(page, ({ state }) => ({ over: state.game.over, used: state.game.adReviveUsed }));
+  expect(s).toEqual({ over: false, used: true });
+  expect(await page.evaluate(() => window.__adBreaks)).toBe(1);
+});
+
+for (const result of ["dismissed", "notReady"]) {
+  test(`AdSense : pub ${result}, pas de récompense`, async ({ page }) => {
+    await fakeAdSense(page, result);
+    await page.goto("/");
+    await startGame(page);
+    await fastAds(page, { provider: "adsense" });
+    await kill(page);
+    await page.locator("#btnReviveAd").click();
+    await expect(page.locator("#reviveMessage")).toContainText("pas de récompense");
+    await expect(page.locator("#btnReviveAd")).toBeEnabled();
+    expect(await game(page, ({ state }) => state.game.over)).toBe(true);
+  });
+}
+
+test("AdSense bloqué : pas de récompense et pas de blocage", async ({ page }) => {
+  await page.route("https://pagead2.googlesyndication.com/**", (route) => route.abort());
+  await page.goto("/");
+  await startGame(page);
+  await fastAds(page, { provider: "adsense" });
+  await kill(page);
+  await page.locator("#btnReviveAd").click();
+  await expect(page.locator("#reviveMessage")).toContainText("pas de récompense");
+});
+
+test("ads.txt déclare le compte AdSense", async ({ request }) => {
+  const res = await request.get("/ads.txt");
+  expect(await res.text()).toMatch(/^google\.com, pub-\d+, DIRECT, f08c47fec0942fa0$/m);
+});
