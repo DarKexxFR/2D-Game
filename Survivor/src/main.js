@@ -57,6 +57,7 @@ import { closeLogin, initAccount, openLogin } from "./ui/accountMenu.js";
 import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
+import { initQuestMenu, openQuests } from "./ui/questMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
@@ -264,6 +265,7 @@ const MENUS = {
   leaderboardMenu: openLeaderboard,
   achievementMenu: openAchievements,
   dailyMenu: openDaily,
+  questMenu: openQuests,
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
   talentMenu: openTalents,
@@ -362,6 +364,7 @@ function init() {
   initSkinMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
   initAchievementMenu({ onBack: showMainMenu });
+  initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
 
   $("btnResume").addEventListener("click", togglePause);
   $("btnQuit").addEventListener("click", returnToMenu);

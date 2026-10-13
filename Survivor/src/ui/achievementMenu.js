@@ -7,7 +7,8 @@ import { $, el, setWidth } from "./dom.js";
 import { icon, setLabel } from "./icons.js";
 import { showScreen } from "./screens.js";
 
-let toastTimer;
+let toastTimer = null;
+const toastQueue = [];
 
 export function openAchievements() {
   renderAchievements();
@@ -66,10 +67,25 @@ function achievementCard(achievement, color) {
 }
 
 function showAchievementToast(achievement) {
-  const toast = $("achievementToast");
   const reward = achievement.reward ? ` · +${achievement.reward} or` : "";
-  setLabel(toast, ` Succès débloqué : ${achievement.name}${reward}`, achievement.icon, { before: true });
+  showToast(`Succès débloqué : ${achievement.name}${reward}`, achievement.icon);
+}
+
+/** Notification en haut de l'écran (succès, quête accomplie...) : à la suite si plusieurs arrivent. */
+export function showToast(text, iconName) {
+  toastQueue.push({ text, iconName });
+  if (!toastTimer) nextToast();
+}
+
+function nextToast() {
+  const toast = $("achievementToast");
+  const next = toastQueue.shift();
+  if (!next) {
+    toastTimer = null;
+    toast.classList.remove("visible");
+    return;
+  }
+  setLabel(toast, ` ${next.text}`, next.iconName, { before: true });
   toast.classList.add("visible");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("visible"), 3500);
+  toastTimer = setTimeout(nextToast, toastQueue.length ? 1800 : 3500);
 }

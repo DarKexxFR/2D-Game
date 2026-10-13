@@ -133,6 +133,12 @@ export const BOSS_CHEST = {
   goldPerWave: 8,
 };
 
+// Quêtes hebdomadaires (data/quests.js) : renouvelées chaque lundi à 0 h (heure du joueur).
+export const WEEKLY = {
+  questsPerWeek: 3,
+  bonusGold: 750, // or en plus quand toutes les quêtes de la semaine sont récupérées
+};
+
 // Publicités récompensées (vidéo facultative contre un bonus). provider "demo" = fausse
 // pub interne en attendant une vraie régie (CrazyGames, Poki, AdSense...), "none" = désactivé.
 export const ADS = {
