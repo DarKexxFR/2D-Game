@@ -37,16 +37,14 @@ const ENEMY_LOOKS = {
   goblin: { sprite: "goblin", mode: "flee" },
 };
 
-let lastX = 0;
-let lastY = 0;
-
 export function drawPlayer(now) {
   const { worldX: x, worldY: y, size } = player;
   const look = shipLook(player.hero, currentSkin(), now);
   const hull = look.hull;
-  const moving = Math.hypot(x - lastX, y - lastY) > 0.5;
-  lastX = x;
-  lastY = y;
+  // Position à l'image précédente : gardée sur le joueur (deux parties en duel sur un écran)
+  const moving = Math.hypot(x - (player.drawnX ?? x), y - (player.drawnY ?? y)) > 0.5;
+  player.drawnX = x;
+  player.drawnY = y;
 
   for (const g of world.ghosts) {
     ctx.globalAlpha = g.life / 30;

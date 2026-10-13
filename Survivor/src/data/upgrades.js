@@ -1,6 +1,5 @@
 // Liste des améliorations proposées à chaque montée de niveau.
-// `canApply(p)` filtre les cartes proposées, `apply(p)` modifie le joueur,
-// `noVersus` retire la carte en duel (sans effet contre un autre joueur).
+// `canApply(p)` filtre les cartes proposées, `apply(p)` modifie le joueur.
 
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
@@ -36,7 +35,6 @@ export const UPGRADES = [
   },
   {
     name: "Aimant",
-    noVersus: true, // rien à ramasser en duel
     rarity: "common",
     icon: "magnet",
     desc: "+50% Portée",
@@ -45,7 +43,6 @@ export const UPGRADES = [
   },
   {
     name: "Avidité",
-    noVersus: true, // pas d'or en duel
     rarity: "common",
     icon: "coin",
     desc: "+20% Gain d'Or",
@@ -146,7 +143,6 @@ export const UPGRADES = [
   },
   {
     name: "Explosion",
-    noVersus: true, // déclenchée par les éliminations d'ennemis
     rarity: "epic",
     icon: "bomb",
     desc: "20% chance boum ennemis",
@@ -189,7 +185,6 @@ export const UPGRADES = [
   },
   {
     name: "Exécution",
-    noVersus: true, // tuerait d'un coup en duel
     rarity: "legendary",
     icon: "skull",
     desc: "Tue instantanément < 20% HP",
@@ -201,9 +196,8 @@ export const UPGRADES = [
 // --- ÉVOLUTIONS : amélioration au maximum + amélioration partenaire → super-arme ---
 // Elles sont proposées en priorité à la montée de niveau dès que la recette est complète.
 const count = (p, name) => p.inventory[name] || 0;
-const evolution = ({ id, name, icon, desc, base, baseMax, partner, noVersus }) => ({
+const evolution = ({ id, name, icon, desc, base, baseMax, partner }) => ({
   id,
-  noVersus,
   name,
   icon,
   desc,
@@ -249,7 +243,6 @@ export const EVOLUTIONS = [
     base: "Vampirisme",
     baseMax: 5,
     partner: "Régénération",
-    noVersus: true, // soigne aux éliminations d'ennemis
   }),
 ];
 

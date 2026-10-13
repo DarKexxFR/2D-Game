@@ -1,15 +1,14 @@
-// Choix d'une amélioration : à la montée de niveau (tirage pondéré par rareté),
-// à l'ouverture d'un coffre de boss (raretés supérieures + or bonus)
-// ou après une mort en duel (le joueur qui meurt choisit plusieurs améliorations).
+// Choix d'une amélioration : à la montée de niveau (tirage pondéré par rareté)
+// ou à l'ouverture d'un coffre de boss (raretés supérieures + or bonus).
 
-import { BOSS_CHEST, RARITIES } from "../config.js";
+import { BOSS_CHEST, RARITIES, VERSUS } from "../config.js";
 import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
 import { applyUpgrade, availableEvolutions, availableUpgrades } from "../data/upgrades.js";
 import { addStat } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
-import { $, el, isVisible, setClass, setText } from "./dom.js";
+import { $, el, isVisible, setClass, setText, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
 import { isTouchDevice } from "./touchControls.js";
@@ -25,8 +24,11 @@ const RARITY_NAMES = {
 
 /** Choix en attente (un coffre ramassé pendant qu'un autre choix est affiché, par exemple). */
 const queue = [];
-// Choix affiché : { kind: "level" | "chest" | "versus" | "remote", target (joueur qui reçoit), title, subtitle }
+// Choix affiché : { kind: "level" | "chest", target (joueur qui reçoit) }
 let current = null;
+// Duel en ligne : choix automatique au bout de quelques secondes (l'adversaire, lui, continue)
+let autoPick = false;
+let autoPickTimer = null;
 // Choix au clavier : carte surlignée, et heure d'affichage (un dash en cours ne doit pas valider)
 let selected = 0;
 let shownAt = 0;
@@ -35,8 +37,8 @@ const CONFIRM_DELAY_MS = 350;
 function drawUpgrades(count, req = current) {
   const chest = req.kind === "chest";
   const p = req.target;
-  // Coffre de boss : pas de cartes communes ; duel : pas de cartes inutiles contre un joueur
-  const allowed = (u) => (!chest || u.rarity !== "common") && !(req.kind === "versus" && u.noVersus);
+  // Coffre de boss : pas de cartes communes
+  const allowed = (u) => !chest || u.rarity !== "common";
   const pool = availableUpgrades(p).filter(allowed);
   const weight = (u) => (chest ? BOSS_CHEST.weights[u.rarity] : RARITIES[u.rarity]?.weight) ?? 10;
   const picks = availableEvolutions(p).filter(allowed).slice(0, 1); // une évolution prête passe en premier
@@ -68,7 +70,7 @@ export function initUpgradeMenu() {
 
 /**
  * Choix sans souris : 1 / 2 / 3 prennent directement une carte, flèches (ou ZQSD) déplacent la
- * sélection, Entrée / Espace la valident. Marche aussi pour le duel (touches des deux joueurs).
+ * sélection, Entrée / Espace la valident.
  */
 function onKey(e) {
   if (!current || !isVisible("upgradeMenu") || e.target.matches?.("input, textarea")) return;
@@ -105,6 +107,22 @@ function select(index, show = true) {
 export function resetUpgradeMenu() {
   queue.length = 0;
   current = null;
+  clearTimeout(autoPickTimer);
+}
+
+/** Duel en ligne : au-delà de `VERSUS.pickSeconds`, la carte surlignée est prise. */
+export function setAutoPick(enabled) {
+  autoPick = enabled;
+}
+
+/** Tirage des cartes proposées à `target` (duel sur un écran : voir ui/duelPicks.js). */
+export function drawChoices(kind, target) {
+  return drawUpgrades(CHOICES, { kind, target });
+}
+
+/** Or d'un coffre de boss à la vague en cours. */
+export function chestGold() {
+  return BOSS_CHEST.gold + game.wave * BOSS_CHEST.goldPerWave;
 }
 
 /** Montée de niveau. */
@@ -115,31 +133,6 @@ export function showUpgradeMenu() {
 /** Coffre lâché par un boss : une augmentation au choix + de l'or. */
 export function showBossChest() {
   request({ kind: "chest", target: player });
-}
-
-/** Duel : `count` améliorations d'affilée pour le joueur `target` (affiché sous le nom `name`). */
-export function showVersusUpgrades(target, count, name) {
-  for (let i = 0; i < count; i++) {
-    request({ kind: "versus", target, title: name, subtitle: `Amélioration ${i + 1}/${count}` });
-  }
-}
-
-/** Duel en ligne (hôte) : tire les cartes proposées à l'invité. */
-export function drawVersusChoices(target) {
-  return drawUpgrades(CHOICES, { kind: "versus", target });
-}
-
-/**
- * Duel en ligne (invité) : affiche des cartes tirées par l'hôte ; `onPick(carte)` envoie le choix.
- * La partie n'est pas mise en pause ici : c'est l'hôte qui l'arrête pour les deux joueurs.
- */
-export function showRemoteChoices(picks, { title, subtitle, target, onPick }) {
-  current = { kind: "remote", target, onPick };
-  setText("upgradeTitle", title);
-  setText("upgradeSubtitle", subtitle);
-  setClass("upgradeMenu", "boss-chest", false);
-  renderChoices(picks);
-  showScreen("upgradeMenu");
 }
 
 function request(req) {
@@ -153,13 +146,12 @@ function open(req) {
   const chest = req.kind === "chest";
   let gold = 0;
   if (chest) {
-    gold = BOSS_CHEST.gold + game.wave * BOSS_CHEST.goldPerWave;
+    gold = chestGold();
     game.runGold += gold;
   }
   if (picks.length === 0) {
     // soin de secours si plus rien n'est disponible
-    if (req.target === player) heal(50);
-    else req.target.health = Math.min(req.target.maxHealth, req.target.health + 50);
+    heal(50);
     current = null;
     if (queue.length > 0) open(queue.shift());
     return;
@@ -167,11 +159,32 @@ function open(req) {
 
   game.running = false;
   game.paused = true;
-  setText("upgradeTitle", req.title ?? (chest ? "COFFRE DE BOSS" : "CHOISISSEZ !"));
-  setText("upgradeSubtitle", req.subtitle ?? (chest ? `+${gold} or · choisis une augmentation` : ""));
+  setText("upgradeTitle", chest ? "COFFRE DE BOSS" : "CHOISISSEZ !");
+  setText("upgradeSubtitle", chest ? `+${gold} or · choisis une augmentation` : "");
   setClass("upgradeMenu", "boss-chest", chest);
   renderChoices(picks);
   showScreen("upgradeMenu");
+  startAutoPick();
+}
+
+/** Barre qui se vide, puis choix de la carte surlignée (duel en ligne seulement). */
+function startAutoPick() {
+  clearTimeout(autoPickTimer);
+  const timer = $("upgradeTimer");
+  const autoPickMs = autoPick ? VERSUS.pickSeconds * 1000 : 0;
+  setVisible("upgradeTimer", autoPick);
+  if (!autoPick) return;
+  const fill = timer.firstElementChild;
+  fill.style.transition = "none";
+  fill.style.width = "100%";
+  void fill.offsetWidth; // relance la transition
+  fill.style.transition = `width ${autoPickMs}ms linear`;
+  fill.style.width = "0%";
+  const req = current;
+  autoPickTimer = setTimeout(
+    () => current === req && $("upgradeOptions").children[selected]?.click(),
+    autoPickMs,
+  );
 }
 
 function renderChoices(picks) {
@@ -195,14 +208,10 @@ function renderChoices(picks) {
     card.append(tag, key, ico, info);
     card.addEventListener("mouseenter", () => select(i));
     card.addEventListener("click", () => {
-      if (current.onPick) {
-        const send = current.onPick;
-        current = null;
-        hideScreens();
-        return send(u);
-      }
+      if (!current) return;
+      clearTimeout(autoPickTimer);
       applyUpgrade(u, p);
-      if (u.rarity === "evolution" && current.kind !== "versus") addStat("evolutions");
+      if (u.rarity === "evolution") addStat("evolutions");
       resume();
     });
     options.append(card);

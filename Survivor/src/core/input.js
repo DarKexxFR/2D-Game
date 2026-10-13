@@ -27,6 +27,8 @@ const held = {}; // touches enfoncées
 const virtual = {}; // actions tenues par les boutons tactiles
 const listeners = {}; // action → fonction appelée à l'appui
 let capture = null; // attente d'une touche pour la réassigner
+// Duel sur un écran : touches et joystick du joueur dont la partie avance (voir systems/versus.js)
+let profile = null;
 
 /** Touches liées à une action (réglage du joueur, sinon défaut). */
 export function bindingsOf(action) {
@@ -34,12 +36,21 @@ export function bindingsOf(action) {
 }
 
 export function isDown(action) {
+  if (profile) return !!profile.virtual[action] || (profile.keys[action] || []).some((k) => held[k]);
   return !!virtual[action] || bindingsOf(action).some((k) => held[k]);
 }
 
-/** Une des touches est-elle enfoncée ? (duel : chaque joueur a ses propres touches) */
-export function isAnyKeyDown(keys) {
-  return keys.some((k) => held[k]);
+/**
+ * Duel sur un écran : `p` = { keys: { action: [touches] }, virtual: { action: bool }, stick: { x, y } }
+ * remplace les commandes habituelles le temps de faire avancer la partie d'un joueur ; null = normal.
+ */
+export function useInputProfile(p) {
+  profile = p;
+}
+
+/** Direction du joystick tactile (celui du joueur en cours en duel sur un écran). */
+export function stickDirection() {
+  return profile ? profile.stick : touchMove;
 }
 
 /** Relâche une action (évite qu'un appui maintenu la redéclenche en boucle). */

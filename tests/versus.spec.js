@@ -1,152 +1,177 @@
-// Duel 1 contre 1 sur le même écran : 3 vies chacun, 3 améliorations à chaque mort.
-// (le duel en ligne est testé dans versus-online.spec.js)
+// Duel sur un écran : écran scindé, chaque joueur joue sa propre partie de survie ; le premier mort
+// perd et le gagnant empoche l'XP et l'or des deux parties. (en ligne : versus-online.spec.js)
 import { expect, test } from "./fixtures.js";
 
-/** Exécute `fn(versusModule, arg)` dans la page. */
-function duel(page, fn, arg) {
+/**
+ * Exécute `fn(mods, arg)` avec la partie du joueur `i` chargée (0 = J1, 1 = J2) ; sans `i`,
+ * avec seulement les modules. `mods` : state, player, versus, config.
+ */
+function run(page, i, fn, arg) {
   return page.evaluate(
-    async ({ src, arg }) => {
-      const v = await import("/src/systems/versus.js");
+    async ({ i, src, arg }) => {
+      const mods = {
+        state: await import("/src/core/state.js"),
+        player: await import("/src/systems/player.js"),
+        versus: await import("/src/systems/versus.js"),
+        config: await import("/src/config.js"),
+      };
       // eslint-disable-next-line no-new-func
-      return new Function("v", "arg", `return (${src})(v, arg)`)(v, arg);
+      const fn = new Function("mods", "arg", `return (${src})(mods, arg)`);
+      return i === null ? fn(mods, arg) : mods.versus.withRun(i, () => fn(mods, arg));
     },
-    { src: fn.toString(), arg },
+    { i, src: fn.toString(), arg },
   );
 }
 
+/** Ouvre le duel sur cet écran ; les deux joueurs sont invincibles et ne montent pas de niveau. */
 async function openDuel(page) {
   await page.goto("/");
   await page.locator("#btnVersus").click();
   await page.locator("#btnDuelLocal").click();
-  await expect(page.locator("#versusHud")).toBeVisible();
-}
-
-/** Tue un joueur (balle fatale de l'adversaire, bouclier et dash ignorés). */
-async function kill(page, i) {
-  await duel(
-    page,
-    (v, i) => {
-      const f = v.versus.fighters[i];
-      f.buffs.shield = 0;
-      f.isDashing = false;
-      v.hitFighter(v.versus.fighters[1 - i], f, 1e9);
-    },
-    i,
-  );
-}
-
-/** Choisit les 3 améliorations proposées après une mort. */
-async function pickThree(page, name) {
-  for (let n = 1; n <= 3; n++) {
-    await expect(page.locator("#upgradeTitle")).toHaveText(name);
-    await expect(page.locator("#upgradeSubtitle")).toHaveText(`Amélioration ${n}/3`);
-    await page.locator(".upgrade-option").first().click();
+  for (const i of [0, 1]) {
+    await run(page, i, ({ state }) => {
+      state.player.health = state.player.maxHealth = 1e7;
+      state.player.xpToNextLevel = 1e12;
+    });
   }
-  await expect(page.locator("#upgradeMenu")).toBeHidden();
 }
 
-test("duel : deux joueurs, 3 vies chacun, tir automatique vers l'adversaire", async ({ page }) => {
-  await openDuel(page);
-  await expect(page.locator("#ui")).toBeHidden(); // pas le HUD du mode survie
-  await expect(page.locator("#vsLives1")).toHaveText("♥♥♥");
-  await expect(page.locator("#vsLives2")).toHaveText("♥♥♥");
+/** Pause (Échap, ou le bouton du milieu sur mobile) puis QUITTER. */
+async function quit(page, isMobile) {
+  if (isMobile) await page.locator("#btnVersusPause").click();
+  else await page.keyboard.press("Escape");
+  await expect(page.locator("#pauseMenu")).toBeVisible();
+  await page.locator("#btnQuit").click();
+}
 
-  // Les balles touchent l'adversaire (on retire le bouclier de départ éventuel)
+const both = (page, fn, arg) => Promise.all([0, 1].map((i) => run(page, i, fn, arg)));
+
+test("duel : deux parties de survie indépendantes, côte à côte", async ({ page }) => {
+  await openDuel(page);
+  await expect(page.locator("#ui")).toBeHidden(); // chaque moitié a son propre bandeau
+  expect(await run(page, null, ({ versus }) => versus.versus.split)).toBe(true);
+  // Les deux parties avancent, chacune avec ses ennemis
   await expect
-    .poll(() =>
-      duel(page, (v) => {
-        const [a, b] = v.versus.fighters;
-        a.buffs.shield = b.buffs.shield = 0;
-        return a.health < a.maxHealth && b.health < b.maxHealth;
-      }),
+    .poll(
+      async () => await both(page, ({ state }) => state.game.time > 500 && state.world.enemies.length > 0),
     )
-    .toBe(true);
+    .toEqual([true, true]);
+  await run(page, 1, ({ state }) => (state.game.runGold = 77));
+  expect(await both(page, ({ state }) => state.game.runGold)).toEqual([0, 77]);
 });
 
 test("duel : chaque joueur a ses touches (ZQSD pour J1, flèches pour J2)", async ({ page, isMobile }) => {
   test.skip(isMobile, "clavier");
   await openDuel(page);
-  const pos = () => duel(page, (v) => v.versus.fighters.map((f) => [f.worldX, f.worldY]));
-  const [[x1], [x2]] = await pos();
+  const pos = () => both(page, ({ state }) => state.player.worldX);
+  const [x1, x2] = await pos();
   await page.keyboard.down("d");
   await page.keyboard.down("ArrowLeft");
   await page.waitForTimeout(400);
   await page.keyboard.up("d");
   await page.keyboard.up("ArrowLeft");
-  const [[nx1], [nx2]] = await pos();
+  const [nx1, nx2] = await pos();
   expect(nx1).toBeGreaterThan(x1 + 20);
   expect(nx2).toBeLessThan(x2 - 20);
 });
 
-test("duel : à chaque mort, le joueur perd une vie et choisit 3 améliorations", async ({ page }) => {
+test("duel : la montée de niveau n'arrête que la partie du joueur, qui choisit dans sa moitié", async ({
+  page,
+  isMobile,
+}) => {
   await openDuel(page);
-  await kill(page, 1);
-  await expect(page.locator("#vsLives2")).toHaveText("♥♥♡");
-  await pickThree(page, "JOUEUR 2");
-  const after = await duel(page, (v) => {
-    const f = v.versus.fighters[1];
-    return {
-      upgrades: Object.values(f.inventory).reduce((a, b) => a + b, 0),
-      alive: f.alive,
-      full: f.health === f.maxHealth || f.buffs.shield > 0,
-      p1: Object.keys(v.versus.fighters[0].inventory).length,
-    };
+  await run(page, 1, ({ state, player }) => {
+    state.player.xpToNextLevel = 10;
+    player.gainXp(10);
   });
-  expect(after).toEqual({ upgrades: 3, alive: true, full: true, p1: 0 });
-  await expect(page.locator("#vsUpgrades2")).toHaveText("3");
+  await expect(page.locator("#duelPick2")).toBeVisible();
+  await expect(page.locator("#duelPick1")).toBeHidden();
+  await expect(page.locator("#duelPick2 .dp-title")).toHaveText("JOUEUR 2");
+  // La partie de J1 continue, celle de J2 attend
+  const t = await both(page, ({ state }) => state.game.time);
+  await page.waitForTimeout(300);
+  const t2 = await both(page, ({ state }) => state.game.time);
+  expect(t2[0]).toBeGreaterThan(t[0]);
+  expect(t2[1]).toBe(t[1]);
+
+  // Choix : flèche puis ENTRÉE pour J2 au clavier, toucher la carte sur mobile
+  const second = await page.locator("#duelPick2 .dp-card h4").nth(1).textContent();
+  if (isMobile) await page.locator("#duelPick2 .dp-card").nth(1).click();
+  else {
+    await page.waitForTimeout(400); // délai anti-validation accidentelle
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+  }
+  await expect(page.locator("#duelPick2")).toBeHidden();
+  const inventories = await both(page, ({ state }) => Object.keys(state.player.inventory));
+  expect(inventories[0]).toEqual([]);
+  expect(inventories[1]).toEqual([second.replace(/ · niv\. \d+$/, "")]);
+  await expect.poll(() => run(page, 1, ({ state }) => state.game.running)).toBe(true);
 });
 
-test("duel : les cartes inutiles contre un joueur ne sont jamais proposées", async ({ page }) => {
+test("duel : sans choix, la carte surlignée est prise au bout du temps imparti", async ({ page }) => {
   await openDuel(page);
-  const offered = new Set();
-  for (let round = 0; round < 2; round++) {
-    await kill(page, 0);
-    for (let n = 0; n < 3; n++) {
-      await expect(page.locator("#upgradeMenu")).toBeVisible();
-      for (const t of await page.locator(".upgrade-option h4").allTextContents()) offered.add(t);
-      await page.locator(".upgrade-option").first().click();
-    }
-    await expect(page.locator("#upgradeMenu")).toBeHidden();
-  }
-  const names = [...offered].join(" | ");
-  for (const banned of ["Aimant", "Avidité", "Exécution", "Explosion"]) expect(names).not.toContain(banned);
+  await run(page, null, ({ config }) => (config.VERSUS.pickSeconds = 0.5));
+  await run(page, 0, ({ state, player }) => {
+    state.player.xpToNextLevel = 10;
+    player.gainXp(10);
+  });
+  await expect(page.locator("#duelPick1")).toBeVisible();
+  await expect(page.locator("#duelPick1")).toBeHidden({ timeout: 5000 });
+  expect(await run(page, 0, ({ state }) => Object.keys(state.player.inventory).length)).toBe(1);
 });
 
-test("duel : 3 morts = défaite, revanche puis retour au menu, sans gain pour le compte", async ({ page }) => {
+test("duel : la pause arrête les deux parties", async ({ page, isMobile }) => {
+  test.skip(isMobile, "touche Échap");
   await openDuel(page);
-  const gold = await page.evaluate(async () => (await import("/src/services/storage.js")).account.gold);
-  for (let death = 1; death <= 2; death++) {
-    await kill(page, 0);
-    await pickThree(page, "JOUEUR 1");
-  }
-  await kill(page, 0);
-  await expect(page.locator("#versusOver")).toBeVisible();
-  await expect(page.locator("#versusWinner")).toHaveText("JOUEUR 2 GAGNE !");
-  await expect(page.locator("#versusScore")).toContainText("0 - 3");
-  expect(await page.evaluate(async () => (await import("/src/services/storage.js")).account.gold)).toBe(gold);
-
-  await page.locator("#btnVersusReplay").click();
-  await expect(page.locator("#versusHud")).toBeVisible();
-  await expect(page.locator("#vsLives1")).toHaveText("♥♥♥");
-  expect(await duel(page, (v) => v.versus.fighters.map((f) => Object.keys(f.inventory).length))).toEqual([
-    0, 0,
-  ]);
-
   await page.keyboard.press("Escape");
   await expect(page.locator("#pauseMenu")).toBeVisible();
-  await page.locator("#btnQuit").click();
-  await expect(page.locator("#mainMenu")).toBeVisible();
-  await expect(page.locator("#versusHud")).toBeHidden();
+  const t = await both(page, ({ state }) => state.game.time);
+  await page.waitForTimeout(300);
+  expect(await both(page, ({ state }) => state.game.time)).toEqual(t);
+  await page.locator("#btnResume").click();
+  await expect.poll(async () => (await both(page, ({ state }) => state.game.time))[1]).toBeGreaterThan(t[1]);
 });
 
-test("duel puis partie normale : le mode survie repart normalement", async ({ page }) => {
+test("duel : le premier mort perd, le gagnant empoche l'XP et l'or des deux parties", async ({
+  page,
+  isMobile,
+}) => {
   await openDuel(page);
-  await page.keyboard.press("Escape");
-  await page.locator("#btnQuit").click();
+  const gold = await page.evaluate(async () => (await import("/src/services/storage.js")).account.gold);
+  await run(page, 0, ({ state }) => (state.game.runGold = 30));
+  await run(page, 1, ({ state }) => (state.game.runGold = 12));
+  await run(page, 0, ({ state, player }) => {
+    state.player.health = 1;
+    state.player.revives = 0;
+    player.takeDamage(1e9);
+  });
+  await expect(page.locator("#versusOver")).toBeVisible();
+  await expect(page.locator("#versusWinner")).toHaveText("JOUEUR 2 GAGNE !");
+  await expect(page.locator("#versusScore")).toContainText("+42 or");
+  const after = await page.evaluate(async () => (await import("/src/services/storage.js")).account.gold);
+  expect(after - gold).toBeGreaterThanOrEqual(42); // + éventuelles récompenses de succès
+
+  await page.locator("#btnVersusReplay").click();
+  await expect(page.locator("#versusOver")).toBeHidden();
+  expect(await both(page, ({ state }) => [state.game.runGold, state.game.over])).toEqual([
+    [0, false],
+    [0, false],
+  ]);
+
+  await quit(page, isMobile);
+  await expect(page.locator("#mainMenu")).toBeVisible();
+});
+
+test("duel puis partie normale : le mode survie repart normalement", async ({ page, isMobile }) => {
+  await openDuel(page);
+  await quit(page, isMobile);
   await page.locator("#btnPlay").click();
   await expect(page.locator("#ui")).toBeVisible();
-  await expect(page.locator("#versusHud")).toBeHidden();
-  expect(await duel(page, (v) => v.versus.active)).toBe(false);
+  expect(
+    await run(page, null, ({ versus, state }) => [versus.versus.active, state.game.time < 2000]),
+  ).toEqual([false, true]);
+  await expect(page.locator("#duelPick1")).toBeHidden();
 });
 
 test("duel sur mobile : une moitié d'écran par joueur, toucher = dash", async ({ page, isMobile }) => {
@@ -156,7 +181,7 @@ test("duel sur mobile : une moitié d'écran par joueur, toucher = dash", async 
   await expect(page.locator("#touchControls")).toBeHidden();
   // Portrait : J1 en bas, J2 en haut ; on glisse vers la droite dans la moitié du bas
   const box = await page.locator("#vsZone1").boundingBox();
-  const x0 = await duel(page, (v) => v.versus.fighters[0].worldX);
+  const x0 = await run(page, 0, ({ state }) => state.player.worldX);
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;
   await page.locator("#vsZone1").dispatchEvent("pointerdown", { pointerId: 7, clientX: cx, clientY: cy });
@@ -165,7 +190,7 @@ test("duel sur mobile : une moitié d'écran par joueur, toucher = dash", async 
     .dispatchEvent("pointermove", { pointerId: 7, clientX: cx + 60, clientY: cy });
   await page.waitForTimeout(300);
   await page.locator("#vsZone1").dispatchEvent("pointerup", { pointerId: 7, clientX: cx + 60, clientY: cy });
-  expect(await duel(page, (v) => v.versus.fighters[0].worldX)).toBeGreaterThan(x0 + 20);
+  expect(await run(page, 0, ({ state }) => state.player.worldX)).toBeGreaterThan(x0 + 20);
 
   // Touche rapide dans la moitié du haut : dash du joueur 2
   const top = await page.locator("#vsZone2").boundingBox();
@@ -173,5 +198,14 @@ test("duel sur mobile : une moitié d'écran par joueur, toucher = dash", async 
   const ty = top.y + top.height / 2;
   await page.locator("#vsZone2").dispatchEvent("pointerdown", { pointerId: 8, clientX: tx, clientY: ty });
   await page.locator("#vsZone2").dispatchEvent("pointerup", { pointerId: 8, clientX: tx, clientY: ty });
-  await expect.poll(() => duel(page, (v) => v.versus.fighters[1].dashCooldownTimer > 0)).toBe(true);
+  await expect.poll(() => run(page, 1, ({ state }) => state.player.dashCooldownTimer > 0)).toBe(true);
+  expect(await run(page, 0, ({ state }) => state.player.dashCooldownTimer)).toBe(0);
+
+  // Bouton de compétence de J2 quand elle est prête
+  await run(page, 1, ({ state }) => {
+    state.player.ultCharge = state.player.maxUltCharge;
+    state.player.isUltReady = true;
+  });
+  await page.locator("#vsSkill2").dispatchEvent("pointerdown");
+  expect(await both(page, ({ state }) => state.player.isUltReady)).toEqual([false, false]);
 });

@@ -1,68 +1,100 @@
-// Duel : bandeau des vies et des PV en jeu, et écran du vainqueur.
+// Duel : panneau de l'adversaire en ligne, boutons tactiles de l'écran scindé, écran du vainqueur.
 
 import { VERSUS } from "../config.js";
-import { fighterName, versus } from "../systems/versus.js";
-import { $, setText, setVisible, setWidth } from "./dom.js";
+import { player } from "../core/state.js";
+import { fighterName, versus, withRun } from "../systems/versus.js";
+import { rival } from "../systems/versusOnline.js";
+import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 import { showVersusTouch } from "./versusTouch.js";
-
-const HINT_KEYBOARD = "J1 : ZQSD + ESPACE (dash) · J2 : FLÈCHES + ENTRÉE (dash) · tir automatique";
-const HINT_TOUCH = "Une moitié d'écran par joueur : glisser pour bouger, toucher pour dasher";
-const COLOR_NAMES = ["BLEU", "ROSE"];
-
-/** Aide affichée sous le bandeau (en ligne : quel vaisseau on pilote, ou ce qu'on attend). */
-function hint() {
-  if (!versus.online) return isTouchDevice ? HINT_TOUCH : HINT_KEYBOARD;
-  if (versus.wait) return versus.wait;
-  const color = COLOR_NAMES[versus.online.local];
-  const keys = isTouchDevice ? "joystick + DASH" : "ZQSD ou flèches + ESPACE (dash)";
-  return `Tu pilotes le vaisseau ${color} · ${keys} · tir automatique`;
-}
 
 export function initVersusMenu({ onReplay, onMenu }) {
   $("btnVersusReplay").addEventListener("click", onReplay);
   $("btnVersusMenu").addEventListener("click", onMenu);
 }
 
+/** Écran scindé : commandes à deux (moitiés d'écran) ; en ligne : panneau de l'adversaire. */
 export function showVersusHud(visible) {
-  setVisible("versusHud", visible);
-  document.body.classList.toggle("versus", visible); // masque l'aide des touches du mode survie
-  // En ligne, chacun pilote un seul vaisseau : commandes tactiles habituelles (joystick + dash)
-  showVersusTouch(visible && !versus.online);
-  showTouchControls(visible && !!versus.online);
+  const split = visible && versus.split;
+  document.body.classList.toggle("versus", split); // masque l'aide des touches du mode survie
+  showVersusTouch(split);
+  if (split) showTouchControls(false);
+  setVisible("duelRival", visible && !!versus.online);
 }
 
-const hearts = (n) => "♥".repeat(Math.max(0, n)) + "♡".repeat(Math.max(0, VERSUS.lives - n));
-
+/** À chaque image : panneau de l'adversaire (en ligne) ou boutons de compétence (écran scindé). */
 export function updateVersusHud() {
-  setText("versusHint", hint());
-  versus.fighters.forEach((f, i) => {
-    setText(`vsName${i + 1}`, fighterName(i));
-    setText(`vsLives${i + 1}`, hearts(versus.lives[i]));
-    setWidth(`vsHealth${i + 1}`, Math.max(0, f.health) / f.maxHealth);
-    setText(
-      `vsUpgrades${i + 1}`,
-      Object.values(f.inventory).reduce((a, b) => a + b, 0),
-    );
-  });
+  if (versus.split) {
+    if (isTouchDevice)
+      for (const i of [0, 1]) withRun(i, () => setClass(`vsSkill${i + 1}`, "ready", player.isUltReady));
+    return;
+  }
+  const s = rival.stats;
+  setText("rivalName", fighterName(1));
+  if (!s) return setText("rivalInfo", "En route…");
+  setText("rivalInfo", `VAGUE ${s.w} · NIV. ${s.l} · ${s.k} ÉLIM.`);
+  setWidth("rivalHealth", s.h / s.m);
 }
 
-/** Fin du duel ; `winner` = null quand la connexion avec l'adversaire est perdue. */
-export function showVersusOver(winner) {
+const ROWS = [
+  ["Vague", "w"],
+  ["Niveau", "l"],
+  ["Éliminations", "k"],
+  ["Score", "s"],
+  ["XP", "x"],
+  ["Or", "g"],
+];
+
+/**
+ * Fin du duel : `runs` = bilans des deux parties (0 = J1, ou soi-même en ligne).
+ * `prize` = { xp, gold } empochés par le gagnant.
+ */
+export function showVersusOver({ winner, runs }, prize) {
   showVersusHud(false);
-  const lost = winner === null;
-  setText("versusWinner", lost ? "CONNEXION PERDUE" : `${fighterName(winner)} GAGNE !`);
-  $("versusWinner").style.color = lost ? "#aaa" : VERSUS.colors[winner];
-  setText(
-    "versusScore",
-    lost ? "L'adversaire a quitté la partie." : `Vies restantes : ${versus.lives[0]} - ${versus.lives[1]}`,
-  );
-  setVisible("btnVersusReplay", !lost);
+  const title = versus.online
+    ? winner === 0
+      ? "TU GAGNES !"
+      : `${fighterName(1)} GAGNE !`
+    : `${fighterName(winner)} GAGNE !`;
+  setText("versusWinner", title);
+  $("versusWinner").style.color = VERSUS.colors[winner];
+
+  const table = $("versusTable");
+  table.replaceChildren();
+  const head = el("tr");
+  head.append(el("th"));
+  for (const i of [0, 1]) {
+    const th = el("th", i === winner ? "winner" : "", fighterName(i));
+    th.style.color = VERSUS.colors[i];
+    head.append(th);
+  }
+  table.append(head);
+  for (const [label, key] of ROWS) {
+    const tr = el("tr");
+    tr.append(el("td", "", label));
+    for (const i of [0, 1]) tr.append(el("td", "", String(runs[i][key])));
+    table.append(tr);
+  }
+
+  const gains = `+${prize.xp} XP · +${prize.gold} or`;
+  let text = `${fighterName(winner)} empoche les deux parties : ${gains}`;
+  if (versus.online) {
+    text = winner === 0 ? `Tu empoches les deux parties : ${gains}` : `${fighterName(1)} empoche tes gains.`;
+    if (rival.left) text = `${fighterName(1)} a quitté le duel. ${text}`;
+  }
+  setText("versusScore", text);
+  setVisible("btnVersusReplay", !rival.left || !versus.online);
   showScreen("versusOver");
 }
 
 /** En ligne : l'invité a demandé la revanche, l'hôte doit la lancer. */
 export function showRematchWaiting() {
   setText("versusScore", "Revanche demandée. En attente de l'adversaire…");
+}
+
+/** En ligne, sur l'écran de fin : l'adversaire est parti, plus de revanche possible. */
+export function showRivalGone() {
+  setText("versusScore", `${fighterName(1)} a quitté le duel.`);
+  setVisible("btnVersusReplay", false);
 }

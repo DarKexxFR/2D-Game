@@ -1,17 +1,19 @@
 // Menu pause avec l'inventaire des améliorations de la partie.
 
 import { game, player } from "../core/state.js";
-import { fighterName, versus } from "../systems/versus.js";
+import { fighterName, versus, withRun } from "../systems/versus.js";
 import { $, el, isVisible } from "./dom.js";
 import { hideScreens, showScreen } from "./screens.js";
 
 export function canTogglePause() {
+  // Écran scindé : pause commune, même quand l'un des joueurs choisit une amélioration
+  if (versus.split) return game.started && versus.winner === null;
   return game.started && game.running && !isVisible("upgradeMenu");
 }
 
 export function togglePause() {
-  game.paused = !game.paused;
-  if (!game.paused) {
+  const paused = versus.split ? (versus.paused = !versus.paused) : (game.paused = !game.paused);
+  if (!paused) {
     hideScreens();
     return;
   }
@@ -22,8 +24,8 @@ export function togglePause() {
 function renderInventory() {
   const list = $("pauseInventory");
   list.replaceChildren();
-  if (versus.active) {
-    versus.fighters.forEach((f, i) => renderItems(list, f.inventory, fighterName(i) + " · "));
+  if (versus.split) {
+    for (const i of [0, 1]) withRun(i, () => renderItems(list, player.inventory, fighterName(i) + " · "));
     if (list.children.length === 0) list.append(el("div", "inv-empty", "Inventaire vide"));
     return;
   }

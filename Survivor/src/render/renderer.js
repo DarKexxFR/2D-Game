@@ -7,7 +7,7 @@ import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./en
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
-import { applyVersusView, drawVersus } from "./versus.js";
+import { renderSplit } from "./versus.js";
 import { versus } from "../systems/versus.js";
 
 export { renderMenuBackground } from "./menuScene.js";
@@ -16,16 +16,19 @@ export function render() {
   const now = performance.now();
   resetTransform();
   ctx.clearRect(0, 0, view.width, view.height);
+  if (versus.split) renderSplit(now, drawScene);
+  else drawScene(now);
+}
 
+/** Une partie, dans la vue courante (l'écran entier, ou sa moitié en duel sur un écran). */
+function drawScene(now) {
   ctx.save();
   ctx.translate((Math.random() - 0.5) * game.screenShake, (Math.random() - 0.5) * game.screenShake);
   drawGrid();
 
   // Tout ce qui suit est dessiné directement en coordonnées monde.
   ctx.save();
-  if (versus.online)
-    applyVersusView(); // arène commune aux deux joueurs, zoomée pour tenir à l'écran
-  else ctx.translate(-camera.x, -camera.y);
+  ctx.translate(-camera.x, -camera.y);
   drawMapBorder();
   drawMysteryBox();
   drawShrines(now);
@@ -33,8 +36,7 @@ export function render() {
   drawHazards(now); // au sol, sous les entités
   drawBossChests(now);
   drawTurrets(now);
-  if (versus.active) drawVersus(now);
-  else drawPlayer(now);
+  drawPlayer(now);
   drawEnemies();
   drawProjectiles();
   drawBolts();
@@ -53,7 +55,7 @@ export function render() {
 
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
-  if (view.scale === 1 && !versus.active && !game.rush) drawWaveTimer();
+  if (view.scale === 1 && !versus.split && !game.rush) drawWaveTimer();
   ctx.restore();
 }
 

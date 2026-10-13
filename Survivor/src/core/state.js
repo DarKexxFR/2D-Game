@@ -57,6 +57,7 @@ export function resetGame() {
     comboTimer: 0,
     slowMo: 0, // ticks de ralenti restants (mort d'un boss)
     flash: null, // flash plein écran { color, alpha }
+    banner: null, // duel sur un écran : annonce dans la moitié d'écran (voir systems/versus.js)
   });
   for (const list of Object.values(world)) list.length = 0;
 }

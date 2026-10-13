@@ -37,18 +37,22 @@ export function ageTrail(list) {
   list.length = w;
 }
 
-let lastX = null;
-let lastY = null;
-let tick = 0;
+/** Dernière position du vaisseau (une par partie en duel sur un écran, voir systems/versus.js). */
+export const trailState = { lastX: null, lastY: null, tick: 0 };
+
+export function resetTrail() {
+  Object.assign(trailState, { lastX: null, lastY: null, tick: 0 });
+}
 
 /** En partie : sème la traînée du joueur quand il bouge. */
 export function updateTrail() {
   ageTrail(world.trail);
+  const t = trailState;
   const { worldX: x, worldY: y } = player;
-  const dx = lastX === null ? 0 : x - lastX;
-  const dy = lastY === null ? 0 : y - lastY;
-  lastX = x;
-  lastY = y;
-  if (Math.hypot(dx, dy) < 0.5 || ++tick % TRAIL.every) return;
+  const dx = t.lastX === null ? 0 : x - t.lastX;
+  const dy = t.lastY === null ? 0 : y - t.lastY;
+  t.lastX = x;
+  t.lastY = y;
+  if (Math.hypot(dx, dy) < 0.5 || ++t.tick % TRAIL.every) return;
   pushTrailPoint(world.trail, x, y, dx, dy, player.size, shipLook(player.hero, currentSkin()));
 }
