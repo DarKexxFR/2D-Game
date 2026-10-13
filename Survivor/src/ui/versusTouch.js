@@ -1,7 +1,7 @@
 // Duel sur écran tactile : une moitié d'écran par joueur, chacune avec son joystick flottant.
-// Une touche rapide (sans glisser) déclenche le dash.
+// Une touche rapide (sans glisser) déclenche le dash ; un bouton par joueur pour sa compétence.
 
-import { versusTouch } from "../systems/versus.js";
+import { useSkill, versusTouch } from "../systems/versus.js";
 import { $, setVisible } from "./dom.js";
 import { isTouchDevice } from "./touchControls.js";
 
@@ -14,7 +14,13 @@ const sticks = [];
 
 export function initVersusTouch() {
   if (!isTouchDevice) return;
-  for (let i = 0; i < 2; i++) sticks.push(createStick(i));
+  for (let i = 0; i < 2; i++) {
+    sticks.push(createStick(i));
+    $(`vsSkill${i + 1}`).addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      useSkill(i);
+    });
+  }
   $("versusTouch").addEventListener("contextmenu", (e) => e.preventDefault());
 }
 

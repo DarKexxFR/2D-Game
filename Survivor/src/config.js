@@ -150,34 +150,21 @@ export const ADS = {
   },
 };
 
-// Duel 1 contre 1 sur le même écran (voir systems/versus.js). Les deux joueurs partent à égalité
-// (Pilote + Blaster, ni niveau de compte ni talents) ; celui qui meurt choisit des améliorations.
+// Duel (voir systems/versus.js) : chaque joueur joue sa propre partie de survie, le dernier en vie
+// gagne et empoche l'XP et l'or des deux parties. Sur un écran : écran scindé en deux.
 export const VERSUS = {
-  lives: 3,
-  upgradesPerDeath: 3,
-  healthMult: 2, // PV de base multipliés : un duel ne doit pas se jouer en deux tirs
-  respawnDelay: 90, // ticks entre la mort et le choix des améliorations
-  spawnShield: 150, // ticks d'invulnérabilité au retour
-  endDelay: 60, // ticks avant l'écran du vainqueur
-  endSlowMo: 40, // dont ticks au ralenti (×0,3)
-  knockback: 10,
-  thornsReflect: 0.3, // part des dégâts renvoyés par les Épines (par niveau de 0,5)
-  vampirismCap: 10, // soin maximum par tir
-  orbitalHitCooldown: 300, // ms entre deux coups d'orbes sur l'adversaire
-  orbitalDamageMult: 5,
-  arena: { maxWidth: 1400, maxHeight: 1100, margin: 30, top: 130 },
+  pickSeconds: 12, // choix d'amélioration en duel : au-delà, la carte surlignée est prise (pas de blocage)
+  endDelayMs: 1200, // entre la mort du perdant et l'écran du vainqueur
   colors: ["#00ffff", "#ff2a6d"],
 };
 
 // Duel en ligne (voir services/netplay.js) : Supabase Realtime sert de salon (code de salle et
 // mise en relation), puis les deux navigateurs se parlent en direct (WebRTC). Si la connexion directe
-// échoue (réseau strict), les messages passent par Supabase, moins souvent.
+// échoue (réseau strict), les messages passent par Supabase. Chaque joueur fait tourner sa partie
+// et envoie seulement ses statistiques (vague, PV, score...) à l'adversaire.
 export const NET = {
   codeLength: 4,
-  arena: { width: 1200, height: 700 }, // arène fixe : la même pour les deux joueurs, zoomée pour tenir à l'écran
-  snapshotsPerSecond: 20, // état envoyé par l'hôte (connexion directe)
-  inputsPerSecond: 30, // position envoyée par l'invité (connexion directe)
-  relayPerSecond: 8, // les deux, quand les messages passent par Supabase (quotas)
+  statsPerSecond: 4, // statistiques envoyées à l'adversaire
   p2pTimeoutMs: 7000, // au-delà, on passe par Supabase
   joinTimeoutMs: 8000, // pas de réponse de l'hôte : code inconnu
   lostAfterMs: 6000, // plus aucun message de l'adversaire : partie interrompue

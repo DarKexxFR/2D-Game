@@ -1,5 +1,5 @@
 // Choix d'une amélioration sans souris (touches 1 / 2 / 3, flèches ou ZQSD + Entrée / Espace),
-// en partie normale comme en duel.
+// en partie normale comme en duel sur un écran (chaque joueur avec ses touches).
 import { expect, game, killPlayer, startGame, test } from "./fixtures.js";
 
 test.beforeEach(async ({ isMobile }) => test.skip(isMobile, "clavier uniquement"));
@@ -69,30 +69,34 @@ test("un dash juste à l'ouverture ne choisit pas de carte", async ({ page }) =>
   await killPlayer(page);
 });
 
-test("duel : le joueur qui meurt choisit ses 3 améliorations au clavier", async ({ page }) => {
+test("duel sur un écran : J1 choisit avec D puis ESPACE, sans toucher au choix de J2", async ({ page }) => {
   await page.goto("/");
   await page.locator("#btnVersus").click();
   await page.locator("#btnDuelLocal").click();
-  await expect(page.locator("#versusHud")).toBeVisible();
   await page.evaluate(async () => {
     const v = await import("/src/systems/versus.js");
-    const f = v.versus.fighters[0];
-    f.buffs.shield = 0;
-    f.isDashing = false;
-    v.hitFighter(v.versus.fighters[1], f, 1e9);
+    const { player } = await import("/src/core/state.js");
+    const { gainXp } = await import("/src/systems/player.js");
+    for (const i of [0, 1]) {
+      v.withRun(i, () => {
+        player.health = player.maxHealth = 1e7;
+        player.xpToNextLevel = 10;
+        gainXp(10);
+      });
+    }
   });
-  await expect(page.locator("#upgradeSubtitle")).toHaveText("Amélioration 1/3");
-  await page.keyboard.press("1");
-  await expect(page.locator("#upgradeSubtitle")).toHaveText("Amélioration 2/3");
-  await page.keyboard.press("3");
-  await expect(page.locator("#upgradeSubtitle")).toHaveText("Amélioration 3/3");
+  await expect(page.locator("#duelPick1")).toBeVisible();
+  await expect(page.locator("#duelPick2")).toBeVisible();
+  const second = await page.locator("#duelPick1 .dp-card h4").nth(1).textContent();
   await page.waitForTimeout(400);
-  await page.keyboard.press("ArrowRight"); // touches du joueur 2
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#upgradeMenu")).toBeHidden();
-  const count = await page.evaluate(async () => {
+  await page.keyboard.press("d");
+  await page.keyboard.press("Space");
+  await expect(page.locator("#duelPick1")).toBeHidden();
+  await expect(page.locator("#duelPick2")).toBeVisible(); // J2 n'a pas encore choisi
+  const owned = await page.evaluate(async () => {
     const v = await import("/src/systems/versus.js");
-    return Object.values(v.versus.fighters[0].inventory).reduce((a, b) => a + b, 0);
+    const { player } = await import("/src/core/state.js");
+    return [0, 1].map((i) => v.withRun(i, () => Object.keys(player.inventory)));
   });
-  expect(count).toBe(3);
+  expect(owned).toEqual([[second.replace(/ · niv\. \d+$/, "")], []]);
 });

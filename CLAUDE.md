@@ -99,21 +99,30 @@ Principes :
   (`survivor_account_sync`) et demande au joueur de choisir quand l'appareil et le compte ont tous
   deux avancé. Réglages côté Google / Discord / Supabase : `supabase/CONNEXION.md`. Les tests simulent
   l'authentification dans `fixtures.js` (`EMAIL_CODE`, `GOOGLE_EMAIL`, `DISCORD_EMAIL`).
-- **Duel 1 contre 1** (`systems/versus.js`, bouton « DUEL 1V1 ») : deux joueurs sur le même écran
-  (J1 ZQSD + Espace, J2 flèches + Entrée ; en tactile une moitié d'écran chacun, toucher = dash), tir
-  automatique vers l'adversaire, 3 vies, et le joueur qui meurt choisit 3 améliorations (`VERSUS` dans
-  `config.js`). Chaque combattant est un objet joueur complet ; `withFighter` le charge dans `player`
-  pour réutiliser le code existant. Cartes sans effet en duel : `noVersus` dans `data/upgrades.js`.
-  Aucun gain d'XP ni d'or pour le compte.
-- **Duel en ligne** (écran « Duel » → créer / rejoindre avec un code) : `services/realtime.js` (client
-  Supabase Realtime minimal, sans bibliothèque) sert de salon et de signalisation, `services/netplay.js`
-  ouvre une connexion directe WebRTC, ou relaie les messages par Supabase si elle échoue (`NET` dans
-  `config.js`). L'hôte fait tourner la partie et envoie des instantanés ; l'invité pilote son vaisseau chez
-  lui et envoie sa position (`systems/versusOnline.js`). Arène de taille fixe, zoomée pour tenir à l'écran.
-  Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du propriétaire :
-  du **duel** en ligne, pas de coop.
+- **Duel** (`systems/versus.js`, bouton « DUEL 1V1 ») : chaque joueur joue sa propre partie de survie
+  (règles normales, équipement et talents du compte) ; le premier mort perd et le gagnant empoche l'XP et
+  l'or des **deux** parties (choix du propriétaire). Pas d'offre « revivre » en duel. Réglages : `VERSUS`
+  dans `config.js`.
+  - **Sur un écran** : écran scindé (côte à côte, ou J1 en bas en portrait). Le moteur n'a qu'un état
+    global : la partie de l'autre joueur est rangée de côté et échangée le temps de la faire avancer ou de
+    la dessiner (`withRun(i, fn)` : échange `game`, `player`, `world`, `pet`, `camera`, `mysteryBox`,
+    `trailState`, réduit `view` à la moitié d'écran et branche les touches du joueur via
+    `useInputProfile`). Tout nouvel état de partie au niveau d'un module doit vivre dans ces objets
+    (sinon il fuit d'une partie à l'autre). J1 ZQSD + Espace (dash) + E / R (compétence), J2 flèches +
+    Entrée / 0 + Maj / 1 ; en tactile une moitié d'écran chacun (toucher = dash, bouton de compétence).
+    Montée de niveau : choix dans la moitié du joueur (`ui/duelPicks.js`), seule sa partie s'arrête, choix
+    automatique au bout de `VERSUS.pickSeconds`. Bandeaux dessinés sur le canvas (`render/versus.js`).
+    Pas de boîte mystère (pas de touche libre).
+  - **En ligne** (écran « Duel » → créer / rejoindre avec un code) : `services/realtime.js` (client
+    Supabase Realtime minimal, sans bibliothèque) sert de salon et de signalisation, `services/netplay.js`
+    ouvre une connexion directe WebRTC, ou relaie les messages par Supabase si elle échoue (`NET` dans
+    `config.js`). Chaque appareil fait tourner sa partie et envoie ses statistiques (`systems/versusOnline.js`) ;
+    panneau de l'adversaire `#duelRival`. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
+    Quitter = abandon. Pas de pause ; choix d'amélioration automatique au bout de `VERSUS.pickSeconds`.
+    Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
+    propriétaire : du **duel** en ligne, pas de coop.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
-  Entrée / Espace, carte surlignée), y compris en duel ; Entrée / Espace sont ignorés juste après
+  Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
 - **Boss Rush** : `game.rush` (sinon `null`), ordre et réglages dans `BOSS_RUSH` (`data/enemies.js`).
   Pas de petits ennemis ni de minuteur ; `game.wave` prend la vague habituelle du boss (PV, biome).
@@ -173,7 +182,7 @@ ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stat
 touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
 coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
-montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local,
+montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
 évolutions d'armes (une par arme).
 

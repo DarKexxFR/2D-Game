@@ -2,9 +2,10 @@
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
 import { TICK_MS, VERSUS } from "./config.js";
+import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
-import { game, mysteryBox, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
+import { camera, game, mysteryBox, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
@@ -40,7 +41,7 @@ import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
-import { updateTrail } from "./systems/trail.js";
+import { resetTrail, updateTrail } from "./systems/trail.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
@@ -54,7 +55,13 @@ import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
 import { closeOptions, initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { closeLogin, initAccount, openLogin } from "./ui/accountMenu.js";
-import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
+import {
+  initUpgradeMenu,
+  resetUpgradeMenu,
+  setAutoPick,
+  showBossChest,
+  showUpgradeMenu,
+} from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
@@ -64,31 +71,29 @@ import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
 import {
-  fighterName,
-  isLocalFighter,
-  startVersus,
+  VERSUS_KEYS,
+  splitBanner,
+  splitDeath,
+  startOnlineVersus,
+  startSplitVersus,
   stopVersus,
-  updateVersus,
+  updateSplit,
+  useSkill,
   versus,
 } from "./systems/versus.js";
-import {
-  netTick,
-  onNetMessage,
-  resetOnline,
-  startRemotePicks,
-  updateVersusGuest,
-} from "./systems/versusOnline.js";
+import { netTick, onNetMessage, onOwnDeath, onRivalLeft, resetOnline } from "./systems/versusOnline.js";
 import { leaveRoom, net, sendGame, setNetHandlers } from "./services/netplay.js";
 import {
   initVersusMenu,
   showRematchWaiting,
+  showRivalGone,
   showVersusHud,
   showVersusOver,
   updateVersusHud,
 } from "./ui/versusMenu.js";
 import { initVersusTouch } from "./ui/versusTouch.js";
 import { initDuelMenu, openDuel, setDuelStatus } from "./ui/duelMenu.js";
-import { drawVersusChoices, showRemoteChoices, showVersusUpgrades } from "./ui/upgradeMenu.js";
+import { initDuelPicks, requestDuelPick, resetDuelPicks, tickDuelPick } from "./ui/duelPicks.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -105,8 +110,17 @@ function startGame(mode = "normal") {
   commitPseudo();
   playRandomMusic();
   restoreRandom();
-  resetGame();
   resetUpgradeMenu();
+  setAutoPick(false);
+  setupRun(mode);
+  hideScreens();
+  showHud(true);
+}
+
+/** Prépare une partie (aussi celle de chaque joueur en duel). */
+function setupRun(mode) {
+  resetGame();
+  resetTrail();
   if (mode === "daily") {
     const daily = dailyChallenge();
     game.daily = daily;
@@ -128,28 +142,38 @@ function startGame(mode = "normal") {
   resetMysteryBox();
   if (game.modifier.noMysteryBox) mysteryBox.active = false;
   player.autoShoot = true; // tir automatique par défaut (la touche T le coupe pour viser à la souris)
-  hideScreens();
-  showHud(true);
+  camera.x = player.worldX - view.width / 2;
+  camera.y = player.worldY - view.height / 2;
   spawnWave();
 }
 
 /**
- * Duel 1 contre 1 (voir systems/versus.js) : pas d'XP ni d'or pour le compte.
- * `online` = { role, local } pour un duel en ligne, avec les pseudos `names`.
+ * Duel (voir systems/versus.js) : chaque joueur joue sa partie de survie, le dernier en vie
+ * empoche l'XP et l'or des deux. `online` = { role } en ligne (pseudos `names`, soi-même en premier),
+ * sinon écran scindé sur cet appareil.
  */
 function startDuel(online = null, names = []) {
   commitPseudo();
   playRandomMusic();
   restoreRandom();
-  resetGame();
   resetUpgradeMenu();
-  resetMysteryBox();
-  mysteryBox.active = false;
-  startVersus(online, names);
+  resetDuelPicks();
   resetOnline();
+  prizeGiven = false;
+  if (online) {
+    startOnlineVersus(online, names);
+    setAutoPick(true); // l'adversaire continue pendant qu'on choisit
+    setupRun("normal");
+  } else {
+    setAutoPick(false);
+    startSplitVersus(() => {
+      setupRun("normal");
+      mysteryBox.active = false; // à deux sur un clavier, pas de touche libre pour l'ouvrir
+    });
+  }
   document.activeElement?.blur?.(); // ESPACE / ENTRÉE (dash) ne doivent pas recliquer un bouton
   hideScreens();
-  showHud(false);
+  showHud(!!online); // écran scindé : chaque moitié a son propre bandeau
   showVersusHud(true);
 }
 
@@ -157,7 +181,7 @@ function startDuel(online = null, names = []) {
 function startOnlineDuel() {
   const names = [getPseudo(), net.peerName || "ADVERSAIRE"];
   sendGame({ t: "start", names });
-  startDuel({ role: "host", local: 0 }, names);
+  startDuel({ role: "host" }, names);
 }
 
 function replayDuel() {
@@ -169,11 +193,8 @@ function replayDuel() {
 
 /** Messages du jeu reçus de l'adversaire (voir services/netplay.js). */
 function onNetGame(msg) {
-  if (net.role === "guest" && msg.t === "start") return startDuel({ role: "guest", local: 1 }, msg.names);
-  if (net.role === "guest" && msg.t === "over" && versus.online) {
-    versus.lives = msg.lives;
-    game.running = false;
-    return showVersusOver(msg.winner);
+  if (net.role === "guest" && msg.t === "start") {
+    return startDuel({ role: "guest" }, [msg.names[1], msg.names[0]]);
   }
   if (net.role === "host" && msg.t === "rematch" && currentScreen() === "versusOver")
     return startOnlineDuel();
@@ -182,11 +203,31 @@ function onNetGame(msg) {
 
 function onNetLost() {
   if (versus.online && game.started) {
-    game.running = false;
-    showVersusOver(null);
+    onRivalLeft();
+    if (currentScreen() === "versusOver") showRivalGone();
   } else if (currentScreen() === "duelMenu") {
     setDuelStatus("L'adversaire s'est déconnecté.");
   }
+}
+
+let prizeGiven = false; // un duel en ligne peut s'inverser une fois : la récompense n'est donnée qu'une fois
+let overTimer = null;
+
+/** Fin du duel : le gagnant empoche l'XP et l'or des deux parties. */
+function onVersusOver(result) {
+  const [a, b] = result.runs;
+  const prize = { xp: a.x + b.x, gold: a.g + b.g };
+  // Écran scindé : les deux joueurs partagent le compte de cet appareil ; en ligne, seul le gagnant gagne
+  if ((!versus.online || result.winner === 0) && !prizeGiven) {
+    prizeGiven = true;
+    addAccountRewards(prize.xp, prize.gold);
+    refreshAccountUI();
+  }
+  showTouchControls(false);
+  clearTimeout(overTimer);
+  const show = () => versus.active && showVersusOver(result, prize);
+  if (currentScreen() === "versusOver") show();
+  else overTimer = setTimeout(show, VERSUS.endDelayMs);
 }
 
 function applyModifierToPlayer(mod) {
@@ -202,7 +243,9 @@ function returnToMenu() {
   game.running = false;
   game.paused = false;
   if (versus.online) leaveRoom();
+  clearTimeout(overTimer);
   stopVersus();
+  resetDuelPicks();
   showVersusHud(false);
   stopMusic();
   showHud(false);
@@ -295,15 +338,14 @@ function navigate(id) {
 // --- MISE À JOUR (un tick = 1/60 s) ---
 
 function update() {
+  if (versus.split) return updateSplit(simulate, tickDuelPick);
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
-  if (versus.active) {
-    if (versus.online?.role === "guest") updateVersusGuest();
-    else updateVersus();
-    updateEffects();
-    return;
-  }
+  simulate();
+}
 
+/** Un tick de la partie chargée. */
+function simulate() {
   updateSpawning();
   updatePlayer();
   updateTrail();
@@ -329,7 +371,8 @@ let accumulator = 0;
 
 function frame(now) {
   if (game.started) {
-    const timeScale = game.slowMo > 0 ? 0.3 : 1; // ralenti à la mort d'un boss
+    // Ralenti à la mort d'un boss (écran scindé : géré partie par partie)
+    const timeScale = game.slowMo > 0 && !versus.split ? 0.3 : 1;
     accumulator += Math.min(now - lastFrame, 250) * timeScale; // borne : évite la « spirale » après un onglet en arrière-plan
     while (accumulator >= TICK_MS) {
       update();
@@ -337,8 +380,8 @@ function frame(now) {
     }
     if (versus.online) netTick(now);
     render();
+    if (!versus.split) updateHud();
     if (versus.active) updateVersusHud();
-    else updateHud();
   } else {
     accumulator = 0;
     renderMenuBackground();
@@ -361,6 +404,7 @@ function init() {
   initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initSkinMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
+  initDuelPicks();
   initAchievementMenu({ onBack: showMainMenu });
 
   $("btnResume").addEventListener("click", togglePause);
@@ -391,10 +435,10 @@ function init() {
   };
   onAction("pause", pause);
   onAction("skill", () => {
-    if (game.running && !game.paused && !versus.active) activateSkill();
+    if (game.running && !game.paused && !versus.split) activateSkill();
   });
   onAction("autoShoot", () => {
-    if (game.started && !versus.active) player.autoShoot = !player.autoShoot;
+    if (game.started && !versus.split) player.autoShoot = !player.autoShoot;
   });
 
   initTouchControls({
@@ -402,10 +446,11 @@ function init() {
     onPause: pause,
   });
 
-  on("levelUp", showUpgradeMenu);
-  on("bossChest", showBossChest);
+  on("levelUp", () => (versus.split ? requestDuelPick(versus.current, "level") : showUpgradeMenu()));
+  on("bossChest", () => (versus.split ? requestDuelPick(versus.current, "chest") : showBossChest()));
   on("goblin", () => {
-    showGoblinWarning();
+    if (versus.split) splitBanner("VOLEUR DORÉ !", "#ffd700");
+    else showGoblinWarning();
     playSfx("combo");
   });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
@@ -420,27 +465,25 @@ function init() {
     onGame: onNetGame,
     onLost: onNetLost,
   });
-  on("versusUpgrades", (f) => {
-    const count = VERSUS.upgradesPerDeath;
-    if (isLocalFighter(f)) showVersusUpgrades(f, count, fighterName(f.index));
-    else startRemotePicks(f, count, drawVersusChoices);
+  on("versusOver", onVersusOver);
+  // Écran scindé : compétence de chaque joueur (J1 E / R, J2 MAJ / 1)
+  document.addEventListener("keydown", (e) => {
+    if (!versus.split || e.repeat) return;
+    const key = e.key.toLowerCase();
+    VERSUS_KEYS.forEach((keys, i) => keys.skill.includes(key) && useSkill(i));
   });
-  on("versusRemoteChoices", ({ picks, n, count }) =>
-    showRemoteChoices(picks, {
-      title: fighterName(versus.online.local),
-      subtitle: `Amélioration ${n}/${count}`,
-      target: versus.fighters[versus.online.local],
-      onPick: (u) => sendGame({ t: "choose", name: u.name }),
-    }),
+  on("playerDied", () => {
+    if (versus.split) return splitDeath(versus.current);
+    if (versus.online) return onOwnDeath();
+    if (canOfferRevive()) showReviveOffer();
+    else endGame();
+  });
+  on("biomeChange", (biome) =>
+    versus.split ? splitBanner(biome.name, biome.color) : showBiomeBanner(biome),
   );
-  on("versusOver", (winner) => {
-    if (versus.online) sendGame({ t: "over", winner, lives: versus.lives });
-    showVersusOver(winner);
-  });
-  on("playerDied", () => (canOfferRevive() ? showReviveOffer() : endGame()));
-  on("biomeChange", showBiomeBanner);
   on("bossWarning", (text) => {
-    showBossWarning(text);
+    if (versus.split) splitBanner(text, "#ff2a6d");
+    else showBossWarning(text);
     playSfx("boss");
     vibrate([100, 50, 100]);
   });

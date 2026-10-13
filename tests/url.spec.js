@@ -133,7 +133,7 @@ test("duel : #jeu pendant le duel, #modal=fin-duel à la fin, le retour ramène 
   await page.locator("#btnVersus").click();
   await expect(page).toHaveURL(/#modal=duel$/);
   await page.locator("#btnDuelLocal").click();
-  await expect(page.locator("#versusHud")).toBeVisible();
+  await expect(page.locator("#duelMenu")).toBeHidden();
   await expect(page).toHaveURL(/#jeu$/);
 
   await page.goBack();
@@ -143,15 +143,16 @@ test("duel : #jeu pendant le duel, #modal=fin-duel à la fin, le retour ramène 
 
   await page.evaluate(async () => {
     const v = await import("/src/systems/versus.js");
-    const [p1, p2] = v.versus.fighters;
-    v.versus.lives[0] = 1;
-    p1.buffs.shield = 0;
-    p1.isDashing = false;
-    v.hitFighter(p2, p1, 1e9);
+    const { player } = await import("/src/core/state.js");
+    const { takeDamage } = await import("/src/systems/player.js");
+    v.withRun(0, () => {
+      player.revives = 0;
+      takeDamage(1e12);
+    });
   });
   await expect(page.locator("#versusOver")).toBeVisible();
   await expect(page).toHaveURL(/#modal=fin-duel$/);
   await page.goBack();
   await expect(page.locator("#mainMenu")).toBeVisible();
-  await expect(page.locator("#versusHud")).toBeHidden();
+  await expect(page.locator("#versusTouch")).toBeHidden();
 });

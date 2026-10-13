@@ -1,5 +1,6 @@
 // Duel en ligne : deux navigateurs, un salon avec code (Supabase Realtime simulé ici),
-// puis connexion directe (WebRTC) ou, à défaut, messages relayés par Supabase.
+// puis connexion directe (WebRTC) ou, à défaut, messages relayés par Supabase. Chacun joue sa
+// partie de survie et voit celle de l'adversaire ; le gagnant empoche l'XP et l'or des deux.
 import { expect, test } from "./fixtures.js";
 
 // Chromium masque les adresses locales derrière des noms « .local » : inutile entre deux onglets
@@ -12,7 +13,8 @@ test.use({ launchOptions: { args: ["--disable-features=WebRtcHideLocalIpsWithMdn
  */
 function fakeRealtime() {
   const rooms = new Map(); // topic → Set de connexions
-  return async (page) => {
+  let held = null; // diffusions retenues (voir `hold`)
+  const realtime = async (page) => {
     await page.routeWebSocket(/\/realtime\/v1\/websocket/, (ws) => {
       const topics = new Set();
       const reply = (msg, status = "ok") =>
@@ -35,8 +37,10 @@ function fakeRealtime() {
         else if (msg.event === "phx_leave") rooms.get(msg.topic)?.delete(ws);
         else if (msg.event === "broadcast") {
           for (const other of rooms.get(msg.topic) || []) {
-            if (other !== ws)
-              other.send(JSON.stringify({ topic: msg.topic, event: "broadcast", payload: msg.payload }));
+            if (other === ws) continue;
+            const out = JSON.stringify({ topic: msg.topic, event: "broadcast", payload: msg.payload });
+            if (held) held.push(() => other.send(out));
+            else other.send(out);
           }
         }
       });
@@ -45,19 +49,53 @@ function fakeRealtime() {
       });
     });
   };
+  /** Retient les messages (true) puis les délivre tous (false) : simule un réseau lent. */
+  realtime.hold = (on) => {
+    if (on) held ??= [];
+    else for (const send of held?.splice(0) ?? []) send();
+    if (!on) held = null;
+  };
+  return realtime;
 }
 
-/** Exécute `fn(versusModule, arg)` dans la page. */
-function duel(page, fn, arg) {
+/** Exécute `fn(mods, arg)` dans la page ; `mods` : state, player, versus, online, config. */
+function run(page, fn, arg) {
   return page.evaluate(
     async ({ src, arg }) => {
-      const v = await import("/src/systems/versus.js");
+      const mods = {
+        state: await import("/src/core/state.js"),
+        player: await import("/src/systems/player.js"),
+        versus: await import("/src/systems/versus.js"),
+        online: await import("/src/systems/versusOnline.js"),
+        config: await import("/src/config.js"),
+      };
       // eslint-disable-next-line no-new-func
-      return new Function("v", "arg", `return (${src})(v, arg)`)(v, arg);
+      return new Function("mods", "arg", `return (${src})(mods, arg)`)(mods, arg);
     },
     { src: fn.toString(), arg },
   );
 }
+
+const accountGold = (page) =>
+  page.evaluate(async () => (await import("/src/services/storage.js")).account.gold);
+
+/** Rend le joueur invincible (sans montée de niveau), ou le tue avec `score` et `gold` imposés. */
+const protect = (page) =>
+  run(page, ({ state }) => {
+    state.player.health = state.player.maxHealth = 1e7;
+    state.player.xpToNextLevel = 1e12;
+  });
+const kill = (page, run_ = {}) =>
+  run(
+    page,
+    ({ state, player }, { score, gold }) => {
+      if (score !== undefined) state.game.score = score;
+      if (gold !== undefined) state.game.runGold = gold;
+      state.player.revives = 0;
+      player.takeDamage(1e12);
+    },
+    run_,
+  );
 
 /** Ouvre l'écran Duel avec un pseudo ; `net` ajuste la configuration réseau (délais, relais forcé). */
 async function openDuelMenu(page, realtime, pseudo, net = {}) {
@@ -88,10 +126,14 @@ async function connect(page, browser, net = {}, realtime = fakeRealtime()) {
   await guest.locator("#duelCode").fill(code.toLowerCase()); // le code est remis en majuscules
   await guest.locator("#btnDuelJoin").click();
 
-  for (const p of [page, guest]) {
-    await expect(p.locator("#versusHud")).toBeVisible({ timeout: 15_000 });
-    await expect(p.locator("#vsName1")).toHaveText("Hote");
-    await expect(p.locator("#vsName2")).toHaveText("Invite");
+  for (const [p, rival] of [
+    [page, "Invite"],
+    [guest, "Hote"],
+  ]) {
+    await expect(p.locator("#duelRival")).toBeVisible({ timeout: 15_000 });
+    await expect(p.locator("#ui")).toBeVisible(); // sa propre partie : le HUD habituel
+    await expect(p.locator("#rivalName")).toHaveText(rival);
+    await protect(p);
   }
   return { guest, errors, code };
 }
@@ -111,60 +153,79 @@ for (const [mode, net] of [
     const usesRelay = () => page.evaluate(async () => (await import("/src/services/netplay.js")).net.relay);
     expect(await usesRelay()).toBe(!!net.disableP2P);
 
-    // L'invité pilote le vaisseau rose (J2) chez lui ; l'hôte voit le déplacement
-    const x0 = await duel(page, (v) => v.versus.fighters[1].worldX);
-    await guest.keyboard.down("ArrowLeft");
-    await guest.waitForTimeout(500);
-    await guest.keyboard.up("ArrowLeft");
-    await expect.poll(() => duel(page, (v) => v.versus.fighters[1].worldX)).toBeLessThan(x0 - 30);
-    // L'hôte, lui, ne fait pas bouger le vaisseau rose
-    await page.keyboard.down("ArrowRight");
-    await page.waitForTimeout(300);
-    await page.keyboard.up("ArrowRight");
-    expect(await duel(page, (v) => v.versus.fighters[1].worldX)).toBeLessThan(x0 - 30);
+    // Chacun voit la partie de l'autre (vague, niveau, PV)
+    await run(guest, ({ state }) => (state.game.kills = 42));
+    await expect(page.locator("#rivalInfo")).toContainText("42 ÉLIM.");
 
-    // L'invité meurt : il choisit ses 3 améliorations chez lui, l'hôte attend
-    await duel(page, (v) => {
-      const [a, b] = v.versus.fighters;
-      b.buffs.shield = 0;
-      v.hitFighter(a, b, 1e9);
-    });
-    await expect(guest.locator("#vsLives2")).toHaveText("♥♥♡");
-    for (let n = 1; n <= 3; n++) {
-      await expect(guest.locator("#upgradeSubtitle")).toHaveText(`Amélioration ${n}/3`);
-      await expect(page.locator("#versusHint")).toHaveText("Invite choisit ses améliorations…");
-      await guest.locator(".upgrade-option").first().click();
-    }
-    await expect(guest.locator("#vsUpgrades2")).toHaveText("3");
-    await expect(page.locator("#vsUpgrades2")).toHaveText("3");
-    await expect(page.locator("#upgradeMenu")).toBeHidden(); // rien à choisir chez l'hôte
-
-    // Dernière vie de l'invité : les deux voient le vainqueur
-    await duel(page, (v) => {
-      const [a, b] = v.versus.fighters;
-      v.versus.lives[1] = 1;
-      b.buffs.shield = 0;
-      v.hitFighter(a, b, 1e9);
-    });
-    for (const p of [page, guest]) await expect(p.locator("#versusWinner")).toHaveText("Hote GAGNE !");
+    // L'invité meurt le premier : l'hôte gagne et empoche l'or des deux parties
+    const gold = await accountGold(page);
+    await run(page, ({ state }) => (state.game.runGold = 25));
+    await kill(guest, { gold: 17 });
+    await expect(page.locator("#versusWinner")).toHaveText("TU GAGNES !");
+    await expect(guest.locator("#versusWinner")).toHaveText("Hote GAGNE !");
+    await expect(page.locator("#versusScore")).toContainText("+42 or");
+    expect((await accountGold(page)) - gold).toBeGreaterThanOrEqual(42);
+    await expect(guest.locator("#versusScore")).toHaveText("Hote empoche tes gains.");
 
     // Revanche demandée par l'invité : tout recommence chez les deux
     await guest.locator("#btnVersusReplay").click();
     for (const p of [page, guest]) {
-      await expect(p.locator("#versusHud")).toBeVisible();
-      await expect(p.locator("#vsLives2")).toHaveText("♥♥♥");
+      await expect(p.locator("#duelRival")).toBeVisible();
+      await expect
+        .poll(() => run(p, ({ state }) => [state.game.over, state.game.runGold]))
+        .toEqual([false, 0]);
+      await protect(p);
     }
-    expect(await duel(guest, (v) => Object.keys(v.versus.fighters[1].inventory).length)).toBe(0);
 
-    // L'hôte quitte : l'invité est prévenu
+    // L'hôte quitte en pleine partie : l'invité gagne par abandon
     page.once("dialog", (d) => d.accept());
     await page.keyboard.press("Escape");
     await expect(page.locator("#mainMenu")).toBeVisible();
-    await expect(guest.locator("#versusWinner")).toHaveText("CONNEXION PERDUE");
+    await expect(guest.locator("#versusWinner")).toHaveText("TU GAGNES !");
+    await expect(guest.locator("#versusScore")).toContainText("Hote a quitté le duel.");
     await expect(guest.locator("#btnVersusReplay")).toBeHidden();
     expect(errors).toEqual([]);
   });
 }
+
+test("duel en ligne : deux morts qui se croisent, le meilleur score gagne chez les deux", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const realtime = fakeRealtime();
+  const { guest } = await connect(page, browser, { disableP2P: true, p2pTimeoutMs: 200 }, realtime);
+  // Les deux meurent avant d'avoir reçu la nouvelle de l'autre (messages retenus)
+  realtime.hold(true);
+  await kill(page, { score: 100 });
+  await kill(guest, { score: 300 });
+  for (const p of [page, guest]) await expect(p.locator("#versusWinner")).toHaveText(/GAGNE/);
+  realtime.hold(false);
+  for (const p of [page, guest]) await expect(p.locator("#versusOver")).toBeVisible();
+  await expect(guest.locator("#versusWinner")).toHaveText("TU GAGNES !");
+  await expect(page.locator("#versusWinner")).toHaveText("Invite GAGNE !");
+});
+
+test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imparti", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const { guest } = await connect(page, browser);
+  await run(guest, ({ config, state, player }) => {
+    config.VERSUS.pickSeconds = 0.5;
+    state.player.xpToNextLevel = 10;
+    player.gainXp(10);
+  });
+  await expect(guest.locator("#upgradeMenu")).toBeVisible();
+  await expect(page.locator("#upgradeMenu")).toBeHidden(); // l'adversaire continue
+  await expect(guest.locator("#upgradeMenu")).toBeHidden({ timeout: 15_000 });
+  expect(await run(guest, ({ state }) => Object.keys(state.player.inventory).length)).toBe(1);
+});
 
 test("duel en ligne : un code inconnu est signalé", async ({ page }) => {
   await openDuelMenu(page, fakeRealtime(), "Seul", { joinTimeoutMs: 800 });

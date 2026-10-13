@@ -3,7 +3,7 @@
 import { ADS, MAP_BOUNDS, STUN, SURVIVAL } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
-import { isDown, touchMove } from "../core/input.js";
+import { isDown, stickDirection } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, clamp, dist } from "../utils/math.js";
@@ -83,8 +83,7 @@ function move() {
   }
   if (dx === 0 && dy === 0) {
     // Joystick tactile (analogique)
-    dx = touchMove.x;
-    dy = touchMove.y;
+    ({ x: dx, y: dy } = stickDirection());
   }
   const r = player.size;
   player.worldX = clamp(player.worldX + dx * player.speed, MAP_BOUNDS.minX + r, MAP_BOUNDS.maxX - r);
