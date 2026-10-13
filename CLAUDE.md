@@ -105,6 +105,13 @@ Principes :
   `config.js`). Chaque combattant est un objet joueur complet ; `withFighter` le charge dans `player`
   pour réutiliser le code existant. Cartes sans effet en duel : `noVersus` dans `data/upgrades.js`.
   Aucun gain d'XP ni d'or pour le compte.
+- **Duel en ligne** (écran « Duel » → créer / rejoindre avec un code) : `services/realtime.js` (client
+  Supabase Realtime minimal, sans bibliothèque) sert de salon et de signalisation, `services/netplay.js`
+  ouvre une connexion directe WebRTC, ou relaie les messages par Supabase si elle échoue (`NET` dans
+  `config.js`). L'hôte fait tourner la partie et envoie des instantanés ; l'invité pilote son vaisseau chez
+  lui et envoie sa position (`systems/versusOnline.js`). Arène de taille fixe, zoomée pour tenir à l'écran.
+  Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du propriétaire :
+  du **duel** en ligne, pas de coop.
 - **Boss Rush** : `game.rush` (sinon `null`), ordre et réglages dans `BOSS_RUSH` (`data/enemies.js`).
   Pas de petits ennemis ni de minuteur ; `game.wave` prend la vague habituelle du boss (PV, biome).
   Record = statistique de succès `bestBossRush` ; hors classements.
@@ -159,17 +166,6 @@ touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo
 coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local,
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush.
-
-En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
-
-1. Refonte multi-joueurs locale (le code suppose un seul `player` : passer à une liste de
-   joueurs ; ennemis qui visent le plus proche, XP partagée, améliorations par joueur,
-   réanimation, difficulté adaptée).
-2. Salon en ligne avec code de salle (Supabase sert à la mise en relation).
-3. Synchronisation : l'hôte fait tourner la simulation, l'invité envoie ses commandes et
-   reçoit des instantanés (~15-20/s) interpolés. Transport conseillé : WebRTC (pair à pair),
-   Supabase Realtime seulement pour la signalisation (quotas de messages).
-4. Finitions : ping, déconnexions, classement coop.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

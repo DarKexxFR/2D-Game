@@ -61,10 +61,32 @@ import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
-import { fighterName, startVersus, stopVersus, updateVersus, versus } from "./systems/versus.js";
-import { initVersusMenu, showVersusHud, showVersusOver, updateVersusHud } from "./ui/versusMenu.js";
+import {
+  fighterName,
+  isLocalFighter,
+  startVersus,
+  stopVersus,
+  updateVersus,
+  versus,
+} from "./systems/versus.js";
+import {
+  netTick,
+  onNetMessage,
+  resetOnline,
+  startRemotePicks,
+  updateVersusGuest,
+} from "./systems/versusOnline.js";
+import { leaveRoom, net, sendGame, setNetHandlers } from "./services/netplay.js";
+import {
+  initVersusMenu,
+  showRematchWaiting,
+  showVersusHud,
+  showVersusOver,
+  updateVersusHud,
+} from "./ui/versusMenu.js";
 import { initVersusTouch } from "./ui/versusTouch.js";
-import { showVersusUpgrades } from "./ui/upgradeMenu.js";
+import { initDuelMenu, openDuel, setDuelStatus } from "./ui/duelMenu.js";
+import { drawVersusChoices, showRemoteChoices, showVersusUpgrades } from "./ui/upgradeMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -109,19 +131,60 @@ function startGame(mode = "normal") {
   spawnWave();
 }
 
-/** Duel 1 contre 1 sur le même écran (voir systems/versus.js) : pas d'XP ni d'or pour le compte. */
-function startDuel() {
+/**
+ * Duel 1 contre 1 (voir systems/versus.js) : pas d'XP ni d'or pour le compte.
+ * `online` = { role, local } pour un duel en ligne, avec les pseudos `names`.
+ */
+function startDuel(online = null, names = []) {
+  commitPseudo();
   playRandomMusic();
   restoreRandom();
   resetGame();
   resetUpgradeMenu();
   resetMysteryBox();
   mysteryBox.active = false;
-  startVersus();
+  startVersus(online, names);
+  resetOnline();
   document.activeElement?.blur?.(); // ESPACE / ENTRÉE (dash) ne doivent pas recliquer un bouton
   hideScreens();
   showHud(false);
   showVersusHud(true);
+}
+
+/** Hôte en ligne : (re)lance le duel chez les deux joueurs. */
+function startOnlineDuel() {
+  const names = [getPseudo(), net.peerName || "ADVERSAIRE"];
+  sendGame({ t: "start", names });
+  startDuel({ role: "host", local: 0 }, names);
+}
+
+function replayDuel() {
+  if (!versus.online) return startDuel();
+  if (versus.online.role === "host") return startOnlineDuel();
+  sendGame({ t: "rematch" });
+  showRematchWaiting();
+}
+
+/** Messages du jeu reçus de l'adversaire (voir services/netplay.js). */
+function onNetGame(msg) {
+  if (net.role === "guest" && msg.t === "start") return startDuel({ role: "guest", local: 1 }, msg.names);
+  if (net.role === "guest" && msg.t === "over" && versus.online) {
+    versus.lives = msg.lives;
+    game.running = false;
+    return showVersusOver(msg.winner);
+  }
+  if (net.role === "host" && msg.t === "rematch" && currentScreen() === "versusOver")
+    return startOnlineDuel();
+  onNetMessage(msg);
+}
+
+function onNetLost() {
+  if (versus.online && game.started) {
+    game.running = false;
+    showVersusOver(null);
+  } else if (currentScreen() === "duelMenu") {
+    setDuelStatus("L'adversaire s'est déconnecté.");
+  }
 }
 
 function applyModifierToPlayer(mod) {
@@ -136,6 +199,7 @@ function returnToMenu() {
   game.started = false;
   game.running = false;
   game.paused = false;
+  if (versus.online) leaveRoom();
   stopVersus();
   showVersusHud(false);
   stopMusic();
@@ -199,6 +263,7 @@ const MENUS = {
   achievementMenu: openAchievements,
   dailyMenu: openDaily,
   bossRushMenu: openBossRush,
+  duelMenu: openDuel,
   talentMenu: openTalents,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
 };
@@ -215,7 +280,8 @@ function navigate(id) {
     return;
   }
   if (screen === null) {
-    if (canTogglePause()) togglePause();
+    // En ligne, pas de pause (l'adversaire continue) : le retour arrière ne fait rien
+    if (!versus.online && canTogglePause()) togglePause();
   } else if (screen === "pauseMenu") togglePause();
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
@@ -229,7 +295,8 @@ function update() {
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
   if (versus.active) {
-    updateVersus();
+    if (versus.online?.role === "guest") updateVersusGuest();
+    else updateVersus();
     updateEffects();
     return;
   }
@@ -264,6 +331,7 @@ function frame(now) {
       update();
       accumulator -= TICK_MS;
     }
+    if (versus.online) netTick(now);
     render();
     if (versus.active) updateVersusHud();
     else updateHud();
@@ -308,7 +376,14 @@ function init() {
     if (e.target.closest("button:not(.touch-btn)")) playSfx("click");
   });
 
-  const pause = () => canTogglePause() && togglePause();
+  const pause = () => {
+    // En ligne, la partie ne s'arrête pas pour l'adversaire : on propose seulement de quitter
+    if (versus.online) {
+      if (game.running && confirm("Quitter le duel en ligne ?")) returnToMenu();
+      return;
+    }
+    if (canTogglePause()) togglePause();
+  };
   onAction("pause", pause);
   onAction("skill", () => {
     if (game.running && !game.paused && !versus.active) activateSkill();
@@ -330,12 +405,33 @@ function init() {
   });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
 
-  $("btnVersus").addEventListener("click", startDuel);
+  $("btnVersus").addEventListener("click", openDuel);
   $("btnVersusPause").addEventListener("click", pause);
-  initVersusMenu({ onReplay: startDuel, onMenu: returnToMenu });
+  initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu });
+  initVersusMenu({ onReplay: replayDuel, onMenu: returnToMenu });
   initVersusTouch();
-  on("versusUpgrades", (f) => showVersusUpgrades(f, VERSUS.upgradesPerDeath, fighterName(f.index)));
-  on("versusOver", showVersusOver);
+  setNetHandlers({
+    onReady: () => net.role === "host" && startOnlineDuel(),
+    onGame: onNetGame,
+    onLost: onNetLost,
+  });
+  on("versusUpgrades", (f) => {
+    const count = VERSUS.upgradesPerDeath;
+    if (isLocalFighter(f)) showVersusUpgrades(f, count, fighterName(f.index));
+    else startRemotePicks(f, count, drawVersusChoices);
+  });
+  on("versusRemoteChoices", ({ picks, n, count }) =>
+    showRemoteChoices(picks, {
+      title: fighterName(versus.online.local),
+      subtitle: `Amélioration ${n}/${count}`,
+      target: versus.fighters[versus.online.local],
+      onPick: (u) => sendGame({ t: "choose", name: u.name }),
+    }),
+  );
+  on("versusOver", (winner) => {
+    if (versus.online) sendGame({ t: "over", winner, lives: versus.lives });
+    showVersusOver(winner);
+  });
   on("playerDied", () => (canOfferRevive() ? showReviveOffer() : endGame()));
   on("biomeChange", showBiomeBanner);
   on("bossWarning", (text) => {

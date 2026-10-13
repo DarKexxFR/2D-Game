@@ -23,6 +23,7 @@ const ROUTES = {
   reviveMenu: "revivre",
   gameOver: "fin",
   versusOver: "fin-duel",
+  duelMenu: "duel",
 };
 const PLAYING = "#jeu";
 

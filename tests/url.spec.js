@@ -131,6 +131,8 @@ test("duel : #jeu pendant le duel, #modal=fin-duel à la fin, le retour ramène 
 }) => {
   await page.goto("/");
   await page.locator("#btnVersus").click();
+  await expect(page).toHaveURL(/#modal=duel$/);
+  await page.locator("#btnDuelLocal").click();
   await expect(page.locator("#versusHud")).toBeVisible();
   await expect(page).toHaveURL(/#jeu$/);
 
