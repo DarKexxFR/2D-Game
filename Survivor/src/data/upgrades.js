@@ -4,6 +4,7 @@
 
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
+import { WEAPONS } from "./items.js";
 
 export const UPGRADES = [
   // --- COMMUNES ---
@@ -252,12 +253,131 @@ export const EVOLUTIONS = [
   }),
 ];
 
+// --- ÉVOLUTIONS D'ARMES : arme équipée + amélioration partenaire → arme évoluée pour la partie ---
+// `stats(w)` reçoit l'arme actuelle (dégâts déjà multipliés par le niveau et le prestige).
+const weaponEvolution = ({ id, name, desc, weapon, partner, count: needed, stats }) => ({
+  id,
+  name,
+  icon: WEAPONS[weapon].icon,
+  desc,
+  rarity: "evolution",
+  weapon,
+  recipe: `${WEAPONS[weapon].name} équipé + ${partner} ×${needed}`,
+  canApply: (p) => !p.evolutions[id] && p.weapon?.id === weapon && count(p, partner) >= needed,
+  apply: (p) => evolveWeapon(p, id, name, stats),
+});
+
+/** Remplace l'arme du joueur par sa version évoluée (la couleur reste celle de l'arme ou du duel). */
+function evolveWeapon(p, id, name, stats) {
+  const old = p.weapon;
+  p.weapon = { ...old, ...stats(old), name, evolved: id, color: old.color };
+  p.attackSpeed *= p.weapon.cooldown / old.cooldown;
+  p.evolutions[id] = true;
+}
+
+export const WEAPON_EVOLUTIONS = [
+  weaponEvolution({
+    id: "solarBlaster",
+    name: "Blaster solaire",
+    desc: "Trois rayons plus gros et plus forts qui traversent un ennemi.",
+    weapon: "blaster",
+    partner: "Force Brute",
+    count: 3,
+    stats: (w) => ({
+      projectiles: 3,
+      spread: 0.14,
+      damage: w.damage * 1.3,
+      size: w.size * 1.3,
+      pierce: w.pierce + 1,
+    }),
+  }),
+  weaponEvolution({
+    id: "leadStorm",
+    name: "Ouragan de plomb",
+    desc: "Deux canons, cadence encore plus folle, balles précises et perçantes.",
+    weapon: "smg",
+    partner: "Mitraillette",
+    count: 2,
+    stats: (w) => ({
+      projectiles: 2,
+      spread: 0.08,
+      inaccuracy: 0.06,
+      cooldown: w.cooldown * 0.75,
+      damage: w.damage * 1.25,
+      pierce: w.pierce + 1,
+    }),
+  }),
+  weaponEvolution({
+    id: "stormCannon",
+    name: "Canon tempête",
+    desc: "Neuf plombs perçants qui portent bien plus loin.",
+    weapon: "shotgun",
+    partner: "Recul",
+    count: 2,
+    stats: (w) => ({ projectiles: 9, spread: 0.11, range: 44, pierce: w.pierce + 1, damage: w.damage * 1.2 }),
+  }),
+  weaponEvolution({
+    id: "ionLance",
+    name: "Lance ionique",
+    desc: "Un rayon géant qui traverse tout, plus fort et plus rapide.",
+    weapon: "railgun",
+    partner: "Perçage",
+    count: 3,
+    stats: (w) => ({ damage: w.damage * 1.6, pierce: 99, size: w.size * 1.6, cooldown: w.cooldown * 0.75 }),
+  }),
+  weaponEvolution({
+    id: "missileRain",
+    name: "Pluie de missiles",
+    desc: "Trois roquettes en éventail aux explosions bien plus larges.",
+    weapon: "rocket",
+    partner: "Explosion",
+    count: 2,
+    stats: (w) => ({ projectiles: 3, spread: 0.3, explosion: 120, cooldown: w.cooldown * 0.85 }),
+  }),
+  weaponEvolution({
+    id: "supernova",
+    name: "Supernova",
+    desc: "Des orbes énormes qui explosent sur une zone deux fois plus grande.",
+    weapon: "plasma",
+    partner: "Sniper",
+    count: 2,
+    stats: (w) => ({ explosion: 90, size: w.size * 1.5, damage: w.damage * 1.35 }),
+  }),
+  weaponEvolution({
+    id: "dragonBreath",
+    name: "Souffle du dragon",
+    desc: "Quatre jets de flammes plus longs qui traversent des rangées entières.",
+    weapon: "flamer",
+    partner: "Aura de Feu",
+    count: 2,
+    stats: (w) => ({ projectiles: 4, range: 36, pierce: 5, damage: w.damage * 1.3 }),
+  }),
+  weaponEvolution({
+    id: "whirlwind",
+    name: "Tourbillon",
+    desc: "Trois disques lancés tout autour de vous, plus forts et plus durables.",
+    weapon: "disc",
+    partner: "Orbe Protecteur",
+    count: 2,
+    stats: (w) => ({ projectiles: 3, ring: true, damage: w.damage * 1.3, lifetime: 240 }),
+  }),
+  weaponEvolution({
+    id: "ionStorm",
+    name: "Tempête ionique",
+    desc: "Les éclairs rebondissent sur 8 ennemis, plus vite et plus fort.",
+    weapon: "tesla",
+    partner: "Multi-Tir",
+    count: 2,
+    stats: (w) => ({ chain: 8, damage: w.damage * 1.25, cooldown: w.cooldown * 0.8 }),
+  }),
+];
+
 export function availableUpgrades(p) {
   return UPGRADES.filter((u) => !u.canApply || u.canApply(p));
 }
 
 export function availableEvolutions(p) {
-  return EVOLUTIONS.filter((e) => e.canApply(p));
+  return [...WEAPON_EVOLUTIONS, ...EVOLUTIONS].filter((e) => e.canApply(p));
 }
 
 export function applyUpgrade(upgrade, p) {

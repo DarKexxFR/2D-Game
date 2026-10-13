@@ -18,6 +18,7 @@ const ROUTES = {
   dailyMenu: "defi",
   bossRushMenu: "boss-rush",
   talentMenu: "talents",
+  skinMenu: "skins",
   upgradeMenu: "amelioration",
   pauseMenu: "pause",
   reviveMenu: "revivre",

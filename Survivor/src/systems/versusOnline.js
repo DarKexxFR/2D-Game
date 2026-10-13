@@ -7,14 +7,14 @@
 import { NET } from "../config.js";
 import { emit } from "../core/events.js";
 import { game, world } from "../core/state.js";
-import { EVOLUTIONS, UPGRADES, applyUpgrade } from "../data/upgrades.js";
+import { EVOLUTIONS, UPGRADES, WEAPON_EVOLUTIONS, applyUpgrade } from "../data/upgrades.js";
 import { checkConnection, net, sendGame } from "../services/netplay.js";
 import { playSfx } from "../services/sfx.js";
 import { addFloatingText, createSpawnEffect } from "./effects.js";
 import { fighterName, killEffects, updateMovement, updateTrails, versus } from "./versus.js";
 
 const SMOOTHING = 0.35; // part du chemin vers la dernière position reçue, par tick
-const ALL_CARDS = [...UPGRADES, ...EVOLUTIONS];
+const ALL_CARDS = [...UPGRADES, ...WEAPON_EVOLUTIONS, ...EVOLUTIONS];
 
 let lastSend = 0;
 let picking = null; // hôte : améliorations en cours de choix chez l'invité { f, n, count, picks, draw }

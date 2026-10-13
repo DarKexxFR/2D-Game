@@ -40,6 +40,7 @@ import { applyEquipment } from "./systems/equipment.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
+import { updateTrail } from "./systems/trail.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
@@ -58,6 +59,7 @@ import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
+import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
@@ -265,6 +267,7 @@ const MENUS = {
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
   talentMenu: openTalents,
+  skinMenu: openSkins,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
 };
 
@@ -303,6 +306,7 @@ function update() {
 
   updateSpawning();
   updatePlayer();
+  updateTrail();
   rebuildEnemyGrid();
   updateAura();
   updateMysteryBox();
@@ -355,6 +359,7 @@ function init() {
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });
   initBossRushMenu({ onPlay: () => startGame("rush"), onBack: showMainMenu });
   initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initSkinMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
   initAchievementMenu({ onBack: showMainMenu });
 

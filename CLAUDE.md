@@ -118,6 +118,12 @@ Principes :
 - **Boss Rush** : `game.rush` (sinon `null`), ordre et réglages dans `BOSS_RUSH` (`data/enemies.js`).
   Pas de petits ennemis ni de minuteur ; `game.wave` prend la vague habituelle du boss (PV, biome).
   Record = statistique de succès `bestBossRush` ; hors classements.
+- **Skins** (`data/skins.js`, `services/skins.js`, écran `ui/skinMenu.js`) : forme de coque, couleur du
+  vaisseau, des tirs et de la traînée (`systems/trail.js` + `render/trail.js`), couleur libre ou
+  arc-en-ciel. Formes et traînées payantes en or (`account.skinsOwned`), à l'essai dans l'aperçu avant
+  l'achat. Purement cosmétique, ignoré en duel (chaque joueur garde sa couleur).
+- **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
+  (ex. Blaster + Force Brute ×3 → Blaster solaire) ; l'arme garde sa couleur.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -168,9 +174,10 @@ touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
 coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local,
-Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush.
+Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
+évolutions d'armes (une par arme).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
 Autres idées en attente : sons et musique, niveaux de difficulté, quêtes hebdomadaires,
-skins, PWA installable, tutoriel, manette.
+PWA installable, tutoriel, manette.

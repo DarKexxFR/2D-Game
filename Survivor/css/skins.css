@@ -1,0 +1,225 @@
+/* Écran Skins : aperçu animé à gauche, options (forme, couleurs, traînée) à droite. */
+button.tile-skins {
+  --tile: #ff00ff;
+}
+
+.skin-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 1.4fr;
+  gap: 18px;
+  align-items: start;
+  text-align: left;
+  overflow: visible; /* sinon l'aperçu « collant » ne suit pas le défilement (base.css) */
+}
+.skin-stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#skinPreview {
+  width: 100%;
+  height: 260px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 0, 255, 0.35);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(170, 102, 255, 0.12), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(0, 255, 255, 0.05) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(90deg, rgba(0, 255, 255, 0.05) 0 1px, transparent 1px 32px), #07040f;
+}
+.skin-buy {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed #ffd700;
+  background: rgba(255, 215, 0, 0.06);
+  color: #ffe680;
+  font-size: 12px;
+}
+.skin-buy.show {
+  display: flex;
+}
+.skin-buy button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 11px;
+  font-size: 14px;
+  background: linear-gradient(180deg, #ffd700, #ff9d00);
+  color: #1a0b00;
+}
+.skin-buy button:disabled {
+  background: #333;
+  color: #888;
+}
+
+.skin-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.skin-part h4 {
+  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c79bff;
+}
+.skin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  overflow: visible;
+}
+/* Place pour le prix sous la pastille arc-en-ciel */
+.skin-row-color {
+  row-gap: 16px;
+  padding-bottom: 8px;
+}
+
+/* --- Option (forme, traînée, couleur) --- */
+button.skin-chip,
+label.skin-chip {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: auto;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid #3a3350;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ddd;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: visible;
+}
+.skin-chip small {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.skin-chip.on {
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.55);
+}
+.skin-chip.trial {
+  border-color: #ffd700;
+  border-style: dashed;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+.skin-chip.locked > canvas,
+.skin-chip.locked > small {
+  opacity: 0.55;
+}
+.skin-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 9px;
+  color: #ffd700;
+}
+.skin-hull {
+  width: 72px;
+}
+.skin-hull canvas {
+  width: 46px;
+  height: 46px;
+}
+button.skin-text {
+  min-width: 82px;
+  padding: 9px 10px;
+}
+
+/* Pastilles de couleur */
+button.skin-color,
+label.skin-color {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--swatch, #222);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--swatch, #000) 60%, transparent);
+}
+.skin-color.on,
+.skin-color.trial {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+button.skin-default {
+  width: auto;
+  min-width: 56px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+button.skin-rainbow {
+  background: conic-gradient(#ff3344, #ffd700, #00ff88, #00ccff, #aa66ff, #ff00ff, #ff3344);
+}
+.skin-color .skin-price {
+  position: absolute;
+  bottom: -9px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  background: #120a20;
+}
+label.skin-custom {
+  background: var(--swatch, rgba(255, 255, 255, 0.06));
+  border-style: dashed;
+}
+label.skin-custom .ico {
+  font-size: 18px;
+  color: #fff;
+  filter: drop-shadow(0 0 2px #000);
+}
+label.skin-custom input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .skin-chip:hover {
+    border-color: #ff00ff;
+  }
+}
+
+@media (max-width: 760px) {
+  .skin-layout {
+    grid-template-columns: 1fr;
+  }
+  .skin-stage {
+    position: sticky;
+    top: -20px;
+    z-index: 1;
+    background: #0b0715;
+    padding-bottom: 6px;
+  }
+  #skinPreview {
+    height: 140px;
+  }
+  .skin-buy {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .skin-buy button {
+    width: auto;
+    flex-shrink: 0;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .skin-hull {
+    width: 64px;
+  }
+}

@@ -26,6 +26,7 @@ export const world = {
   hazards: [], // attaques de zone des boss (voir systems/hazards.js)
   bossChests: [], // coffres d'augmentation lâchés par les boss
   bolts: [], // éclairs de l'Arc Tesla (purement visuels)
+  trail: [], // traînée cosmétique du vaisseau (skin, voir systems/trail.js)
 };
 
 export function resetGame() {
