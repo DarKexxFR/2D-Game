@@ -43,13 +43,18 @@ export function openLogin(from = "mainMenu") {
   showScreen("loginMenu");
 }
 
+/** Ferme la fenêtre de connexion et revient à l'écran d'où elle a été ouverte. */
+export function closeLogin() {
+  showScreen(returnTo);
+}
+
 /**
  * Au démarrage : session (retour de Google / Discord compris), puis comparaison avec le compte.
  * `onConflictFound` ouvre la fenêtre de connexion quand le joueur doit choisir entre deux progressions.
  */
 export async function initAccount({ onConflictFound }) {
   onConflict = onConflictFound;
-  $("btnLoginBack").addEventListener("click", () => showScreen(returnTo));
+  $("btnLoginBack").addEventListener("click", closeLogin);
   if (!isOnlineEnabled()) {
     // Sans serveur, pas de compte : les boutons d'accès disparaissent
     $("btnLogin").style.display = "none";
