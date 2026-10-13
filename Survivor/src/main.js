@@ -50,7 +50,7 @@ import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchC
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
 import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
-import { initAccount } from "./ui/accountMenu.js";
+import { initAccount, openLogin } from "./ui/accountMenu.js";
 import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
 import { initAchievementMenu } from "./ui/achievementMenu.js";
 import { initDailyMenu } from "./ui/dailyMenu.js";
@@ -207,7 +207,7 @@ function init() {
   initOptionsMenu();
   initKeyBindings();
   // Connexion facultative : vérifie la progression du compte sans bloquer le démarrage
-  initAccount({ onConflictFound: () => !game.started && openOptions("mainMenu") });
+  initAccount({ onConflictFound: () => !game.started && openLogin("mainMenu") });
 
   // L'audio ne peut démarrer qu'après une interaction ; petit « clic » sur chaque bouton.
   document.addEventListener("pointerdown", unlockAudio);

@@ -11,7 +11,7 @@ const remoteSave = (gold, level = 5) => ({
 });
 
 async function loginWithEmail(page, email, code = EMAIL_CODE) {
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await page.locator("#accountEmail").fill(email);
   await page.locator("#btnEmailCode").click();
   await expect(page.locator("#codeStep")).toBeVisible();
@@ -21,10 +21,24 @@ async function loginWithEmail(page, email, code = EMAIL_CODE) {
 
 test("on peut jouer sans compte : la connexion est facultative", async ({ page }) => {
   await page.goto("/");
-  await page.locator("#btnOptions").click();
-  await expect(page.locator("#accountSection")).toContainText("facultatif");
+  await expect(page.locator("#btnLogin")).toHaveText("SE CONNECTER");
+  await page.locator("#btnLogin").click();
+  await expect(page.locator("#loginMenu")).toContainText("Facultatif");
   await expect(page.locator("#accountOut")).toBeVisible();
   await expect(page.locator("#accountIn")).toBeHidden();
+  await page.locator("#btnLoginBack").click();
+  await expect(page.locator("#mainMenu")).toBeVisible();
+});
+
+test("la connexion s'ouvre aussi depuis les Options, et RETOUR y ramène", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#btnOptions").click();
+  await page.locator("#btnOptionsAccount").click();
+  await expect(page.locator("#loginMenu")).toBeVisible();
+  await page.locator("#btnLoginBack").click();
+  await expect(page.locator("#optionsMenu")).toBeVisible();
+  await page.locator("#btnOptionsBack").click();
+  await expect(page.locator("#mainMenu")).toBeVisible();
 });
 
 test("Google : première connexion, la progression de l'appareil part sur le compte", async ({
@@ -33,13 +47,15 @@ test("Google : première connexion, la progression de l'appareil part sur le com
 }) => {
   await withSave(page, { gold: 555, level: 4, lastFreeChest: Date.now() });
   await page.goto("/");
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await page.locator("#btnGoogle").click();
   // Retour de « Google » : l'URL est nettoyée et le joueur est connecté
   await page.waitForURL((url) => !url.hash);
   await expect.poll(() => supabase.accounts[GOOGLE_EMAIL]?.account.gold).toBe(555);
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await expect(page.locator("#accountWho")).toContainText(`${GOOGLE_EMAIL} (Google)`);
+  await expect(page.locator("#loginTitle")).toHaveText("MON COMPTE");
+  await expect(page.locator("#btnLogin")).toHaveText("COMPTE");
   await expect(page.locator("#accountStatus")).toHaveText("Progression sauvegardée sur ton compte");
 
   // Les sauvegardes suivantes partent toutes seules
@@ -58,11 +74,11 @@ test("Google : première connexion, la progression de l'appareil part sur le com
 test("Discord : connexion, la progression de l'appareil part sur le compte", async ({ page, supabase }) => {
   await withSave(page, { gold: 321, level: 3, lastFreeChest: Date.now() });
   await page.goto("/");
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await page.locator("#btnDiscord").click();
   await page.waitForURL((url) => !url.hash);
   await expect.poll(() => supabase.accounts[DISCORD_EMAIL]?.account.gold).toBe(321);
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await expect(page.locator("#accountWho")).toContainText(`${DISCORD_EMAIL} (Discord)`);
 });
 
@@ -131,7 +147,7 @@ test("au démarrage, un compte inchangé reçoit la progression de l'appareil (p
   });
   await page.reload();
   await expect.poll(() => supabase.accounts["moi@exemple.fr"].account.gold).toBe(77);
-  await page.locator("#btnOptions").click();
+  await page.locator("#btnLogin").click();
   await expect(page.locator("#accountConflict")).toBeHidden();
 });
 
