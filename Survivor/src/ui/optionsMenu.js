@@ -14,6 +14,7 @@ import { canVibrate, playSfx, vibrate } from "../services/sfx.js";
 import { $, setText, setVisible } from "./dom.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice } from "./touchControls.js";
+import { replayTutorial } from "./tutorial.js";
 
 let returnTo = "mainMenu";
 
@@ -34,6 +35,11 @@ export function initOptionsMenu() {
       render();
     });
   }
+
+  $("btnTutorialReplay").addEventListener("click", () => {
+    replayTutorial();
+    setText("tutorialReplayHint", "Le tutoriel s'affichera à ta prochaine partie.");
+  });
 
   $("btnOptionsBack").addEventListener("click", closeOptions);
   initCloudSection();
@@ -118,6 +124,7 @@ function bindVolume(id, key, preview) {
 
 function render() {
   renderCloud();
+  setText("tutorialReplayHint", "");
   $("optMusic").value = Math.round(settings.musicVolume * 100);
   $("optSfx").value = Math.round(settings.sfxVolume * 100);
   setText("optMusicValue", `${Math.round(settings.musicVolume * 100)}%`);

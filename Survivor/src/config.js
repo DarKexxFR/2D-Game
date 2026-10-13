@@ -93,6 +93,14 @@ export const KUNAI = {
   damageMultiplier: 0.75,
 };
 
+// Tutoriel de la première partie (ui/tutorial.js)
+export const TUTORIAL = {
+  moveDistance: 150, // distance à parcourir pour valider « se déplacer »
+  kills: 5, // ennemis à détruire pour valider « tir auto »
+  minTicks: 90, // une bulle reste affichée au moins 1,5 s
+  endTicks: 240, // durée du message de fin
+};
+
 export const MYSTERY_BOX = {
   x: 0,
   y: -600,
