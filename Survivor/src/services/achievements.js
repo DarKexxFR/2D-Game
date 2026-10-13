@@ -3,6 +3,7 @@
 
 import { emit } from "../core/events.js";
 import { ACHIEVEMENTS } from "../data/achievements.js";
+import { trackQuest, trackQuestBest } from "./quests.js";
 import { account, saveAccount } from "./storage.js";
 
 const DEFAULT_STATS = { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 };
@@ -43,11 +44,13 @@ function checkAchievements() {
 /** Ajoute `n` à une statistique cumulée (coffres ouverts, boss vaincus...). */
 export function addStat(metric, n = 1) {
   stats()[metric] = statValue(metric) + n;
+  trackQuest(metric, n);
   checkAchievements();
 }
 
 /** Retient le meilleur score d'une statistique (vague, niveau, combo...). */
 export function recordBest(metric, value) {
+  trackQuestBest(metric, value); // record de la semaine, même sous le record de toujours
   if (value <= statValue(metric)) return;
   stats()[metric] = value;
   checkAchievements();
@@ -59,6 +62,9 @@ export function recordKill(type, isBoss = false) {
   s.kills = statValue("kills") + 1;
   if (isBoss) s.bosses = statValue("bosses") + 1;
   if (isBoss || type === "goblin") s[`kill_${type}`] = statValue(`kill_${type}`) + 1;
+  trackQuest("kills");
+  if (isBoss) trackQuest("bosses");
+  if (type === "goblin") trackQuest("kill_goblin");
   checkAchievements();
 }
 
@@ -72,6 +78,7 @@ export function recordPlayerLevel(level) {
 
 export function recordCompletedRun() {
   stats().runs = statValue("runs") + 1;
+  trackQuest("runs");
   checkAchievements();
   saveAccount();
 }

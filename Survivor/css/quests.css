@@ -1,0 +1,102 @@
+/* Quêtes hebdomadaires */
+#questMenu {
+  --accent: #ffd700;
+  --accent-soft: #ffe680;
+  border-color: #ffd700;
+  width: min(560px, calc(100vw - 30px));
+}
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.quest-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #333;
+  border-left: 3px solid #ffd700;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.quest-card.done {
+  border-color: rgba(0, 255, 136, 0.6);
+  border-left-color: #00ff88;
+  background: linear-gradient(120deg, rgba(0, 255, 136, 0.12), rgba(0, 0, 0, 0.3));
+}
+.quest-card.claimed {
+  opacity: 0.6;
+}
+.quest-icon {
+  font-size: 28px;
+  color: #ffd700;
+  overflow: visible;
+}
+.quest-card.done .quest-icon {
+  color: #00ff88;
+}
+.quest-details {
+  min-width: 0;
+}
+.quest-details h3 {
+  font-size: 14px;
+  color: #fff;
+}
+.quest-progress {
+  margin: 4px 0;
+  font-size: 12px;
+  color: #aaa;
+}
+.quest-track {
+  height: 5px;
+  border-radius: 3px;
+  background: #222;
+}
+.quest-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+}
+.quest-card.done .quest-bar {
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+}
+button.quest-claim {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  min-width: 96px;
+  justify-content: center;
+  padding: 9px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.quest-bonus {
+  margin-top: 14px;
+  color: #ffd700;
+  font-size: 13px;
+}
+.quest-bonus.done {
+  color: #00ff88;
+}
+@media (max-width: 760px) {
+  .quest-card {
+    gap: 10px;
+    padding: 10px;
+  }
+  .quest-icon {
+    font-size: 22px;
+  }
+  .quest-details h3 {
+    font-size: 12px;
+  }
+  button.quest-claim {
+    min-width: 76px;
+    padding: 8px;
+    font-size: 12px;
+  }
+}

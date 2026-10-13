@@ -124,6 +124,11 @@ Principes :
   l'achat. Purement cosmétique, ignoré en duel (chaque joueur garde sa couleur).
 - **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
   (ex. Blaster + Force Brute ×3 → Blaster solaire) ; l'arme garde sa couleur.
+- **Quêtes hebdomadaires** (`data/quests.js`, `services/quests.js`, écran `ui/questMenu.js`) : 3 quêtes
+  par semaine, les mêmes pour tous (tirage à graine sur la semaine), renouvelées le lundi à 0 h (heure
+  locale). Elles suivent les statistiques des succès (`trackQuest` / `trackQuestBest` appelés par
+  `services/achievements.js`) ; « atteindre » = record de la semaine. Or à récupérer à la main, bonus quand
+  les 3 sont récupérées (`WEEKLY` dans `config.js`). État dans `account.weekly`, donc synchronisé avec le compte.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -175,9 +180,9 @@ touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo
 coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local,
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
-évolutions d'armes (une par arme).
+évolutions d'armes (une par arme), quêtes hebdomadaires.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
-Autres idées en attente : sons et musique, niveaux de difficulté, quêtes hebdomadaires,
+Autres idées en attente : sons et musique, niveaux de difficulté,
 PWA installable, tutoriel, manette.

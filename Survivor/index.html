@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/achievements.css" />
+    <link rel="stylesheet" href="css/quests.css" />
     <link rel="stylesheet" href="css/daily.css" />
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/ads.css" />
@@ -171,6 +172,10 @@
             <button id="btnTalents" class="home-tile tile-talents">
               <i data-icon="sparkle"></i>
               <span class="tile-text"><b>TALENTS</b><small id="talentTileSub">Bonus permanents</small></span>
+            </button>
+            <button id="btnQuests" class="home-tile tile-quests">
+              <i data-icon="quest"></i>
+              <span class="tile-text"><b>QUÊTES</b><small id="questTileSub">De la semaine</small></span>
             </button>
           </div>
 
@@ -359,6 +364,20 @@
         <p id="rushBest" class="daily-best"></p>
         <button id="btnRushPlay" class="rush-play">LANCER LE BOSS RUSH</button>
         <button id="btnRushBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== QUÊTES HEBDOMADAIRES ===== -->
+      <div id="questMenu" class="menu-overlay">
+        <div class="menu-head">
+          <h2>QUÊTES DE LA SEMAINE</h2>
+          <p id="questReset" class="menu-sub"></p>
+          <div class="gold-pill">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="questGoldDisplay">0</span>
+          </div>
+        </div>
+        <div id="questList" class="quest-list"></div>
+        <p id="questBonus" class="quest-bonus"></p>
+        <button id="btnQuestsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== SUCCÈS ===== -->

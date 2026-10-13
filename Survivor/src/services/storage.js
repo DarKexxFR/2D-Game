@@ -39,6 +39,7 @@ export const account = {
   achievementStats: { kills: 0, bosses: 0, runs: 0, bestWave: 1, bestLevel: 1 },
   skin: { ...DEFAULT_SKIN }, // personnalisation du vaisseau (voir data/skins.js)
   skinsOwned: [], // options achetées : "hull:manta", "trail:sparks", "rainbow"...
+  weekly: null, // quêtes de la semaine : { week, quests: [{ id, progress, claimed }], bonusClaimed }
 };
 
 export function loadAccount() {
@@ -65,6 +66,7 @@ export function loadAccount() {
   };
   account.skin = { ...DEFAULT_SKIN, ...saved.skin };
   account.skinsOwned = Array.isArray(saved.skinsOwned) ? saved.skinsOwned : [];
+  account.weekly = saved.weekly || null;
 }
 
 const saveListeners = [];

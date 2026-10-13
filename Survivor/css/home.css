@@ -299,16 +299,21 @@ button.tile-daily {
 button.tile-talents {
   --tile: #aa66ff;
 }
+button.tile-quests {
+  --tile: #ffd700;
+}
 button.tile-shop {
   --tile: #00ff88;
 }
 button.tile-inv {
   --tile: #00ccff;
 }
-#btnShop.has-free .tile-text small {
+#btnShop.has-free .tile-text small,
+#btnQuests.has-new .tile-text small {
   color: #00ff88;
 }
-#btnDaily.has-new::after {
+#btnDaily.has-new::after,
+#btnQuests.has-new::after {
   content: "!";
   position: absolute;
   top: -9px;

@@ -4,6 +4,7 @@ import { HEROES, PETS } from "../data/items.js";
 import { TALENTS } from "../data/talents.js";
 import { getDailyBest } from "../services/daily.js";
 import { getEquipped } from "../services/inventory.js";
+import { getWeeklyQuests } from "../services/quests.js";
 import { account, loadPseudo, resetProgress, savePseudo } from "../services/storage.js";
 import { $, setClass, setText, setWidth } from "./dom.js";
 import { initChestMenu, renderChests } from "./chestMenu.js";
@@ -67,7 +68,7 @@ export function refreshAccountUI() {
   renderChests();
 }
 
-/** Infos rapides de l'écran d'accueil : héros équipé, défi du jour, talents. */
+/** Infos rapides de l'écran d'accueil : héros équipé, défi du jour, talents, quêtes. */
 function refreshHomeTiles() {
   const hero = HEROES[getEquipped("hero")?.id] || HEROES.pilot;
   const pet = PETS[getEquipped("pet")?.id];
@@ -82,4 +83,10 @@ function refreshHomeTiles() {
   const ranks = TALENTS.reduce((sum, t) => sum + Math.min(account.talents[t.id] || 0, t.max), 0);
   const max = TALENTS.reduce((sum, t) => sum + t.max, 0);
   setText("talentTileSub", `${ranks} / ${max} rangs`);
+
+  const { quests } = getWeeklyQuests();
+  const ready = quests.filter((q) => q.done && !q.claimed).length;
+  const done = quests.filter((q) => q.done).length;
+  setText("questTileSub", ready ? "Or à récupérer !" : `${done} / ${quests.length} accomplies`);
+  setClass("btnQuests", "has-new", ready > 0);
 }
