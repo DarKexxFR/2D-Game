@@ -52,7 +52,7 @@ button.dock-rush {
     font-size: 10px;
   }
 }
-/* Trois boutons dans le bas de l'accueil : ils doivent tenir sur une ligne, même sur iPhone SE */
+/* Boutons du bas de l'accueil : sur une ligne tant que la largeur le permet */
 .home-dock button.dock-btn {
   white-space: nowrap;
 }
@@ -67,5 +67,15 @@ button.dock-rush {
   }
   .home-dock .dock-btn .ico {
     display: none;
+  }
+}
+/* Très petit écran (iPhone SE) : les quatre boutons passent sur deux lignes */
+@media (max-width: 360px) {
+  .home-dock {
+    flex-wrap: wrap;
+  }
+  .home-dock button.dock-btn {
+    flex: 1 1 40%;
+    font-size: 11px;
   }
 }
