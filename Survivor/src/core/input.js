@@ -37,6 +37,11 @@ export function isDown(action) {
   return !!virtual[action] || bindingsOf(action).some((k) => held[k]);
 }
 
+/** Une des touches est-elle enfoncée ? (duel : chaque joueur a ses propres touches) */
+export function isAnyKeyDown(keys) {
+  return keys.some((k) => held[k]);
+}
+
 /** Relâche une action (évite qu'un appui maintenu la redéclenche en boucle). */
 export function releaseAction(action) {
   virtual[action] = false;

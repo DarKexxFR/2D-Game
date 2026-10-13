@@ -18,6 +18,7 @@ const SCREENS = [
   "loginMenu",
   "reviveMenu",
   "gameOver",
+  "versusOver",
 ];
 
 let current = null;

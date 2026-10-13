@@ -1,7 +1,7 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
-import { TICK_MS } from "./config.js";
+import { TICK_MS, VERSUS } from "./config.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
 import { game, mysteryBox, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
@@ -59,6 +59,10 @@ import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
+import { fighterName, startVersus, stopVersus, updateVersus, versus } from "./systems/versus.js";
+import { initVersusMenu, showVersusHud, showVersusOver, updateVersusHud } from "./ui/versusMenu.js";
+import { initVersusTouch } from "./ui/versusTouch.js";
+import { showVersusUpgrades } from "./ui/upgradeMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -67,6 +71,8 @@ let lastMode = "normal"; // « REJOUER » relance le même mode
 /** Lance une partie ; mode "daily" = défi du jour (équipement, modificateur et graine imposés). */
 function startGame(mode = "normal") {
   lastMode = mode;
+  stopVersus();
+  showVersusHud(false);
   commitPseudo();
   playRandomMusic();
   restoreRandom();
@@ -94,6 +100,21 @@ function startGame(mode = "normal") {
   spawnWave();
 }
 
+/** Duel 1 contre 1 sur le même écran (voir systems/versus.js) : pas d'XP ni d'or pour le compte. */
+function startDuel() {
+  playRandomMusic();
+  restoreRandom();
+  resetGame();
+  resetUpgradeMenu();
+  resetMysteryBox();
+  mysteryBox.active = false;
+  startVersus();
+  document.activeElement?.blur?.(); // ESPACE / ENTRÉE (dash) ne doivent pas recliquer un bouton
+  hideScreens();
+  showHud(false);
+  showVersusHud(true);
+}
+
 function applyModifierToPlayer(mod) {
   player.maxHealth *= mod.playerHealth || 1;
   player.health = player.maxHealth;
@@ -106,6 +127,8 @@ function returnToMenu() {
   game.started = false;
   game.running = false;
   game.paused = false;
+  stopVersus();
+  showVersusHud(false);
   stopMusic();
   showHud(false);
   showMainMenu();
@@ -180,6 +203,11 @@ function navigate(id) {
 function update() {
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
+  if (versus.active) {
+    updateVersus();
+    updateEffects();
+    return;
+  }
 
   updateSpawning();
   updatePlayer();
@@ -212,7 +240,8 @@ function frame(now) {
       accumulator -= TICK_MS;
     }
     render();
-    updateHud();
+    if (versus.active) updateVersusHud();
+    else updateHud();
   } else {
     accumulator = 0;
     renderMenuBackground();
@@ -256,10 +285,10 @@ function init() {
   const pause = () => canTogglePause() && togglePause();
   onAction("pause", pause);
   onAction("skill", () => {
-    if (game.running && !game.paused) activateSkill();
+    if (game.running && !game.paused && !versus.active) activateSkill();
   });
   onAction("autoShoot", () => {
-    if (game.started) player.autoShoot = !player.autoShoot;
+    if (game.started && !versus.active) player.autoShoot = !player.autoShoot;
   });
 
   initTouchControls({
@@ -274,6 +303,13 @@ function init() {
     playSfx("combo");
   });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
+
+  $("btnVersus").addEventListener("click", startDuel);
+  $("btnVersusPause").addEventListener("click", pause);
+  initVersusMenu({ onReplay: startDuel, onMenu: returnToMenu });
+  initVersusTouch();
+  on("versusUpgrades", (f) => showVersusUpgrades(f, VERSUS.upgradesPerDeath, fighterName(f.index)));
+  on("versusOver", showVersusOver);
   on("playerDied", () => (canOfferRevive() ? showReviveOffer() : endGame()));
   on("biomeChange", showBiomeBanner);
   on("bossWarning", (text) => {

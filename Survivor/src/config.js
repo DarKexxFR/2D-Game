@@ -144,6 +144,25 @@ export const ADS = {
   },
 };
 
+// Duel 1 contre 1 sur le même écran (voir systems/versus.js). Les deux joueurs partent à égalité
+// (Pilote + Blaster, ni niveau de compte ni talents) ; celui qui meurt choisit des améliorations.
+export const VERSUS = {
+  lives: 3,
+  upgradesPerDeath: 3,
+  healthMult: 2, // PV de base multipliés : un duel ne doit pas se jouer en deux tirs
+  respawnDelay: 90, // ticks entre la mort et le choix des améliorations
+  spawnShield: 150, // ticks d'invulnérabilité au retour
+  endDelay: 60, // ticks avant l'écran du vainqueur
+  endSlowMo: 40, // dont ticks au ralenti (×0,3)
+  knockback: 10,
+  thornsReflect: 0.3, // part des dégâts renvoyés par les Épines (par niveau de 0,5)
+  vampirismCap: 10, // soin maximum par tir
+  orbitalHitCooldown: 300, // ms entre deux coups d'orbes sur l'adversaire
+  orbitalDamageMult: 5,
+  arena: { maxWidth: 1400, maxHeight: 1100, margin: 30, top: 130 },
+  colors: ["#00ffff", "#ff2a6d"],
+};
+
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],

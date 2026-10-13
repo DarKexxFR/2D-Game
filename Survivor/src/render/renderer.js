@@ -7,6 +7,8 @@ import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./en
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
+import { drawVersus } from "./versus.js";
+import { versus } from "../systems/versus.js";
 
 export { renderMenuBackground } from "./menuScene.js";
 
@@ -29,7 +31,8 @@ export function render() {
   drawHazards(now); // au sol, sous les entités
   drawBossChests(now);
   drawTurrets(now);
-  drawPlayer(now);
+  if (versus.active) drawVersus(now);
+  else drawPlayer(now);
   drawEnemies();
   drawProjectiles();
   drawBolts();
@@ -48,7 +51,7 @@ export function render() {
 
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
-  if (view.scale === 1) drawWaveTimer();
+  if (view.scale === 1 && !versus.active) drawWaveTimer();
   ctx.restore();
 }
 

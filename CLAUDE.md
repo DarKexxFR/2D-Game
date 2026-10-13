@@ -96,6 +96,12 @@ Principes :
   (`survivor_account_sync`) et demande au joueur de choisir quand l'appareil et le compte ont tous
   deux avancé. Réglages côté Google / Discord / Supabase : `supabase/CONNEXION.md`. Les tests simulent
   l'authentification dans `fixtures.js` (`EMAIL_CODE`, `GOOGLE_EMAIL`, `DISCORD_EMAIL`).
+- **Duel 1 contre 1** (`systems/versus.js`, bouton « DUEL 1V1 ») : deux joueurs sur le même écran
+  (J1 ZQSD + Espace, J2 flèches + Entrée ; en tactile une moitié d'écran chacun, toucher = dash), tir
+  automatique vers l'adversaire, 3 vies, et le joueur qui meurt choisit 3 améliorations (`VERSUS` dans
+  `config.js`). Chaque combattant est un objet joueur complet ; `withFighter` le charge dans `player`
+  pour réutiliser le code existant. Cartes sans effet en duel : `noVersus` dans `data/upgrades.js`.
+  Aucun gain d'XP ni d'or pour le compte.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -145,7 +151,7 @@ ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stat
 touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
 coffres de boss, 29 succès avec récompenses, Voleur doré, difficulté croissante (élites,
-montée exponentielle), connexion facultative Google / Discord / e-mail.
+montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local.
 
 En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
 
