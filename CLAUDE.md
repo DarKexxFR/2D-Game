@@ -84,6 +84,11 @@ Principes :
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
 - **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
   `.menu-wide` pour les écrans larges (boutique, équipement, talents, succès), sur le modèle du défi du jour.
+- **Adresse de la page** (`ui/router.js`) : `showScreen` met l'adresse à jour (`#modal=option`,
+  `#modal=boutique`… ; `#jeu` en partie ; rien sur l'accueil). Le retour du navigateur ferme l'écran
+  ouvert (`navigate` dans `main.js` ; en partie il met en pause, jamais ne quitte). Un lien vers un
+  menu de l'accueil l'ouvre ; un rechargement revient à l'accueil. Nouvel écran = une entrée dans
+  `ROUTES` (et dans `MENUS` de `main.js` s'il doit s'ouvrir par lien).
 - **Compte (facultatif)** : connexion Google, Discord ou code à 6 chiffres par e-mail, via l'API REST
   d'authentification de Supabase (pas de bibliothèque). Fenêtre `loginMenu` (`ui/accountMenu.js`,
   `openLogin`), ouverte par le bouton « Se connecter » de l'accueil ou depuis les Options. `accountSync.js` ne doit **jamais** écraser

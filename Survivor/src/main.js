@@ -45,16 +45,19 @@ import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
-import { hideScreens } from "./ui/screens.js";
+import { currentScreen, hideScreens, showScreen } from "./ui/screens.js";
+import { initRouter } from "./ui/router.js";
 import { initTouchControls, isTouchDevice, showTouchControls } from "./ui/touchControls.js";
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
-import { initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
-import { initAccount, openLogin } from "./ui/accountMenu.js";
+import { closeOptions, initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
+import { closeLogin, initAccount, openLogin } from "./ui/accountMenu.js";
 import { initUpgradeMenu, resetUpgradeMenu, showBossChest, showUpgradeMenu } from "./ui/upgradeMenu.js";
-import { initAchievementMenu } from "./ui/achievementMenu.js";
-import { initDailyMenu } from "./ui/dailyMenu.js";
-import { initTalentMenu } from "./ui/talentMenu.js";
+import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
+import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
+import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
+import { openInventory } from "./ui/inventoryMenu.js";
+import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
@@ -136,6 +139,40 @@ function endGame() {
       setOnlineStatus((day && status === "sent" ? "Défi du jour : " : "") + SUBMIT_MESSAGES[status]),
     );
   }
+}
+
+// --- ADRESSE DE LA PAGE (#modal=option...) ---
+
+/** Menus de l'accueil qu'un lien peut ouvrir directement. */
+const MENUS = {
+  optionsMenu: () => openOptions("mainMenu"),
+  shopMenu: () => showScreen("shopMenu"),
+  inventoryMenu: openInventory,
+  leaderboardMenu: openLeaderboard,
+  achievementMenu: openAchievements,
+  dailyMenu: openDaily,
+  talentMenu: openTalents,
+  loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
+};
+
+/** Retour / avancer du navigateur : ferme l'écran ouvert. En partie, ne quitte jamais la partie. */
+function navigate(id) {
+  const screen = currentScreen();
+  if (!game.started) {
+    if (MENUS[id]) MENUS[id]();
+    else if (screen === "loginMenu")
+      closeLogin(); // ouverte depuis les options : retour aux options
+    else if (screen === "chestReveal") showScreen("shopMenu");
+    else showMainMenu();
+    return;
+  }
+  if (screen === null) {
+    if (canTogglePause()) togglePause();
+  } else if (screen === "pauseMenu") togglePause();
+  else if (screen === "optionsMenu") closeOptions();
+  else if (screen === "loginMenu") closeLogin();
+  else if (screen === "gameOver") returnToMenu();
+  // amélioration et revivre : le choix reste à faire, l'adresse est simplement remise
 }
 
 // --- MISE À JOUR (un tick = 1/60 s) ---
@@ -246,6 +283,7 @@ function init() {
   });
 
   showMainMenu();
+  initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
   requestAnimationFrame(frame);
 }
 

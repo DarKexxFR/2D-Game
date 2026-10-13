@@ -35,7 +35,7 @@ export function initOptionsMenu() {
     });
   }
 
-  $("btnOptionsBack").addEventListener("click", () => showScreen(returnTo));
+  $("btnOptionsBack").addEventListener("click", closeOptions);
   initCloudSection();
 }
 
@@ -100,6 +100,11 @@ export function openOptions(from) {
   setVisible("btnReset", from === "mainMenu"); // pas de remise à zéro en pleine partie
   render();
   showScreen("optionsMenu");
+}
+
+/** Ferme les options et revient à l'écran d'où elles ont été ouvertes. */
+export function closeOptions() {
+  showScreen(returnTo);
 }
 
 function bindVolume(id, key, preview) {
