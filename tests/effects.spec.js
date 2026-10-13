@@ -30,6 +30,10 @@ test("combo : compteur affiché, palier annoncé, meilleur combo retenu", async 
     const sp = await import("/src/systems/spawner.js");
     const c = await import("/src/systems/combat.js");
     s.game.spawnTimer = 1e9;
+    // Le joueur ne tire plus : sinon (tir auto sur mobile) il tue les ennemis qui réapparaissent
+    // et le combo continue de monter au lieu de retomber
+    s.player.autoShoot = false;
+    s.player.lastAttack = Infinity;
     for (let i = 0; i < 12; i++) {
       sp.spawnEnemy("normal", s.player.worldX + 400, s.player.worldY);
       c.killEnemy(s.world.enemies.at(-1));

@@ -74,6 +74,9 @@ Principes :
 - **Boss** : chaque boss enchaîne un cycle d'attaques **annoncées** (`systems/hazards.js` : zone ronde,
   laser, onde de choc ; le dash et le bouclier protègent) et passe en « furie » sous 50 % de vie.
   `e.rooted` immobilise un boss pendant une attaque. Le Roi Slime est volontairement laissé tel quel.
+  Le **Titan de l'orage** étourdit le joueur (option `stun` des attaques, `stunPlayer` dans
+  `systems/player.js`, réglages `STUN` dans `config.js` : ni déplacement, ni dash, ni compétence, puis
+  courte insensibilité). La **Sentinelle prismatique** utilise des lasers tournants (option `spin`).
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
@@ -97,6 +100,9 @@ Principes :
   `config.js`). Chaque combattant est un objet joueur complet ; `withFighter` le charge dans `player`
   pour réutiliser le code existant. Cartes sans effet en duel : `noVersus` dans `data/upgrades.js`.
   Aucun gain d'XP ni d'or pour le compte.
+- **Boss Rush** : `game.rush` (sinon `null`), ordre et réglages dans `BOSS_RUSH` (`data/enemies.js`).
+  Pas de petits ennemis ni de minuteur ; `game.wave` prend la vague habituelle du boss (PV, biome).
+  Record = statistique de succès `bestBossRush` ; hors classements.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -145,8 +151,9 @@ gratuit, options, succès, refonte néon, héros / familiers / Nécro-Hydre, sau
 ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stats de fin,
 touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
-coffres de boss, 29 succès avec récompenses, Voleur doré, difficulté croissante (élites,
-montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local.
+coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
+montée exponentielle), connexion facultative Google / Discord / e-mail, duel 1 contre 1 local,
+Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush.
 
 En cours de réflexion : **coop en ligne à 2 joueurs**. Plan retenu :
 

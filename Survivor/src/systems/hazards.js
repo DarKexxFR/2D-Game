@@ -3,19 +3,26 @@
 //  - circle : zone ronde qui se remplit puis explose (et peut laisser une flaque) ;
 //  - beam   : laser en ligne droite, d'abord un trait fin d'alerte puis le rayon ;
 //  - ring   : onde de choc qui s'élargit, à franchir au dash.
+// Option `stun` (ticks) : un coup étourdit le joueur (Titan de l'orage).
 
 import { TICK_MS } from "../config.js";
 import { game, player, world } from "../core/state.js";
 import { playSfx } from "../services/sfx.js";
 import { dist, removeWhere } from "../utils/math.js";
 import { addScreenShake, createParticles, createShockwave } from "./effects.js";
-import { isProtected, takeDamage } from "./player.js";
+import { isProtected, stunPlayer, takeDamage } from "./player.js";
 
 const POOL_TICK = 30; // une flaque blesse au plus toutes les 0,5 s
 const BEAM_TICK = 12; // un laser actif blesse au plus toutes les 0,2 s
 
 /** Zone ronde : alerte pendant `delay` ticks, puis dégâts ; `pool` = durée de la flaque restante. */
-export function addCircle(x, y, radius, damage, { delay = 60, color = "#ff2a6d", pool = 0, slow = 0 } = {}) {
+export function addCircle(
+  x,
+  y,
+  radius,
+  damage,
+  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0 } = {},
+) {
   world.hazards.push({
     kind: "circle",
     x,
@@ -27,17 +34,18 @@ export function addCircle(x, y, radius, damage, { delay = 60, color = "#ff2a6d",
     color,
     pool,
     slow,
+    stun,
     hit: 0,
   });
 }
 
-/** Laser depuis (x, y) dans la direction `angle`. */
+/** Laser depuis (x, y) dans la direction `angle` ; `spin` = rotation par tick une fois actif. */
 export function addBeam(
   x,
   y,
   angle,
   damage,
-  { length = 1400, width = 34, delay = 55, active = 28, color = "#ff0040" } = {},
+  { length = 1400, width = 34, delay = 55, active = 28, color = "#ff0040", spin = 0, stun = 0 } = {},
 ) {
   world.hazards.push({
     kind: "beam",
@@ -51,13 +59,34 @@ export function addBeam(
     total: delay,
     active,
     color,
+    spin,
+    stun,
     hit: 0,
   });
 }
 
 /** Onde de choc circulaire qui s'élargit jusqu'à `max`. */
-export function addRing(x, y, max, damage, { speed = 7, width = 26, color = "#9fe8ff", slow = 0 } = {}) {
-  world.hazards.push({ kind: "ring", x, y, radius: 0, max, speed, width, damage, color, slow, done: false });
+export function addRing(
+  x,
+  y,
+  max,
+  damage,
+  { speed = 7, width = 26, color = "#9fe8ff", slow = 0, stun = 0 } = {},
+) {
+  world.hazards.push({
+    kind: "ring",
+    x,
+    y,
+    radius: 0,
+    max,
+    speed,
+    width,
+    damage,
+    color,
+    slow,
+    stun,
+    done: false,
+  });
 }
 
 export function updateHazards() {
@@ -69,6 +98,7 @@ function hurt(h) {
   if (isProtected()) return;
   takeDamage(h.damage);
   if (h.slow) player.buffs.slow = Math.max(player.buffs.slow, h.slow);
+  if (h.stun) stunPlayer(h.stun);
 }
 
 const UPDATERS = {
@@ -103,6 +133,7 @@ const UPDATERS = {
       addScreenShake(8);
       playSfx("explosion");
     }
+    h.angle += h.spin; // laser tournant (Sentinelle prismatique)
     if (--h.active <= 0) h.done = true;
     if (game.time - h.hit < BEAM_TICK * TICK_MS) return;
     if (distToBeam(h, player.worldX, player.worldY) < h.width / 2 + player.size * 0.5) {

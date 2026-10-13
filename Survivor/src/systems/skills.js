@@ -6,7 +6,7 @@ import { game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, rebuildEnemyGrid, spawnProjectile } from "./combat.js";
-import { heal } from "./player.js";
+import { heal, isStunned } from "./player.js";
 import {
   addFloatingText,
   addScreenShake,
@@ -31,7 +31,7 @@ export function heroSkill() {
 }
 
 export function activateSkill() {
-  if (!player.isUltReady) return;
+  if (!player.isUltReady || isStunned()) return;
   player.ultCharge = 0;
   player.isUltReady = false;
   vibrate(150);

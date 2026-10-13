@@ -49,6 +49,7 @@ export function resetGame() {
     nextWaveTimer: 0,
     adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
+    rush: null, // Boss Rush en cours : { stage, defeated } (voir systems/spawner.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
     stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0, bossChests: 0 }, // pour l'écran de fin
     combo: 0, // éliminations enchaînées (voir systems/effects.js)
@@ -100,7 +101,7 @@ export function resetPlayer(accountLevel) {
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0 },
+    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0 },
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

@@ -585,6 +585,58 @@ const SHAPES = {
     eye(c, r * 0.4, r * 0.16, r * 0.1, "#ff0040");
   },
 
+  /** Titan de l'orage : carapace hexagonale, bobines sur les épaules, éclair au cœur. */
+  storm_titan(c, r, color) {
+    // Bobines électriques
+    for (const s of [-1, 1]) {
+      c.save();
+      c.translate(-r * 0.15, s * r * 0.95);
+      neonBody(c, () => regular(c, 6, r * 0.32, 0), "#9be7ff", 2, 12);
+      dot(c, 0, 0, r * 0.1, "#ffffff", 12);
+      c.restore();
+    }
+    neonBody(c, () => regular(c, 6, r * 0.9, TAU / 12), color, 4, 22);
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 2;
+    regular(c, 6, r * 0.6, TAU / 12);
+    c.stroke();
+    // Éclair au centre
+    neonBody(
+      c,
+      () =>
+        polygon(c, [
+          [r * 0.12, -r * 0.5],
+          [-r * 0.2, r * 0.05],
+          [r * 0.02, r * 0.05],
+          [-r * 0.12, r * 0.5],
+          [r * 0.22, -r * 0.08],
+          [r * 0.0, -r * 0.08],
+        ]),
+      "#ffffff",
+      1.5,
+      14,
+    );
+    eye(c, r * 0.62, -r * 0.2, r * 0.09, "#9be7ff");
+    eye(c, r * 0.62, r * 0.2, r * 0.09, "#9be7ff");
+  },
+
+  /** Sentinelle prismatique : triangle de cristal, facettes et cœur qui réfracte. */
+  prism(c, r, color) {
+    neonBody(c, () => regular(c, 3, r * 1.05, 0), color, 3.5, 22);
+    neonBody(c, () => regular(c, 3, r * 0.62, Math.PI), "#ff4dd2", 2.5, 16);
+    c.strokeStyle = shade(color, 0.75);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const a = (TAU * i) / 3;
+      c.moveTo(0, 0);
+      c.lineTo(Math.cos(a) * r * 1.05, Math.sin(a) * r * 1.05);
+    }
+    c.stroke();
+    dot(c, 0, 0, r * 0.2, "#b07dff", 16);
+    dot(c, 0, 0, r * 0.09, "#ffffff", 0);
+  },
+
   /** Spectre (sbire du Faucheur) : petit fantôme. */
   phantom(c, r, color) {
     const path = () => {

@@ -85,7 +85,9 @@ export function killEnemy(enemy) {
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
   );
   if (Math.random() < 0.05) dropLootBox(enemy.x, enemy.y);
-  if (enemy.template.chest && Math.random() < enemy.template.chest) dropBossChest(enemy.x, enemy.y);
+  // En Boss Rush, chaque boss (même le crabe) lâche son coffre : c'est la seule source d'améliorations rares
+  const chest = game.rush && enemy.template.isBoss ? 1 : enemy.template.chest;
+  if (chest && Math.random() < chest) dropBossChest(enemy.x, enemy.y);
 
   const t = enemy.template;
   if (game.isBossWave && t.isBoss && !world.enemies.some((e) => !e.dead && e.template.isBoss)) {

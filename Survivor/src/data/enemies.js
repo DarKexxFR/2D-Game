@@ -105,6 +105,32 @@ export const ENEMY_TYPES = {
     chest: 1, // chance de lâcher un coffre d'augmentation
     noExecute: true,
   },
+  // Titan de l'orage : ses éclairs étourdissent le joueur (voir STUN dans config.js)
+  storm_titan: {
+    health: 1600,
+    damage: 45,
+    speed: 2.2,
+    size: 58,
+    color: "#ffe94d",
+    xp: 300,
+    gold: 150,
+    isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
+    noExecute: true,
+  },
+  // Sentinelle prismatique : lasers tournants, éclats qui se diffractent, damier de zones
+  prism: {
+    health: 2000,
+    damage: 48,
+    speed: 1.7,
+    size: 54,
+    color: "#3dffd8",
+    xp: 350,
+    gold: 170,
+    isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
+    noExecute: true,
+  },
   phantom: { health: 30, damage: 12, speed: 4, size: 13, color: "#ff7ab0", xp: 4, gold: 2 },
   // Voleur doré : s'enfuit, lâche de l'or quand on le touche (voir systems/enemies.js)
   goblin: {
@@ -152,6 +178,8 @@ export const ENEMY_NAMES = {
   hydra_spawn: "Rejeton",
   colossus: "Colosse de givre",
   void_reaper: "Faucheur du vide",
+  storm_titan: "Titan de l'orage",
+  prism: "Sentinelle prismatique",
   phantom: "Spectre",
   goblin: "Voleur doré",
 };
@@ -175,10 +203,34 @@ export const BOSS_WAVES = [
   { every: 15, type: "void_reaper", warning: "FAUCHEUR DU VIDE" },
   { every: 12, type: "hydra", warning: "NÉCRO-HYDRE" },
   { every: 10, type: "colossus", warning: "COLOSSE DE GIVRE" },
+  { every: 9, type: "prism", warning: "SENTINELLE PRISMATIQUE" },
   { every: 8, type: "slime_boss", warning: "ROI SLIME" },
+  { every: 7, type: "storm_titan", warning: "TITAN DE L'ORAGE" },
   { every: 5, type: "boss", warning: "ŒIL DU NÉANT" },
   { every: 2, type: "miniboss", warning: "" },
 ];
+
+/**
+ * Boss Rush : les boss s'enchaînent sans ennemis ordinaires. Chaque boss est réglé comme à sa
+ * vague habituelle (`wave`) ; après le dernier, le cycle reprend `cycleWaves` vagues plus fort.
+ */
+export const BOSS_RUSH = {
+  order: [
+    { type: "miniboss", wave: 2, warning: "CRABE BLINDÉ" },
+    { type: "boss", wave: 5, warning: "ŒIL DU NÉANT" },
+    { type: "storm_titan", wave: 7, warning: "TITAN DE L'ORAGE" },
+    { type: "slime_boss", wave: 8, warning: "ROI SLIME" },
+    { type: "prism", wave: 9, warning: "SENTINELLE PRISMATIQUE" },
+    { type: "colossus", wave: 10, warning: "COLOSSE DE GIVRE" },
+    { type: "hydra", wave: 12, warning: "NÉCRO-HYDRE" },
+    { type: "void_reaper", wave: 15, warning: "FAUCHEUR DU VIDE" },
+  ],
+  cycleWaves: 15,
+  spawnDelay: 120, // ticks avant l'arrivée du boss
+  breather: 180, // ticks de répit entre deux boss
+  heal: 0.3, // part des PV max rendue après chaque boss
+  modifier: { enemyHealth: 0.6, enemyXp: 2.5 }, // pas de petits ennemis : plus d'XP, boss moins solides
+};
 
 export const BOSS_SPAWN_DELAY = 180; // ticks
 

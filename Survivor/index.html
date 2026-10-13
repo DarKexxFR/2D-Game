@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/daily.css" />
+    <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/versus.css" />
     <link rel="stylesheet" href="css/touch.css" />
@@ -50,7 +51,7 @@
 
       <div id="ui">
         <div class="ui-header">
-          <div>VAGUE <span id="wave" class="c-cyan">1</span></div>
+          <div><span id="waveLabel">VAGUE</span> <span id="wave" class="c-cyan">1</span></div>
           <div>KILLS <span id="kills" class="c-pink">0</span></div>
         </div>
         <div id="timerContainer"><div id="timerBar"></div></div>
@@ -198,6 +199,7 @@
             <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
             <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
             <button id="btnVersus" class="dock-btn"><i data-icon="sword"></i> DUEL 1V1</button>
+            <button id="btnBossRush" class="dock-btn dock-rush"><i data-icon="crown"></i> BOSS RUSH</button>
           </nav>
           <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
             >Conditions générales · Confidentialité</a
@@ -317,6 +319,19 @@
           </table>
         </div>
         <button id="btnDailyBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== BOSS RUSH ===== -->
+      <div id="bossRushMenu" class="menu-overlay">
+        <h2>BOSS RUSH</h2>
+        <p class="rush-sub">
+          Tous les boss à la suite, sans petits ennemis. Chaque boss lâche un coffre et rend 30 % de tes PV.
+          Après le dernier, le cycle recommence, plus fort.
+        </p>
+        <ol id="rushList" class="rush-list"></ol>
+        <p id="rushBest" class="daily-best"></p>
+        <button id="btnRushPlay" class="rush-play">LANCER LE BOSS RUSH</button>
+        <button id="btnRushBack" class="secondary">RETOUR</button>
       </div>
 
       <!-- ===== SUCCÈS ===== -->
@@ -533,7 +548,7 @@
         <p class="final-pseudo"><span id="finalPseudo"></span></p>
         <div class="final-stats">
           <div>Niveau: <span id="finalLvl">1</span></div>
-          <div>Vague: <span id="finalWave">0</span></div>
+          <div><span id="finalWaveLabel">Vague</span>: <span id="finalWave">0</span></div>
         </div>
         <div class="rewards-box">
           <p class="reward-xp">+<span id="runXpGain">0</span> XP</p>
