@@ -3,7 +3,7 @@
 import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
 import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../systems/combat.js";
-import { hydraHeads } from "../systems/enemies.js";
+import { hydraHeads, tetherWidth } from "../systems/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
 import { drawTrail } from "./trail.js";
@@ -33,6 +33,10 @@ const ENEMY_LOOKS = {
   void_reaper: { sprite: "void_reaper", mode: "face" },
   storm_titan: { sprite: "storm_titan", mode: "face" },
   prism: { sprite: "prism", mode: "spin", spin: 0.0012 },
+  kraken: { sprite: "kraken", mode: "face" },
+  kraken_tentacle: { sprite: "tentacle", mode: "sway" },
+  twin_fire: { sprite: "twin_fire", mode: "spin", spin: 0.002 },
+  twin_ice: { sprite: "twin_ice", mode: "spin", spin: -0.0015 },
   phantom: { sprite: "phantom", mode: "face" },
   goblin: { sprite: "goblin", mode: "flee" },
 };
@@ -558,7 +562,14 @@ function drawWeapon(x, y, size) {
 export function drawEnemies() {
   const now = performance.now();
   for (const e of world.enemies) {
+    if (e.type === "twin_fire" && e.pair && !e.dead && !e.partner.dead) drawTether(e, now);
+  }
+  for (const e of world.enemies) {
     if (!isOnScreen(e.x, e.y, e.size)) continue;
+    if (e.submerged) {
+      drawSubmerged(e, now);
+      continue;
+    }
     const look = ENEMY_LOOKS[e.type] || ENEMY_LOOKS.normal;
     const base = e.template.size;
     const scale = e.size / base;
@@ -572,6 +583,10 @@ export function drawEnemies() {
     } else if (look.mode === "wobble") {
       const w = Math.sin(t / 160) * 0.08;
       drawSprite(ctx, sprite, e.x, e.y, 0, scale * (1 + w), scale * (1 - w));
+    } else if (look.mode === "sway") {
+      // Tentacule : vers le joueur, en ondulant
+      const angle = Math.atan2(player.worldY - e.y, player.worldX - e.x) + Math.sin(t / 220) * 0.35;
+      drawSprite(ctx, sprite, e.x, e.y, angle, scale);
     } else if (look.mode === "spin") {
       const pulse = e.type === "kamikaze" ? 1 + Math.sin(t / 60) * 0.08 : 1;
       drawSprite(ctx, sprite, e.x, e.y, t * look.spin, scale * pulse);
@@ -586,6 +601,68 @@ export function drawEnemies() {
     if (e.health < e.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
+}
+
+/** Kraken sous l'eau : silhouette sombre, remous et, pendant un tourbillon, spirale qui aspire. */
+function drawSubmerged(e, now) {
+  ctx.globalAlpha = 0.28;
+  const sprite = getSprite("kraken", e.template.size, e.color);
+  drawSprite(
+    ctx,
+    sprite,
+    e.x,
+    e.y,
+    Math.atan2(player.worldY - e.y, player.worldX - e.x),
+    e.size / e.template.size,
+  );
+  for (let i = 0; i < 3; i++) {
+    const k = ((now / 1400 + i / 3) % 1) * 1.2;
+    ctx.globalAlpha = 0.45 * (1 - k / 1.2);
+    strokeCircle(e.x, e.y, e.size * (0.6 + k), e.color, 2);
+  }
+  if (e.whirl > 0) {
+    ctx.strokeStyle = e.color;
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.6;
+    for (let arm = 0; arm < 3; arm++) {
+      ctx.beginPath();
+      for (let s = 0; s <= 24; s++) {
+        const a = -now / 200 + (TAU * arm) / 3 + s * 0.28;
+        const rr = 30 + s * 11;
+        const px = e.x + Math.cos(a) * rr;
+        const py = e.y + Math.sin(a) * rr;
+        if (s) ctx.lineTo(px, py);
+        else ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** Lien d'énergie entre les Jumeaux : dégradé feu → glace, clignote avant les ciseaux. */
+function drawTether(fire, now) {
+  const ice = fire.partner;
+  const pair = fire.pair;
+  const grad = ctx.createLinearGradient(fire.x, fire.y, ice.x, ice.y);
+  grad.addColorStop(0, fire.color);
+  grad.addColorStop(1, ice.color);
+  const warn = pair.warn > 0 && Math.floor(now / 80) % 2 === 0;
+  ctx.strokeStyle = warn ? "#ffd700" : grad;
+  ctx.lineWidth = tetherWidth(pair) * (0.85 + Math.sin(now / 70) * 0.15);
+  ctx.lineCap = "round";
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = warn ? "#ffd700" : "#ffffff";
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  ctx.moveTo(fire.x, fire.y);
+  ctx.lineTo(ice.x, ice.y);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#ffffff";
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 }
 
 /** Élite : couronne de points dorés qui tourne autour de l'ennemi. */

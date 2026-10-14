@@ -637,6 +637,113 @@ const SHAPES = {
     dot(c, 0, 0, r * 0.09, "#ffffff", 0);
   },
 
+  /** Kraken : manteau bulbeux, gros yeux et couronne de bras repliés (tête tournée vers la droite). */
+  kraken(c, r, color) {
+    // Bras repliés derrière la tête
+    c.strokeStyle = color;
+    c.lineWidth = r * 0.14;
+    glow(c, color, 10);
+    for (let i = 0; i < 6; i++) {
+      const a = Math.PI * 0.62 + (Math.PI * 0.76 * i) / 5;
+      c.beginPath();
+      c.moveTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5);
+      c.quadraticCurveTo(
+        Math.cos(a - 0.35) * r * 1.15,
+        Math.sin(a - 0.35) * r * 1.15,
+        Math.cos(a + 0.15) * r * 1.4,
+        Math.sin(a + 0.15) * r * 1.4,
+      );
+      c.stroke();
+    }
+    noGlow(c);
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.ellipse(-r * 0.05, 0, r * 0.95, r * 0.78, 0, 0, TAU);
+      },
+      color,
+      3.5,
+      22,
+    );
+    // Taches du manteau
+    for (const [x, y, rr] of [
+      [-r * 0.45, -r * 0.3, 0.12],
+      [-r * 0.5, r * 0.28, 0.1],
+      [-r * 0.15, 0, 0.09],
+    ]) {
+      dot(c, x, y, r * rr, shade(color, 0.6), 0);
+    }
+    eye(c, r * 0.45, -r * 0.32, r * 0.17, "#ffd700");
+    eye(c, r * 0.45, r * 0.32, r * 0.17, "#ffd700");
+  },
+
+  /** Tentacule du Kraken : bras courbé couvert de ventouses, qui sort d'un trou dans le sol. */
+  tentacle(c, r, color) {
+    dot(c, 0, 0, r * 0.75, "#05010d", 0);
+    c.strokeStyle = shade(color, 0.6);
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(0, 0, r * 0.8, 0, TAU);
+    c.stroke();
+    const path = () => {
+      c.beginPath();
+      c.moveTo(-r * 0.1, -r * 0.45);
+      c.quadraticCurveTo(r * 0.9, -r * 0.8, r * 1.35, -r * 0.05);
+      c.quadraticCurveTo(r * 1.1, r * 0.2, r * 0.75, -r * 0.05);
+      c.quadraticCurveTo(r * 0.5, r * 0.35, -r * 0.1, r * 0.45);
+      c.closePath();
+    };
+    neonBody(c, path, color, 2.5, 14);
+    for (const [x, y] of [
+      [r * 0.25, r * 0.05],
+      [r * 0.6, -r * 0.15],
+      [r * 0.95, -r * 0.2],
+    ]) {
+      dot(c, x, y, r * 0.09, "#ffd0ff", 4);
+    }
+  },
+
+  /** Jumeau de feu : étoile de flammes autour d'un cœur ardent. */
+  twin_fire(c, r, color) {
+    const pts = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (TAU * i) / 16;
+      const rr = i % 2 ? r * 0.62 : r * (i % 4 ? 1.0 : 1.2);
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+    }
+    neonBody(c, () => polygon(c, pts), color, 3, 22);
+    neonBody(c, () => regular(c, 8, r * 0.48, TAU / 16), "#ffd23d", 2, 14);
+    dot(c, 0, 0, r * 0.2, "#fff2b0", 16);
+  },
+
+  /** Jumeau de glace : flocon hexagonal autour d'un cristal. */
+  twin_ice(c, r, color) {
+    neonBody(c, () => regular(c, 6, r * 0.95, 0), color, 3, 22);
+    c.strokeStyle = "#e8fbff";
+    c.lineWidth = 2;
+    glow(c, color, 8);
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (TAU * i) / 6;
+      const [x, y] = [Math.cos(a), Math.sin(a)];
+      c.moveTo(0, 0);
+      c.lineTo(x * r * 0.85, y * r * 0.85);
+      // Petites branches du flocon
+      for (const s of [-1, 1]) {
+        c.moveTo(x * r * 0.5, y * r * 0.5);
+        c.lineTo(
+          x * r * 0.5 + Math.cos(a + s * 0.8) * r * 0.22,
+          y * r * 0.5 + Math.sin(a + s * 0.8) * r * 0.22,
+        );
+      }
+    }
+    c.stroke();
+    noGlow(c);
+    neonBody(c, () => regular(c, 6, r * 0.3, TAU / 12), "#bdf3ff", 2, 12);
+    dot(c, 0, 0, r * 0.12, "#ffffff", 12);
+  },
+
   /** Spectre (sbire du Faucheur) : petit fantôme. */
   phantom(c, r, color) {
     const path = () => {

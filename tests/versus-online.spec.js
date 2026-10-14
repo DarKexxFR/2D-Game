@@ -171,8 +171,9 @@ for (const [mode, net] of [
     expect(await usesRelay()).toBe(!!net.disableP2P);
 
     // Chacun voit la partie de l'autre (vague, niveau, PV)
-    await run(guest, ({ state }) => (state.game.kills = 42));
-    await expect(page.locator("#rivalInfo")).toContainText("42 ÉLIM.");
+    // (sa partie continue : son tir auto peut encore ajouter quelques éliminations)
+    await run(guest, ({ state }) => (state.game.kills = 4200));
+    await expect(page.locator("#rivalInfo")).toContainText(/42\d\d ÉLIM\./);
 
     // L'invité meurt le premier : l'hôte gagne et empoche l'or des deux parties
     const gold = await accountGold(page);

@@ -1,9 +1,9 @@
 // IA des ennemis : déplacement, séparation, attaques et comportements de boss.
 
 import { game, player, world } from "../core/state.js";
-import { GOBLIN, MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
-import { MAP_BOUNDS, SURVIVAL } from "../config.js";
+import { MAP_BOUNDS, SURVIVAL, TICK_MS } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -22,6 +22,10 @@ const BOSS_BEHAVIORS = {
   void_reaper: updateVoidReaper,
   storm_titan: updateStormTitan,
   prism: updatePrism,
+  kraken: updateKraken,
+  kraken_tentacle: updateTentacle,
+  twin_fire: updateTwin,
+  twin_ice: updateTwin,
   goblin: updateGoblin,
 };
 
@@ -46,7 +50,7 @@ export function updateEnemies() {
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
     if (e.type === "ranged") rangedAttack(e, d);
-    if (d < player.size + e.size && e.damage > 0) handleContact(e);
+    if (d < player.size + e.size && e.damage > 0 && !e.submerged) handleContact(e);
   }
   updateEnemyProjectiles();
   removeWhere(enemies, (e) => e.dead);
@@ -521,6 +525,295 @@ function updatePrism(e) {
     }
     e.attackTimer = 140 * speed;
   }
+}
+
+// --- KRAKEN ---
+
+const INK = "#6a3dff";
+
+/**
+ * Kraken : sous l'eau (invulnérable), il fait jaillir des tentacules autour du joueur et l'aspire
+ * par des tourbillons. Quand toutes ses tentacules sont détruites, sa tête remonte : c'est le
+ * seul moment où on peut le blesser. Puis il replonge avec de nouvelles tentacules.
+ */
+function updateKraken(e) {
+  if (!e.tentacles) return krakenDive(e);
+  if (e.emergeIn > 0 && --e.emergeIn === 0) {
+    for (const [i, p] of e.pending.entries()) {
+      spawnEnemy("kraken_tentacle", p.x, p.y);
+      const t = world.enemies[world.enemies.length - 1];
+      t.owner = e;
+      t.attackTimer = 50 + i * 22; // pas toutes en même temps
+      e.tentacles.push(t);
+    }
+    addScreenShake(6);
+  }
+  if (e.surfaceIn > 0) {
+    e.rooted = 1;
+    if (--e.surfaceIn > 0) return;
+    e.submerged = false;
+    e.exposedFor = e.enraged ? KRAKEN.exposedEnraged : KRAKEN.exposed;
+    e.attackTimer = 40;
+    addFloatingText(e.x, e.y - e.size - 20, "TÊTE EXPOSÉE !", "#ffd700", 24, 70);
+    addScreenShake(10);
+    return;
+  }
+  if (e.submerged) {
+    if (e.emergeIn <= 0 && e.tentacles.every((t) => t.dead)) return krakenSurface(e);
+    krakenWhirl(e);
+    return;
+  }
+  // Tête à l'air : jets d'encre, puis il replonge
+  e.rooted = 1;
+  enrage(e, "#ff3d9a", 1.25, "COLÈRE DES ABYSSES !");
+  if (--e.exposedFor <= 0) return krakenDive(e);
+  if (--e.attackTimer > 0) return;
+  const count = e.enraged ? 7 : 5;
+  const base = aim(e);
+  for (let k = 0; k < count; k++) {
+    fireEnemyProjectile(e.x, e.y, base + (k - (count - 1) / 2) * 0.22, 5.5, {
+      size: 12,
+      damage: e.damage * 0.5,
+      color: INK,
+    });
+  }
+  e.attackTimer = e.enraged ? 40 : 55;
+}
+
+/** Plongée : la tête disparaît et des tentacules jaillissent (zones annoncées) autour du joueur. */
+function krakenDive(e) {
+  const first = !e.tentacles;
+  e.submerged = true;
+  e.tentacles = [];
+  e.pending = [];
+  e.whirlTimer = KRAKEN.whirlEvery;
+  const count = e.enraged ? KRAKEN.tentaclesEnraged : KRAKEN.tentacles;
+  const offset = Math.random() * Math.PI * 2;
+  for (let k = 0; k < count; k++) {
+    const a = offset + (Math.PI * 2 * k) / count;
+    const x = clamp(
+      player.worldX + Math.cos(a) * KRAKEN.ringRadius,
+      MAP_BOUNDS.minX + 60,
+      MAP_BOUNDS.maxX - 60,
+    );
+    const y = clamp(
+      player.worldY + Math.sin(a) * KRAKEN.ringRadius,
+      MAP_BOUNDS.minY + 60,
+      MAP_BOUNDS.maxY - 60,
+    );
+    addCircle(x, y, 60, e.damage * 0.6, { delay: KRAKEN.emerge, color: "#b46bff" });
+    e.pending.push({ x, y });
+  }
+  e.emergeIn = KRAKEN.emerge;
+  createParticles(e.x, e.y, e.color, 25);
+  if (!first) addFloatingText(e.x, e.y - e.size - 20, "LE KRAKEN PLONGE !", e.color, 22, 60);
+}
+
+/** Plus de tentacules : la tête remonte (zone annoncée sous elle). */
+function krakenSurface(e) {
+  e.whirl = 0;
+  e.surfaceIn = 50;
+  addCircle(e.x, e.y, e.size + 50, e.damage, { delay: 50, color: e.color });
+  addFloatingText(e.x, e.y - e.size - 20, "IL REMONTE !", e.color, 20, 50);
+}
+
+/** Tourbillon : de temps en temps, la tête immergée aspire le joueur (le dash y échappe). */
+function krakenWhirl(e) {
+  if (e.whirl > 0) {
+    e.whirl--;
+    if (isProtected()) return;
+    const a = angleTo(player.worldX, player.worldY, e.x, e.y);
+    const pull = Math.min(KRAKEN.whirlPull, dist(player.worldX, player.worldY, e.x, e.y));
+    player.worldX = clamp(player.worldX + Math.cos(a) * pull, MAP_BOUNDS.minX, MAP_BOUNDS.maxX);
+    player.worldY = clamp(player.worldY + Math.sin(a) * pull, MAP_BOUNDS.minY, MAP_BOUNDS.maxY);
+    return;
+  }
+  if (--e.whirlTimer > 0) return;
+  e.whirlTimer = KRAKEN.whirlEvery;
+  e.whirl = KRAKEN.whirlDuration;
+  addFloatingText(e.x, e.y - e.size - 20, "TOURBILLON !", e.color, 20, 50);
+}
+
+/**
+ * Tentacule du Kraken : fixe, elle n'attaque qu'en zone. « Frappe » : grande zone sous le joueur ;
+ * « fracas » : elle s'abat autour d'elle et envoie une onde de choc.
+ */
+function updateTentacle(e) {
+  e.rooted = 1;
+  if (!e.owner || e.owner.dead) {
+    e.dead = true; // le Kraken est mort : ses tentacules retombent (sans récompense)
+    createParticles(e.x, e.y, e.color, 10);
+    return;
+  }
+  if (e.smashIn > 0 && --e.smashIn === 0) {
+    addRing(e.x, e.y, 380, e.damage * 0.6, { color: e.color, speed: 6 });
+    addScreenShake(6);
+  }
+  if (--e.attackTimer > 0) return;
+  if (nextAttack(e, ["slam", "smash"]) === "slam") {
+    addCircle(player.worldX, player.worldY, 120, e.damage, { delay: 60, color: e.color });
+    e.attackTimer = 170;
+    return;
+  }
+  addCircle(e.x, e.y, 190, e.damage * 1.2, { delay: 65, color: "#ff3d9a" });
+  e.smashIn = 65;
+  e.attackTimer = 200;
+}
+
+// --- JUMEAUX ---
+
+const TWIN_CYCLES = {
+  twin_fire: ["flames", "meteors", "scissors"],
+  twin_ice: ["shards", "spikes"],
+  revenge: ["flames", "shards", "meteors", "spikes"],
+};
+
+/**
+ * Jumeaux de feu et de glace : ils tournent autour du joueur, reliés par un lien d'énergie qui
+ * blesse. « Ciseaux » : ils changent de côté et le lien balaie le joueur. Si l'un meurt, l'autre
+ * se venge : il récupère de la vie et enchaîne les attaques des deux.
+ */
+function updateTwin(e) {
+  if (!e.pair) linkTwins(e);
+  const partner = e.partner;
+  if (partner.dead && !e.revenge) twinRevenge(e);
+  if (e.revenge) {
+    if (--e.attackTimer <= 0) twinAttack(e, nextAttack(e, TWIN_CYCLES.revenge));
+    return; // seul : il fonce sur le joueur comme un boss ordinaire
+  }
+  const pair = e.pair;
+  if (e.type === "twin_fire") updatePair(e, pair);
+  // Chacun rejoint sa place sur le cercle autour du joueur
+  e.rooted = 1;
+  const angle = pair.theta + (e.type === "twin_ice" ? pair.gap : 0);
+  const tx = player.worldX + Math.cos(angle) * TWINS.orbit;
+  const ty = player.worldY + Math.sin(angle) * TWINS.orbit;
+  const d = dist(e.x, e.y, tx, ty);
+  const step = Math.min(d, pair.scissors > 0 ? 16 : e.speed * 1.6);
+  if (d > 0) {
+    e.x = clamp(e.x + ((tx - e.x) / d) * step, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
+    e.y = clamp(e.y + ((ty - e.y) / d) * step, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+  }
+  if (pair.scissors > 0 || pair.warn > 0) return;
+  if (--e.attackTimer <= 0) twinAttack(e, nextAttack(e, TWIN_CYCLES[e.type]));
+}
+
+/** Premier tick d'un jumeau : son frère apparaît à côté et les deux sont reliés. */
+function linkTwins(e) {
+  spawnEnemy(e.type === "twin_fire" ? "twin_ice" : "twin_fire", e.x + 120, e.y);
+  const other = world.enemies[world.enemies.length - 1];
+  const pair = { theta: angleTo(player.worldX, player.worldY, e.x, e.y), gap: TWINS.gap };
+  Object.assign(pair, { scissors: 0, warn: 0, hit: -1e9 });
+  e.pair = other.pair = pair;
+  e.partner = other;
+  other.partner = e;
+  other.attackTimer = e.attackTimer + 45; // attaques décalées
+}
+
+/** Rotation du duo, ciseaux et dégâts du lien (gérés une fois par tick, par le Jumeau de feu). */
+function updatePair(fire, pair) {
+  pair.theta += TWINS.orbitSpeed;
+  if (pair.warn > 0 && --pair.warn === 0) pair.scissors = TWINS.scissors;
+  if (pair.scissors > 0) {
+    // L'écart passe de `from` à 2π - from : les jumeaux échangent leurs côtés
+    const t = 1 - --pair.scissors / TWINS.scissors;
+    pair.gap = pair.from + (Math.PI * 2 - 2 * pair.from) * t;
+    if (pair.scissors === 0) pair.gap = Math.PI * 2 - pair.from;
+  }
+  const ice = fire.partner;
+  if (game.time - pair.hit < TWINS.tetherTick * TICK_MS || isProtected()) return;
+  const width = tetherWidth(pair);
+  if (
+    segmentDist(player.worldX, player.worldY, fire.x, fire.y, ice.x, ice.y) <
+    width / 2 + player.size * 0.5
+  ) {
+    pair.hit = game.time;
+    takeDamage(fire.damage * TWINS.tetherDamage * (pair.scissors > 0 ? 2 : 1));
+  }
+}
+
+/** Épaisseur du lien entre les jumeaux (plus large pendant les ciseaux). Partagée avec le rendu. */
+export function tetherWidth(pair) {
+  return pair.scissors > 0 ? TWINS.tetherWidth * 2 : TWINS.tetherWidth;
+}
+
+function twinAttack(e, attack) {
+  const fast = e.revenge ? 0.7 : 1;
+  if (attack === "flames") {
+    const base = aim(e);
+    for (let k = 0; k < 9; k++) {
+      fireEnemyProjectile(e.x, e.y, base + (k - 4) * 0.1, 6.5, {
+        size: 10,
+        damage: e.damage * 0.45,
+        color: "#ff7a1a",
+        life: 80,
+      });
+    }
+    e.attackTimer = 90 * fast;
+  } else if (attack === "meteors") {
+    for (let k = 0; k < 3; k++) {
+      const off = k === 0 ? 0 : 90 + Math.random() * 90;
+      const a = Math.random() * Math.PI * 2;
+      addCircle(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 75, e.damage * 0.8, {
+        delay: 60 + k * 10,
+        color: "#ff5a00",
+        pool: 150,
+      });
+    }
+    addFloatingText(e.x, e.y - e.size - 10, "MÉTÉORES !", "#ff7a1a", 18, 40);
+    e.attackTimer = 120 * fast;
+  } else if (attack === "shards") {
+    const count = e.revenge ? 16 : 12;
+    const offset = Math.random();
+    for (let k = 0; k < count; k++) {
+      fireEnemyProjectile(e.x, e.y, offset + (Math.PI * 2 * k) / count, 5, {
+        size: 9,
+        damage: e.damage * 0.45,
+        color: "#bdf3ff",
+        slow: 90,
+      });
+    }
+    e.attackTimer = 90 * fast;
+  } else if (attack === "spikes") {
+    const base = aim(e);
+    for (const off of [-0.3, 0, 0.3]) {
+      addBeam(e.x, e.y, base + off, e.damage * 0.7, {
+        length: 600,
+        width: 36,
+        delay: 45,
+        active: 18,
+        color: "#7fd8ff",
+      });
+    }
+    e.attackTimer = 110 * fast;
+  } else {
+    // Ciseaux : le lien clignote, puis les jumeaux se croisent en passant de part et d'autre du joueur
+    const pair = e.pair;
+    pair.warn = 45;
+    pair.from = pair.gap;
+    addFloatingText(player.worldX, player.worldY - 70, "CISEAUX !", "#ffd700", 22, 50);
+    e.attackTimer = 45 + TWINS.scissors + 60;
+  }
+}
+
+/** Le frère est mort : vengeance (soin, vitesse, attaques des deux jumeaux). */
+function twinRevenge(e) {
+  e.revenge = e.enraged = true;
+  e.health = Math.min(e.maxHealth, e.health + e.maxHealth * TWINS.revengeHeal);
+  e.speed = e.baseSpeed = e.baseSpeed * TWINS.revengeSpeed;
+  e.attackTimer = 60;
+  addFloatingText(e.x, e.y - e.size - 20, "VENGEANCE !", e.color, 26, 80);
+  addScreenShake(12);
+  playSfx("boss");
+}
+
+/** Distance d'un point au segment [A, B]. */
+function segmentDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy || 1;
+  const t = clamp(((px - ax) * dx + (py - ay) * dy) / len2, 0, 1);
+  return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
 }
 
 function updateSlimeBoss(e) {

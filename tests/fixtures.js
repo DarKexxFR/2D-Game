@@ -151,6 +151,8 @@ export async function game(page, fn, arg) {
         inventory: await import("/src/services/inventory.js"),
         settings: await import("/src/services/settings.js"),
         spawner: await import("/src/systems/spawner.js"),
+        combat: await import("/src/systems/combat.js"),
+        enemies: await import("/src/systems/enemies.js"),
         input: await import("/src/core/input.js"),
         canvas: await import("/src/core/canvas.js"),
       };

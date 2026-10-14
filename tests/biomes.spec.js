@@ -15,6 +15,7 @@ test("biomes : annonce, décor et ennemis du biome", async ({ page, isMobile }) 
   await game(page, ({ state, spawner }) => {
     state.game.wave = 10;
     spawner.startNextWave();
+    state.game.pendingBosses.length = 0; // la vague 11 est celle du Kraken : pas de petits ennemis pendant un boss
   });
   await expect(page.locator("#biomeBanner")).toHaveClass(/show/);
   await expect(page.locator("#biomeBanner")).toHaveText("DÉSERT ROUGE");

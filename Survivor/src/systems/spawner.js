@@ -4,6 +4,7 @@ import { MAP_BOUNDS, NEXT_WAVE_DELAY, SURVIVAL, WAVE_DURATION } from "../config.
 import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import {
+  BOSS_ARENA,
   BOSS_RUSH,
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
@@ -16,7 +17,7 @@ import {
 } from "../data/enemies.js";
 import { biomeForWave } from "../data/biomes.js";
 import { clamp, randomItem, weightedPick } from "../utils/math.js";
-import { addFloatingText, createSpawnEffect } from "./effects.js";
+import { addFloatingText, createParticles, createSpawnEffect } from "./effects.js";
 import { arenaPointNear } from "./pickups.js";
 import { recordBest, recordWave } from "../services/achievements.js";
 
@@ -35,7 +36,7 @@ export function updateSpawning() {
     return;
   }
   updateWaveTimer();
-  spawnMobs();
+  if (!bossFight()) spawnMobs(); // pendant un vrai boss : aucun petit ennemi
   spawnPendingBosses();
   if (Math.random() < SHRINE_CHANCE) spawnShrine();
 }
@@ -63,9 +64,32 @@ function spawnPendingBosses() {
   const pending = game.pendingBosses;
   for (let i = pending.length - 1; i >= 0; i--) {
     if (--pending[i].delay <= 0) {
+      if (isQuietBoss(pending[i].type)) clearMobs();
       spawnEnemy(pending[i].type);
       pending.splice(i, 1);
     }
+  }
+}
+
+/** Un boss qui vide l'arène (tous sauf ceux de `BOSS_ARENA.keepMobs`, comme le Crabe blindé). */
+function isQuietBoss(type) {
+  return ENEMY_TYPES[type].isBoss && !BOSS_ARENA.keepMobs.includes(type);
+}
+
+/** Vrai pendant un combat de boss : boss annoncé ou encore en vie. */
+export function bossFight() {
+  return (
+    game.pendingBosses.some((b) => isQuietBoss(b.type)) ||
+    world.enemies.some((e) => !e.dead && isQuietBoss(e.type))
+  );
+}
+
+/** Le boss arrive : les petits ennemis disparaissent (sans récompense), le Voleur doré reste. */
+function clearMobs() {
+  for (const e of world.enemies) {
+    if (e.dead || e.template.isBoss || e.type === "goblin") continue;
+    e.dead = true;
+    createParticles(e.x, e.y, e.template.color, 4);
   }
 }
 

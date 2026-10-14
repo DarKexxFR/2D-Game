@@ -77,8 +77,14 @@ Principes :
   Le **Titan de l'orage** étourdit le joueur (option `stun` des attaques, `stunPlayer` dans
   `systems/player.js`, réglages `STUN` dans `config.js` : ni déplacement, ni dash, ni compétence, puis
   courte insensibilité). La **Sentinelle prismatique** utilise des lasers tournants (option `spin`).
+  Le **Kraken** reste sous l'eau (`e.submerged` : ni touché, ni visé, ni dans la grille) tant que ses
+  tentacules (`kraken_tentacle`) tiennent, aspire le joueur (tourbillon), puis expose sa tête (`KRAKEN`).
+  Les **Jumeaux** (`twin_fire` fait apparaître `twin_ice`) sont reliés par un lien qui blesse, se croisent
+  (« ciseaux »), le survivant se venge ; un seul coffre, bonus « SYNCHRO » si tués presque ensemble (`TWINS`).
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
+  Combat de boss : à l'arrivée d'un boss les petits ennemis disparaissent et plus aucun n'apparaît tant
+  qu'il vit (`BOSS_ARENA` dans `data/enemies.js`, sauf le Crabe blindé ; choix du propriétaire).
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
   la vague 12 (`SURVIVAL` dans `config.js`). Objectif : même le meilleur build finit par mourir
@@ -196,10 +202,11 @@ gratuit, options, succès, refonte néon, héros / familiers / Nécro-Hydre, sau
 ligne, évolutions, biomes, compétences de héros, défi du jour, talents, stats de fin,
 touches configurables, nouvel accueil, logo officiel, pubs récompensées (démo), CGU, refonte des menus
 (boutique, équipement), nouveaux équipements, boss revus + Colosse de givre et Faucheur du vide,
-coffres de boss, 32 succès avec récompenses, Voleur doré, difficulté croissante (élites,
+coffres de boss, 34 succès avec récompenses, Voleur doré, difficulté croissante (élites,
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
-évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie.
+évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
+Kraken et Jumeaux, arène vidée pendant les boss.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
