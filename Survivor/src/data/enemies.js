@@ -234,6 +234,12 @@ export const BOSS_RUSH = {
 
 export const BOSS_SPAWN_DELAY = 180; // ticks
 
+/**
+ * Combat de boss : à l'arrivée du boss les petits ennemis disparaissent et plus aucun n'apparaît
+ * tant qu'il est en vie (ses propres invocations restent). Sauf pour les boss de `keepMobs`.
+ */
+export const BOSS_ARENA = { keepMobs: ["miniboss"] };
+
 // Mise à l'échelle par vague
 export const WAVE_SCALING = {
   health: 0.35,

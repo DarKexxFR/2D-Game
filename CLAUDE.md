@@ -79,6 +79,8 @@ Principes :
   courte insensibilité). La **Sentinelle prismatique** utilise des lasers tournants (option `spin`).
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
+  Combat de boss : à l'arrivée d'un boss les petits ennemis disparaissent et plus aucun n'apparaît tant
+  qu'il vit (`BOSS_ARENA` dans `data/enemies.js`, sauf le Crabe blindé ; choix du propriétaire).
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
   la vague 12 (`SURVIVAL` dans `config.js`). Objectif : même le meilleur build finit par mourir

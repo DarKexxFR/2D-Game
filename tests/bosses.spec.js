@@ -246,3 +246,47 @@ test("Voleur doré : s'enfuit sans récompense si on le laisse filer", async ({ 
   expect(s).toEqual({ goblinKills: 0, chests: 0 });
   await killPlayer(page);
 });
+
+test("à l'arrivée d'un boss, les petits ennemis disparaissent et n'apparaissent plus tant qu'il vit", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page, { invincible: true });
+  const before = await game(page, ({ state, spawner }) => {
+    state.world.enemies.length = 0;
+    for (let i = 0; i < 6; i++) spawner.spawnEnemy("normal");
+    state.game.pendingBosses.push({ type: "storm_titan", delay: 1 });
+    return state.world.enemies.length;
+  });
+  expect(before).toBe(6);
+  // Le boss arrive : il reste seul, et le spawner n'ajoute plus rien pendant un moment
+  await page.waitForTimeout(1500);
+  const during = await game(page, ({ state, spawner }) => ({
+    types: [...new Set(state.world.enemies.filter((e) => !e.dead).map((e) => e.type))],
+    fight: spawner.bossFight(),
+  }));
+  expect(during).toEqual({ types: ["storm_titan"], fight: true });
+  // Boss vaincu : les ennemis reviennent
+  await game(page, ({ state }) => (state.world.enemies.length = 0));
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies.filter((e) => e.type !== "storm_titan").length))
+    .toBeGreaterThan(0);
+  await killPlayer(page);
+});
+
+test("le Crabe blindé, lui, laisse les petits ennemis", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page, { invincible: true });
+  const types = await game(page, ({ state, spawner }) => {
+    state.world.enemies.length = 0;
+    for (let i = 0; i < 3; i++) spawner.spawnEnemy("normal");
+    state.game.pendingBosses.push({ type: "miniboss", delay: 1 });
+    return spawner.bossFight();
+  });
+  expect(types).toBe(false);
+  await page.waitForTimeout(500);
+  expect(
+    await game(page, ({ state }) => state.world.enemies.filter((e) => !e.dead && e.type === "normal").length),
+  ).toBeGreaterThanOrEqual(3);
+  await killPlayer(page);
+});
