@@ -288,7 +288,7 @@ test("duel en ligne : la partie de l'adversaire est visible en direct en haut à
   const v = await run(guest, ({ online }) => [online.rival.view.cur.x, online.rival.view.cur.w]);
   expect(Math.abs(v[0] - host[0])).toBeLessThan(200);
   expect(v[1]).toBe(host[1]);
-  await expect(guest.locator("body")).toHaveClass(/duel-online/);
+  await expect(guest.locator("body")).toHaveClass(/duel-live/);
 });
 
 test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imparti", async ({

@@ -20,7 +20,7 @@ export function initVersusMenu({ onReplay, onMenu }) {
 export function showVersusHud(visible) {
   const split = visible && versus.split;
   document.body.classList.toggle("versus", split); // masque l'aide des touches du mode survie
-  document.body.classList.toggle("duel-online", visible && !!versus.online); // aperçu de l'adversaire en haut à droite
+  document.body.classList.toggle("duel-live", visible && !!versus.online); // aperçu de l'adversaire en haut à droite
   showVersusTouch(split);
   if (split) showTouchControls(false);
   setVisible("duelRival", visible && !!versus.online);
