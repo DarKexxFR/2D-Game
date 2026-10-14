@@ -5,6 +5,7 @@ import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import {
   BOSS_ARENA,
+  BOSS_POWER,
   BOSS_RUSH,
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
@@ -216,7 +217,8 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
   const mod = game.modifier;
   const mult = waveMultipliers(wave);
   const eliteMult = (k) => (elite ? ELITE[k] : 1);
-  const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health");
+  const boss = bossPower(type, wave);
+  const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health") * boss.health;
   const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
     id: ++enemyIds,
@@ -226,10 +228,10 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     template: t,
     health,
     maxHealth: health,
-    damage: t.damage * mult.damage * eliteMult("damage"),
+    damage: t.damage * mult.damage * eliteMult("damage") * boss.damage,
     speed,
     baseSpeed: speed,
-    size: t.size * eliteMult("size"),
+    size: t.size * eliteMult("size") * boss.size,
     elite,
     color: t.color,
     xp: t.xp * (1 + wave * W.xp) * (mod.enemyXp || 1) * (elite ? ELITE.rewards : 1),
@@ -244,6 +246,16 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     isCharging: false,
     dead: false,
   });
+}
+
+const NO_BOOST = { health: 1, damage: 1, size: 1 };
+
+/** Renfort des boss (voir BOSS_POWER) : PV qui grimpent avec la vague, dégâts et taille. */
+export function bossPower(type, wave) {
+  if (!ENEMY_TYPES[type].isBoss) return NO_BOOST;
+  const P = BOSS_POWER;
+  if (!isQuietBoss(type)) return P.minor;
+  return { ...P, health: P.health * (1 + P.healthPerWave * Math.max(0, wave - P.fromWave)) };
 }
 
 /** Voleur doré : apparaît non loin du joueur et s'enfuit avec son or. */

@@ -82,7 +82,7 @@ for (const type of [
       const e = state.world.enemies.find((x) => x.template.isBoss);
       e.health = e.maxHealth * 0.4;
     });
-    if (["boss", "colossus", "void_reaper", "storm_titan", "prism"].includes(type)) {
+    if (["boss", "colossus", "void_reaper", "storm_titan", "prism", "slime_boss"].includes(type)) {
       await expect.poll(() => game(page, ({ state }) => state.world.enemies[0].enraged)).toBe(true);
       await expect(page.locator("#bossBarName")).toContainText("FURIE");
     }
@@ -477,5 +477,86 @@ test("Jumeaux : les ciseaux font passer le lien de l'autre côté du joueur", as
   await page.waitForTimeout(500);
   expect(await side()).toBe(-before);
   await game(page, ({ state }) => (state.player.isDashing = false));
+  await killPlayer(page);
+});
+
+test("boss renforcés : plus de PV, de dégâts et de taille, et encore plus de PV aux vagues tardives", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  const p = await game(page, ({ spawner }) => ({
+    eye5: spawner.bossPower("boss", 5),
+    reaper15: spawner.bossPower("void_reaper", 15),
+    crab: spawner.bossPower("miniboss", 2),
+    mob: spawner.bossPower("normal", 15),
+  }));
+  expect(p.eye5.health).toBeCloseTo(1.6);
+  expect(p.reaper15.health).toBeCloseTo(2.4);
+  expect(p.eye5.size).toBeGreaterThan(1);
+  expect(p.eye5.damage).toBeGreaterThan(1);
+  expect(p.crab.health).toBeLessThan(p.eye5.health);
+  expect(p.mob).toEqual({ health: 1, damage: 1, size: 1 });
+  await spawnAlone(page, "boss");
+  const eye = await game(page, ({ state }) => {
+    const e = state.world.enemies[0];
+    return { size: e.size, base: e.template.size };
+  });
+  expect(eye.size).toBeCloseTo(eye.base * 1.3);
+  await killPlayer(page);
+});
+
+test("Roi Slime : saut annoncé, pluie de slime, absorption de ses petits, mitose en furie", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  await spawnAlone(page, "slime_boss");
+  // Saut : zone d'atterrissage sous le joueur, puis petits slimes à l'arrivée
+  await game(page, ({ state }) => (state.world.enemies[0].attackTimer = 1));
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "slime_small").length))
+    .toBeGreaterThanOrEqual(3);
+  // Pluie de slime : flaques qui ralentissent
+  await game(page, ({ state }) => {
+    const k = state.world.enemies.find((e) => e.type === "slime_boss");
+    k.turn = 0; // prochaine attaque : pluie
+    k.attackTimer = 1;
+  });
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.hazards.filter((h) => h.pool > 0 && h.slow > 0).length))
+    .toBeGreaterThan(0);
+  // Absorption : les petits slimes disparaissent et le roi reprend de la vie
+  const absorbed = await game(page, ({ state, enemies, combat }) => {
+    state.game.running = false;
+    const k = state.world.enemies.find((e) => e.type === "slime_boss");
+    k.jump = null;
+    k.health = k.maxHealth * 0.6;
+    for (const s of state.world.enemies) {
+      if (s.type === "slime_small") Object.assign(s, { x: k.x + 50, y: k.y, dead: false });
+    }
+    const before = k.health;
+    const slimes = state.world.enemies.filter((e) => e.type === "slime_small").length;
+    k.turn = 2; // prochaine attaque : absorption
+    k.attackTimer = 1;
+    combat.rebuildEnemyGrid();
+    enemies.updateEnemies();
+    state.game.running = true;
+    return {
+      healed: k.health - before > 0,
+      left: state.world.enemies.filter((e) => e.type === "slime_small").length,
+      slimes,
+    };
+  });
+  expect(absorbed.slimes).toBeGreaterThan(0);
+  expect(absorbed).toMatchObject({ healed: true, left: 0 });
+  // Furie : mitose (deux gros slimes)
+  await game(page, ({ state }) => {
+    const k = state.world.enemies.find((e) => e.type === "slime_boss");
+    k.health = k.maxHealth * 0.4;
+  });
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "slime_big").length))
+    .toBe(2);
   await killPlayer(page);
 });
