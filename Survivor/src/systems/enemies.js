@@ -634,7 +634,10 @@ function krakenWhirl(e) {
   addFloatingText(e.x, e.y - e.size - 20, "TOURBILLON !", e.color, 20, 50);
 }
 
-/** Tentacule du Kraken : fixe, elle frappe là où est le joueur ou balaie devant elle. */
+/**
+ * Tentacule du Kraken : fixe, elle n'attaque qu'en zone. « Frappe » : grande zone sous le joueur ;
+ * « fracas » : elle s'abat autour d'elle et envoie une onde de choc.
+ */
 function updateTentacle(e) {
   e.rooted = 1;
   if (!e.owner || e.owner.dead) {
@@ -642,22 +645,19 @@ function updateTentacle(e) {
     createParticles(e.x, e.y, e.color, 10);
     return;
   }
+  if (e.smashIn > 0 && --e.smashIn === 0) {
+    addRing(e.x, e.y, 380, e.damage * 0.6, { color: e.color, speed: 6 });
+    addScreenShake(6);
+  }
   if (--e.attackTimer > 0) return;
-  if (nextAttack(e, ["slam", "sweep"]) === "slam") {
-    addCircle(player.worldX, player.worldY, 80, e.damage, { delay: 55, color: e.color });
-    e.attackTimer = 160;
+  if (nextAttack(e, ["slam", "smash"]) === "slam") {
+    addCircle(player.worldX, player.worldY, 120, e.damage, { delay: 60, color: e.color });
+    e.attackTimer = 170;
     return;
   }
-  const side = Math.random() < 0.5 ? -1 : 1;
-  addBeam(e.x, e.y, aim(e) - side * 0.6, e.damage * 0.8, {
-    length: 300,
-    width: 34,
-    delay: 45,
-    active: 40,
-    color: e.color,
-    spin: side * 0.03, // balaie de part et d'autre du joueur
-  });
-  e.attackTimer = 180;
+  addCircle(e.x, e.y, 190, e.damage * 1.2, { delay: 65, color: "#ff3d9a" });
+  e.smashIn = 65;
+  e.attackTimer = 200;
 }
 
 // --- JUMEAUX ---

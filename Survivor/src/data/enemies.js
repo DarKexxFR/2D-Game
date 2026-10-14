@@ -148,7 +148,7 @@ export const ENEMY_TYPES = {
     health: 260,
     damage: 30,
     speed: 0,
-    size: 32,
+    size: 50,
     color: "#b46bff",
     xp: 15,
     gold: 5,
@@ -297,7 +297,7 @@ export const BOSS_SPAWN_DELAY = 180; // ticks
 export const KRAKEN = {
   tentacles: 4,
   tentaclesEnraged: 6,
-  ringRadius: 230, // distance des tentacules autour du joueur
+  ringRadius: 280, // distance des tentacules autour du joueur
   emerge: 45, // ticks d'alerte avant qu'une tentacule ne jaillisse
   exposed: 420,
   exposedEnraged: 360,
