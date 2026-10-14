@@ -87,7 +87,10 @@ function updateBossBar() {
   }
   setVisible("bossBar", !!boss);
   if (!boss) return;
-  setText("bossBarName", (ENEMY_NAMES[boss.type] || "Boss") + (boss.enraged ? " · FURIE" : ""));
+  setText(
+    "bossBarName",
+    (ENEMY_NAMES[boss.type] || "Boss") + (boss.submerged ? " · SOUS L'EAU" : boss.enraged ? " · FURIE" : ""),
+  );
   setWidth("bossBarFill", boss.health / boss.maxHealth);
   setClass("bossBar", "enraged", !!boss.enraged);
 }

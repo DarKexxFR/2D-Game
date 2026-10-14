@@ -1,10 +1,10 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL } from "../config.js";
+import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
-import { GOBLIN, MAX_ENEMY_SIZE } from "../data/enemies.js";
+import { GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleTo, dist } from "../utils/math.js";
@@ -21,7 +21,7 @@ import {
 import { createGem, dropBossChest, dropLootBox } from "./pickups.js";
 import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
-import { recordKill } from "../services/achievements.js";
+import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
@@ -30,7 +30,7 @@ export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
 export function rebuildEnemyGrid() {
   enemyGrid.clear();
   for (const e of world.enemies) {
-    if (!e.dead) enemyGrid.insert(e, e.x, e.y, e.size);
+    if (!e.dead && !e.submerged) enemyGrid.insert(e, e.x, e.y, e.size); // Kraken sous l'eau : intouchable
   }
 }
 
@@ -47,7 +47,7 @@ export function getNearestEnemy(x, y, maxDist = Infinity) {
   let nearest = null;
   let best = maxDist;
   for (const e of world.enemies) {
-    if (e.dead) continue;
+    if (e.dead || e.submerged) continue;
     const d = dist(e.x, e.y, x, y);
     if (d < best) {
       best = d;
@@ -61,7 +61,7 @@ export function getNearestEnemy(x, y, maxDist = Infinity) {
 
 /** Inflige des dégâts ; `source` sert aux statistiques de fin de partie. */
 export function damageEnemy(enemy, amount, source = "other") {
-  if (enemy.dead) return;
+  if (enemy.dead || enemy.submerged) return;
   const dealt = Math.min(amount, Math.max(0, enemy.health));
   game.stats.damage[source] = (game.stats.damage[source] || 0) + dealt;
   enemy.health -= amount;
@@ -87,7 +87,8 @@ export function killEnemy(enemy) {
   );
   if (Math.random() < 0.05) dropLootBox(enemy.x, enemy.y);
   // En Boss Rush, chaque boss (même le crabe) lâche son coffre : c'est la seule source d'améliorations rares
-  const chest = game.rush && enemy.template.isBoss ? 1 : enemy.template.chest;
+  let chest = game.rush && enemy.template.isBoss ? 1 : enemy.template.chest;
+  if (enemy.partner && !twinsDefeated(enemy)) chest = 0; // un seul coffre pour les deux jumeaux
   if (chest && Math.random() < chest) dropBossChest(enemy.x, enemy.y);
 
   const t = enemy.template;
@@ -123,6 +124,22 @@ export function killEnemy(enemy) {
   createParticles(enemy.x, enemy.y, enemy.color, 8);
 }
 
+/**
+ * Jumeaux : renvoie vrai quand le second tombe. S'il tombe peu après son frère (`TWINS.syncWindow`),
+ * bonus d'or « SYNCHRO ».
+ */
+function twinsDefeated(enemy) {
+  enemy.diedAt = game.time;
+  const other = enemy.partner;
+  if (!other.dead) return false;
+  addStat("twinsDefeated");
+  if (game.time - other.diedAt < TWINS.syncWindow * TICK_MS) {
+    game.runGold += TWINS.syncGold;
+    addFloatingText(enemy.x, enemy.y - 60, `SYNCHRO ! +${TWINS.syncGold}`, "#ffd700", 24, 90);
+  }
+  return true;
+}
+
 /** Chaque coup sur le Voleur doré fait tomber un peu d'or (au plus toutes les 0,2 s). */
 function stealGold(enemy) {
   if (game.time - (enemy.lastSteal ?? -1e9) < 200) return;
@@ -148,7 +165,7 @@ function bossDefeated(enemy) {
 export function killAllEnemies() {
   const enemies = world.enemies;
   const count = enemies.length; // les slimes issus des divisions survivent
-  for (let i = 0; i < count; i++) killEnemy(enemies[i]);
+  for (let i = 0; i < count; i++) if (!enemies[i].submerged) killEnemy(enemies[i]);
 }
 
 // --- TIR DU JOUEUR ---

@@ -108,7 +108,7 @@ function drawBossBar() {
   const x = (view.width - bw) / 2;
   const y = view.height - 34;
   text(
-    (ENEMY_NAMES[boss.type] || "Boss") + (boss.enraged ? " · FURIE" : ""),
+    (ENEMY_NAMES[boss.type] || "Boss") + (boss.submerged ? " · SOUS L'EAU" : boss.enraged ? " · FURIE" : ""),
     view.width / 2,
     y - 14,
     10,

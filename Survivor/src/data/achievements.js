@@ -90,11 +90,13 @@ export const ACHIEVEMENTS = [
     "boss_rush",
     "crown",
     "Marathon de boss",
-    "Vaincre les 8 boss d'affilée en Boss Rush.",
+    "Vaincre les 10 boss d'affilée en Boss Rush.",
     "bestBossRush",
-    8,
+    10,
     1500,
   ),
+  a("boss", "boss_kraken", "wave", "Calamar frit", "Vaincre le Kraken.", "kill_kraken", 1, 550),
+  a("boss", "boss_twins", "flame", "Frères ennemis", "Vaincre les deux Jumeaux.", "twinsDefeated", 1, 500),
   a("boss", "boss_chests", "chest", "Pilleur de boss", "Ouvrir 10 coffres de boss.", "bossChests", 10, 600),
 
   // --- SURVIE ---

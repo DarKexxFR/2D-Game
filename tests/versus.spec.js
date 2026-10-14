@@ -4,7 +4,7 @@ import { expect, test } from "./fixtures.js";
 
 /**
  * Exécute `fn(mods, arg)` avec la partie du joueur `i` chargée (0 = J1, 1 = J2) ; sans `i`,
- * avec seulement les modules. `mods` : state, player, versus, config.
+ * avec seulement les modules. `mods` : state, player, versus, config, spawner.
  */
 function run(page, i, fn, arg) {
   return page.evaluate(
@@ -14,6 +14,7 @@ function run(page, i, fn, arg) {
         player: await import("/src/systems/player.js"),
         versus: await import("/src/systems/versus.js"),
         config: await import("/src/config.js"),
+        spawner: await import("/src/systems/spawner.js"),
       };
       // eslint-disable-next-line no-new-func
       const fn = new Function("mods", "arg", `return (${src})(mods, arg)`);
@@ -208,4 +209,27 @@ test("duel sur mobile : une moitié d'écran par joueur, toucher = dash", async 
   });
   await page.locator("#vsSkill2").dispatchEvent("pointerdown");
   expect(await both(page, ({ state }) => state.player.isUltReady)).toEqual([false, false]);
+});
+
+test("duel : le Kraken de J1 et les Jumeaux de J2 restent chacun dans leur partie", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "logique de jeu : une seule plateforme suffit");
+  await openDuel(page);
+  await run(page, 0, ({ state, spawner }) => {
+    state.world.enemies.length = 0;
+    spawner.spawnEnemy("kraken", state.player.worldX + 300, state.player.worldY);
+  });
+  await run(page, 1, ({ state, spawner }) => {
+    state.world.enemies.length = 0;
+    spawner.spawnEnemy("twin_fire", state.player.worldX + 300, state.player.worldY);
+  });
+  const types = () => both(page, ({ state }) => [...new Set(state.world.enemies.map((e) => e.type))].sort());
+  await expect.poll(types, { timeout: 8000 }).toEqual([
+    ["kraken", "kraken_tentacle"],
+    ["twin_fire", "twin_ice"],
+  ]);
+  await page.waitForTimeout(1500); // les deux combats se déroulent sans erreur
+  await quit(page, isMobile);
 });

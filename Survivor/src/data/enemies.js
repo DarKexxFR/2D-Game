@@ -131,6 +131,54 @@ export const ENEMY_TYPES = {
     chest: 1, // chance de lâcher un coffre d'augmentation
     noExecute: true,
   },
+  // Kraken : la tête reste sous l'eau (invulnérable) tant que ses tentacules sont debout
+  kraken: {
+    health: 2400,
+    damage: 50,
+    speed: 1.2,
+    size: 62,
+    color: "#3d8bff",
+    xp: 450,
+    gold: 200,
+    isBoss: true,
+    chest: 1, // chance de lâcher un coffre d'augmentation
+    noExecute: true,
+  },
+  kraken_tentacle: {
+    health: 260,
+    damage: 30,
+    speed: 0,
+    size: 32,
+    color: "#b46bff",
+    xp: 15,
+    gold: 5,
+    noExecute: true,
+  },
+  // Jumeaux : deux boss reliés par un lien d'énergie ; le survivant se venge (voir TWINS)
+  twin_fire: {
+    health: 1500,
+    damage: 46,
+    speed: 2.4,
+    size: 46,
+    color: "#ff7a1a",
+    xp: 300,
+    gold: 140,
+    isBoss: true,
+    chest: 1, // seul le dernier jumeau lâche le coffre
+    noExecute: true,
+  },
+  twin_ice: {
+    health: 1500,
+    damage: 46,
+    speed: 2.4,
+    size: 46,
+    color: "#7fd8ff",
+    xp: 300,
+    gold: 140,
+    isBoss: true,
+    chest: 1,
+    noExecute: true,
+  },
   phantom: { health: 30, damage: 12, speed: 4, size: 13, color: "#ff7ab0", xp: 4, gold: 2 },
   // Voleur doré : s'enfuit, lâche de l'or quand on le touche (voir systems/enemies.js)
   goblin: {
@@ -180,6 +228,10 @@ export const ENEMY_NAMES = {
   void_reaper: "Faucheur du vide",
   storm_titan: "Titan de l'orage",
   prism: "Sentinelle prismatique",
+  kraken: "Kraken",
+  kraken_tentacle: "Tentacule",
+  twin_fire: "Jumeau de feu",
+  twin_ice: "Jumeau de glace",
   phantom: "Spectre",
   goblin: "Voleur doré",
 };
@@ -201,7 +253,9 @@ export const SPAWN_TABLES = [
 // Vagues de boss, testées dans l'ordre.
 export const BOSS_WAVES = [
   { every: 15, type: "void_reaper", warning: "FAUCHEUR DU VIDE" },
+  { every: 13, type: "twin_fire", warning: "LES JUMEAUX" },
   { every: 12, type: "hydra", warning: "NÉCRO-HYDRE" },
+  { every: 11, type: "kraken", warning: "KRAKEN" },
   { every: 10, type: "colossus", warning: "COLOSSE DE GIVRE" },
   { every: 9, type: "prism", warning: "SENTINELLE PRISMATIQUE" },
   { every: 8, type: "slime_boss", warning: "ROI SLIME" },
@@ -222,7 +276,9 @@ export const BOSS_RUSH = {
     { type: "slime_boss", wave: 8, warning: "ROI SLIME" },
     { type: "prism", wave: 9, warning: "SENTINELLE PRISMATIQUE" },
     { type: "colossus", wave: 10, warning: "COLOSSE DE GIVRE" },
+    { type: "kraken", wave: 11, warning: "KRAKEN" },
     { type: "hydra", wave: 12, warning: "NÉCRO-HYDRE" },
+    { type: "twin_fire", wave: 13, warning: "LES JUMEAUX" },
     { type: "void_reaper", wave: 15, warning: "FAUCHEUR DU VIDE" },
   ],
   cycleWaves: 15,
@@ -233,6 +289,41 @@ export const BOSS_RUSH = {
 };
 
 export const BOSS_SPAWN_DELAY = 180; // ticks
+
+/**
+ * Kraken : tentacules qui sortent du sol autour du joueur ; quand toutes sont détruites, la tête
+ * remonte et devient vulnérable pendant `exposed` ticks, puis replonge avec de nouvelles tentacules.
+ */
+export const KRAKEN = {
+  tentacles: 4,
+  tentaclesEnraged: 6,
+  ringRadius: 230, // distance des tentacules autour du joueur
+  emerge: 45, // ticks d'alerte avant qu'une tentacule ne jaillisse
+  exposed: 420,
+  exposedEnraged: 360,
+  whirlEvery: 260, // tourbillon (attire le joueur vers la tête) quand elle est sous l'eau
+  whirlDuration: 120,
+  whirlPull: 1.8, // pixels par tick
+};
+
+/**
+ * Jumeaux : ils tournent autour du joueur, reliés par un lien qui blesse ; « ciseaux » = ils
+ * changent de côté et le lien balaie le joueur. Le survivant se venge (soin, attaques des deux).
+ * Les tuer à moins de `syncWindow` ticks d'écart rapporte `syncGold` d'or.
+ */
+export const TWINS = {
+  orbit: 280,
+  gap: 1.4, // écart angulaire entre les deux (le lien passe à orbit × cos(gap / 2) du joueur)
+  orbitSpeed: 0.006,
+  tetherWidth: 12,
+  tetherDamage: 0.35, // part des dégâts du boss
+  tetherTick: 30,
+  scissors: 110, // durée du croisement
+  revengeHeal: 0.35,
+  revengeSpeed: 1.35,
+  syncWindow: 300,
+  syncGold: 150,
+};
 
 /**
  * Combat de boss : à l'arrivée du boss les petits ennemis disparaissent et plus aucun n'apparaît

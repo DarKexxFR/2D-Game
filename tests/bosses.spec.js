@@ -16,14 +16,14 @@ async function spawnAlone(page, type, dx = 300) {
   );
 }
 
-test("calendrier des boss : Titan à la vague 7, Sentinelle à la 9, Colosse à la 10, Faucheur à la 15", async ({
+test("calendrier des boss : Titan à la 7, Sentinelle à la 9, Colosse à la 10, Kraken à la 11, Jumeaux à la 13", async ({
   page,
 }) => {
   await page.goto("/");
   await startGame(page);
   const bosses = await game(page, ({ state, spawner }) => {
     const out = {};
-    for (const wave of [5, 7, 8, 9, 10, 12, 14, 15, 18]) {
+    for (const wave of [5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18]) {
       state.game.pendingBosses.length = 0;
       state.game.wave = wave - 1;
       spawner.startNextWave();
@@ -37,7 +37,9 @@ test("calendrier des boss : Titan à la vague 7, Sentinelle à la 9, Colosse à 
     8: "slime_boss",
     9: "prism",
     10: "colossus",
+    11: "kraken",
     12: "hydra",
+    13: "twin_fire",
     14: "storm_titan",
     15: "void_reaper",
     18: "prism",
@@ -45,7 +47,17 @@ test("calendrier des boss : Titan à la vague 7, Sentinelle à la 9, Colosse à 
   await killPlayer(page);
 });
 
-for (const type of ["miniboss", "boss", "colossus", "void_reaper", "hydra", "storm_titan", "prism"]) {
+for (const type of [
+  "miniboss",
+  "boss",
+  "colossus",
+  "void_reaper",
+  "hydra",
+  "storm_titan",
+  "prism",
+  "kraken",
+  "twin_fire",
+]) {
   test(`le boss ${type} enchaîne ses attaques et passe en furie`, async ({ page }) => {
     await page.goto("/");
     await startGame(page);
@@ -288,5 +300,182 @@ test("le Crabe blindé, lui, laisse les petits ennemis", async ({ page }) => {
   expect(
     await game(page, ({ state }) => state.world.enemies.filter((e) => !e.dead && e.type === "normal").length),
   ).toBeGreaterThanOrEqual(3);
+  await killPlayer(page);
+});
+
+test("Kraken : invulnérable sous l'eau tant que ses tentacules tiennent, puis la tête remonte", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  await spawnAlone(page, "kraken");
+  // Il plonge et fait jaillir ses tentacules autour du joueur
+  await expect
+    .poll(() =>
+      game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "kraken_tentacle").length),
+    )
+    .toBe(4);
+  const submerged = await game(page, ({ state, combat }) => {
+    const k = state.world.enemies.find((e) => e.type === "kraken");
+    const hp = k.health;
+    combat.damageEnemy(k, 500);
+    combat.rebuildEnemyGrid();
+    return {
+      submerged: k.submerged,
+      unhurt: k.health === hp,
+      targeted: combat.getNearestEnemy(k.x, k.y, 1)?.type ?? null,
+    };
+  });
+  expect(submerged).toEqual({ submerged: true, unhurt: true, targeted: null });
+  await expect(page.locator("#bossBarName")).toContainText("SOUS L'EAU");
+  // Toutes les tentacules détruites : la tête remonte et prend des dégâts
+  await game(page, ({ state, combat }) => {
+    for (const e of state.world.enemies) if (e.type === "kraken_tentacle") combat.killEnemy(e);
+  });
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies.find((e) => e.type === "kraken").submerged))
+    .toBe(false);
+  const exposed = await game(page, ({ state, combat }) => {
+    const k = state.world.enemies.find((e) => e.type === "kraken");
+    const hp = k.health;
+    combat.damageEnemy(k, 100);
+    return hp - k.health;
+  });
+  expect(exposed).toBe(100);
+  // Plus de tête exposée : il replonge avec de nouvelles tentacules
+  await game(page, ({ state }) => (state.world.enemies.find((e) => e.type === "kraken").exposedFor = 1));
+  await expect
+    .poll(() =>
+      game(
+        page,
+        ({ state }) => state.world.enemies.filter((e) => e.type === "kraken_tentacle" && !e.dead).length,
+      ),
+    )
+    .toBe(4);
+  // Le Kraken vaincu : ses tentacules retombent
+  await game(page, ({ state, combat }) => {
+    const k = state.world.enemies.find((e) => e.type === "kraken");
+    k.submerged = false;
+    combat.killEnemy(k);
+  });
+  await expect
+    .poll(() =>
+      game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "kraken_tentacle").length),
+    )
+    .toBe(0);
+  await killPlayer(page);
+});
+
+test("Kraken : le tourbillon attire le joueur vers la tête, sauf pendant le dash", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  await spawnAlone(page, "kraken", 400);
+  const pulled = await game(page, ({ state, enemies }) => {
+    const k = state.world.enemies[0];
+    state.game.running = false; // le test fait avancer la logique lui-même
+    k.tentacles = [{ dead: false }]; // déjà sous l'eau
+    k.submerged = true;
+    k.emergeIn = 0;
+    k.whirlTimer = 1;
+    const p = state.player;
+    const moved = () => {
+      const [x, y] = [p.worldX, p.worldY];
+      for (let i = 0; i < 30; i++) enemies.updateEnemies();
+      return Math.hypot(p.worldX - x, p.worldY - y);
+    };
+    const pulled = moved();
+    p.isDashing = true;
+    const dashing = moved();
+    p.isDashing = false;
+    state.game.running = true;
+    return { pulled, dashing };
+  });
+  expect(pulled.pulled).toBeGreaterThan(30);
+  expect(pulled.dashing).toBe(0);
+  await killPlayer(page);
+});
+
+test("Jumeaux : reliés par un lien qui blesse, le survivant se venge, un seul coffre", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  await spawnAlone(page, "twin_fire");
+  await expect.poll(() => game(page, ({ state }) => state.world.enemies.length)).toBe(2);
+  // Le lien blesse le joueur qui le traverse
+  const hurt = await game(page, ({ state, enemies }) => {
+    state.game.running = false;
+    const [a, b] = state.world.enemies;
+    const p = state.player;
+    a.pair.theta = 0;
+    a.pair.hit = -1e9;
+    // Le joueur se place au milieu du lien
+    p.worldX = (a.x + b.x) / 2;
+    p.worldY = (a.y + b.y) / 2;
+    const before = p.health;
+    enemies.updateEnemies();
+    state.game.running = true;
+    return before - p.health;
+  });
+  expect(hurt).toBeGreaterThan(0);
+  // Le premier jumeau tombe : pas de coffre, l'autre se venge (soin + furie)
+  const revenge = await game(page, ({ state, combat }) => {
+    const [fire, ice] = state.world.enemies;
+    ice.health = ice.maxHealth * 0.4;
+    combat.killEnemy(fire);
+    return { chests: state.world.bossChests.length };
+  });
+  expect(revenge.chests).toBe(0);
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies.find((e) => e.type === "twin_ice")?.revenge))
+    .toBe(true);
+  const after = await game(page, ({ state }) => {
+    const ice = state.world.enemies.find((e) => e.type === "twin_ice");
+    return { health: ice.health / ice.maxHealth, enraged: ice.enraged };
+  });
+  expect(after.enraged).toBe(true);
+  expect(after.health).toBeCloseTo(0.75, 1);
+  await expect(page.locator("#bossBarName")).toContainText("FURIE");
+  // Le second tombe vite : coffre, bonus SYNCHRO et succès
+  const end = await game(page, ({ state, combat, storage }) => {
+    const gold = state.game.runGold;
+    combat.killEnemy(state.world.enemies.find((e) => e.type === "twin_ice"));
+    return {
+      chests: state.world.bossChests.length,
+      bonus: state.game.runGold - gold,
+      stat: storage.account.achievementStats.twinsDefeated,
+    };
+  });
+  expect(end.chests).toBe(1);
+  expect(end.bonus).toBeGreaterThanOrEqual(150);
+  expect(end.stat).toBe(1);
+  await killPlayer(page);
+});
+
+test("Jumeaux : les ciseaux font passer le lien de l'autre côté du joueur", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  await spawnAlone(page, "twin_fire");
+  await expect.poll(() => game(page, ({ state }) => state.world.enemies.length)).toBe(2);
+  // Côté du joueur par rapport au lien (signe du produit vectoriel)
+  const side = () =>
+    game(page, ({ state }) => {
+      const [a, b] = state.world.enemies;
+      const p = state.player;
+      return Math.sign((b.x - a.x) * (p.worldY - a.y) - (b.y - a.y) * (p.worldX - a.x));
+    });
+  await game(page, ({ state }) => {
+    const fire = state.world.enemies.find((e) => e.type === "twin_fire");
+    fire.turn = 1; // prochaine attaque : ciseaux
+    fire.attackTimer = 1;
+    state.player.isDashing = true; // le test regarde le lien, pas les dégâts
+  });
+  await page.waitForTimeout(800);
+  const before = await side();
+  await expect
+    .poll(() => game(page, ({ state }) => state.world.enemies[0].pair.scissors), { timeout: 5000 })
+    .toBeGreaterThan(0);
+  await expect.poll(() => game(page, ({ state }) => state.world.enemies[0].pair.scissors)).toBe(0);
+  await page.waitForTimeout(500);
+  expect(await side()).toBe(-before);
+  await game(page, ({ state }) => (state.player.isDashing = false));
   await killPlayer(page);
 });
