@@ -5,51 +5,67 @@ import { test as base, expect } from "@playwright/test";
 export const test = base.extend({
   // Réponses du faux Supabase, modifiables par test : supabase.scores, supabase.mode...
   supabase: async ({}, use) => {
-    // accounts : sauvegardes liées à un compte (par adresse) ; emails : codes demandés
-    await use({ scores: [], mode: "ok", posts: [], cloud: {}, accounts: {}, emails: [] });
+    // accounts : sauvegardes liées à un compte (par adresse) ; emails : codes demandés ;
+    // duel : classement ELO simulé (ratings par adresse, déclarations par duel)
+    await use({
+      scores: [],
+      mode: "ok",
+      posts: [],
+      cloud: {},
+      accounts: {},
+      emails: [],
+      duel: { ratings: {}, reports: {}, settled: {} },
+    });
   },
   page: async ({ page, supabase }, use) => {
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.route("https://*.supabase.co/**", (route) => {
-      const req = route.request();
-      if (supabase.mode === "down") return route.fulfill({ status: 503, body: "down" });
-      const auth = fakeAuth(route, req, supabase);
-      if (auth) return auth;
-      // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
-      const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
-      if (rpc === "save_progress") {
-        const { p_code, p_data } = req.postDataJSON();
-        supabase.cloud[p_code] = p_data;
-        return route.fulfill({ status: 204, body: "" });
-      }
-      if (rpc === "load_progress") {
-        const data = supabase.cloud[req.postDataJSON().p_code] ?? null;
-        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(data) });
-      }
-      if (req.method() === "POST") {
-        supabase.posts.push(req.postDataJSON());
-        if (supabase.mode === "rateLimited") {
-          return route.fulfill({
-            status: 400,
-            contentType: "application/json",
-            body: JSON.stringify({ code: "P0001", message: "Trop de scores envoyés" }),
-          });
-        }
-        return route.fulfill({ status: 201, body: "" });
-      }
-      return route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(supabase.scores),
-      });
-    });
+    await routeSupabase(page, supabase);
     await use(page);
     expect(errors, "erreurs JavaScript dans la page").toEqual([]);
   },
 });
 
 export { expect };
+
+/** Faux Supabase pour une page (aussi pour une deuxième page, en duel en ligne : même état partagé). */
+export function routeSupabase(page, supabase) {
+  return page.route("https://*.supabase.co/**", (route) => {
+    const req = route.request();
+    if (supabase.mode === "down") return route.fulfill({ status: 503, body: "down" });
+    const auth = fakeAuth(route, req, supabase);
+    if (auth) return auth;
+    const duel = fakeDuelRanking(route, req, supabase);
+    if (duel) return duel;
+    // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
+    const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
+    if (rpc === "save_progress") {
+      const { p_code, p_data } = req.postDataJSON();
+      supabase.cloud[p_code] = p_data;
+      return route.fulfill({ status: 204, body: "" });
+    }
+    if (rpc === "load_progress") {
+      const data = supabase.cloud[req.postDataJSON().p_code] ?? null;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(data) });
+    }
+    if (req.method() === "POST") {
+      supabase.posts.push(req.postDataJSON());
+      if (supabase.mode === "rateLimited") {
+        return route.fulfill({
+          status: 400,
+          contentType: "application/json",
+          body: JSON.stringify({ code: "P0001", message: "Trop de scores envoyés" }),
+        });
+      }
+      return route.fulfill({ status: 201, body: "" });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(supabase.scores),
+    });
+  });
+}
 
 /** Code à 6 chiffres accepté par le faux Supabase pour toute adresse e-mail. */
 export const EMAIL_CODE = "123456";
@@ -181,4 +197,43 @@ export async function killPlayer(page) {
 /** À la mort, refuse l'offre « revivre avec une pub » si elle s'affiche. */
 export async function declineRevive(page) {
   if (await page.locator("#reviveMenu").isVisible()) await page.locator("#btnReviveGiveUp").click();
+}
+
+/**
+ * Classement ELO du duel (même règle que report_duel dans supabase/schema.sql) : un duel compte
+ * quand les deux joueurs l'ont déclaré et sont d'accord ; ELO K = 32, départ à 1000.
+ */
+function fakeDuelRanking(route, req, supabase) {
+  const rpc = req.url().match(/\/rpc\/(report_duel|get_duel_ranking)$/)?.[1];
+  if (!rpc) return null;
+  const d = supabase.duel;
+  const me = userFromToken(req);
+  const rating = (u) => (d.ratings[u] ??= { name: u, rating: 1000, wins: 0, losses: 0 });
+  if (rpc === "get_duel_ranking") {
+    const ranked = Object.values(d.ratings)
+      .filter((r) => r.wins + r.losses > 0)
+      .sort((a, b) => b.rating - a.rating);
+    const mine = me && d.ratings[me];
+    const rank = mine && ranked.indexOf(mine) + 1;
+    return route.fulfill(json({ top: ranked, me: rank ? { ...mine, rank } : null }));
+  }
+  if (!me) return route.fulfill(json({ message: "Non connecté" }, 401));
+  const { p_match, p_won, p_name } = req.postDataJSON();
+  rating(me).name = p_name;
+  const settled = d.settled[p_match];
+  const result = (delta) => json({ status: "settled", rating: d.ratings[me].rating, delta });
+  if (settled) return route.fulfill(result(settled.winner === me ? settled.delta : -settled.delta));
+  const reports = (d.reports[p_match] ??= {});
+  reports[me] = p_won;
+  const other = Object.keys(reports).find((u) => u !== me);
+  if (!other || reports[other] === p_won)
+    return route.fulfill(json({ status: "pending", rating: rating(me).rating }));
+  const [w, l] = p_won ? [me, other] : [other, me];
+  const delta = Math.round(32 * (1 - 1 / (1 + 10 ** ((rating(l).rating - rating(w).rating) / 400))));
+  rating(w).rating += delta;
+  rating(w).wins++;
+  rating(l).rating -= delta;
+  rating(l).losses++;
+  d.settled[p_match] = { winner: w, delta };
+  return route.fulfill(result(p_won ? delta : -delta));
 }

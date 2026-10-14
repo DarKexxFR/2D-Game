@@ -48,8 +48,8 @@ test("montée de niveau : touche 2, puis flèches + Entrée, puis ZQSD + Espace"
   await page.keyboard.press("ArrowDown");
   await page.waitForTimeout(400); // un dash au moment de l'ouverture ne valide pas
   await page.keyboard.press("Enter");
-  await expect(page.locator(".upgrade-option h4").first()).not.toHaveText(shown.names[0]);
-  expect(await owned(page)).toContain(shown.names[2].split(" · ")[0]);
+  // (le tirage suivant peut reproposer les mêmes cartes : on attend l'amélioration elle-même)
+  await expect.poll(() => owned(page)).toContain(shown.names[2].split(" · ")[0]);
 
   await killPlayer(page);
 });

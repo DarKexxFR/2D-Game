@@ -97,7 +97,11 @@ function bindButtons() {
   $("btnKeepLocal").addEventListener("click", () => choose("local"));
   $("btnKeepRemote").addEventListener("click", () => choose("remote"));
   $("btnDeleteOnline").addEventListener("click", async () => {
-    if (!confirm("Supprimer la sauvegarde de ton compte ? La progression de cet appareil est conservée.")) {
+    if (
+      !confirm(
+        "Supprimer la sauvegarde de ton compte et ton classement en duel ? La progression de cet appareil est conservée.",
+      )
+    ) {
       return;
     }
     const ok = await deleteAccountProgress();

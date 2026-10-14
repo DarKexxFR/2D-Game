@@ -1,7 +1,7 @@
 // Duel en ligne : deux navigateurs, un salon avec code (Supabase Realtime simulé ici),
 // puis connexion directe (WebRTC) ou, à défaut, messages relayés par Supabase. Chacun joue sa
 // partie de survie et voit celle de l'adversaire ; le gagnant empoche l'XP et l'or des deux.
-import { expect, test } from "./fixtures.js";
+import { expect, routeSupabase, test } from "./fixtures.js";
 
 // Chromium masque les adresses locales derrière des noms « .local » : inutile entre deux onglets
 // de la même machine, et parfois impossible à résoudre dans la CI.
@@ -111,8 +111,23 @@ async function openDuelMenu(page, realtime, pseudo, net = {}) {
   await expect(page.locator("#duelMenu")).toBeVisible();
 }
 
-/** Crée la partie chez l'hôte, la rejoint chez l'invité ; renvoie la page de l'invité. */
-async function connect(page, browser, net = {}, realtime = fakeRealtime()) {
+/** Session de connexion du faux Supabase (voir fixtures.js) enregistrée avant le chargement. */
+function logIn(page, email) {
+  const session = {
+    accessToken: `tok-${email}`,
+    refreshToken: `ref-${email}`,
+    expiresAt: Date.now() + 3_600_000,
+    user: { id: `id-${email}`, email, provider: "email" },
+  };
+  return page.addInitScript((s) => localStorage.setItem("survivor_auth", JSON.stringify(s)), session);
+}
+
+/**
+ * Crée la partie chez l'hôte, la rejoint chez l'invité. `accounts` = [adresse de l'hôte, de l'invité]
+ * (null = non connecté), avec le faux Supabase `supabase` partagé par les deux pages.
+ */
+async function connect(page, browser, net = {}, realtime = fakeRealtime(), { supabase, accounts = [] } = {}) {
+  if (accounts[0]) await logIn(page, accounts[0]);
   await openDuelMenu(page, realtime, "Hote", net);
   await page.locator("#btnDuelHost").click();
   await expect(page.locator("#duelRoomCode")).toHaveText(/^[A-Z2-9]{4}$/);
@@ -121,7 +136,9 @@ async function connect(page, browser, net = {}, realtime = fakeRealtime()) {
   const guest = await (await browser.newContext()).newPage();
   const errors = [];
   guest.on("pageerror", (e) => errors.push(e.message));
-  await guest.route("https://*.supabase.co/rest/**", (r) => r.fulfill({ status: 200, body: "[]" }));
+  if (supabase) await routeSupabase(guest, supabase);
+  else await guest.route("https://*.supabase.co/rest/**", (r) => r.fulfill({ status: 200, body: "[]" }));
+  if (accounts[1]) await logIn(guest, accounts[1]);
   await openDuelMenu(guest, realtime, "Invite", net);
   await guest.locator("#duelCode").fill(code.toLowerCase()); // le code est remis en majuscules
   await guest.locator("#btnDuelJoin").click();
@@ -166,6 +183,10 @@ for (const [mode, net] of [
     await expect(page.locator("#versusScore")).toContainText("+42 or");
     expect((await accountGold(page)) - gold).toBeGreaterThanOrEqual(42);
     await expect(guest.locator("#versusScore")).toHaveText("Hote empoche tes gains.");
+    // Personne n'est connecté : duel non classé
+    await expect(page.locator("#versusElo")).toHaveText(
+      "Duel non classé : connecte-toi pour gagner des points ELO.",
+    );
 
     // Revanche demandée par l'invité : tout recommence chez les deux
     await guest.locator("#btnVersusReplay").click();
@@ -225,6 +246,44 @@ test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imp
   await expect(page.locator("#upgradeMenu")).toBeHidden(); // l'adversaire continue
   await expect(guest.locator("#upgradeMenu")).toBeHidden({ timeout: 15_000 });
   expect(await run(guest, ({ state }) => Object.keys(state.player.inventory).length)).toBe(1);
+});
+
+test("duel en ligne classé : ELO des deux joueurs connectés, abandon = défaite, onglet DUEL ELO", async ({
+  page,
+  browser,
+  isMobile,
+  supabase,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const accounts = ["hote@test.fr", "invite@test.fr"];
+  const { guest } = await connect(page, browser, {}, fakeRealtime(), { supabase, accounts });
+
+  // L'invité meurt : les deux déclarent le résultat, le serveur compte le duel
+  await kill(guest);
+  await expect(page.locator("#versusElo")).toHaveText("ELO : 1016 (+16)");
+  await expect(guest.locator("#versusElo")).toHaveText("ELO : 984 (-16)");
+
+  // Revanche, puis l'hôte quitte en pleine partie : défaite pour lui, victoire pour l'invité
+  await guest.locator("#btnVersusReplay").click();
+  for (const p of [page, guest]) {
+    await expect(p.locator("#duelRival")).toBeVisible();
+    await expect(p.locator("#versusElo")).toHaveText("");
+    await protect(p);
+  }
+  page.once("dialog", (d) => d.accept());
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#mainMenu")).toBeVisible();
+  await expect(guest.locator("#versusWinner")).toHaveText("TU GAGNES !");
+  await expect(guest.locator("#versusElo")).toHaveText(/^ELO : 1001 \(\+17\)$/);
+
+  // Classement : onglet DUEL ELO, avec sa propre place
+  await page.locator("#btnLeaderboard").click();
+  await page.locator("#lbTabDuel").click();
+  await expect(page.locator("#lbContent tr")).toHaveCount(2);
+  await expect(page.locator("#lbContent tr").first()).toContainText("Invite");
+  await expect(page.locator("#lbContent tr").first()).toContainText("1001");
+  await expect(page.locator("#lbMe")).toHaveText("Ta place : #2 · 999 ELO · 1 V / 1 D");
 });
 
 test("duel en ligne : un code inconnu est signalé", async ({ page }) => {

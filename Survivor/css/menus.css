@@ -396,7 +396,8 @@
 /* --- Onglets du classement --- */
 .lb-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 10px;
   margin-bottom: 15px;
 }
@@ -409,6 +410,15 @@
 .lb-tab.active {
   background: linear-gradient(180deg, #ffd700, #aa8800);
   color: #000;
+}
+.lb-me {
+  min-height: 1.2em;
+  margin: 10px 0 12px;
+  color: #ffd700;
+  font-size: 12px;
+}
+.lb-me:empty {
+  display: none;
 }
 .lb-scroll {
   max-height: 50vh;

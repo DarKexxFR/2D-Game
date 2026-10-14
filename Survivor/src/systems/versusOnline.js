@@ -11,13 +11,13 @@ import { runStats, versus } from "./versus.js";
 
 const EMPTY = { w: 1, l: 1, h: 0, m: 1, k: 0, s: 0, x: 0, g: 0 };
 
-/** Adversaire : dernières statistiques reçues, et bilan final quand il est mort. */
-export const rival = { stats: null, alive: true, final: null, left: false };
+/** Adversaire : dernières statistiques reçues, bilan final quand il est mort, connecté à un compte (duel classé). */
+export const rival = { stats: null, alive: true, final: null, left: false, ranked: false };
 let mine = null; // bilan de sa propre partie à sa mort
 let lastSend = 0;
 
 export function resetOnline() {
-  Object.assign(rival, { stats: null, alive: true, final: null, left: false });
+  Object.assign(rival, { stats: null, alive: true, final: null, left: false, ranked: false });
   mine = null;
   lastSend = 0;
 }
@@ -35,7 +35,8 @@ export function netTick(now) {
 /** Message reçu de l'adversaire. */
 export function onNetMessage(msg) {
   if (!msg || !versus.online) return;
-  if (msg.t === "st" && rival.alive) rival.stats = msg;
+  if (msg.t === "ranked") rival.ranked = !!msg.on;
+  else if (msg.t === "st" && rival.alive) rival.stats = msg;
   else if (msg.t === "dead" && rival.alive) {
     rival.alive = false;
     rival.final = rival.stats = msg;
