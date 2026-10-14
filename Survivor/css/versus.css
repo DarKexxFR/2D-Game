@@ -456,3 +456,25 @@ body.versus #controls {
 .vs-spell-label {
   color: #00ff88;
 }
+/* Duel en ligne : la partie de l'adversaire occupe le coin haut droit, le combo passe dessous */
+body.duel-online #comboDisplay {
+  top: 230px;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  /* Petit écran : la barre du boss se décale à gauche de l'aperçu de l'adversaire */
+  body.duel-online #bossBar {
+    left: 4vw;
+    transform: none;
+    width: 58vw;
+  }
+  body.duel-online #comboDisplay {
+    top: calc(330px + env(safe-area-inset-top));
+  }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  body.duel-online #comboDisplay {
+    top: calc(140px + env(safe-area-inset-top));
+    right: auto;
+    left: 20px;
+  }
+}

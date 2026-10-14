@@ -192,6 +192,11 @@ export const VERSUS = {
 export const NET = {
   codeLength: 4,
   statsPerSecond: 4, // statistiques envoyées à l'adversaire
+  // Aperçu en direct : scène (vaisseau, ennemis proches) envoyée à l'adversaire, qui la redessine en petit
+  viewPerSecond: 8, // connexion directe
+  viewPerSecondRelay: 4, // relais par Supabase (plus lent, quota de messages)
+  viewEnemies: 80, // ennemis envoyés au plus (les plus proches)
+  viewRange: 900, // distance (unités du monde) au-delà de laquelle un ennemi n'est pas envoyé
   p2pTimeoutMs: 7000, // au-delà, on passe par Supabase
   joinTimeoutMs: 8000, // pas de réponse de l'hôte : code inconnu
   lostAfterMs: 6000, // plus aucun message de l'adversaire : partie interrompue

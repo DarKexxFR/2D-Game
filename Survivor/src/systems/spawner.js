@@ -171,6 +171,8 @@ export function eliteChance(wave) {
   return Math.min(ELITE.maxChance, (wave - ELITE.fromWave + 1) * ELITE.chancePerWave);
 }
 
+let enemyIds = 0; // identifiant de chaque ennemi (suivi d'un ennemi dans l'aperçu du duel en ligne)
+
 /** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel). */
 export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElite = false) {
   const t = ENEMY_TYPES[type];
@@ -193,6 +195,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
   const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health");
   const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
+    id: ++enemyIds,
     x,
     y,
     type,

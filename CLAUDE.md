@@ -122,7 +122,9 @@ Principes :
     Supabase Realtime minimal, sans bibliothèque) sert de salon et de signalisation, `services/netplay.js`
     ouvre une connexion directe WebRTC, ou relaie les messages par Supabase si elle échoue (`NET` dans
     `config.js`). Chaque appareil fait tourner sa partie et envoie ses statistiques (`systems/versusOnline.js`) ;
-    panneau de l'adversaire `#duelRival`. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
+    panneau de l'adversaire `#duelRival`. **Partie de l'adversaire en direct** en haut à droite
+    (`render/rivalView.js`) : chaque appareil envoie sa scène (`t: "vw"`, vaisseau + ennemis proches avec un
+    `id` stable, `NET.viewPerSecond`) et l'autre la redessine avec les vrais sprites, mouvements lissés. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
     Quitter = abandon. Pas de pause ; choix d'amélioration automatique au bout de `VERSUS.pickSeconds`.
     **Classement ELO** (`services/duelRanking.js`, onglet « DUEL ELO » du classement) : joueurs connectés
     seulement, départ 1000, K = 32. L'hôte tire un identifiant de duel (`match`) ; chaque joueur le

@@ -5,22 +5,66 @@
 
 import { NET } from "../config.js";
 import { emit } from "../core/events.js";
-import { game } from "../core/state.js";
-import { checkConnection, sendGame } from "../services/netplay.js";
+import { game, player, world } from "../core/state.js";
+import { ENEMY_TYPES } from "../data/enemies.js";
+import { checkConnection, net, sendGame } from "../services/netplay.js";
+import { currentSkin, shipLook } from "../services/skins.js";
 import { receiveAttack, receiveSpell } from "./duelAttacks.js";
 import { runStats, versus } from "./versus.js";
 
 const EMPTY = { w: 1, l: 1, h: 0, m: 1, k: 0, s: 0, x: 0, g: 0 };
 
 /** Adversaire : dernières statistiques reçues, bilan final quand il est mort, connecté à un compte (duel classé). */
-export const rival = { stats: null, alive: true, final: null, left: false, ranked: false };
+export const rival = { stats: null, alive: true, final: null, left: false, ranked: false, view: null };
 let mine = null; // bilan de sa propre partie à sa mort
 let lastSend = 0;
+let lastView = 0;
 
 export function resetOnline() {
-  Object.assign(rival, { stats: null, alive: true, final: null, left: false, ranked: false });
+  Object.assign(rival, { stats: null, alive: true, final: null, left: false, ranked: false, view: null });
   mine = null;
   lastSend = 0;
+  lastView = 0;
+}
+
+export const ENEMY_KEYS = Object.keys(ENEMY_TYPES);
+
+/**
+ * Scène de sa partie pour l'aperçu de l'adversaire : vaisseau { x, y, a (visée), h (vie), w (vague),
+ * s: [coque, couleur] } et ennemis proches [id, type, x, y, taille, drapeaux (1 élite, 2 furie), vie %].
+ */
+function sceneSnapshot() {
+  const { viewEnemies, viewRange } = NET;
+  const px = player.worldX;
+  const py = player.worldY;
+  const near = [];
+  for (const e of world.enemies) {
+    if (e.dead || Math.abs(e.x - px) > viewRange || Math.abs(e.y - py) > viewRange) continue;
+    near.push(e);
+  }
+  if (near.length > viewEnemies) {
+    near.sort((a, b) => Math.hypot(a.x - px, a.y - py) - Math.hypot(b.x - px, b.y - py));
+    near.length = viewEnemies;
+  }
+  const look = shipLook(player.hero, currentSkin());
+  return {
+    t: "vw",
+    x: Math.round(px),
+    y: Math.round(py),
+    a: Math.round((player.aimAngle || 0) * 100) / 100,
+    h: Math.round((Math.max(0, player.health) / player.maxHealth) * 100),
+    w: game.wave,
+    s: [look.hull, look.color],
+    e: near.map((e) => [
+      e.id,
+      ENEMY_KEYS.indexOf(e.type),
+      Math.round(e.x),
+      Math.round(e.y),
+      Math.round(e.size),
+      (e.elite ? 1 : 0) | (e.enraged ? 2 : 0),
+      Math.round((Math.max(0, e.health) / e.maxHealth) * 100),
+    ]),
+  };
 }
 
 /** À chaque image : envoie ses statistiques, surveille la connexion. */
@@ -28,9 +72,21 @@ export function netTick(now) {
   if (!versus.online) return;
   checkConnection(now);
   if (!versus.online || versus.winner !== null || mine) return;
+  if (now - lastView >= 1000 / (net.relay ? NET.viewPerSecondRelay : NET.viewPerSecond)) {
+    lastView = now;
+    sendGame(sceneSnapshot());
+  }
   if (now - lastSend < 1000 / NET.statsPerSecond) return;
   lastSend = now;
   sendGame({ t: "st", ...runStats() });
+}
+
+/** Scène reçue : les deux dernières sont gardées pour lisser les mouvements entre deux envois. */
+function onView(msg) {
+  if (!Array.isArray(msg.e) || !Array.isArray(msg.s)) return;
+  const now = performance.now();
+  const v = rival.view;
+  rival.view = { prev: v?.cur || msg, cur: msg, at: now, gap: v ? Math.min(500, now - v.at) : 125 };
 }
 
 /** Message reçu de l'adversaire. */
@@ -38,6 +94,7 @@ export function onNetMessage(msg) {
   if (!msg || !versus.online) return;
   if (msg.t === "ranked") rival.ranked = !!msg.on;
   else if (msg.t === "st" && rival.alive) rival.stats = msg;
+  else if (msg.t === "vw" && rival.alive) onView(msg);
   else if (msg.t === "atk" && rival.alive) receiveAttack(msg.n, msg.e);
   else if (msg.t === "hex" && rival.alive) receiveSpell(msg.s);
   else if (msg.t === "dead" && rival.alive) {

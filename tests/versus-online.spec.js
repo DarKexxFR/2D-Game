@@ -264,6 +264,33 @@ test("duel en ligne : la jauge d'attaque pleine envoie des ennemis chez l'advers
   await expect(page.locator("#duelSpellLabel")).toHaveText("TON SORT");
 });
 
+test("duel en ligne : la partie de l'adversaire est visible en direct en haut à droite", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const { guest } = await connect(page, browser);
+  // L'hôte fait apparaître un boss : l'invité doit le recevoir dans l'aperçu
+  await page.evaluate(async () => {
+    const { spawnEnemy } = await import("/src/systems/spawner.js");
+    const { player } = await import("/src/core/state.js");
+    spawnEnemy("boss", player.worldX + 200, player.worldY);
+  });
+  const view = () =>
+    run(guest, ({ online }) => {
+      const v = online.rival.view?.cur;
+      return v && { boss: v.e.some((e) => e[1] === online.ENEMY_KEYS.indexOf("boss")), wave: v.w, ship: v.s };
+    });
+  await expect.poll(async () => (await view())?.boss).toBe(true);
+  const host = await run(page, ({ state }) => [Math.round(state.player.worldX), state.game.wave]);
+  const v = await run(guest, ({ online }) => [online.rival.view.cur.x, online.rival.view.cur.w]);
+  expect(Math.abs(v[0] - host[0])).toBeLessThan(200);
+  expect(v[1]).toBe(host[1]);
+  await expect(guest.locator("body")).toHaveClass(/duel-online/);
+});
+
 test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imparti", async ({
   page,
   browser,

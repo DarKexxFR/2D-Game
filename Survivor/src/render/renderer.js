@@ -8,6 +8,8 @@ import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.j
 import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 import { renderSplit } from "./versus.js";
+import { drawRivalView } from "./rivalView.js";
+import { rival } from "../systems/versusOnline.js";
 import { versus } from "../systems/versus.js";
 
 export { renderMenuBackground } from "./menuScene.js";
@@ -18,6 +20,7 @@ export function render() {
   ctx.clearRect(0, 0, view.width, view.height);
   if (versus.split) renderSplit(now, drawScene);
   else drawScene(now);
+  if (versus.online && rival.view && versus.winner === null) drawRivalView(now);
 }
 
 /** Une partie, dans la vue courante (l'écran entier, ou sa moitié en duel sur un écran). */
