@@ -108,6 +108,9 @@ Principes :
     marqués `sent` ; un boss tué envoie des élites) et une jauge de sort. Pleine, celle-ci tire au hasard
     un sort (ralenti, brouillard, tir coupé) que le joueur lance à la main (J1 F, J2 Ctrl / 2, en ligne
     l'action `spell` = F ou le bouton SORT). Sort subi = `game.hex`, qui s'estompe tout seul.
+  - **Récap de fin** (`ui/duelRecap.js`, canvas `#versusChart`) : courbe de vie des deux joueurs (un point par
+    seconde dans `game.duelLog`, celle de l'adversaire en ligne dans `rival.log` à partir de ses statistiques)
+    avec les attaques (▲, ◆ élites) et sorts (●) envoyés, plus « Attaques envoyées » / « Sorts lancés » au tableau.
   - **Sur un écran** : écran scindé (côte à côte, ou J1 en bas en portrait). Le moteur n'a qu'un état
     global : la partie de l'autre joueur est rangée de côté et échangée le temps de la faire avancer ou de
     la dessiner (`withRun(i, fn)` : échange `game`, `player`, `world`, `pet`, `camera`, `mysteryBox`,

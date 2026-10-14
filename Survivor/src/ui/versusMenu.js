@@ -7,6 +7,7 @@ import { fighterName, versus, withRun } from "../systems/versus.js";
 import { SPELLS, attackProgress, spellProgress } from "../systems/duelAttacks.js";
 import { rival } from "../systems/versusOnline.js";
 import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
+import { drawDuelRecap } from "./duelRecap.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 import { showVersusTouch } from "./versusTouch.js";
@@ -57,13 +58,15 @@ const ROWS = [
   ["Score", "s"],
   ["XP", "x"],
   ["Or", "g"],
+  ["Attaques envoyées", "a"],
+  ["Sorts lancés", "p"],
 ];
 
 /**
  * Fin du duel : `runs` = bilans des deux parties (0 = J1, ou soi-même en ligne).
  * `prize` = { xp, gold } empochés par le gagnant.
  */
-export function showVersusOver({ winner, runs }, prize) {
+export function showVersusOver({ winner, runs, logs }, prize) {
   showVersusHud(false);
   const title = versus.online
     ? winner === 0
@@ -86,7 +89,7 @@ export function showVersusOver({ winner, runs }, prize) {
   for (const [label, key] of ROWS) {
     const tr = el("tr");
     tr.append(el("td", "", label));
-    for (const i of [0, 1]) tr.append(el("td", "", String(runs[i][key])));
+    for (const i of [0, 1]) tr.append(el("td", "", String(runs[i][key] ?? 0)));
     table.append(tr);
   }
 
@@ -99,6 +102,8 @@ export function showVersusOver({ winner, runs }, prize) {
   setText("versusScore", text);
   setVisible("btnVersusReplay", !rival.left || !versus.online);
   showScreen("versusOver");
+  setVisible("versusChart", !!logs);
+  if (logs) drawDuelRecap($("versusChart"), logs); // une fois l'écran visible (taille connue)
 }
 
 /** Duel en ligne : ligne du classement ELO sur l'écran de fin (vide = rien à afficher). */

@@ -49,7 +49,18 @@ export function spellProgress() {
   return game.spellReady ? 1 : Math.min(1, (game.duelSpell || 0) / VERSUS.spell.killsPerSpell);
 }
 
+/** Temps du récap : ms depuis le début du duel. */
+export function duelTime() {
+  return performance.now() - versus.startedAt;
+}
+
+function mark(kind) {
+  game.duelLog.marks.push({ t: duelTime(), k: kind });
+}
+
 function launch(count, elite) {
+  game.duelLog.sent++;
+  mark(elite ? "elite" : "atk");
   addFloatingText(player.worldX, player.worldY - 60, "ATTAQUE ENVOYÉE !", "#aa66ff", 18, 80);
   if (versus.split) {
     const from = versus.current;
@@ -73,6 +84,8 @@ export function castSpell() {
   const type = game.spellReady;
   if (!type || !versus.active || versus.winner !== null || game.over) return;
   game.spellReady = null;
+  game.duelLog.cast++;
+  mark("hex");
   addFloatingText(player.worldX, player.worldY - 60, `${SPELLS[type]} ENVOYÉ !`, "#00ff88", 18, 80);
   if (versus.split) {
     const from = versus.current;
@@ -87,7 +100,21 @@ export function receiveSpell(type, from = 1) {
   emit("spellReceived", { type, name: SPELLS[type], from });
 }
 
-/** À chaque tick de la partie : le sort subi s'estompe. */
+/** À chaque tick de la partie : le sort subi s'estompe ; en duel, la vie est notée chaque seconde. */
 export function updateHex() {
   if (game.hex && --game.hex.ticks <= 0) game.hex = null;
+  if (versus.active) logHealth(game.duelLog, healthPct());
+}
+
+/** Vie du joueur de la partie chargée, en %. */
+export function healthPct() {
+  return (Math.max(0, player.health) / player.maxHealth) * 100;
+}
+
+/** Note la vie (en %) dans un récap, au plus une fois par seconde (sauf `force` : point final). */
+export function logHealth(log, pct, force = false) {
+  const t = duelTime();
+  if (!force && t - log.lastT < 1000) return;
+  log.lastT = t;
+  log.hp.push({ t, h: Math.round(pct) });
 }

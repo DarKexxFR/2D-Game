@@ -9,19 +9,36 @@ import { game, player, world } from "../core/state.js";
 import { ENEMY_TYPES } from "../data/enemies.js";
 import { checkConnection, net, sendGame } from "../services/netplay.js";
 import { currentSkin, shipLook } from "../services/skins.js";
-import { receiveAttack, receiveSpell } from "./duelAttacks.js";
+import { duelTime, healthPct, logHealth, receiveAttack, receiveSpell } from "./duelAttacks.js";
 import { runStats, versus } from "./versus.js";
 
-const EMPTY = { w: 1, l: 1, h: 0, m: 1, k: 0, s: 0, x: 0, g: 0 };
+const EMPTY = { w: 1, l: 1, h: 0, m: 1, k: 0, s: 0, x: 0, g: 0, a: 0, p: 0 };
+const newLog = () => ({ hp: [], marks: [], sent: 0, cast: 0, lastT: -1e9 });
 
 /** Adversaire : dernières statistiques reçues, bilan final quand il est mort, connecté à un compte (duel classé). */
-export const rival = { stats: null, alive: true, final: null, left: false, ranked: false, view: null };
+export const rival = {
+  stats: null,
+  alive: true,
+  final: null,
+  left: false,
+  ranked: false,
+  view: null,
+  log: newLog(), // récap de fin : sa vie (reçue avec ses statistiques), ses attaques et sorts reçus ici
+};
 let mine = null; // bilan de sa propre partie à sa mort
 let lastSend = 0;
 let lastView = 0;
 
 export function resetOnline() {
-  Object.assign(rival, { stats: null, alive: true, final: null, left: false, ranked: false, view: null });
+  Object.assign(rival, {
+    stats: null,
+    alive: true,
+    final: null,
+    left: false,
+    ranked: false,
+    view: null,
+    log: newLog(),
+  });
   mine = null;
   lastSend = 0;
   lastView = 0;
@@ -93,11 +110,17 @@ function onView(msg) {
 export function onNetMessage(msg) {
   if (!msg || !versus.online) return;
   if (msg.t === "ranked") rival.ranked = !!msg.on;
-  else if (msg.t === "st" && rival.alive) rival.stats = msg;
-  else if (msg.t === "vw" && rival.alive) onView(msg);
-  else if (msg.t === "atk" && rival.alive) receiveAttack(msg.n, msg.e);
-  else if (msg.t === "hex" && rival.alive) receiveSpell(msg.s);
-  else if (msg.t === "dead" && rival.alive) {
+  else if (msg.t === "st" && rival.alive) {
+    rival.stats = msg;
+    if (msg.m > 0) logHealth(rival.log, (msg.h / msg.m) * 100);
+  } else if (msg.t === "vw" && rival.alive) onView(msg);
+  else if (msg.t === "atk" && rival.alive) {
+    rival.log.marks.push({ t: duelTime(), k: msg.e ? "elite" : "atk" });
+    receiveAttack(msg.n, msg.e);
+  } else if (msg.t === "hex" && rival.alive) {
+    rival.log.marks.push({ t: duelTime(), k: "hex" });
+    receiveSpell(msg.s);
+  } else if (msg.t === "dead" && rival.alive) {
     rival.alive = false;
     rival.final = rival.stats = msg;
     decide();
@@ -134,7 +157,13 @@ function decide() {
     game.running = false;
     game.over = true;
   }
-  emit("versusOver", { winner, runs: [mine || runStats(), rival.final || rival.stats || EMPTY] });
+  logHealth(game.duelLog, mine ? 0 : healthPct(), true); // points finals des courbes
+  if (!rival.alive) logHealth(rival.log, 0, true);
+  emit("versusOver", {
+    winner,
+    runs: [mine || runStats(), rival.final || rival.stats || EMPTY],
+    logs: [game.duelLog, rival.log],
+  });
 }
 
 function beats(a, b) {

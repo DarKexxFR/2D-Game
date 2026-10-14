@@ -183,6 +183,9 @@ for (const [mode, net] of [
     await expect(page.locator("#versusScore")).toContainText("+42 or");
     expect((await accountGold(page)) - gold).toBeGreaterThanOrEqual(42);
     await expect(guest.locator("#versusScore")).toHaveText("Hote empoche tes gains.");
+    // Récap : courbes de vie des deux joueurs (la sienne et celle reçue de l'adversaire)
+    for (const p of [page, guest]) await expect(p.locator("#versusChart")).toBeVisible();
+    await expect(page.locator("#versusTable tr", { hasText: "Attaques envoyées" })).toBeVisible();
     // Personne n'est connecté : duel non classé
     await expect(page.locator("#versusElo")).toHaveText(
       "Duel non classé : connecte-toi pour gagner des points ELO.",

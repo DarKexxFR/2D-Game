@@ -62,6 +62,8 @@ export function resetGame() {
     duelSpell: 0, // duel : éliminations vers le prochain sort
     spellReady: null, // duel : sort prêt à lancer ("slow", "fog", "jam")
     hex: null, // duel : sort subi { type, ticks }
+    // duel : récap de fin (vie % chaque seconde, attaques et sorts envoyés) ; t en ms depuis le début du duel
+    duelLog: { hp: [], marks: [], sent: 0, cast: 0, lastT: -1e9 },
   });
   for (const list of Object.values(world)) list.length = 0;
 }
