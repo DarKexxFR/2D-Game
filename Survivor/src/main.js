@@ -71,8 +71,10 @@ import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
+import { castSpell, chargeAttack, updateHex } from "./systems/duelAttacks.js";
 import {
   VERSUS_KEYS,
+  fighterName,
   splitBanner,
   splitDeath,
   startOnlineVersus,
@@ -80,6 +82,7 @@ import {
   stopVersus,
   updateSplit,
   useSkill,
+  useSpell,
   versus,
 } from "./systems/versus.js";
 import {
@@ -406,6 +409,7 @@ function update() {
 
 /** Un tick de la partie chargée. */
 function simulate() {
+  updateHex();
   updateSpawning();
   updatePlayer();
   updateTrail();
@@ -528,11 +532,32 @@ function init() {
     onLost: onNetLost,
   });
   on("versusOver", onVersusOver);
+  on("kill", chargeAttack);
+  on("attackReceived", ({ count, elite, from }) => {
+    const text = `ATTAQUE DE ${fighterName(from)} ! +${count} ${elite ? "ÉLITES" : "ENNEMIS"}`;
+    if (versus.split) splitBanner(text, "#aa66ff");
+    else showBossWarning(text);
+    vibrate(80);
+  });
+  on("spellReceived", ({ name, from }) => {
+    const text = `${name} ! (SORT DE ${fighterName(from)})`;
+    if (versus.split) splitBanner(text, "#00ff88");
+    else showBossWarning(text);
+    vibrate([60, 40, 60]);
+  });
+  onAction("spell", () => versus.online && game.running && !game.paused && castSpell());
+  $("btnTouchSpell").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    if (versus.online && game.running && !game.paused) castSpell();
+  });
   // Écran scindé : compétence de chaque joueur (J1 E / R, J2 MAJ / 1)
   document.addEventListener("keydown", (e) => {
     if (!versus.split || e.repeat) return;
     const key = e.key.toLowerCase();
-    VERSUS_KEYS.forEach((keys, i) => keys.skill.includes(key) && useSkill(i));
+    VERSUS_KEYS.forEach((keys, i) => {
+      if (keys.skill.includes(key)) useSkill(i);
+      if (keys.spell.includes(key)) useSpell(i);
+    });
   });
   on("playerDied", () => {
     if (versus.split) return splitDeath(versus.current);

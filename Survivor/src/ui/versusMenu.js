@@ -1,10 +1,13 @@
 // Duel : panneau de l'adversaire en ligne, boutons tactiles de l'écran scindé, écran du vainqueur.
 
 import { VERSUS } from "../config.js";
-import { player } from "../core/state.js";
+import { bindingsOf, keyLabel } from "../core/input.js";
+import { game, player } from "../core/state.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
+import { SPELLS, attackProgress, spellProgress } from "../systems/duelAttacks.js";
 import { rival } from "../systems/versusOnline.js";
 import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
+import { drawDuelRecap } from "./duelRecap.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 import { showVersusTouch } from "./versusTouch.js";
@@ -18,18 +21,29 @@ export function initVersusMenu({ onReplay, onMenu }) {
 export function showVersusHud(visible) {
   const split = visible && versus.split;
   document.body.classList.toggle("versus", split); // masque l'aide des touches du mode survie
+  document.body.classList.toggle("duel-live", visible && !!versus.online); // aperçu de l'adversaire en haut à droite
   showVersusTouch(split);
   if (split) showTouchControls(false);
   setVisible("duelRival", visible && !!versus.online);
+  if (isTouchDevice) setVisible("btnTouchSpell", visible && !!versus.online);
 }
 
 /** À chaque image : panneau de l'adversaire (en ligne) ou boutons de compétence (écran scindé). */
 export function updateVersusHud() {
   if (versus.split) {
     if (isTouchDevice)
-      for (const i of [0, 1]) withRun(i, () => setClass(`vsSkill${i + 1}`, "ready", player.isUltReady));
+      for (const i of [0, 1])
+        withRun(i, () => {
+          setClass(`vsSkill${i + 1}`, "ready", player.isUltReady);
+          setClass(`vsSpell${i + 1}`, "ready", !!game.spellReady);
+        });
     return;
   }
+  setWidth("duelAttack", attackProgress());
+  setWidth("duelSpell", spellProgress());
+  const key = isTouchDevice ? "BOUTON SORT" : keyLabel(bindingsOf("spell")[0]);
+  setText("duelSpellLabel", game.spellReady ? `SORT PRÊT : ${SPELLS[game.spellReady]} (${key})` : "TON SORT");
+  setClass("btnTouchSpell", "ready", !!game.spellReady);
   const s = rival.stats;
   setText("rivalName", fighterName(1));
   if (!s) return setText("rivalInfo", "En route…");
@@ -44,13 +58,15 @@ const ROWS = [
   ["Score", "s"],
   ["XP", "x"],
   ["Or", "g"],
+  ["Attaques envoyées", "a"],
+  ["Sorts lancés", "p"],
 ];
 
 /**
  * Fin du duel : `runs` = bilans des deux parties (0 = J1, ou soi-même en ligne).
  * `prize` = { xp, gold } empochés par le gagnant.
  */
-export function showVersusOver({ winner, runs }, prize) {
+export function showVersusOver({ winner, runs, logs }, prize) {
   showVersusHud(false);
   const title = versus.online
     ? winner === 0
@@ -73,7 +89,7 @@ export function showVersusOver({ winner, runs }, prize) {
   for (const [label, key] of ROWS) {
     const tr = el("tr");
     tr.append(el("td", "", label));
-    for (const i of [0, 1]) tr.append(el("td", "", String(runs[i][key])));
+    for (const i of [0, 1]) tr.append(el("td", "", String(runs[i][key] ?? 0)));
     table.append(tr);
   }
 
@@ -86,6 +102,8 @@ export function showVersusOver({ winner, runs }, prize) {
   setText("versusScore", text);
   setVisible("btnVersusReplay", !rival.left || !versus.online);
   showScreen("versusOver");
+  setVisible("versusChart", !!logs);
+  if (logs) drawDuelRecap($("versusChart"), logs); // une fois l'écran visible (taille connue)
 }
 
 /** Duel en ligne : ligne du classement ELO sur l'écran de fin (vide = rien à afficher). */

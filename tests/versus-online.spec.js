@@ -184,6 +184,9 @@ for (const [mode, net] of [
     await expect(page.locator("#versusScore")).toContainText("+42 or");
     expect((await accountGold(page)) - gold).toBeGreaterThanOrEqual(42);
     await expect(guest.locator("#versusScore")).toHaveText("Hote empoche tes gains.");
+    // Récap : courbes de vie des deux joueurs (la sienne et celle reçue de l'adversaire)
+    for (const p of [page, guest]) await expect(p.locator("#versusChart")).toBeVisible();
+    await expect(page.locator("#versusTable tr", { hasText: "Attaques envoyées" })).toBeVisible();
     // Personne n'est connecté : duel non classé
     await expect(page.locator("#versusElo")).toHaveText(
       "Duel non classé : connecte-toi pour gagner des points ELO.",
@@ -228,6 +231,68 @@ test("duel en ligne : deux morts qui se croisent, le meilleur score gagne chez l
   for (const p of [page, guest]) await expect(p.locator("#versusOver")).toBeVisible();
   await expect(guest.locator("#versusWinner")).toHaveText("TU GAGNES !");
   await expect(page.locator("#versusWinner")).toHaveText("Invite GAGNE !");
+});
+
+test("duel en ligne : la jauge d'attaque pleine envoie des ennemis chez l'adversaire", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const { guest } = await connect(page, browser);
+  await run(guest, ({ state }) => (state.player.autoShoot = false));
+  const mobs = await run(page, ({ config, state }) => {
+    state.game.duelAttack = config.VERSUS.attack.killsPerSend - 1;
+    return config.VERSUS.attack.mobs;
+  });
+  await page.evaluate(async () => {
+    const { killEnemy } = await import("/src/systems/combat.js");
+    const { spawnEnemy } = await import("/src/systems/spawner.js");
+    const { world } = await import("/src/core/state.js");
+    spawnEnemy("normal", 0, 0);
+    killEnemy(world.enemies[world.enemies.length - 1]);
+  });
+  await expect
+    .poll(() => run(guest, ({ state }) => state.world.enemies.filter((e) => e.sent).length))
+    .toBe(mobs);
+  await expect(guest.locator("#bossWarning")).toHaveText(`ATTAQUE DE Hote ! +${mobs} ENNEMIS`);
+  expect(await run(page, ({ state }) => state.world.enemies.some((e) => e.sent))).toBe(false);
+
+  // Sort : prêt chez l'hôte (touche F), il tombe sur l'invité
+  await run(page, ({ state }) => (state.game.spellReady = "fog"));
+  await expect(page.locator("#duelSpellLabel")).toHaveText("SORT PRÊT : BROUILLARD (F)");
+  await page.keyboard.press("f");
+  await expect.poll(() => run(guest, ({ state }) => state.game.hex?.type)).toBe("fog");
+  await expect(guest.locator("#bossWarning")).toHaveText("BROUILLARD ! (SORT DE Hote)");
+  await expect(page.locator("#duelSpellLabel")).toHaveText("TON SORT");
+});
+
+test("duel en ligne : la partie de l'adversaire est visible en direct en haut à droite", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const { guest } = await connect(page, browser);
+  // L'hôte fait apparaître un boss : l'invité doit le recevoir dans l'aperçu
+  await page.evaluate(async () => {
+    const { spawnEnemy } = await import("/src/systems/spawner.js");
+    const { player } = await import("/src/core/state.js");
+    spawnEnemy("boss", player.worldX + 200, player.worldY);
+  });
+  const view = () =>
+    run(guest, ({ online }) => {
+      const v = online.rival.view?.cur;
+      return v && { boss: v.e.some((e) => e[1] === online.ENEMY_KEYS.indexOf("boss")), wave: v.w, ship: v.s };
+    });
+  await expect.poll(async () => (await view())?.boss).toBe(true);
+  const host = await run(page, ({ state }) => [Math.round(state.player.worldX), state.game.wave]);
+  const v = await run(guest, ({ online }) => [online.rival.view.cur.x, online.rival.view.cur.w]);
+  expect(Math.abs(v[0] - host[0])).toBeLessThan(200);
+  expect(v[1]).toBe(host[1]);
+  await expect(guest.locator("body")).toHaveClass(/duel-live/);
 });
 
 test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imparti", async ({

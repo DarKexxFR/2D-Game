@@ -80,7 +80,7 @@ input {
   align-items: center;
   grid-template-areas:
     "box ult"
-    ". dash";
+    "spell dash";
   gap: 14px;
 }
 .touch-dash {

@@ -109,6 +109,14 @@ Principes :
   (règles normales, équipement et talents du compte) ; le premier mort perd et le gagnant empoche l'XP et
   l'or des **deux** parties (choix du propriétaire). Pas d'offre « revivre » en duel. Réglages : `VERSUS`
   dans `config.js`.
+  - **Attaques** (`systems/duelAttacks.js`, réglages `VERSUS.attack` / `VERSUS.spell`, choix du propriétaire :
+    les deux) : chaque élimination remplit une jauge d'attaque (pleine = ennemis envoyés chez l'adversaire,
+    marqués `sent` ; un boss tué envoie des élites) et une jauge de sort. Pleine, celle-ci tire au hasard
+    un sort (ralenti, brouillard, tir coupé) que le joueur lance à la main (J1 F, J2 Ctrl / 2, en ligne
+    l'action `spell` = F ou le bouton SORT). Sort subi = `game.hex`, qui s'estompe tout seul.
+  - **Récap de fin** (`ui/duelRecap.js`, canvas `#versusChart`) : courbe de vie des deux joueurs (un point par
+    seconde dans `game.duelLog`, celle de l'adversaire en ligne dans `rival.log` à partir de ses statistiques)
+    avec les attaques (▲, ◆ élites) et sorts (●) envoyés, plus « Attaques envoyées » / « Sorts lancés » au tableau.
   - **Sur un écran** : écran scindé (côte à côte, ou J1 en bas en portrait). Le moteur n'a qu'un état
     global : la partie de l'autre joueur est rangée de côté et échangée le temps de la faire avancer ou de
     la dessiner (`withRun(i, fn)` : échange `game`, `player`, `world`, `pet`, `camera`, `mysteryBox`,
@@ -123,7 +131,9 @@ Principes :
     Supabase Realtime minimal, sans bibliothèque) sert de salon et de signalisation, `services/netplay.js`
     ouvre une connexion directe WebRTC, ou relaie les messages par Supabase si elle échoue (`NET` dans
     `config.js`). Chaque appareil fait tourner sa partie et envoie ses statistiques (`systems/versusOnline.js`) ;
-    panneau de l'adversaire `#duelRival`. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
+    panneau de l'adversaire `#duelRival`. **Partie de l'adversaire en direct** en haut à droite
+    (`render/rivalView.js`) : chaque appareil envoie sa scène (`t: "vw"`, vaisseau + ennemis proches avec un
+    `id` stable, `NET.viewPerSecond`) et l'autre la redessine avec les vrais sprites, mouvements lissés. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
     Quitter = abandon. Pas de pause ; choix d'amélioration automatique au bout de `VERSUS.pickSeconds`.
     **Classement ELO** (`services/duelRanking.js`, onglet « DUEL ELO » du classement) : joueurs connectés
     seulement, départ 1000, K = 32. L'hôte tire un identifiant de duel (`match`) ; chaque joueur le

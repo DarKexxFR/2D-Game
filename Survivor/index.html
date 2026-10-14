@@ -118,6 +118,10 @@
         <b id="rivalName">ADVERSAIRE</b>
         <span id="rivalInfo" class="rival-info"></span>
         <div class="vs-bar"><div id="rivalHealth" class="vs-fill"></div></div>
+        <small class="vs-attack">TON ATTAQUE</small>
+        <div class="vs-bar vs-attack-bar"><div id="duelAttack" class="vs-fill"></div></div>
+        <small id="duelSpellLabel" class="vs-attack vs-spell-label">TON SORT</small>
+        <div class="vs-bar vs-spell-bar"><div id="duelSpell" class="vs-fill"></div></div>
       </div>
       <div id="duelPicks">
         <div id="duelPick1" class="duel-pick duel-pick1">
@@ -144,6 +148,12 @@
         <button id="vsSkill2" class="touch-btn vs-skill vs-skill2" aria-label="Compétence du joueur 2">
           <i data-icon="bolt"></i>
         </button>
+        <button id="vsSpell1" class="touch-btn vs-spell vs-spell1" aria-label="Sort du joueur 1">
+          <i data-icon="sparkle"></i>
+        </button>
+        <button id="vsSpell2" class="touch-btn vs-spell vs-spell2" aria-label="Sort du joueur 2">
+          <i data-icon="sparkle"></i>
+        </button>
         <button id="btnVersusPause" class="touch-btn touch-pause">II</button>
       </div>
 
@@ -155,6 +165,7 @@
         <div class="touch-actions">
           <button id="btnTouchBox" class="touch-btn touch-box"><i data-icon="chest"></i></button>
           <button id="btnTouchUlt" class="touch-btn touch-ult">ULT</button>
+          <button id="btnTouchSpell" class="touch-btn touch-spell" aria-label="Sort du duel">SORT</button>
           <button id="btnTouchDash" class="touch-btn touch-dash">DASH</button>
         </div>
       </div>
@@ -166,14 +177,6 @@
             <div class="home-profile">
               <div class="home-level" title="Niveau du compte"><span id="acLvlDisplay">1</span></div>
               <div class="home-id">
-                <input
-                  type="text"
-                  id="playerPseudo"
-                  class="home-pseudo"
-                  placeholder="TON PSEUDO"
-                  maxlength="12"
-                  aria-label="Pseudo"
-                />
                 <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
                 <span id="acXpDisplay" class="home-xp">0/1000 XP</span>
               </div>
@@ -234,6 +237,14 @@
           </div>
 
           <div class="home-play">
+            <input
+              type="text"
+              id="playerPseudo"
+              class="home-pseudo"
+              placeholder="TON PSEUDO"
+              maxlength="12"
+              aria-label="Pseudo"
+            />
             <button id="btnPlay" class="play-btn"><i data-icon="play"></i> JOUER</button>
           </div>
 
@@ -651,6 +662,10 @@
       <div id="versusOver" class="menu-overlay">
         <h1 id="versusWinner">JOUEUR 1 GAGNE !</h1>
         <table id="versusTable" class="versus-table"></table>
+        <div class="duel-recap">
+          <canvas id="versusChart" aria-label="Vie des deux joueurs pendant le duel"></canvas>
+          <p class="recap-legend">Vie au fil du duel · ▲ attaque · ◆ élites · <b>●</b> sort</p>
+        </div>
         <p id="versusScore" class="menu-sub"></p>
         <p id="versusElo" class="versus-elo"></p>
         <div class="btn-grid">

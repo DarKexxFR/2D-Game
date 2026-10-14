@@ -58,6 +58,12 @@ export function resetGame() {
     slowMo: 0, // ticks de ralenti restants (mort d'un boss)
     flash: null, // flash plein écran { color, alpha }
     banner: null, // duel sur un écran : annonce dans la moitié d'écran (voir systems/versus.js)
+    duelAttack: 0, // duel : éliminations vers la prochaine attaque (voir systems/duelAttacks.js)
+    duelSpell: 0, // duel : éliminations vers le prochain sort
+    spellReady: null, // duel : sort prêt à lancer ("slow", "fog", "jam")
+    hex: null, // duel : sort subi { type, ticks }
+    // duel : récap de fin (vie % chaque seconde, attaques et sorts envoyés) ; t en ms depuis le début du duel
+    duelLog: { hp: [], marks: [], sent: 0, cast: 0, lastT: -1e9 },
   });
   for (const list of Object.values(world)) list.length = 0;
 }

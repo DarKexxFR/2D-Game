@@ -195,10 +195,14 @@ export function eliteChance(wave) {
   return Math.min(ELITE.maxChance, (wave - ELITE.fromWave + 1) * ELITE.chancePerWave);
 }
 
-export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
+let enemyIds = 0; // identifiant de chaque ennemi (suivi d'un ennemi dans l'aperçu du duel en ligne)
+
+/** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel). */
+export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElite = false) {
   const t = ENEMY_TYPES[type];
   // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
-  const elite = x === null && !t.isBoss && type !== "goblin" && Math.random() < eliteChance(game.wave);
+  const elite =
+    x === null && !t.isBoss && type !== "goblin" && (forceElite || Math.random() < eliteChance(game.wave));
   if (x === null || y === null) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
@@ -215,6 +219,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null) {
   const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health");
   const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
+    id: ++enemyIds,
     x,
     y,
     type,

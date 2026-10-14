@@ -122,6 +122,103 @@ test("duel : sans choix, la carte surlignée est prise au bout du temps imparti"
   expect(await run(page, 0, ({ state }) => Object.keys(state.player.inventory).length)).toBe(1);
 });
 
+test("duel : la jauge d'attaque pleine envoie des ennemis chez l'adversaire, un boss tué envoie des élites", async ({
+  page,
+}) => {
+  await openDuel(page);
+  const sent = () =>
+    run(page, 1, ({ state }) => state.world.enemies.filter((e) => e.sent && !e.dead).map((e) => e.elite));
+  const killOne = (boss) =>
+    run(
+      page,
+      0,
+      async (_, boss) => {
+        const { killEnemy } = await import("/src/systems/combat.js");
+        const { spawnEnemy } = await import("/src/systems/spawner.js");
+        const { world } = await import("/src/core/state.js");
+        spawnEnemy(boss ? "boss" : "normal", 0, 0);
+        killEnemy(world.enemies[world.enemies.length - 1]);
+      },
+      boss,
+    );
+  // Les deux parties figées : seuls les ennemis envoyés changent
+  await run(page, null, ({ versus }) => (versus.versus.paused = true));
+  const { mobs, killsPerSend, bossElites } = await run(page, null, ({ config }) => config.VERSUS.attack);
+  await run(page, 0, ({ state }, n) => (state.game.duelAttack = n - 2), killsPerSend);
+  await killOne(false);
+  expect(await sent()).toEqual([]); // pas encore pleine
+  await killOne(false);
+  expect(await sent()).toEqual(Array(mobs).fill(false));
+  expect(await run(page, 0, ({ state }) => state.game.duelAttack)).toBe(0);
+  expect(await run(page, 1, ({ state }) => state.game.banner.text)).toBe(
+    `ATTAQUE DE JOUEUR 1 ! +${mobs} ENNEMIS`,
+  );
+  expect(await run(page, 0, ({ state }) => state.world.enemies.some((e) => e.sent))).toBe(false);
+
+  await killOne(true);
+  const after = await sent();
+  expect(after.filter(Boolean)).toHaveLength(bossElites);
+});
+
+test("duel : un sort prêt se lance à la main et gêne l'adversaire (ralenti, tir coupé, brouillard)", async ({
+  page,
+  isMobile,
+}) => {
+  await openDuel(page);
+  const hex = () => run(page, 1, ({ state }) => state.game.hex?.type ?? null);
+  // La jauge de sort se remplit avec les éliminations
+  const per = await run(page, null, ({ config }) => config.VERSUS.spell.killsPerSpell);
+  await run(
+    page,
+    0,
+    async ({ state }, per) => {
+      const { killEnemy } = await import("/src/systems/combat.js");
+      const { spawnEnemy } = await import("/src/systems/spawner.js");
+      state.game.duelAttack = -1e9; // pas d'envoi d'ennemis ici
+      state.game.duelSpell = per - 1;
+      spawnEnemy("normal", 0, 0);
+      killEnemy(state.world.enemies[state.world.enemies.length - 1]);
+    },
+    per,
+  );
+  expect(await run(page, 0, ({ state }) => ["slow", "fog", "jam"].includes(state.game.spellReady))).toBe(
+    true,
+  );
+
+  for (const type of ["slow", "jam", "fog"]) {
+    await run(page, 0, ({ state }, type) => (state.game.spellReady = type), type);
+    if (isMobile) await page.locator("#vsSpell1").dispatchEvent("pointerdown");
+    else await page.keyboard.press("f");
+    expect(await hex()).toBe(type);
+    expect(await run(page, 0, ({ state }) => [state.game.spellReady, state.game.hex])).toEqual([null, null]);
+  }
+  await expect
+    .poll(() => run(page, 1, ({ state }) => state.game.banner.text))
+    .toBe("BROUILLARD ! (SORT DE JOUEUR 1)");
+
+  // Ralenti : le joueur 2 avance moins vite ; tir coupé : son arme ne tire plus
+  const effects = await run(page, 1, async ({ state }) => {
+    const { shoot } = await import("/src/systems/combat.js");
+    const { updatePlayer } = await import("/src/systems/player.js");
+    const p = state.player;
+    state.game.hex = { type: "slow", ticks: 100 };
+    updatePlayer();
+    const slow = p.speed / p.baseSpeed;
+    state.game.hex = { type: "jam", ticks: 100 };
+    p.lastAttack = -1e9;
+    const before = state.world.projectiles?.length ?? 0;
+    shoot();
+    const jammed = (state.world.projectiles?.length ?? 0) === before && p.lastAttack === -1e9;
+    return { slow, jammed };
+  });
+  expect(effects.slow).toBeLessThan(0.7);
+  expect(effects.jammed).toBe(true);
+
+  // Le sort s'estompe tout seul
+  await run(page, 1, ({ state }) => (state.game.hex = { type: "fog", ticks: 3 }));
+  await expect.poll(hex).toBe(null);
+});
+
 test("duel : la pause arrête les deux parties", async ({ page, isMobile }) => {
   test.skip(isMobile, "touche Échap");
   await openDuel(page);
@@ -162,6 +259,52 @@ test("duel : le premier mort perd, le gagnant empoche l'XP et l'or des deux part
 
   await quit(page, isMobile);
   await expect(page.locator("#mainMenu")).toBeVisible();
+});
+
+test("duel : écran de fin avec les courbes de vie et les attaques de chacun", async ({ page }) => {
+  await openDuel(page);
+  await page.waitForTimeout(2500); // quelques points de vie notés chaque seconde
+  const killsPerSend = await run(page, null, ({ config }) => config.VERSUS.attack.killsPerSend);
+  await run(
+    page,
+    0,
+    async ({ state }, n) => {
+      const { killEnemy } = await import("/src/systems/combat.js");
+      const { spawnEnemy } = await import("/src/systems/spawner.js");
+      state.game.duelAttack = n - 1;
+      spawnEnemy("normal", 0, 0);
+      killEnemy(state.world.enemies[state.world.enemies.length - 1]);
+      state.game.spellReady = "slow";
+    },
+    killsPerSend,
+  );
+  await run(page, 0, async () => (await import("/src/systems/duelAttacks.js")).castSpell());
+  const logs = await both(page, ({ state }) => ({
+    hp: state.game.duelLog.hp.length,
+    marks: state.game.duelLog.marks.map((m) => m.k),
+  }));
+  expect(logs[0].hp).toBeGreaterThanOrEqual(2);
+  expect(logs[0].marks).toEqual(["atk", "hex"]);
+  expect(logs[1].marks).toEqual([]);
+
+  await run(page, 1, ({ state, player }) => {
+    state.player.health = 1;
+    state.player.revives = 0;
+    player.takeDamage(1e9);
+  });
+  await expect(page.locator("#versusOver")).toBeVisible();
+  await expect(page.locator("#versusChart")).toBeVisible();
+  const row = (label) => page.locator("#versusTable tr", { hasText: label }).locator("td");
+  await expect(row("Attaques envoyées")).toHaveText(["Attaques envoyées", "1", "0"]);
+  await expect(row("Sorts lancés")).toHaveText(["Sorts lancés", "1", "0"]);
+  // La courbe est bien dessinée (pixels cyan de J1 sur le graphique)
+  const cyan = await page.locator("#versusChart").evaluate((canvas) => {
+    const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] < 80 && d[i + 1] > 200 && d[i + 2] > 200) n++;
+    return n;
+  });
+  expect(cyan).toBeGreaterThan(20);
 });
 
 test("duel puis partie normale : le mode survie repart normalement", async ({ page, isMobile }) => {

@@ -170,6 +170,19 @@ export const VERSUS = {
   pickSeconds: 12, // choix d'amélioration en duel : au-delà, la carte surlignée est prise (pas de blocage)
   endDelayMs: 1200, // entre la mort du perdant et l'écran du vainqueur
   colors: ["#00ffff", "#ff2a6d"],
+  // Attaques : les éliminations remplissent une jauge ; pleine, elle envoie des ennemis chez l'adversaire
+  attack: {
+    killsPerSend: 35, // éliminations pour remplir la jauge
+    mobs: 6, // ennemis envoyés quand la jauge est pleine
+    bossElites: 3, // élites envoyées quand on tue un boss
+  },
+  // Sorts : une seconde jauge (éliminations) donne un sort tiré au hasard, lancé à la main sur l'adversaire
+  spell: {
+    killsPerSpell: 50,
+    slow: { ticks: 300, speed: 0.55 }, // RALENTI : vitesse de l'adversaire réduite
+    fog: { ticks: 360, radius: 160 }, // BROUILLARD : on ne voit plus qu'autour de son vaisseau
+    jam: { ticks: 240 }, // TIR COUPÉ : l'arme principale ne tire plus
+  },
 };
 
 // Duel en ligne (voir services/netplay.js) : Supabase Realtime sert de salon (code de salle et
@@ -179,6 +192,11 @@ export const VERSUS = {
 export const NET = {
   codeLength: 4,
   statsPerSecond: 4, // statistiques envoyées à l'adversaire
+  // Aperçu en direct : scène (vaisseau, ennemis proches) envoyée à l'adversaire, qui la redessine en petit
+  viewPerSecond: 8, // connexion directe
+  viewPerSecondRelay: 4, // relais par Supabase (plus lent, quota de messages)
+  viewEnemies: 80, // ennemis envoyés au plus (les plus proches)
+  viewRange: 900, // distance (unités du monde) au-delà de laquelle un ennemi n'est pas envoyé
   p2pTimeoutMs: 7000, // au-delà, on passe par Supabase
   joinTimeoutMs: 8000, // pas de réponse de l'hôte : code inconnu
   lostAfterMs: 6000, // plus aucun message de l'adversaire : partie interrompue

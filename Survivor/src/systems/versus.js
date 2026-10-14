@@ -11,6 +11,7 @@ import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { useInputProfile } from "../core/input.js";
 import { camera, game, mysteryBox, pet, player, world } from "../core/state.js";
+import { castSpell, healthPct, logHealth } from "./duelAttacks.js";
 import { activateSkill } from "./skills.js";
 import { trailState } from "./trail.js";
 
@@ -22,6 +23,7 @@ export const versus = {
   paused: false, // écran scindé : pause commune aux deux parties
   winner: null, // index du gagnant, une fois le duel joué
   current: 0, // écran scindé : partie chargée dans l'état global
+  startedAt: 0, // performance.now() au début du duel (temps du récap de fin)
 };
 
 /** Joystick et touche « dash » tactiles de chaque joueur (écrits par ui/versusTouch.js). */
@@ -32,7 +34,15 @@ export const versusTouch = [
 
 /** Écran scindé : touches de chaque joueur (J1 à gauche du clavier, J2 autour des flèches). */
 export const VERSUS_KEYS = [
-  { up: ["z", "w"], down: ["s"], left: ["q", "a"], right: ["d"], dash: ["space"], skill: ["e", "r"] },
+  {
+    up: ["z", "w"],
+    down: ["s"],
+    left: ["q", "a"],
+    right: ["d"],
+    dash: ["space"],
+    skill: ["e", "r"],
+    spell: ["f"],
+  },
   {
     up: ["arrowup"],
     down: ["arrowdown"],
@@ -40,6 +50,7 @@ export const VERSUS_KEYS = [
     right: ["arrowright"],
     dash: ["enter", "0"],
     skill: ["shift", "1"],
+    spell: ["control", "2"],
   },
 ];
 
@@ -116,13 +127,13 @@ export function withRun(i, fn) {
 /** Duel en ligne : la partie de ce joueur tourne normalement, l'adversaire est suivi à part. */
 export function startOnlineVersus(online, names) {
   stopVersus();
-  Object.assign(versus, { active: true, online, names: [...names] });
+  Object.assign(versus, { active: true, online, names: [...names], startedAt: performance.now() });
 }
 
 /** Écran scindé : `setupRun()` prépare une partie (appelée une fois par joueur). */
 export function startSplitVersus(setupRun) {
   stopVersus();
-  Object.assign(versus, { active: true, split: true });
+  Object.assign(versus, { active: true, split: true, startedAt: performance.now() });
   for (const i of [0, 1]) withRun(i, setupRun);
 }
 
@@ -174,6 +185,12 @@ export function useSkill(i) {
   withRun(i, () => game.running && !game.paused && activateSkill());
 }
 
+/** Sort du joueur `i` contre l'autre (touche ou bouton tactile). */
+export function useSpell(i) {
+  if (!versus.split || versus.paused || versus.winner !== null) return;
+  withRun(i, () => game.running && !game.paused && castSpell());
+}
+
 /** Bilan d'une partie (écran du vainqueur, envoyé à l'adversaire en ligne). */
 export function runStats() {
   return {
@@ -185,6 +202,8 @@ export function runStats() {
     s: game.score,
     x: Math.floor(game.totalRunXp),
     g: game.runGold,
+    a: game.duelLog?.sent || 0,
+    p: game.duelLog?.cast || 0,
   };
 }
 
@@ -192,7 +211,13 @@ export function runStats() {
 export function splitDeath(loser) {
   versus.winner = 1 - loser;
   const runs = [0, 1].map((i) => withRun(i, runStats));
-  emit("versusOver", { winner: versus.winner, runs });
+  const logs = [0, 1].map((i) =>
+    withRun(i, () => {
+      logHealth(game.duelLog, i === loser ? 0 : healthPct(), true); // point final des courbes
+      return game.duelLog;
+    }),
+  );
+  emit("versusOver", { winner: versus.winner, runs, logs });
 }
 
 /** Écran scindé : annonce dans la moitié d'écran de la partie en cours (boss, biome...). */

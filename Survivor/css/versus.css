@@ -391,3 +391,143 @@ body.versus #controls {
     margin-top: -22px;
   }
 }
+.vs-attack {
+  display: block;
+  margin: 5px 0 2px;
+  color: #aa66ff;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.vs-attack-bar {
+  height: 4px;
+  color: #aa66ff;
+}
+.vs-attack-bar .vs-fill {
+  width: 0;
+}
+/* Sort du duel : à côté du bouton de compétence, vert quand un sort est prêt */
+#versusTouch .vs-spell {
+  pointer-events: auto;
+  position: absolute;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 100px;
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+  opacity: 0.5;
+  background: rgba(20, 10, 40, 0.75);
+  color: #aaa;
+}
+#versusTouch .vs-spell.ready {
+  opacity: 1;
+  color: #00ff88;
+  box-shadow: 0 0 14px #00ff88;
+}
+#versusTouch .vs-spell2 {
+  left: auto;
+  right: 100px;
+}
+@media (orientation: portrait) {
+  #versusTouch .vs-spell2 {
+    bottom: auto;
+    top: calc(14px + env(safe-area-inset-top));
+  }
+}
+.touch-spell {
+  grid-area: spell;
+  display: none;
+  background: radial-gradient(circle, #004422, #001a0d);
+  color: #00ff88;
+  border-color: #00ff88;
+  opacity: 0.5;
+}
+.touch-spell.ready {
+  opacity: 1;
+  background: radial-gradient(circle, #00ff88, #008844);
+  color: #000;
+}
+.vs-spell-bar {
+  height: 4px;
+  color: #00ff88;
+}
+.vs-spell-bar .vs-fill {
+  width: 0;
+}
+.vs-spell-label {
+  color: #00ff88;
+}
+/* Duel en ligne : la partie de l'adversaire occupe le coin haut droit, le combo passe dessous */
+body.duel-live #comboDisplay {
+  top: 230px;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  /* Petit écran : la barre du boss se décale à gauche de l'aperçu de l'adversaire */
+  body.duel-live #bossBar {
+    left: 4vw;
+    transform: none;
+    width: 58vw;
+  }
+  body.duel-live #comboDisplay {
+    top: calc(330px + env(safe-area-inset-top));
+  }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  body.duel-live #comboDisplay {
+    top: calc(140px + env(safe-area-inset-top));
+    right: auto;
+    left: 20px;
+  }
+}
+/* Fin de duel : courbes de vie et attaques (ui/duelRecap.js) */
+.duel-recap {
+  margin: 0 auto 10px;
+  width: min(100%, 440px);
+}
+#versusChart {
+  display: block;
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.recap-legend {
+  margin: 4px 0 0;
+  color: #888;
+  font-size: 10px;
+}
+.recap-legend b {
+  color: #00ff88;
+}
+/* Écran bas (téléphone en paysage) : tableau et courbe côte à côte, titre réduit */
+@media (orientation: landscape) and (max-height: 500px) {
+  #versusOver {
+    max-width: min(760px, calc(100vw - 24px));
+    width: min(760px, calc(100vw - 24px));
+  }
+  #versusOver h1 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  #versusOver .versus-table {
+    float: left;
+    width: 48%;
+    margin: 0;
+    font-size: 10px;
+  }
+  #versusOver .versus-table th,
+  #versusOver .versus-table td {
+    padding: 2px 6px;
+  }
+  #versusOver .duel-recap {
+    float: right;
+    width: 50%;
+    margin: 0;
+  }
+  #versusOver #versusChart {
+    height: 150px;
+  }
+  #versusScore {
+    clear: both;
+    padding-top: 8px;
+  }
+}

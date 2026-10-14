@@ -3,6 +3,7 @@
 import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
+import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
 import { GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
@@ -74,6 +75,7 @@ export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
   recordKill(enemy.type, enemy.template.isBoss);
+  emit("kill", enemy);
   playSfx("kill");
 
   game.score += 10;
@@ -171,6 +173,7 @@ export function killAllEnemies() {
 // --- TIR DU JOUEUR ---
 
 export function shoot() {
+  if (game.hex?.type === "jam") return; // duel : sort « tir coupé » de l'adversaire
   let fireRate = player.buffs.overcharge > 0 ? MYSTERY_BOX.overchargeAttackSpeed : player.attackSpeed;
   if (player.buffs.frenzy > 0) fireRate /= 3;
   if (game.time - player.lastAttack < fireRate) return;
