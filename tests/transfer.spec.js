@@ -1,5 +1,9 @@
 // Déménagement vers last-pulse.com : la progression passe de l'ancienne adresse à la nouvelle.
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test } from "./fixtures.js";
+
+const GAME_DIR = join(import.meta.dirname, "..", "Survivor");
 
 test.beforeEach(async ({ isMobile }) => test.skip(isMobile, "logique de navigation : une plateforme suffit"));
 
@@ -14,16 +18,20 @@ function encode(data) {
 /**
  * Sert le jeu local sous les deux vraies adresses. `redirect` active la redirection de
  * l'ancienne adresse (désactivée dans le dépôt tant que le nouveau site n'est pas en ligne).
+ * Les fichiers sont lus sur le disque : les relayer un par un par le serveur de test rendait
+ * le chargement trop lent quand toute la suite tourne en parallèle (délai de 30 s dépassé).
  */
-async function serveBothDomains(page, baseURL, { redirect }) {
+async function serveBothDomains(page, { redirect }) {
   const serve = (prefix) => async (route) => {
-    const path = new URL(route.request().url()).pathname.replace(prefix, "/");
-    const response = await route.fetch({ url: new URL(path, baseURL).href });
-    let body = await response.text();
+    let path = new URL(route.request().url()).pathname.replace(prefix, "/");
+    if (path.endsWith("/")) path += "index.html";
+    const file = join(GAME_DIR, decodeURIComponent(path));
+    if (!file.startsWith(GAME_DIR) || !existsSync(file)) return route.fulfill({ status: 404 });
     if (redirect && path.endsWith("/src/transfer.js")) {
-      body = body.replace("REDIRECT_ENABLED = false", "REDIRECT_ENABLED = true");
+      const body = readFileSync(file, "utf8").replace("REDIRECT_ENABLED = false", "REDIRECT_ENABLED = true");
+      return route.fulfill({ body, contentType: "text/javascript" });
     }
-    await route.fulfill({ response, body });
+    await route.fulfill({ path: file });
   };
   await page.route("https://darkexxfr.github.io/**", serve("/2D-Game/Survivor/"));
   await page.route("https://last-pulse.com/**", serve("/"));
@@ -63,8 +71,8 @@ for (const accept of [true, false]) {
   });
 }
 
-test("redirection désactivée : l'ancienne adresse reste jouable", async ({ page, baseURL }) => {
-  await serveBothDomains(page, baseURL, { redirect: false });
+test("redirection désactivée : l'ancienne adresse reste jouable", async ({ page }) => {
+  await serveBothDomains(page, { redirect: false });
   await page.goto(OLD);
   await expect(page.locator("#mainMenu")).toBeVisible();
   expect(page.url()).toBe(OLD);
@@ -72,9 +80,8 @@ test("redirection désactivée : l'ancienne adresse reste jouable", async ({ pag
 
 test("déménagement complet : ancienne adresse → last-pulse.com avec la progression, une seule fois", async ({
   page,
-  baseURL,
 }) => {
-  await serveBothDomains(page, baseURL, { redirect: true });
+  await serveBothDomains(page, { redirect: true });
   // Progression enregistrée sur l'ancienne adresse
   await page.goto(`${OLD}legal.html`);
   await page.evaluate(() => {
