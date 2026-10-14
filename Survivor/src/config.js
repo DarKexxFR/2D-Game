@@ -170,6 +170,19 @@ export const VERSUS = {
   pickSeconds: 12, // choix d'amélioration en duel : au-delà, la carte surlignée est prise (pas de blocage)
   endDelayMs: 1200, // entre la mort du perdant et l'écran du vainqueur
   colors: ["#00ffff", "#ff2a6d"],
+  // Attaques : les éliminations remplissent une jauge ; pleine, elle envoie des ennemis chez l'adversaire
+  attack: {
+    killsPerSend: 35, // éliminations pour remplir la jauge
+    mobs: 6, // ennemis envoyés quand la jauge est pleine
+    bossElites: 3, // élites envoyées quand on tue un boss
+  },
+  // Sorts : une seconde jauge (éliminations) donne un sort tiré au hasard, lancé à la main sur l'adversaire
+  spell: {
+    killsPerSpell: 50,
+    slow: { ticks: 300, speed: 0.55 }, // RALENTI : vitesse de l'adversaire réduite
+    fog: { ticks: 360, radius: 160 }, // BROUILLARD : on ne voit plus qu'autour de son vaisseau
+    jam: { ticks: 240 }, // TIR COUPÉ : l'arme principale ne tire plus
+  },
 };
 
 // Duel en ligne (voir services/netplay.js) : Supabase Realtime sert de salon (code de salle et

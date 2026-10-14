@@ -1,8 +1,10 @@
 // Duel : panneau de l'adversaire en ligne, boutons tactiles de l'écran scindé, écran du vainqueur.
 
 import { VERSUS } from "../config.js";
-import { player } from "../core/state.js";
+import { bindingsOf, keyLabel } from "../core/input.js";
+import { game, player } from "../core/state.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
+import { SPELLS, attackProgress, spellProgress } from "../systems/duelAttacks.js";
 import { rival } from "../systems/versusOnline.js";
 import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
 import { showScreen } from "./screens.js";
@@ -21,15 +23,25 @@ export function showVersusHud(visible) {
   showVersusTouch(split);
   if (split) showTouchControls(false);
   setVisible("duelRival", visible && !!versus.online);
+  if (isTouchDevice) setVisible("btnTouchSpell", visible && !!versus.online);
 }
 
 /** À chaque image : panneau de l'adversaire (en ligne) ou boutons de compétence (écran scindé). */
 export function updateVersusHud() {
   if (versus.split) {
     if (isTouchDevice)
-      for (const i of [0, 1]) withRun(i, () => setClass(`vsSkill${i + 1}`, "ready", player.isUltReady));
+      for (const i of [0, 1])
+        withRun(i, () => {
+          setClass(`vsSkill${i + 1}`, "ready", player.isUltReady);
+          setClass(`vsSpell${i + 1}`, "ready", !!game.spellReady);
+        });
     return;
   }
+  setWidth("duelAttack", attackProgress());
+  setWidth("duelSpell", spellProgress());
+  const key = isTouchDevice ? "BOUTON SORT" : keyLabel(bindingsOf("spell")[0]);
+  setText("duelSpellLabel", game.spellReady ? `SORT PRÊT : ${SPELLS[game.spellReady]} (${key})` : "TON SORT");
+  setClass("btnTouchSpell", "ready", !!game.spellReady);
   const s = rival.stats;
   setText("rivalName", fighterName(1));
   if (!s) return setText("rivalInfo", "En route…");

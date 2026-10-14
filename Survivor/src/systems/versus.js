@@ -11,6 +11,7 @@ import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { useInputProfile } from "../core/input.js";
 import { camera, game, mysteryBox, pet, player, world } from "../core/state.js";
+import { castSpell } from "./duelAttacks.js";
 import { activateSkill } from "./skills.js";
 import { trailState } from "./trail.js";
 
@@ -32,7 +33,15 @@ export const versusTouch = [
 
 /** Écran scindé : touches de chaque joueur (J1 à gauche du clavier, J2 autour des flèches). */
 export const VERSUS_KEYS = [
-  { up: ["z", "w"], down: ["s"], left: ["q", "a"], right: ["d"], dash: ["space"], skill: ["e", "r"] },
+  {
+    up: ["z", "w"],
+    down: ["s"],
+    left: ["q", "a"],
+    right: ["d"],
+    dash: ["space"],
+    skill: ["e", "r"],
+    spell: ["f"],
+  },
   {
     up: ["arrowup"],
     down: ["arrowdown"],
@@ -40,6 +49,7 @@ export const VERSUS_KEYS = [
     right: ["arrowright"],
     dash: ["enter", "0"],
     skill: ["shift", "1"],
+    spell: ["control", "2"],
   },
 ];
 
@@ -172,6 +182,12 @@ export function updateSplit(simulate, waiting) {
 export function useSkill(i) {
   if (!versus.split || versus.paused || versus.winner !== null) return;
   withRun(i, () => game.running && !game.paused && activateSkill());
+}
+
+/** Sort du joueur `i` contre l'autre (touche ou bouton tactile). */
+export function useSpell(i) {
+  if (!versus.split || versus.paused || versus.winner !== null) return;
+  withRun(i, () => game.running && !game.paused && castSpell());
 }
 
 /** Bilan d'une partie (écran du vainqueur, envoyé à l'adversaire en ligne). */

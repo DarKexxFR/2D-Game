@@ -229,6 +229,41 @@ test("duel en ligne : deux morts qui se croisent, le meilleur score gagne chez l
   await expect(page.locator("#versusWinner")).toHaveText("Invite GAGNE !");
 });
 
+test("duel en ligne : la jauge d'attaque pleine envoie des ennemis chez l'adversaire", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  test.skip(isMobile, "deux navigateurs");
+  test.setTimeout(60_000);
+  const { guest } = await connect(page, browser);
+  await run(guest, ({ state }) => (state.player.autoShoot = false));
+  const mobs = await run(page, ({ config, state }) => {
+    state.game.duelAttack = config.VERSUS.attack.killsPerSend - 1;
+    return config.VERSUS.attack.mobs;
+  });
+  await page.evaluate(async () => {
+    const { killEnemy } = await import("/src/systems/combat.js");
+    const { spawnEnemy } = await import("/src/systems/spawner.js");
+    const { world } = await import("/src/core/state.js");
+    spawnEnemy("normal", 0, 0);
+    killEnemy(world.enemies[world.enemies.length - 1]);
+  });
+  await expect
+    .poll(() => run(guest, ({ state }) => state.world.enemies.filter((e) => e.sent).length))
+    .toBe(mobs);
+  await expect(guest.locator("#bossWarning")).toHaveText(`ATTAQUE DE Hote ! +${mobs} ENNEMIS`);
+  expect(await run(page, ({ state }) => state.world.enemies.some((e) => e.sent))).toBe(false);
+
+  // Sort : prêt chez l'hôte (touche F), il tombe sur l'invité
+  await run(page, ({ state }) => (state.game.spellReady = "fog"));
+  await expect(page.locator("#duelSpellLabel")).toHaveText("SORT PRÊT : BROUILLARD (F)");
+  await page.keyboard.press("f");
+  await expect.poll(() => run(guest, ({ state }) => state.game.hex?.type)).toBe("fog");
+  await expect(guest.locator("#bossWarning")).toHaveText("BROUILLARD ! (SORT DE Hote)");
+  await expect(page.locator("#duelSpellLabel")).toHaveText("TON SORT");
+});
+
 test("duel en ligne : le choix d'amélioration se fait seul au bout du temps imparti", async ({
   page,
   browser,

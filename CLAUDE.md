@@ -103,6 +103,11 @@ Principes :
   (règles normales, équipement et talents du compte) ; le premier mort perd et le gagnant empoche l'XP et
   l'or des **deux** parties (choix du propriétaire). Pas d'offre « revivre » en duel. Réglages : `VERSUS`
   dans `config.js`.
+  - **Attaques** (`systems/duelAttacks.js`, réglages `VERSUS.attack` / `VERSUS.spell`, choix du propriétaire :
+    les deux) : chaque élimination remplit une jauge d'attaque (pleine = ennemis envoyés chez l'adversaire,
+    marqués `sent` ; un boss tué envoie des élites) et une jauge de sort. Pleine, celle-ci tire au hasard
+    un sort (ralenti, brouillard, tir coupé) que le joueur lance à la main (J1 F, J2 Ctrl / 2, en ligne
+    l'action `spell` = F ou le bouton SORT). Sort subi = `game.hex`, qui s'estompe tout seul.
   - **Sur un écran** : écran scindé (côte à côte, ou J1 en bas en portrait). Le moteur n'a qu'un état
     global : la partie de l'autre joueur est rangée de côté et échangée le temps de la faire avancer ou de
     la dessiner (`withRun(i, fn)` : échange `game`, `player`, `world`, `pet`, `camera`, `mysteryBox`,

@@ -19,6 +19,7 @@ export const ACTIONS = {
   dash: { label: "Dash", keys: ["space"] },
   skill: { label: "Compétence", keys: ["r"] },
   box: { label: "Boîte mystère", keys: ["e"] },
+  spell: { label: "Sort (duel)", keys: ["f"] },
   autoShoot: { label: "Tir auto", keys: ["t"] },
   pause: { label: "Pause", keys: ["p", "escape"] },
 };

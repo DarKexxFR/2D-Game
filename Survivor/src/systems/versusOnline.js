@@ -7,6 +7,7 @@ import { NET } from "../config.js";
 import { emit } from "../core/events.js";
 import { game } from "../core/state.js";
 import { checkConnection, sendGame } from "../services/netplay.js";
+import { receiveAttack, receiveSpell } from "./duelAttacks.js";
 import { runStats, versus } from "./versus.js";
 
 const EMPTY = { w: 1, l: 1, h: 0, m: 1, k: 0, s: 0, x: 0, g: 0 };
@@ -37,6 +38,8 @@ export function onNetMessage(msg) {
   if (!msg || !versus.online) return;
   if (msg.t === "ranked") rival.ranked = !!msg.on;
   else if (msg.t === "st" && rival.alive) rival.stats = msg;
+  else if (msg.t === "atk" && rival.alive) receiveAttack(msg.n, msg.e);
+  else if (msg.t === "hex" && rival.alive) receiveSpell(msg.s);
   else if (msg.t === "dead" && rival.alive) {
     rival.alive = false;
     rival.final = rival.stats = msg;

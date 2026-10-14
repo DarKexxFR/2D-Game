@@ -5,9 +5,12 @@ import { VERSUS, WAVE_DURATION } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
 import { game, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
+import { SPELLS, attackProgress, spellProgress } from "../systems/duelAttacks.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
+import { isTouchDevice } from "../ui/touchControls.js";
 
 const SKILL_KEYS = ["E", "MAJ"];
+const SPELL_KEYS = ["F", "CTRL"];
 const FONT = "Orbitron, sans-serif";
 
 /** Dessine les deux parties ; `drawScene(now)` dessine celle qui est chargée, dans la vue courante. */
@@ -54,10 +57,10 @@ function drawRunHud(i, now) {
   const w = view.width;
   ctx.textBaseline = "top";
   ctx.fillStyle = "rgba(10, 5, 20, 0.75)";
-  ctx.fillRect(10, 10, 196, 92);
+  ctx.fillRect(10, 10, 196, 120);
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
-  ctx.strokeRect(10.5, 10.5, 195, 91);
+  ctx.strokeRect(10.5, 10.5, 195, 119);
 
   text(fighterName(i), 18, 16, 13, color);
   text(`VAGUE ${game.wave} · NIV. ${player.level} · ${game.kills} ÉLIM.`, 18, 34, 10, "#ddd");
@@ -80,6 +83,19 @@ function drawRunHud(i, now) {
   } else {
     bar(18, 83, 180, 4, player.ultCharge / player.maxUltCharge, "#ffaa00");
   }
+  // Jauge d'attaque : pleine, elle envoie des ennemis chez l'adversaire
+  text("ATTAQUE", 18, 94, 8, "#aa66ff");
+  bar(70, 96, 128, 4, attackProgress(), "#aa66ff");
+  if (game.spellReady) {
+    ctx.globalAlpha = 0.6 + Math.sin(now / 150) * 0.4;
+    const key = isTouchDevice ? "" : ` (${SPELL_KEYS[i]})`;
+    text(`SORT : ${SPELLS[game.spellReady]}${key}`, 18, 106, 9, "#00ff88");
+    ctx.globalAlpha = 1;
+  } else {
+    text("SORT", 18, 108, 8, "#00ff88");
+    bar(70, 110, 128, 4, spellProgress(), "#00ff88");
+  }
+  if (game.hex) text(`${SPELLS[game.hex.type]} SUBI !`, 18, 138, 11, "#00ff88");
 
   text(`${game.runGold} OR`, w - 14, 16, 12, "#ffd700", "right");
   if (game.combo >= 5) text(`×${game.combo} COMBO`, w - 14, 34, 11, "#ff2a6d", "right");

@@ -118,6 +118,10 @@
         <b id="rivalName">ADVERSAIRE</b>
         <span id="rivalInfo" class="rival-info"></span>
         <div class="vs-bar"><div id="rivalHealth" class="vs-fill"></div></div>
+        <small class="vs-attack">TON ATTAQUE</small>
+        <div class="vs-bar vs-attack-bar"><div id="duelAttack" class="vs-fill"></div></div>
+        <small id="duelSpellLabel" class="vs-attack vs-spell-label">TON SORT</small>
+        <div class="vs-bar vs-spell-bar"><div id="duelSpell" class="vs-fill"></div></div>
       </div>
       <div id="duelPicks">
         <div id="duelPick1" class="duel-pick duel-pick1">
@@ -144,6 +148,12 @@
         <button id="vsSkill2" class="touch-btn vs-skill vs-skill2" aria-label="Compétence du joueur 2">
           <i data-icon="bolt"></i>
         </button>
+        <button id="vsSpell1" class="touch-btn vs-spell vs-spell1" aria-label="Sort du joueur 1">
+          <i data-icon="sparkle"></i>
+        </button>
+        <button id="vsSpell2" class="touch-btn vs-spell vs-spell2" aria-label="Sort du joueur 2">
+          <i data-icon="sparkle"></i>
+        </button>
         <button id="btnVersusPause" class="touch-btn touch-pause">II</button>
       </div>
 
@@ -155,6 +165,7 @@
         <div class="touch-actions">
           <button id="btnTouchBox" class="touch-btn touch-box"><i data-icon="chest"></i></button>
           <button id="btnTouchUlt" class="touch-btn touch-ult">ULT</button>
+          <button id="btnTouchSpell" class="touch-btn touch-spell" aria-label="Sort du duel">SORT</button>
           <button id="btnTouchDash" class="touch-btn touch-dash">DASH</button>
         </div>
       </div>

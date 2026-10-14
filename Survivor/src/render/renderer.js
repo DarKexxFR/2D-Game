@@ -1,8 +1,8 @@
 // Point d'entrée du rendu : enchaîne les couches dans le bon ordre.
 
-import { WAVE_DURATION } from "../config.js";
+import { VERSUS, WAVE_DURATION } from "../config.js";
 import { ctx, resetTransform, view } from "../core/canvas.js";
-import { camera, game, world } from "../core/state.js";
+import { camera, game, player, world } from "../core/state.js";
 import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
@@ -53,10 +53,24 @@ function drawScene(now) {
     ctx.globalAlpha = 1;
   }
 
+  if (game.hex?.type === "fog") drawFog();
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1 && !versus.split && !game.rush) drawWaveTimer();
   ctx.restore();
+}
+
+/** Duel : sort « brouillard » de l'adversaire, on ne voit plus qu'autour de son vaisseau. */
+function drawFog() {
+  const x = player.worldX - camera.x;
+  const y = player.worldY - camera.y;
+  const r = VERSUS.spell.fog.radius;
+  const fade = Math.min(1, game.hex.ticks / 30); // se dissipe à la fin
+  const g = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 1.3);
+  g.addColorStop(0, "rgba(5, 2, 12, 0)");
+  g.addColorStop(1, `rgba(5, 2, 12, ${0.985 * fade})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, view.width, view.height);
 }
 
 function drawWaveTimer() {
