@@ -199,6 +199,19 @@ body.versus #controls {
   letter-spacing: 2px;
   color: #aa66ff;
 }
+.duel-ranked {
+  margin: -4px 0 10px;
+  color: #999;
+  font-size: 11px;
+}
+.versus-elo {
+  margin: -6px 0 14px;
+  color: #ffd700;
+  font-size: 13px;
+}
+.versus-elo:empty {
+  display: none;
+}
 .duel-join {
   display: flex;
   gap: 8px;

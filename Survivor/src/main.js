@@ -1,7 +1,7 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
-import { TICK_MS, VERSUS } from "./config.js";
+import { NET, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -82,10 +82,19 @@ import {
   useSkill,
   versus,
 } from "./systems/versus.js";
-import { netTick, onNetMessage, onOwnDeath, onRivalLeft, resetOnline } from "./systems/versusOnline.js";
+import {
+  netTick,
+  onNetMessage,
+  onOwnDeath,
+  onRivalLeft,
+  resetOnline,
+  rival,
+} from "./systems/versusOnline.js";
 import { leaveRoom, net, sendGame, setNetHandlers } from "./services/netplay.js";
+import { canRank, reportDuel } from "./services/duelRanking.js";
 import {
   initVersusMenu,
+  showDuelElo,
   showRematchWaiting,
   showRivalGone,
   showVersusHud,
@@ -164,6 +173,8 @@ function startDuel(online = null, names = []) {
   resetDuelPicks();
   resetOnline();
   stopTutorial();
+  eloRequest++;
+  showDuelElo("");
   prizeGiven = false;
   if (online) {
     startOnlineVersus(online, names);
@@ -185,8 +196,9 @@ function startDuel(online = null, names = []) {
 /** Hôte en ligne : (re)lance le duel chez les deux joueurs. */
 function startOnlineDuel() {
   const names = [getPseudo(), net.peerName || "ADVERSAIRE"];
-  sendGame({ t: "start", names });
-  startDuel({ role: "host" }, names);
+  const match = crypto.randomUUID(); // identifiant du duel, déclaré par les deux joueurs (classement ELO)
+  sendGame({ t: "start", names, match, ranked: canRank() });
+  startDuel({ role: "host", match }, names);
 }
 
 function replayDuel() {
@@ -199,7 +211,10 @@ function replayDuel() {
 /** Messages du jeu reçus de l'adversaire (voir services/netplay.js). */
 function onNetGame(msg) {
   if (net.role === "guest" && msg.t === "start") {
-    return startDuel({ role: "guest" }, [msg.names[1], msg.names[0]]);
+    startDuel({ role: "guest", match: msg.match }, [msg.names[1], msg.names[0]]);
+    rival.ranked = !!msg.ranked;
+    sendGame({ t: "ranked", on: canRank() });
+    return;
   }
   if (net.role === "host" && msg.t === "rematch" && currentScreen() === "versusOver")
     return startOnlineDuel();
@@ -215,6 +230,37 @@ function onNetLost() {
   }
 }
 
+// --- DUEL CLASSÉ (ELO, voir services/duelRanking.js) ---
+
+let eloRequest = 0;
+
+const isRankedDuel = () => !!versus.online?.match && canRank() && rival.ranked;
+
+/** Déclare le résultat du duel en ligne et affiche le nouvel ELO une fois les deux déclarations reçues. */
+function reportRanked(won) {
+  const id = ++eloRequest;
+  if (!canRank()) return showDuelElo("Duel non classé : connecte-toi pour gagner des points ELO.");
+  if (!rival.ranked) return showDuelElo("Duel non classé : ton adversaire n'est pas connecté.");
+  const { match } = versus.online;
+  showDuelElo("Duel classé : calcul de l'ELO…");
+  const attempt = async (tries) => {
+    let res = null;
+    try {
+      res = await reportDuel(match, won, getPseudo());
+    } catch (err) {
+      console.warn("Résultat du duel non déclaré :", err);
+    }
+    if (id !== eloRequest) return;
+    if (res?.status === "settled") {
+      const delta = res.delta ? ` (${res.delta > 0 ? "+" : ""}${res.delta})` : " (duel non compté)";
+      return showDuelElo(`ELO : ${res.rating}${delta}`);
+    }
+    if (tries > 0) return setTimeout(() => attempt(tries - 1), NET.eloRetryMs);
+    showDuelElo(res ? "Duel classé : en attente de l'adversaire." : "Classement ELO indisponible.");
+  };
+  attempt(NET.eloRetries);
+}
+
 let prizeGiven = false; // un duel en ligne peut s'inverser une fois : la récompense n'est donnée qu'une fois
 let overTimer = null;
 
@@ -223,6 +269,7 @@ function onVersusOver(result) {
   const [a, b] = result.runs;
   const prize = { xp: a.x + b.x, gold: a.g + b.g };
   // Écran scindé : les deux joueurs partagent le compte de cet appareil ; en ligne, seul le gagnant gagne
+  if (versus.online) reportRanked(result.winner === 0);
   if ((!versus.online || result.winner === 0) && !prizeGiven) {
     prizeGiven = true;
     addAccountRewards(prize.xp, prize.gold);
@@ -248,6 +295,10 @@ function returnToMenu() {
   game.running = false;
   game.paused = false;
   stopTutorial();
+  // Quitter un duel classé en cours = défaite (l'adversaire déclare sa victoire par abandon)
+  if (isRankedDuel() && versus.winner === null)
+    reportDuel(versus.online.match, false, getPseudo()).catch(() => {});
+  eloRequest++;
   if (versus.online) leaveRoom();
   clearTimeout(overTimer);
   stopVersus();

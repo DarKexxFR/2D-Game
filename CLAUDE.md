@@ -119,6 +119,11 @@ Principes :
     `config.js`). Chaque appareil fait tourner sa partie et envoie ses statistiques (`systems/versusOnline.js`) ;
     panneau de l'adversaire `#duelRival`. Deux morts qui se croisent : meilleur score, puis XP, puis l'hôte.
     Quitter = abandon. Pas de pause ; choix d'amélioration automatique au bout de `VERSUS.pickSeconds`.
+    **Classement ELO** (`services/duelRanking.js`, onglet « DUEL ELO » du classement) : joueurs connectés
+    seulement, départ 1000, K = 32. L'hôte tire un identifiant de duel (`match`) ; chaque joueur le
+    déclare avec `report_duel` et le serveur ne compte le duel que si les deux déclarations concordent
+    (jamais sur la parole d'un seul client). Quitter un duel classé = défaite déclarée. Anti-farm : plus de
+    points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +

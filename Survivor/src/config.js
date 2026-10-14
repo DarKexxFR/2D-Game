@@ -183,6 +183,8 @@ export const NET = {
   joinTimeoutMs: 8000, // pas de réponse de l'hôte : code inconnu
   lostAfterMs: 6000, // plus aucun message de l'adversaire : partie interrompue
   heartbeatMs: 25000, // battement de cœur exigé par Supabase Realtime
+  eloRetryMs: 1500, // duel classé : nouvelle demande tant que l'adversaire n'a pas déclaré le résultat
+  eloRetries: 4,
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
 };
 

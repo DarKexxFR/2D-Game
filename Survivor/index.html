@@ -285,6 +285,7 @@
         <div class="lb-tabs">
           <button id="lbTabGlobal" class="lb-tab active"><i data-icon="globe"></i> MONDIAL</button>
           <button id="lbTabLocal" class="lb-tab"><i data-icon="save"></i> MES SCORES</button>
+          <button id="lbTabDuel" class="lb-tab"><i data-icon="sword"></i> DUEL ELO</button>
         </div>
         <div class="lb-scroll">
           <table class="lb-table">
@@ -292,13 +293,14 @@
               <tr>
                 <th>#</th>
                 <th>PSEUDO</th>
-                <th>VAGUE</th>
-                <th>XP</th>
+                <th id="lbCol3">VAGUE</th>
+                <th id="lbCol4">XP</th>
               </tr>
             </thead>
             <tbody id="lbContent"></tbody>
           </table>
         </div>
+        <p id="lbMe" class="lb-me"></p>
         <button id="btnLeaderboardBack" class="secondary">RETOUR</button>
       </div>
 
@@ -355,8 +357,8 @@
               <tr>
                 <th>#</th>
                 <th>PSEUDO</th>
-                <th>VAGUE</th>
-                <th>XP</th>
+                <th id="lbCol3">VAGUE</th>
+                <th id="lbCol4">XP</th>
               </tr>
             </thead>
             <tbody id="dailyLbContent"></tbody>
@@ -605,6 +607,7 @@
         <button id="btnDuelLocal">SUR CET ÉCRAN</button>
         <div class="duel-online">
           <h3>EN LIGNE</h3>
+          <p class="duel-ranked">Classé (ELO) quand les deux joueurs sont connectés à leur compte</p>
           <button id="btnDuelHost" class="duel-host">CRÉER UNE PARTIE</button>
           <div class="duel-join">
             <input
@@ -629,6 +632,7 @@
         <h1 id="versusWinner">JOUEUR 1 GAGNE !</h1>
         <table id="versusTable" class="versus-table"></table>
         <p id="versusScore" class="menu-sub"></p>
+        <p id="versusElo" class="versus-elo"></p>
         <div class="btn-grid">
           <button id="btnVersusReplay">REVANCHE</button>
           <button id="btnVersusMenu" class="secondary">MENU</button>

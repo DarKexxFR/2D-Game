@@ -200,3 +200,154 @@ create or replace view public.daily_leaderboard with (security_invoker = true) a
   order by day, lower(name), xp desc;
 
 grant select on public.daily_leaderboard to anon;
+
+-- =====================================================================
+-- Classement ELO du duel en ligne (joueurs connectés seulement).
+-- Chaque joueur déclare le résultat d'un duel (report_duel) ; le classement ne bouge que quand
+-- les DEUX joueurs ont déclaré le même duel et sont d'accord (un gagnant, un perdant).
+-- Un seul joueur ne peut donc pas s'inventer des victoires. Aucun accès direct aux tables.
+-- =====================================================================
+
+create table if not exists public.duel_ratings (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  name text not null check (char_length(btrim(name)) between 1 and 12),
+  rating int not null default 1000,
+  wins int not null default 0,
+  losses int not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists duel_ratings_rating_idx on public.duel_ratings (rating desc);
+
+-- Déclarations : une par joueur et par duel (modifiable tant que le duel n'est pas compté)
+create table if not exists public.duel_reports (
+  match_id uuid not null,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  won boolean not null,
+  created_at timestamptz not null default now(),
+  primary key (match_id, user_id)
+);
+
+-- Duels comptés (delta = points gagnés par le vainqueur et perdus par le perdant ; 0 = non classé)
+create table if not exists public.duel_matches (
+  match_id uuid primary key,
+  winner uuid references auth.users (id) on delete set null,
+  loser uuid references auth.users (id) on delete set null,
+  delta int not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.duel_ratings enable row level security;
+alter table public.duel_reports enable row level security;
+alter table public.duel_matches enable row level security;
+revoke all on public.duel_ratings, public.duel_reports, public.duel_matches from anon, authenticated;
+
+-- Déclare le résultat d'un duel pour le joueur connecté. Renvoie
+-- { status: "pending" (en attente de l'adversaire) | "settled", rating, delta }.
+create or replace function public.report_duel(p_match uuid, p_won boolean, p_name text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  other duel_reports;
+  done duel_matches;
+  w duel_ratings;
+  l duel_ratings;
+  d int;
+  farmed boolean;
+begin
+  if me is null then
+    raise exception 'Non connecté';
+  end if;
+  if p_match is null or char_length(btrim(coalesce(p_name, ''))) not between 1 and 12 then
+    raise exception 'Duel invalide';
+  end if;
+  perform pg_advisory_xact_lock(hashtext(p_match::text)); -- deux déclarations simultanées
+
+  insert into duel_ratings (user_id, name) values (me, btrim(p_name))
+  on conflict (user_id) do update set name = excluded.name;
+
+  select * into done from duel_matches where match_id = p_match;
+  if found then
+    return jsonb_build_object(
+      'status', 'settled',
+      'rating', (select rating from duel_ratings where user_id = me),
+      'delta', case when done.winner = me then done.delta when done.loser = me then -done.delta else 0 end
+    );
+  end if;
+
+  if not exists (select 1 from duel_reports where match_id = p_match and user_id = me) then
+    -- Un duel = deux joueurs ; garde-fou anti-spam : un nouveau duel toutes les 15 secondes
+    if (select count(*) from duel_reports where match_id = p_match) >= 2 then
+      raise exception 'Duel invalide';
+    end if;
+    if exists (select 1 from duel_reports where user_id = me and created_at > now() - interval '15 seconds') then
+      raise exception 'Trop de duels déclarés, réessaie plus tard';
+    end if;
+  end if;
+  insert into duel_reports (match_id, user_id, won) values (p_match, me, p_won)
+  on conflict (match_id, user_id) do update set won = excluded.won;
+
+  select * into other from duel_reports where match_id = p_match and user_id <> me;
+  if not found or other.won = p_won then
+    return jsonb_build_object('status', 'pending', 'rating', (select rating from duel_ratings where user_id = me));
+  end if;
+
+  -- Les deux joueurs sont d'accord : ELO classique (K = 32), plancher à 100
+  select * into w from duel_ratings where user_id = case when p_won then me else other.user_id end for update;
+  select * into l from duel_ratings where user_id = case when p_won then other.user_id else me end for update;
+  d := round(32 * (1 - 1 / (1 + power(10, (l.rating - w.rating) / 400.0))));
+  -- Anti-farm : au-delà de 5 duels comptés entre les deux mêmes joueurs en 24 h, duel non classé
+  farmed := (
+    select count(*) from duel_matches
+    where created_at > now() - interval '24 hours' and delta > 0
+      and ((winner = w.user_id and loser = l.user_id) or (winner = l.user_id and loser = w.user_id))
+  ) >= 5;
+  d := case when farmed then 0 else greatest(least(d, l.rating - 100), 0) end;
+  update duel_ratings set rating = rating + d, wins = wins + (not farmed)::int, updated_at = now()
+  where user_id = w.user_id;
+  update duel_ratings set rating = rating - d, losses = losses + (not farmed)::int, updated_at = now()
+  where user_id = l.user_id;
+  insert into duel_matches (match_id, winner, loser, delta) values (p_match, w.user_id, l.user_id, d);
+  delete from duel_reports where match_id = p_match;
+  return jsonb_build_object(
+    'status', 'settled',
+    'rating', (select rating from duel_ratings where user_id = me),
+    'delta', case when p_won then d else -d end
+  );
+end $$;
+
+-- Classement : les meilleurs joueurs (au moins un duel compté), et la place du joueur connecté.
+create or replace function public.get_duel_ranking(p_limit int default 50) returns jsonb
+language sql security definer set search_path = public stable as $$
+  select jsonb_build_object(
+    'top', coalesce((
+      select jsonb_agg(jsonb_build_object('name', name, 'rating', rating, 'wins', wins, 'losses', losses))
+      from (
+        select name, rating, wins, losses from duel_ratings
+        where wins + losses > 0
+        order by rating desc, wins desc
+        limit least(greatest(p_limit, 1), 100)
+      ) t
+    ), '[]'::jsonb),
+    'me', (
+      select jsonb_build_object(
+        'name', r.name, 'rating', r.rating, 'wins', r.wins, 'losses', r.losses,
+        'rank', (select count(*) + 1 from duel_ratings o where o.wins + o.losses > 0 and o.rating > r.rating)
+      )
+      from duel_ratings r where r.user_id = auth.uid() and r.wins + r.losses > 0
+    )
+  );
+$$;
+
+revoke all on function public.report_duel(uuid, boolean, text) from public;
+revoke all on function public.get_duel_ranking(int) from public;
+grant execute on function public.report_duel(uuid, boolean, text) to authenticated;
+grant execute on function public.get_duel_ranking(int) to anon, authenticated;
+
+-- Droit à l'effacement (remplace la version plus haut) : sauvegarde du compte et données de duel.
+create or replace function public.delete_account_progress() returns void
+language sql security definer set search_path = public as $$
+  delete from account_saves where user_id = auth.uid();
+  delete from duel_reports where user_id = auth.uid();
+  delete from duel_ratings where user_id = auth.uid();
+$$;

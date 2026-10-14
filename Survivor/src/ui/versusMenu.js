@@ -88,6 +88,11 @@ export function showVersusOver({ winner, runs }, prize) {
   showScreen("versusOver");
 }
 
+/** Duel en ligne : ligne du classement ELO sur l'écran de fin (vide = rien à afficher). */
+export function showDuelElo(text) {
+  setText("versusElo", text);
+}
+
 /** En ligne : l'invité a demandé la revanche, l'hôte doit la lancer. */
 export function showRematchWaiting() {
   setText("versusScore", "Revanche demandée. En attente de l'adversaire…");
