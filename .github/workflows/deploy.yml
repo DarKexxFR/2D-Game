@@ -1,0 +1,24 @@
+name: Déploiement sur IONOS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Envoi des fichiers en SFTP sur IONOS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          protocol: sftp
+          port: 22
+          local-dir: ./ # Dossier de votre dépôt à envoyer (./ = tout le dépôt)
+          server-dir: ./ # Dossier de destination sur IONOS (ex: ./ ou /mon-site/)
