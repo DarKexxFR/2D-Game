@@ -17,7 +17,8 @@ import {
   WAVE_SCALING as W,
 } from "../data/enemies.js";
 import { biomeForWave } from "../data/biomes.js";
-import { clamp, randomItem, weightedPick } from "../utils/math.js";
+import { randomItem, weightedPick } from "../utils/math.js";
+import { clampToZone } from "./arena.js";
 import { addFloatingText, createParticles, createSpawnEffect } from "./effects.js";
 import { arenaPointNear } from "./pickups.js";
 import { recordBest, recordWave } from "../services/achievements.js";
@@ -212,8 +213,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
     y = player.worldY + Math.sin(angle) * W.spawnDistance;
   }
-  x = clamp(x, game.bounds.minX + 50, game.bounds.maxX - 50);
-  y = clamp(y, game.bounds.minY + 50, game.bounds.maxY - 50);
+  ({ x, y } = clampToZone(x, y, 50));
   if (t.isBoss) createSpawnEffect(x, y, t.color);
 
   const wave = game.wave;

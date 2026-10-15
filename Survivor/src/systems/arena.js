@@ -34,6 +34,28 @@ function sealArena() {
   addFloatingText(player.worldX, player.worldY - 70, "ARÈNE SCELLÉE", "#ff2a6d", 18, 80);
 }
 
+/**
+ * Zone où la partie va se jouer : la zone actuelle, réduite à l'arène si ses murs sont encore en
+ * train de se refermer. À utiliser pour placer quelque chose (tentacule, saut, téléportation) :
+ * `game.bounds` seul laisserait apparaître un objet là où le mur va passer.
+ */
+export function combatZone() {
+  const b = game.bounds;
+  const t = game.arena || MAP_BOUNDS;
+  return {
+    minX: Math.max(b.minX, t.minX),
+    maxX: Math.min(b.maxX, t.maxX),
+    minY: Math.max(b.minY, t.minY),
+    maxY: Math.min(b.maxY, t.maxY),
+  };
+}
+
+/** Ramène un point à l'intérieur de la zone de combat, à `margin` des murs. */
+export function clampToZone(x, y, margin) {
+  const z = combatZone();
+  return { x: clamp(x, z.minX + margin, z.maxX - margin), y: clamp(y, z.minY + margin, z.maxY - margin) };
+}
+
 /** Vrai quand la zone de combat est plus petite que la carte (murs de l'arène à dessiner). */
 export function arenaShrunk() {
   const b = game.bounds;

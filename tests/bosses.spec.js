@@ -303,6 +303,42 @@ test("le Crabe blindé, lui, laisse les petits ennemis", async ({ page }) => {
   await killPlayer(page);
 });
 
+test("Kraken : ses tentacules restent dans l'arène, même quand ses murs se referment encore", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page, { invincible: true });
+  await game(page, ({ state, spawner, arena }) => {
+    Object.assign(state.game, { spawnTimer: 1e9, eventTimer: 1e9 });
+    state.world.enemies.length = 0;
+    // Près du bord gauche : l'arène est collée à gauche et son mur droit a un long chemin à faire
+    state.player.worldX = -1500;
+    state.player.worldY = 0;
+    state.game.pendingBosses.push({ type: "kraken", delay: 1e9 });
+    arena.updateArena();
+    // Le joueur est encore loin, du côté où le mur avance, quand le Kraken plonge
+    state.player.worldX = state.game.arena.maxX + 250;
+    spawner.spawnEnemy("kraken", state.game.arena.maxX - 300, 0);
+  });
+  await expect
+    .poll(() =>
+      game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "kraken_tentacle").length),
+    )
+    .toBe(4);
+  // Murs arrivés : aucune tentacule n'est restée dehors
+  await expect
+    .poll(() => game(page, ({ state }) => state.game.bounds.maxX === state.game.arena.maxX))
+    .toBe(true);
+  const out = await game(page, ({ state }) => {
+    const a = state.game.arena;
+    return state.world.enemies
+      .filter((e) => e.type === "kraken_tentacle")
+      .filter((e) => e.x < a.minX || e.x > a.maxX || e.y < a.minY || e.y > a.maxY).length;
+  });
+  expect(out).toBe(0);
+  await killPlayer(page);
+});
+
 test("Kraken : invulnérable sous l'eau tant que ses tentacules tiennent, puis la tête remonte", async ({
   page,
 }) => {

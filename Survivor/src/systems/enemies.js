@@ -10,6 +10,7 @@ import { addFloatingText, addScreenShake, createAoEEffect, createParticles } fro
 import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
+import { clampToZone } from "./arena.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
 
@@ -52,6 +53,9 @@ export function updateEnemies() {
     if (e.rooted > 0)
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
+    // Même immobile (tentacule, boss en pleine attaque), un ennemi suit les murs de l'arène qui se referment
+    e.x = clamp(e.x, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+    e.y = clamp(e.y, game.bounds.minY + e.size, game.bounds.maxY - e.size);
     if (e.type === "ranged") rangedAttack(e, d);
     if (d < player.size + e.size && e.damage > 0 && !e.submerged && !e.airborne) handleContact(e);
   }
@@ -105,9 +109,6 @@ function moveEnemy(e, distToPlayer) {
     e.x += (mx / len) * speed;
     e.y += (my / len) * speed;
   }
-  // Un recul (ultime, explosion...) ne doit pas sortir un ennemi de la zone de combat
-  e.x = clamp(e.x, game.bounds.minX + e.size, game.bounds.maxX - e.size);
-  e.y = clamp(e.y, game.bounds.minY + e.size, game.bounds.maxY - e.size);
 }
 
 function rangedAttack(e, distToPlayer) {
@@ -186,10 +187,11 @@ function updateBlinker(e, distToPlayer) {
   if (e.blinkTimer > 0 || distToPlayer < b.minDist) return;
   e.blinkTimer = b.every;
   const a = Math.random() * Math.PI * 2;
-  e.blinkTo = {
-    x: clamp(player.worldX + Math.cos(a) * b.landDist, game.bounds.minX + e.size, game.bounds.maxX - e.size),
-    y: clamp(player.worldY + Math.sin(a) * b.landDist, game.bounds.minY + e.size, game.bounds.maxY - e.size),
-  };
+  e.blinkTo = clampToZone(
+    player.worldX + Math.cos(a) * b.landDist,
+    player.worldY + Math.sin(a) * b.landDist,
+    e.size,
+  );
   e.rooted = b.warn; // immobile pendant l'annonce
 }
 
@@ -430,8 +432,9 @@ function updateVoidReaper(e) {
   } else if (attack === "blink") {
     // Réapparaît derrière le joueur
     const a = Math.atan2(e.y - player.worldY, e.x - player.worldX) + Math.PI;
-    e.blinkX = clamp(player.worldX + Math.cos(a) * 140, game.bounds.minX + e.size, game.bounds.maxX - e.size);
-    e.blinkY = clamp(player.worldY + Math.sin(a) * 140, game.bounds.minY + e.size, game.bounds.maxY - e.size);
+    const to = clampToZone(player.worldX + Math.cos(a) * 140, player.worldY + Math.sin(a) * 140, e.size);
+    e.blinkX = to.x;
+    e.blinkY = to.y;
     addCircle(e.blinkX, e.blinkY, 110, e.damage, { delay: 50, color: e.color });
     e.blinkIn = 50;
     e.rooted = 50;
@@ -645,15 +648,11 @@ function krakenDive(e) {
   const offset = Math.random() * Math.PI * 2;
   for (let k = 0; k < count; k++) {
     const a = offset + (Math.PI * 2 * k) / count;
-    const x = clamp(
+    // Dans l'arène finale, pas seulement entre les murs actuels (ils se referment encore à l'arrivée du boss)
+    const { x, y } = clampToZone(
       player.worldX + Math.cos(a) * KRAKEN.ringRadius,
-      game.bounds.minX + 60,
-      game.bounds.maxX - 60,
-    );
-    const y = clamp(
       player.worldY + Math.sin(a) * KRAKEN.ringRadius,
-      game.bounds.minY + 60,
-      game.bounds.maxY - 60,
+      60,
     );
     addCircle(x, y, 60, e.damage * 0.6, { delay: KRAKEN.emerge, color: "#b46bff" });
     e.pending.push({ x, y });
@@ -913,8 +912,7 @@ function updateSlimeBoss(e) {
 
 /** Début d'un saut : zone d'atterrissage annoncée là où se tient le joueur. */
 function startSlimeJump(e) {
-  const tx = clamp(player.worldX, game.bounds.minX + e.size, game.bounds.maxX - e.size);
-  const ty = clamp(player.worldY, game.bounds.minY + e.size, game.bounds.maxY - e.size);
+  const { x: tx, y: ty } = clampToZone(player.worldX, player.worldY, e.size);
   const r = SLIME_KING.jumpRadius;
   addCircle(tx, ty, r, e.damage, { delay: SLIME_KING.jumpTicks, color: SLIME_GREEN });
   e.jump = { fromX: e.x, fromY: e.y, tx, ty, t: 0 };
