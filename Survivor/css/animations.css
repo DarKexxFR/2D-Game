@@ -10,6 +10,17 @@
     box-shadow: 0 0 0 #ffaa00;
   }
 }
+@keyframes pulseMythic {
+  0%,
+  100% {
+    box-shadow: 0 0 4px #ff3b30;
+  }
+  50% {
+    box-shadow:
+      0 0 18px #ff3b30,
+      0 0 6px #ffd700;
+  }
+}
 @keyframes shake {
   0% {
     transform: translate(-52%, -50%);

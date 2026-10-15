@@ -60,6 +60,8 @@ for (const weapon of [
   "flamer",
   "disc",
   "tesla",
+  "blades",
+  "nova",
 ]) {
   test(`l'arme ${weapon} fonctionne en jeu`, async ({ page, isMobile }) => {
     test.skip(isMobile, "une seule plateforme suffit");
@@ -78,6 +80,39 @@ for (const weapon of [
     await killPlayer(page);
   });
 }
+
+test("coffre mythique : rareté mythique, objets mythiques et évolutions des nouvelles armes", async ({
+  page,
+}) => {
+  await withSave(page, { gold: 7000, lastFreeChest: Date.now() });
+  await page.goto("/");
+  await page.locator("#btnShop").click();
+  const tile = page.locator(".chest-mythic");
+  await expect(tile).toContainText("Coffre mythique");
+  await expect(tile.locator(".odds-chip", { hasText: "Mythique 15%" })).toBeVisible();
+  await expect(page.locator(".chest-legendary .odds-chip", { hasText: "Mythique 3%" })).toBeVisible();
+  // Tirage forcé sur la rareté mythique : seules des armes ou armures mythiques peuvent sortir
+  await game(page, () => {
+    Math.random = () => 0.99;
+  });
+  await tile.locator(".shop-btn").click();
+  await expect(page.locator("#chestReveal .item-rarity")).toHaveText(/Mythique/i);
+  const info = await game(page, ({ items, storage }) => ({
+    gold: storage.account.gold,
+    mythics: Object.values(items.ITEMS)
+      .filter((it) => it.rarity === "mythic")
+      .map((it) => it.slot),
+    owned: Object.keys(storage.account.items).filter((id) => items.ITEMS[id].rarity === "mythic"),
+  }));
+  expect(info.gold).toBe(1000);
+  expect(info.mythics.sort()).toEqual(["armor", "weapon"]);
+  expect(info.owned).toHaveLength(1);
+  // Chaque arme a son évolution
+  const missing = await game(page, ({ items, upgrades }) =>
+    Object.keys(items.WEAPONS).filter((id) => !upgrades.WEAPON_EVOLUTIONS.some((e) => e.weapon === id)),
+  );
+  expect(missing).toEqual([]);
+});
 
 test("coffre gratuit : disponible, puis compte à rebours, puis de nouveau disponible", async ({ page }) => {
   await page.goto("/");

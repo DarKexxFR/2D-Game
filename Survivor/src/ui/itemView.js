@@ -5,7 +5,13 @@ import { MAX_PRESTIGE, armorStats, heroStats, petStats, weaponStats } from "../d
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
 
-export const RARITY_LABELS = { common: "Commun", rare: "Rare", epic: "Épique", legendary: "Légendaire" };
+export const RARITY_LABELS = {
+  common: "Commun",
+  rare: "Rare",
+  epic: "Épique",
+  legendary: "Légendaire",
+  mythic: "Mythique",
+};
 
 export function rarityColor(rarity) {
   return RARITIES[rarity].color;
@@ -22,7 +28,7 @@ export function statsText(item, level = 1, prestige = 1) {
   if (item.slot === "weapon") {
     const w = weaponStats(item.id, level, prestige);
     const parts = [`DMG ×${w.damage.toFixed(2)}`, `Cadence ×${(1 / w.cooldown).toFixed(1)}`];
-    if (w.projectiles > 1) parts.push(`${w.projectiles} projectiles`);
+    if (w.projectiles > 1) parts.push(`${w.projectiles} projectiles${w.ring ? " en cercle" : ""}`);
     if (w.pierce && !w.returns) parts.push(`Perce ${w.pierce}`);
     if (w.returns) parts.push("Revient");
     if (w.chain) parts.push(`${w.chain} rebonds`);

@@ -194,7 +194,7 @@ export function shoot() {
   const w = player.weapon;
   const extra = player.inventory["Multi-Tir"] || 0;
   const count = w.projectiles + extra;
-  // Arme en couronne (évolution « Tourbillon ») : projectiles répartis tout autour
+  // Arme en couronne (Couronne de lames, évolution « Tourbillon ») : projectiles répartis tout autour
   const spread = w.ring ? (Math.PI * 2) / count : w.spread || player.multishotSpread;
   for (let i = 0; i < count; i++) {
     const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;

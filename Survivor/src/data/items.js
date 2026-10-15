@@ -16,13 +16,13 @@ export const PRESTIGE_BONUS = 0.15; // +15 % par étoile (max ★5 niv. 50 ≈ �
 /** Doublons nécessaires pour passer de ★n à ★n+1 (index = prestige actuel). */
 export const PRESTIGE_COPIES = [0, 1, 2, 3, 5];
 
-const RARITY_COST = { common: 1, rare: 2, epic: 4, legendary: 8 };
+const RARITY_COST = { common: 1, rare: 2, epic: 4, legendary: 8, mythic: 16 };
 export const levelUpCost = (item, level) => Math.floor(40 * level * RARITY_COST[item.rarity]);
 export const maxLevel = (prestige) => prestige * LEVELS_PER_PRESTIGE;
 export const powerMult = (level, prestige) =>
   (1 + (level - 1) * LEVEL_BONUS) * (1 + (prestige - 1) * PRESTIGE_BONUS);
 /** Or rendu si on obtient un doublon d'un objet déjà au prestige maximum. */
-export const MAXED_DUPLICATE_GOLD = { common: 50, rare: 120, epic: 300, legendary: 800 };
+export const MAXED_DUPLICATE_GOLD = { common: 50, rare: 120, epic: 300, legendary: 800, mythic: 2000 };
 
 // --- ARMES : elles remplacent le tir de base ---
 // damage / cooldown sont des multiplicateurs de l'attaque et de la cadence du joueur.
@@ -163,6 +163,37 @@ export const WEAPONS = {
     chain: 4, // rebonds
     color: "#66ccff",
   },
+  blades: {
+    name: "Couronne de lames",
+    icon: "blades",
+    rarity: "epic",
+    desc: "Six lames lancées tout autour de vous qui traversent les ennemis.",
+    damage: 0.7,
+    cooldown: 1.5,
+    projectiles: 6,
+    ring: true, // projectiles répartis sur 360°
+    speed: 9,
+    size: 7,
+    pierce: 2,
+    range: 40,
+    color: "#ff8844",
+  },
+  nova: {
+    name: "Lance-étoiles",
+    icon: "star",
+    rarity: "mythic",
+    desc: "Trois étoiles perçantes qui explosent et foudroient les ennemis voisins.",
+    damage: 1.5,
+    cooldown: 0.7,
+    projectiles: 3,
+    spread: 0.18,
+    speed: 13,
+    size: 8,
+    pierce: 3,
+    explosion: 55,
+    chain: 2,
+    color: "#ff3b30",
+  },
 };
 
 // --- ARMURES : bonus de statistiques ---
@@ -238,6 +269,22 @@ export const ARMORS = {
     desc: "Régénération, coups critiques et vitesse.",
     stats: { health: 90, crit: 0.1, regen: 2.5, speed: 0.08 },
     color: "#00ffcc",
+  },
+  looter: {
+    name: "Sac de pillard",
+    icon: "backpack",
+    rarity: "rare",
+    desc: "Plus d'or à chaque élimination et des gemmes attirées de plus loin.",
+    stats: { health: 25, magnet: 40, gold: 0.2 },
+    color: "#ffcc33",
+  },
+  aegis: {
+    name: "Égide céleste",
+    icon: "aegis",
+    rarity: "mythic",
+    desc: "Armure des étoiles : énorme protection, régénération, vitesse et coups critiques.",
+    stats: { health: 170, defense: 10, speed: 0.12, regen: 3, crit: 0.08 },
+    color: "#ff3b30",
   },
 };
 
@@ -421,7 +468,15 @@ export const CHESTS = [
     icon: "crown",
     color: "#ffd700",
     cost: 3000,
-    odds: { rare: 40, epic: 45, legendary: 15 },
+    odds: { rare: 38, epic: 44, legendary: 15, mythic: 3 },
+  },
+  {
+    id: "mythic",
+    name: "Coffre mythique",
+    icon: "mythicChest",
+    color: "#ff3b30",
+    cost: 6000,
+    odds: { epic: 45, legendary: 40, mythic: 15 },
   },
   {
     id: "hero",
@@ -445,7 +500,7 @@ export const CHESTS = [
 
 /** Regroupement des coffres dans la boutique. */
 export const CHEST_GROUPS = [
-  { title: "Armes & armures", ids: ["basic", "premium", "legendary"] },
+  { title: "Armes & armures", ids: ["basic", "premium", "legendary", "mythic"] },
   { title: "Héros & familiers", ids: ["hero", "pet"] },
 ];
 

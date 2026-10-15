@@ -20,7 +20,7 @@ import { setLabel } from "./icons.js";
 import { itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
 import { showScreen } from "./screens.js";
 
-const RARITY_ORDER = ["common", "rare", "epic", "legendary"];
+const RARITY_ORDER = ["common", "rare", "epic", "legendary", "mythic"];
 const TABS = { hero: "invTabHero", pet: "invTabPet", weapon: "invTabWeapon", armor: "invTabArmor" };
 const EQUIPPED_SLOTS = [
   ["equippedHero", "hero", "Héros", "Aucun héros"],
@@ -105,7 +105,7 @@ function itemCard(item) {
   const equipped = account.equipped[item.slot] === item.id;
   const card = el(
     "button",
-    `item-card${owned ? "" : " locked"}${equipped ? " equipped" : ""}${item.id === selectedId ? " selected" : ""}`,
+    `item-card rarity-card-${item.rarity}${owned ? "" : " locked"}${equipped ? " equipped" : ""}${item.id === selectedId ? " selected" : ""}`,
   );
   card.style.setProperty("--rarity", rarityColor(item.rarity));
   card.append(

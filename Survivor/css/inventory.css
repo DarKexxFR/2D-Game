@@ -71,9 +71,13 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  overflow: visible; /* lueur du coffre mythique */
 }
 .chest-grid.cols-2 {
   grid-template-columns: repeat(2, 1fr);
+}
+.chest-grid.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 .chest-tile {
   display: flex;
@@ -163,6 +167,16 @@
   animation:
     revealPop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1),
     pulseGold 1.2s 0.5s infinite;
+}
+.rarity-glow-mythic {
+  animation:
+    revealPop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1),
+    pulseMythic 1s 0.5s infinite;
+}
+/* Rareté mythique : lueur rouge qui pulse sur les vignettes et la tuile du coffre */
+button.item-card.rarity-card-mythic:not(.locked),
+.chest-tile.chest-mythic {
+  animation: pulseMythic 1.6s infinite;
 }
 .reveal-icon {
   font-size: 64px;
@@ -468,6 +482,9 @@ button.item-card.locked {
   .chest-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
+  }
+  .chest-grid.cols-4 {
+    grid-template-columns: repeat(2, 1fr);
   }
   .chest-grid.cols-3 > :last-child:nth-child(odd) {
     grid-column: span 2;

@@ -216,7 +216,7 @@ coffres de boss, 34 succès avec récompenses, Voleur doré, difficulté croissa
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
-Kraken et Jumeaux, arène vidée pendant les boss.
+Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (Lance-étoiles, Égide céleste, coffre mythique).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
