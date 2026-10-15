@@ -5,6 +5,7 @@ export const ACHIEVEMENT_GROUPS = [
   { id: "combat", name: "Combat", color: "#ff2a6d" },
   { id: "boss", name: "Boss", color: "#aa66ff" },
   { id: "survival", name: "Survie", color: "#00ffff" },
+  { id: "nightmare", name: "Cauchemar", color: "#ff4466" },
   { id: "collection", name: "Collection", color: "#ffd700" },
 ];
 
@@ -127,6 +128,58 @@ export const ACHIEVEMENTS = [
   a("survival", "runs_10", "repeat", "Persévérance", "Terminer 10 parties.", "runs", 10, 200),
   a("survival", "runs_50", "repeat", "Accro", "Terminer 50 parties.", "runs", 50, 1000),
   a("survival", "daily", "target", "Défi relevé", "Terminer un défi du jour.", "dailyRuns", 1, 200),
+  a(
+    "survival",
+    "streak_7",
+    "gift",
+    "Fidèle au poste",
+    "Se connecter 7 jours d'affilée.",
+    "bestStreak",
+    7,
+    500,
+  ),
+
+  // --- CAUCHEMAR (difficulté débloquée à la vague 10) ---
+  a(
+    "nightmare",
+    "nightmare_5",
+    "skull",
+    "Insomnie",
+    "Atteindre la vague 5 en Cauchemar.",
+    "nightmareWave",
+    5,
+    400,
+  ),
+  a(
+    "nightmare",
+    "nightmare_boss",
+    "crown",
+    "Pire cauchemar",
+    "Vaincre un boss en Cauchemar.",
+    "nightmareBosses",
+    1,
+    800,
+  ),
+  a(
+    "nightmare",
+    "nightmare_15",
+    "rage",
+    "Terreur nocturne",
+    "Atteindre la vague 15 en Cauchemar.",
+    "nightmareWave",
+    15,
+    1500,
+  ),
+  a(
+    "nightmare",
+    "nightmare_25",
+    "crossbones",
+    "Maître du cauchemar",
+    "Atteindre la vague 25 en Cauchemar.",
+    "nightmareWave",
+    25,
+    4000,
+  ),
 
   // --- COLLECTION ---
   a("collection", "chests_10", "gift", "Collectionneur", "Ouvrir 10 coffres.", "chests", 10, 300),

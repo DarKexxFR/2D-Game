@@ -67,6 +67,23 @@ export const ENEMY_TYPES = {
   // Ennemis propres aux biomes (voir data/biomes.js)
   scorpion: { health: 40, damage: 14, speed: 3, size: 16, color: "#ff6a00", xp: 6, gold: 3 },
   golem: { health: 160, damage: 20, speed: 1.4, size: 28, color: "#7fdfff", xp: 12, gold: 6 },
+  // Jungle toxique : la spore éclate en sporelets, le poseur de mines sème des mines annoncées
+  spore: {
+    health: 45,
+    damage: 10,
+    speed: 2.2,
+    size: 19,
+    color: "#7dff3a",
+    xp: 5,
+    gold: 2,
+    splitTo: "sporeling",
+    splitCount: 3,
+  },
+  sporeling: { health: 10, damage: 6, speed: 4.2, size: 9, color: "#c8ff5a", xp: 1, gold: 1 },
+  bomber: { health: 55, damage: 12, speed: 2, size: 18, color: "#d4ff00", xp: 7, gold: 4 },
+  // Station orbitale : le téléporteur surgit près du joueur, le drone laser tire de loin
+  blinker: { health: 35, damage: 13, speed: 2.6, size: 15, color: "#c58bff", xp: 6, gold: 3 },
+  laser_drone: { health: 40, damage: 16, speed: 2, size: 16, color: "#ff4fd8", xp: 7, gold: 4 },
   hydra: {
     health: 3000,
     damage: 50,
@@ -194,6 +211,13 @@ export const ENEMY_TYPES = {
   },
 };
 
+/** Comportements des ennemis des nouveaux biomes (voir systems/enemies.js), en ticks. */
+export const BIOME_FOES = {
+  mine: { every: 150, range: 480, radius: 60, delay: 150, damage: 1.6 }, // poseur de mines
+  blink: { every: 200, minDist: 220, landDist: 130, warn: 35 }, // téléporteur
+  laser: { every: 240, range: 520, length: 700, width: 18, delay: 50, active: 14 }, // drone laser
+};
+
 /** Ennemis d'élite : plus gros, plus résistants, plus forts ; de plus en plus fréquents. */
 export const ELITE = {
   fromWave: 8,
@@ -222,6 +246,11 @@ export const ENEMY_NAMES = {
   slime_small: "Petit slime",
   scorpion: "Scorpion",
   golem: "Golem de glace",
+  spore: "Spore",
+  sporeling: "Sporelet",
+  bomber: "Poseur de mines",
+  blinker: "Téléporteur",
+  laser_drone: "Drone laser",
   hydra: "Nécro-Hydre",
   hydra_spawn: "Rejeton",
   colossus: "Colosse de givre",

@@ -1,7 +1,7 @@
 // IA des ennemis : déplacement, séparation, attaques et comportements de boss.
 
 import { game, player, world } from "../core/state.js";
-import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
 import { SURVIVAL, TICK_MS } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
@@ -46,6 +46,9 @@ export function updateEnemies() {
     if (e.dead) continue; // le Voleur doré a pu s'enfuir
     const d = dist(player.worldX, player.worldY, e.x, e.y);
     if (e.type === "scorpion") updateScorpion(e, d);
+    else if (e.type === "bomber") updateBomber(e, d);
+    else if (e.type === "blinker") updateBlinker(e, d);
+    else if (e.type === "laser_drone") updateLaserDrone(e, d);
     if (e.rooted > 0)
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
@@ -69,7 +72,7 @@ function moveEnemy(e, distToPlayer) {
     // Anticipe légèrement la position du joueur
     tx += (player.worldX - e.x) * 0.2;
     ty += (player.worldY - e.y) * 0.2;
-  } else if (e.type === "ranged") {
+  } else if (e.type === "ranged" || e.type === "laser_drone") {
     if (distToPlayer < 250) {
       // Trop près : recule
       tx = e.x - (player.worldX - e.x);
@@ -155,6 +158,55 @@ function updateScorpion(e, distToPlayer) {
     e.lungeCooldown = SCORPION_LUNGE.cooldown;
     e.speed = e.baseSpeed * SCORPION_LUNGE.speed;
   }
+}
+
+/** Poseur de mines : sème des mines (zones annoncées) quand il est près du joueur. */
+function updateBomber(e, distToPlayer) {
+  const m = BIOME_FOES.mine;
+  e.mineTimer = (e.mineTimer ?? m.every * Math.random()) - 1;
+  if (e.mineTimer > 0 || distToPlayer > m.range) return;
+  e.mineTimer = m.every;
+  addCircle(e.x, e.y, m.radius, e.damage * m.damage, { delay: m.delay, color: e.color });
+}
+
+/** Téléporteur : annonce son point d'arrivée près du joueur, puis y surgit. */
+function updateBlinker(e, distToPlayer) {
+  const b = BIOME_FOES.blink;
+  if (e.blinkTo) {
+    if (e.rooted % 5 === 0) createParticles(e.blinkTo.x, e.blinkTo.y, e.color, 2);
+    if (e.rooted > 1) return;
+    createParticles(e.x, e.y, e.color, 10);
+    e.x = e.blinkTo.x;
+    e.y = e.blinkTo.y;
+    e.blinkTo = null;
+    createParticles(e.x, e.y, e.color, 10);
+    return;
+  }
+  e.blinkTimer = (e.blinkTimer ?? b.every * Math.random()) - 1;
+  if (e.blinkTimer > 0 || distToPlayer < b.minDist) return;
+  e.blinkTimer = b.every;
+  const a = Math.random() * Math.PI * 2;
+  e.blinkTo = {
+    x: clamp(player.worldX + Math.cos(a) * b.landDist, game.bounds.minX + e.size, game.bounds.maxX - e.size),
+    y: clamp(player.worldY + Math.sin(a) * b.landDist, game.bounds.minY + e.size, game.bounds.maxY - e.size),
+  };
+  e.rooted = b.warn; // immobile pendant l'annonce
+}
+
+/** Drone laser : garde ses distances et tire un laser annoncé vers le joueur. */
+function updateLaserDrone(e, distToPlayer) {
+  const l = BIOME_FOES.laser;
+  e.laserTimer = (e.laserTimer ?? l.every * (0.5 + Math.random() * 0.5)) - 1;
+  if (e.laserTimer > 0 || distToPlayer > l.range) return;
+  e.laserTimer = l.every;
+  e.rooted = l.delay + l.active;
+  addBeam(e.x, e.y, aim(e), e.damage, {
+    length: l.length,
+    width: l.width,
+    delay: l.delay,
+    active: l.active,
+    color: e.color,
+  });
 }
 
 /** Voleur doré : file pendant quelques secondes puis disparaît avec son butin. */

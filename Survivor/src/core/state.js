@@ -49,6 +49,7 @@ export function resetGame() {
     isBossWave: false,
     nextWaveTimer: 0,
     adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
+    difficulty: "normal", // niveau de difficulté de la partie (voir services/difficulty.js)
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
     rush: null, // Boss Rush en cours : { stage, defeated } (voir systems/spawner.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...

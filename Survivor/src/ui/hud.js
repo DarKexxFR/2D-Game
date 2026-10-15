@@ -1,11 +1,11 @@
 // Interface en jeu (panneau de stats, barres d'XP / dash / ultime).
 
-import { STAT_CAPS, WAVE_DURATION } from "../config.js";
+import { DIFFICULTIES, STAT_CAPS, WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { heroSkill } from "../systems/skills.js";
-import { setClass, setText, setVisible, setWidth } from "./dom.js";
+import { $, setClass, setText, setVisible, setWidth } from "./dom.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 
 const HUD_ELEMENTS = ["ui", "xpContainer", "levelIndicator"];
@@ -22,6 +22,12 @@ export function showHud(visible) {
 export function updateHud() {
   // Boss Rush : numéro du boss au lieu de la vague, et pas de minuteur
   setText("waveLabel", game.rush ? "BOSS" : "VAGUE");
+  // Facile / Cauchemar : numéro de vague à la couleur du niveau (la place manque pour son nom)
+  const diff = game.difficulty !== "normal" && !game.rush ? game.difficulty : "";
+  if ($("wave").dataset.diff !== diff) {
+    $("wave").dataset.diff = diff;
+    $("wave").style.color = diff ? DIFFICULTIES[diff].color : "";
+  }
   setText("wave", game.rush ? game.rush.stage : game.wave);
   setVisible("timerContainer", !game.rush);
   setText("kills", game.kills);

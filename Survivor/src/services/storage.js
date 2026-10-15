@@ -40,6 +40,8 @@ export const account = {
   skin: { ...DEFAULT_SKIN }, // personnalisation du vaisseau (voir data/skins.js)
   skinsOwned: [], // options achetées : "hull:manta", "trail:sparks", "rainbow"...
   tutorialDone: false, // tutoriel de première partie fait ou passé (voir ui/tutorial.js)
+  difficulty: "normal", // niveau de difficulté choisi à l'accueil (voir DIFFICULTIES dans config.js)
+  loginStreak: { day: "", count: 0 }, // série de connexion : dernier jour récupéré (local) et jours d'affilée
   weekly: null, // quêtes de la semaine : { week, quests: [{ id, progress, claimed }], bonusClaimed }
   loadouts: [null, null, null], // équipements enregistrés : { weapon, armor, hero, pet, module } ou null
   dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
@@ -72,6 +74,8 @@ export function loadAccount() {
   account.weekly = saved.weekly || null;
   account.loadouts = Array.isArray(saved.loadouts) ? saved.loadouts : [null, null, null];
   account.dailyOffer = { day: "", bought: false, ...saved.dailyOffer };
+  account.difficulty = saved.difficulty || "normal";
+  account.loginStreak = { day: "", count: 0, ...saved.loginStreak };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;
 }

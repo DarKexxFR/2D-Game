@@ -221,6 +221,40 @@ export const BOSS_CHEST = {
   goldPerWave: 8,
 };
 
+// Niveaux de difficulté (partie normale seulement : ni défi du jour, ni Boss Rush, ni duel).
+// Multiplicateurs appliqués via `game.modifier` ; `eliteShift` avance (+) ou recule (-) l'arrivée des
+// élites en vagues ; `rewards` multiplie l'XP et l'or. Cauchemar : débloqué au record de vague
+// `unlockWave`, classement mondial à part. Facile : pas de classement mondial.
+export const DIFFICULTIES = {
+  easy: {
+    name: "FACILE",
+    color: "#00ff88",
+    desc: "Ennemis plus faibles · XP et or ×0,7",
+    enemyHealth: 0.7,
+    enemyDamage: 0.6,
+    eliteShift: -4,
+    rewards: 0.7,
+  },
+  normal: { name: "NORMAL", color: "#00ffff", desc: "L'expérience prévue", rewards: 1 },
+  nightmare: {
+    name: "CAUCHEMAR",
+    color: "#ff2a6d",
+    desc: "Ennemis bien plus forts, élites dès la vague 3 · XP et or ×1,75",
+    enemyHealth: 1.6,
+    enemyDamage: 1.5,
+    enemySpeed: 1.1,
+    eliteShift: 5,
+    rewards: 1.75,
+    unlockWave: 10,
+  },
+};
+
+// Série de connexion : une récompense par jour de connexion d'affilée (heure locale), de plus en
+// plus grosse jusqu'au 7e jour ; un jour manqué remet la série à 1, après le 7e jour elle recommence.
+export const LOGIN_STREAK = {
+  rewards: [100, 150, 200, 300, 400, 600, 1200], // or des jours 1 à 7
+};
+
 // Quêtes hebdomadaires (data/quests.js) : renouvelées chaque lundi à 0 h (heure du joueur).
 export const WEEKLY = {
   questsPerWeek: 3,
@@ -301,6 +335,8 @@ export const ONLINE = {
   leaderboardView: "leaderboard",
   dailyTable: "daily_scores",
   dailyView: "daily_leaderboard",
+  nightmareTable: "nightmare_scores",
+  nightmareView: "nightmare_leaderboard",
   topCount: 50,
   timeoutMs: 6000,
 };

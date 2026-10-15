@@ -85,6 +85,7 @@ export function killEnemy(enemy) {
   game.stats.kills[enemy.type] = (game.stats.kills[enemy.type] || 0) + 1;
   addComboKill(enemy.x, enemy.y);
   if (enemy.template.isBoss) bossDefeated(enemy);
+  if (enemy.template.isBoss && game.difficulty === "nightmare") addStat("nightmareBosses");
   createGem(enemy.x, enemy.y, enemy.xp);
   game.runGold += Math.floor(
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
