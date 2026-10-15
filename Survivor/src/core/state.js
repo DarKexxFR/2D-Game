@@ -113,12 +113,23 @@ export function resetPlayer(accountLevel) {
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0 },
+    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0, haste: 0 },
+    hasteBonus: 0, // vitesse en plus pendant buffs.haste (Combinaison légère ★3)
+    // Effets d'équipement (systems/perks.js) : effets ★3 actifs, panoplie, minuteurs, zones
+    perks: {},
+    set: null,
+    perkTimers: {},
+    perkZones: [],
+    damageTaken: 1, // multiplicateur des dégâts reçus
+    healMult: 1, // efficacité des soins
+    bossDamage: 1, // multiplicateur des dégâts contre les boss
+    auraMult: 1, // taille de l'aura de feu
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)
     armor: null,
     hero: null,
+    module: null,
   });
   player.health = player.maxHealth;
   player.speed = player.baseSpeed;

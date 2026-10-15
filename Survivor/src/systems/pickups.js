@@ -8,6 +8,7 @@ import { playSfx } from "../services/sfx.js";
 import { clamp, dist, removeWhere } from "../utils/math.js";
 import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.js";
 import { gainXp, heal } from "./player.js";
+import { onGem } from "./perks.js";
 
 const LOOTBOX_HEAL = 25;
 const MAX_LOOTBOXES = 5; // soins au sol en même temps
@@ -93,6 +94,7 @@ function updateGems() {
       g.collected = true;
       playSfx("pickup");
       gainXp(g.xp);
+      onGem();
     }
   }
   removeWhere(world.gems, (g) => g.collected);

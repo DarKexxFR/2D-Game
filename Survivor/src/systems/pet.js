@@ -6,6 +6,7 @@ import { damageEnemy, enemyGrid, getNearestEnemy, spawnProjectile } from "./comb
 import { addFloatingText, createHealEffect, createParticles, createShockwave } from "./effects.js";
 import { playSfx } from "../services/sfx.js";
 import { heal } from "./player.js";
+import { perk } from "./perks.js";
 
 const DRONE_RANGE = 300;
 const DRONE_PROJECTILE_SPEED = 8;
@@ -15,6 +16,7 @@ const REAPER_HIT_COOLDOWN = 400; // ms entre deux coups sur le même ennemi
 
 const FROST = { range: 240, targets: 3 };
 const DRAGON = { range: 360, fireballs: 5, spread: 0.18, speed: 7, explosion: 40 };
+const PHOENIX = { range: 420, speed: 12, size: 9, life: 55 };
 
 const BEHAVIORS = {
   drone: updateDrone,
@@ -24,6 +26,7 @@ const BEHAVIORS = {
   frost: updateFrost,
   guardian: updateGuardian,
   dragon: updateDragon,
+  phoenix: updatePhoenix,
 };
 
 /** Le familier est-il prêt à agir (délai écoulé) ? Le cas échéant, relance son délai. */
@@ -52,21 +55,28 @@ function updateDrone() {
   pet.lastAction = game.time;
   playSfx("petLaser");
   const angle = angleTo(pet.x, pet.y, target.x, target.y);
-  spawnProjectile({
-    x: pet.x,
-    y: pet.y,
-    vx: Math.cos(angle) * DRONE_PROJECTILE_SPEED,
-    vy: Math.sin(angle) * DRONE_PROJECTILE_SPEED,
-    size: 4,
-    damage: pet.power.damage,
-    color: pet.color,
-    source: "pet",
-  });
+  const shots = perk("drone")?.shots || 1;
+  for (let i = 0; i < shots; i++) {
+    const a = angle + (i - (shots - 1) / 2) * 0.12;
+    spawnProjectile({
+      x: pet.x,
+      y: pet.y,
+      vx: Math.cos(a) * DRONE_PROJECTILE_SPEED,
+      vy: Math.sin(a) * DRONE_PROJECTILE_SPEED,
+      size: 4,
+      damage: pet.power.damage,
+      color: pet.color,
+      source: "pet",
+    });
+  }
 }
 
 function updateMedic() {
   follow();
-  if (game.time - pet.lastAction <= pet.power.cooldown) return;
+  const urgent = perk("medic");
+  const cooldown =
+    urgent && player.health < player.maxHealth * urgent.below ? pet.power.cooldown / 2 : pet.power.cooldown;
+  if (game.time - pet.lastAction <= cooldown) return;
   pet.lastAction = game.time;
   if (player.health >= player.maxHealth) return;
   heal(pet.power.heal);
@@ -86,6 +96,7 @@ function updateReaper() {
     e.reaperHit = game.time;
     playSfx("petSlash");
     damageEnemy(e, pet.power.damage, "pet");
+    if (perk("reaper")) heal(perk("reaper").heal);
   }
 }
 
@@ -96,7 +107,7 @@ function updateFrost() {
   const targets = world.enemies
     .filter((e) => !e.dead && dist(e.x, e.y, pet.x, pet.y) < FROST.range)
     .sort((a, b) => dist(a.x, a.y, pet.x, pet.y) - dist(b.x, b.y, pet.x, pet.y))
-    .slice(0, FROST.targets);
+    .slice(0, perk("frost")?.targets || FROST.targets);
   if (targets.length === 0) return;
   pet.lastAction = game.time;
   playSfx("petLaser");
@@ -122,6 +133,16 @@ function updateGuardian() {
   if (!ready()) return;
   player.buffs.shield = Math.max(player.buffs.shield, Math.round(pet.power.shield));
   createShockwave(player.worldX, player.worldY, 60, pet.color);
+  const rampart = perk("guardian");
+  if (rampart) {
+    createShockwave(player.worldX, player.worldY, rampart.radius, pet.color);
+    for (const e of enemyGrid.query(player.worldX, player.worldY, rampart.radius)) {
+      if (e.dead || e.template.isBoss) continue;
+      const a = angleTo(player.worldX, player.worldY, e.x, e.y);
+      e.x += Math.cos(a) * rampart.push;
+      e.y += Math.sin(a) * rampart.push;
+    }
+  }
   playSfx("petHeal");
 }
 
@@ -135,8 +156,9 @@ function updateDragon() {
   playSfx("explosion");
   const base = angleTo(pet.x, pet.y, target.x, target.y);
   pet.angle = base;
-  for (let i = 0; i < DRAGON.fireballs; i++) {
-    const a = base + (i - (DRAGON.fireballs - 1) / 2) * DRAGON.spread;
+  const count = perk("dragon")?.fireballs || DRAGON.fireballs;
+  for (let i = 0; i < count; i++) {
+    const a = base + (i - (count - 1) / 2) * DRAGON.spread;
     spawnProjectile({
       x: pet.x,
       y: pet.y,
@@ -150,4 +172,29 @@ function updateDragon() {
       source: "pet",
     });
   }
+}
+
+/** Phénix : crache un rayon de feu qui traverse tout (la résurrection est gérée par l'équipement). */
+function updatePhoenix() {
+  follow();
+  if (game.time - pet.lastAction <= pet.power.cooldown) return;
+  const target = getNearestEnemy(pet.x, pet.y, PHOENIX.range);
+  if (!target) return;
+  pet.lastAction = game.time;
+  playSfx("explosion");
+  const a = angleTo(pet.x, pet.y, target.x, target.y);
+  pet.angle = a;
+  spawnProjectile({
+    x: pet.x,
+    y: pet.y,
+    vx: Math.cos(a) * PHOENIX.speed,
+    vy: Math.sin(a) * PHOENIX.speed,
+    size: PHOENIX.size,
+    damage: pet.power.damage,
+    color: pet.color,
+    pierce: 99,
+    life: PHOENIX.life,
+    burn: perk("phoenix")?.burn, // Phénix ★3 : enflamme
+    source: "pet",
+  });
 }

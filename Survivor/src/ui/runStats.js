@@ -29,6 +29,10 @@ function sourceName(source) {
       return "Événements";
     case "skill":
       return heroSkill().name;
+    case "burn":
+      return "Brûlure";
+    case "perk":
+      return "Effets d'équipement";
     default:
       return "Autres";
   }

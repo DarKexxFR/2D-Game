@@ -15,6 +15,7 @@ import {
   createSpawnEffect,
 } from "./effects.js";
 import { recordPlayerLevel } from "../services/achievements.js";
+import { onDash, onHurt, onLevelUp } from "./perks.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -33,6 +34,7 @@ function updateBuffs() {
   if (b.shield > 0) b.shield--;
   if (b.magnet > 0) b.magnet--;
   if (b.slow > 0) b.slow--;
+  if (b.haste > 0) b.haste--;
   if (b.stunImmune > 0) b.stunImmune--;
   if (b.stun > 0 && --b.stun === 0) b.stunImmune = STUN.immunity;
   if (b.overcharge > 0 && --b.overcharge === 0) {
@@ -56,6 +58,7 @@ function updateDash() {
     player.dashCooldownTimer = player.dashCooldown;
     createParticles(player.worldX, player.worldY, "#fff", 10);
     playSfx("dash");
+    onDash();
   }
   if (player.isDashing) {
     player.speed = player.dashSpeed;
@@ -65,8 +68,10 @@ function updateDash() {
     }
     if (player.dashTimer <= 0) player.isDashing = false;
   } else {
-    // Plafond : améliorations, équipement, talents et niveau de compte compris
-    player.speed = Math.min(player.baseSpeed, STAT_CAPS.speed) * (player.buffs.slow > 0 ? FROST_SLOW : 1);
+    // Plafond : améliorations, équipement, talents, niveau de compte et accélération compris
+    const haste = player.buffs.haste > 0 ? 1 + player.hasteBonus : 1;
+    player.speed =
+      Math.min(player.baseSpeed * haste, STAT_CAPS.speed) * (player.buffs.slow > 0 ? FROST_SLOW : 1);
     if (game.hex?.type === "slow") player.speed *= VERSUS.spell.slow.speed; // sort du duel
   }
 }
@@ -119,11 +124,12 @@ export function healFactor(wave = game.wave) {
 }
 
 export function heal(amount) {
-  player.health = Math.min(player.maxHealth, player.health + amount * healFactor());
+  player.health = Math.min(player.maxHealth, player.health + amount * healFactor() * player.healMult);
 }
 
 export function takeDamage(amount) {
   if (game.over) return;
+  amount *= player.damageTaken;
   player.health -= amount;
   playSfx("hurt");
   vibrate(40);
@@ -144,7 +150,9 @@ export function takeDamage(amount) {
     vibrate(300);
     game.running = false;
     emit("playerDied");
+    return;
   }
+  onHurt();
 }
 
 /** Retour en jeu après une pub récompensée : PV partiels, bouclier et ennemis repoussés. */
@@ -183,6 +191,7 @@ export function gainXp(amount) {
   playSfx("levelUp");
   vibrate([30, 40, 30]);
   createSpawnEffect(player.worldX, player.worldY, "#ffd700");
+  onLevelUp();
   emit("levelUp");
 }
 

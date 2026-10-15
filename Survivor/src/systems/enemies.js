@@ -97,8 +97,10 @@ function moveEnemy(e, distToPlayer) {
 
   const len = Math.hypot(mx, my);
   if (len > 0) {
-    e.x += (mx / len) * e.speed;
-    e.y += (my / len) * e.speed;
+    // Traînée spectrale (Cape ★3) : ennemi ralenti
+    const speed = e.speed * (e.slowUntil > game.time ? e.slowFactor : 1);
+    e.x += (mx / len) * speed;
+    e.y += (my / len) * speed;
   }
   // Un recul (ultime, explosion...) ne doit pas sortir un ennemi de la zone de combat
   e.x = clamp(e.x, game.bounds.minX + e.size, game.bounds.maxX - e.size);

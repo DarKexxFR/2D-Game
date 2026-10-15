@@ -29,7 +29,7 @@ export function todayKey(date = new Date()) {
 }
 
 /** Hachage FNV-1a 32 bits d'une chaîne. */
-function hash(str) {
+export function hash(str) {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);

@@ -363,6 +363,24 @@ export const WEAPON_EVOLUTIONS = [
     count: 2,
     stats: (w) => ({ chain: 8, damage: w.damage * 1.25, cooldown: w.cooldown * 0.8 }),
   }),
+  weaponEvolution({
+    id: "chaosWheel",
+    name: "Roue du chaos",
+    desc: "Dix lames plus fortes qui traversent des rangées entières.",
+    weapon: "blades",
+    partner: "Kunai",
+    count: 2,
+    stats: (w) => ({ projectiles: 10, pierce: w.pierce + 3, damage: w.damage * 1.3 }),
+  }),
+  weaponEvolution({
+    id: "starfall",
+    name: "Pluie d'étoiles",
+    desc: "Cinq étoiles aux explosions géantes qui foudroient 4 ennemis voisins.",
+    weapon: "nova",
+    partner: "Divinité",
+    count: 1,
+    stats: (w) => ({ projectiles: 5, spread: 0.16, explosion: 85, chain: 4, damage: w.damage * 1.3 }),
+  }),
 ];
 
 export function availableUpgrades(p) {

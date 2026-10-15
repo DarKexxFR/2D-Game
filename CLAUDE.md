@@ -168,6 +168,13 @@ Principes :
   à côté), qui avancent quand le joueur fait l'action ; textes PC ou tactile, touches lues dans les réglages.
   Bouton « PASSER » ; fait ou passé = `account.tutorialDone` (synchronisé avec le compte ; vrai d'office
   pour une ancienne sauvegarde qui a déjà des parties). « REVOIR » dans les Options le repropose.
+- **Équipement** (`data/items.js`, `services/inventory.js`, écran `ui/inventoryMenu.js`) : 5 emplacements
+  (héros, familier, arme, armure, **module** = puce de bonus). Raretés commun → légendaire, puis **mythique**
+  (rouge `#ff3b30`) : uniquement dans le **coffre mythique** (5 %, choix du propriétaire : très rare mais très
+  fort), toutes catégories. **Effet ★3** par objet et **panoplies** arme + armure (`data/perks.js`, comportements
+  dans `systems/perks.js`, état sur `player` pour le duel). Fiche d'objet : comparaison avec l'objet équipé,
+  3 équipements enregistrés (`account.loadouts`). Boutique : **offre du jour** (`dailyOffer`, jamais mythique,
+  une fois par jour, `account.dailyOffer`).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -220,7 +227,8 @@ coffres de boss, 34 succès avec récompenses, Voleur doré, difficulté croissa
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
-Kraken et Jumeaux, arène vidée pendant les boss.
+Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre mythique seulement), effets ★3, panoplies, modules, Archange et Phénix,
+équipements enregistrés, offre du jour.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

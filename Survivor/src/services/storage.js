@@ -41,6 +41,8 @@ export const account = {
   skinsOwned: [], // options achetées : "hull:manta", "trail:sparks", "rainbow"...
   tutorialDone: false, // tutoriel de première partie fait ou passé (voir ui/tutorial.js)
   weekly: null, // quêtes de la semaine : { week, quests: [{ id, progress, claimed }], bonusClaimed }
+  loadouts: [null, null, null], // équipements enregistrés : { weapon, armor, hero, pet, module } ou null
+  dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
 };
 
 export function loadAccount() {
@@ -68,6 +70,8 @@ export function loadAccount() {
   account.skin = { ...DEFAULT_SKIN, ...saved.skin };
   account.skinsOwned = Array.isArray(saved.skinsOwned) ? saved.skinsOwned : [];
   account.weekly = saved.weekly || null;
+  account.loadouts = Array.isArray(saved.loadouts) ? saved.loadouts : [null, null, null];
+  account.dailyOffer = { day: "", bought: false, ...saved.dailyOffer };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;
 }

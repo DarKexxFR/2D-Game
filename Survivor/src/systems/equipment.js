@@ -2,17 +2,19 @@
 
 import { PLAYER_DEFAULTS } from "../config.js";
 import { player, resetPet } from "../core/state.js";
-import { armorStats, heroStats, petStats, weaponStats } from "../data/items.js";
+import { armorStats, heroStats, moduleStats, petStats, weaponStats } from "../data/items.js";
 import { UPGRADES, applyUpgrade } from "../data/upgrades.js";
 import { getEquipped } from "../services/inventory.js";
+import { applyPerks } from "./perks.js";
 
-/** Équipement du joueur (héros, arme, armure, familier), chacun { id, level, prestige } ou null. */
+/** Équipement du joueur (héros, arme, armure, familier, module), chacun { id, level, prestige } ou null. */
 export function equippedLoadout() {
   return {
     weapon: getEquipped("weapon"),
     armor: getEquipped("armor"),
     hero: getEquipped("hero"),
     pet: getEquipped("pet"),
+    module: getEquipped("module"),
   };
 }
 
@@ -37,6 +39,13 @@ export function applyEquipment(loadout = equippedLoadout()) {
     player.magnetRadius += pet.power.magnet;
     player.goldBonus += pet.power.gold;
   }
+  if (pet?.revive) player.revives++; // Phénix : une résurrection de plus
+
+  const m = loadout.module;
+  player.module = m ? moduleStats(m.id, m.level, m.prestige) : null;
+  if (player.module) applyStats(player.module.stats);
+
+  applyPerks({ ...loadout, weapon: w, hero: h });
   player.health = player.maxHealth;
 }
 
@@ -52,6 +61,9 @@ function applyStats(s) {
   player.thorns += s.thorns || 0;
   player.critChance += s.crit || 0;
   player.goldBonus += s.gold || 0;
+  player.attackSpeed /= 1 + (s.fireRate || 0);
+  player.attack *= 1 + (s.damage || 0);
+  player.xpBonus += s.xp || 0;
 }
 
 function applyHero(hero) {

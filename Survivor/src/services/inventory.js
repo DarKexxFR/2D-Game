@@ -4,6 +4,7 @@
 import {
   CHEST_POOLS,
   CHESTS,
+  DAILY_OFFER_PRICES,
   DEFAULT_EQUIPPED,
   FREE_CHEST,
   ITEMS,
@@ -18,7 +19,7 @@ import {
 import { ADS } from "../config.js";
 import { weightedPick } from "../utils/math.js";
 import { addStat, recordBest } from "./achievements.js";
-import { todayKey } from "./daily.js";
+import { hash, seededRandom, todayKey } from "./daily.js";
 import { account, saveAccount } from "./storage.js";
 
 /** Garantit les objets de départ (et nettoie les objets inconnus d'anciennes sauvegardes). */
@@ -115,7 +116,11 @@ function rollChest(chest) {
   const pool = ofRarity.length > 0 ? ofRarity : inSlots; // sécurité si une rareté n'a aucun objet
   const item = pool[Math.floor(Math.random() * pool.length)];
   addStat("chests");
+  return grantItem(item);
+}
 
+/** Donne un objet : nouveau, doublon (prestige) ou or s'il est déjà au prestige maximum. */
+function grantItem(item) {
   let result;
   let refund = 0;
   const owned = account.items[item.id];
@@ -194,4 +199,52 @@ export function unequip(slot) {
   account.equipped[slot] = null;
   saveAccount();
   return true;
+}
+
+// --- ÉQUIPEMENTS ENREGISTRÉS ---
+
+/** Enregistre l'équipement actuel dans l'emplacement `i`. */
+export function saveLoadout(i) {
+  account.loadouts[i] = { ...account.equipped };
+  saveAccount();
+  return true;
+}
+
+/** Remet un équipement enregistré (un objet qui n'est plus valable reprend la valeur par défaut). */
+export function loadLoadout(i) {
+  const saved = account.loadouts[i];
+  if (!saved) return false;
+  for (const slot of SLOTS) {
+    const id = saved[slot];
+    account.equipped[slot] =
+      id && account.items[id] && ITEMS[id]?.slot === slot ? id : DEFAULT_EQUIPPED[slot];
+  }
+  saveAccount();
+  return true;
+}
+
+/** L'équipement actuel correspond-il à l'emplacement `i` ? */
+export function isLoadoutActive(i) {
+  const saved = account.loadouts[i];
+  return !!saved && SLOTS.every((slot) => (saved[slot] ?? null) === (account.equipped[slot] ?? null));
+}
+
+// --- OFFRE DU JOUR ---
+
+/** Objet en vente aujourd'hui (le même pour tous les joueurs), hors mythiques. */
+export function dailyOffer(day = todayKey()) {
+  const pool = Object.values(ITEMS).filter((it) => DAILY_OFFER_PRICES[it.rarity]);
+  const rand = seededRandom(hash(`survivor-offer-${day}`));
+  const item = pool[Math.floor(rand() * pool.length)];
+  const bought = account.dailyOffer.day === day && account.dailyOffer.bought;
+  return { day, item, price: DAILY_OFFER_PRICES[item.rarity], bought };
+}
+
+/** Achète l'offre du jour (une fois par jour). Même résultat qu'un coffre, ou null. */
+export function buyDailyOffer() {
+  const offer = dailyOffer();
+  if (offer.bought || account.gold < offer.price) return null;
+  account.gold -= offer.price;
+  account.dailyOffer = { day: offer.day, bought: true };
+  return grantItem(offer.item);
 }
