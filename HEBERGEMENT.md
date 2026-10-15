@@ -18,8 +18,8 @@ la progression du joueur vers last-pulse.com (`Survivor/src/transfer.js`), une s
    et l'utilisateur, créer ou réinitialiser le mot de passe.
 2. GitHub → dépôt → **Settings → Secrets and variables → Actions → New repository secret** :
    `SFTP_HOST` (le serveur, sans `sftp://`), `SFTP_USERNAME`, `SFTP_PASSWORD`. Jamais dans le code.
-3. Si le site doit vivre dans un sous-dossier de l'espace web (ex. `last-pulse`), onglet
-   **Variables** → `IONOS_DIR` = `last-pulse`. Sans variable, le jeu va à la racine.
+3. Le jeu est envoyé dans le dossier `last-pulse` de l'espace web (IONOS refuse de relier un
+   domaine à la racine). Pour un autre dossier : onglet **Variables** → `IONOS_DIR`.
 4. **Actions → Déploiement sur IONOS → Run workflow** pour un premier envoi, et vérifier qu'il est vert.
 
 ## 2. Domaine chez IONOS
@@ -27,7 +27,7 @@ la progression du joueur vers last-pulse.com (`Survivor/src/transfer.js`), une s
 1. Si les serveurs de noms pointent encore vers Netlify (`dns1.p06.nsone.net`…) : IONOS →
    **Domaines & SSL** → `last-pulse.com` → **Serveurs de noms** → revenir aux serveurs de noms IONOS.
 2. **Domaines & SSL** → `last-pulse.com` → **Utilisation du domaine** → **Espace web** → choisir le
-   dossier où le jeu est envoyé (la racine, ou celui de `IONOS_DIR`). Faire de même pour `www`.
+   dossier `/last-pulse` (créé au premier envoi, ou avec le crayon). Faire de même pour `www`.
 3. **Certificat SSL** : activer le certificat inclus pour `last-pulse.com` et `www`, puis
    « Rediriger HTTP vers HTTPS ».
 
