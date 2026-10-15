@@ -1,6 +1,6 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
+import { KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { emit } from "../core/events.js";
@@ -288,10 +288,10 @@ export function updateProjectiles() {
     proj.y += proj.vy;
     if (
       --proj.life <= 0 ||
-      proj.x < MAP_BOUNDS.minX ||
-      proj.x > MAP_BOUNDS.maxX ||
-      proj.y < MAP_BOUNDS.minY ||
-      proj.y > MAP_BOUNDS.maxY ||
+      proj.x < game.bounds.minX ||
+      proj.x > game.bounds.maxX ||
+      proj.y < game.bounds.minY ||
+      proj.y > game.bounds.maxY ||
       !isOnScreen(proj.x, proj.y, 200)
     ) {
       proj.dead = true;

@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, MAP_BOUNDS, STUN, SURVIVAL, VERSUS } from "../config.js";
+import { ADS, STUN, SURVIVAL, VERSUS } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, stickDirection } from "../core/input.js";
@@ -87,8 +87,8 @@ function move() {
     ({ x: dx, y: dy } = stickDirection());
   }
   const r = player.size;
-  player.worldX = clamp(player.worldX + dx * player.speed, MAP_BOUNDS.minX + r, MAP_BOUNDS.maxX - r);
-  player.worldY = clamp(player.worldY + dy * player.speed, MAP_BOUNDS.minY + r, MAP_BOUNDS.maxY - r);
+  player.worldX = clamp(player.worldX + dx * player.speed, game.bounds.minX + r, game.bounds.maxX - r);
+  player.worldY = clamp(player.worldY + dy * player.speed, game.bounds.minY + r, game.bounds.maxY - r);
 }
 
 /** Le joueur est-il invulnérable aux coups « normaux » (contact, projectiles) ? */

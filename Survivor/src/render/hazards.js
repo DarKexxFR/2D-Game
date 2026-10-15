@@ -28,6 +28,59 @@ function drawStunMark(x, y, r, color) {
   ctx.fill();
 }
 
+/** Événements de carte : astéroïdes, gouttes et étoiles en train de tomber (au-dessus des entités). */
+export function drawFallers(now) {
+  for (const h of world.hazards) {
+    if (h.fall && h.delay > 0) drawFaller(h, h.delay / h.total, now);
+  }
+  ctx.globalAlpha = 1;
+}
+
+const FALL_DX = 260; // les objets tombent en diagonale, depuis le haut à droite
+const FALL_DY = -620;
+
+/** Événement de carte : ce qui tombe du ciel vers la zone (`left` = part du trajet restante). */
+function drawFaller(h, left, now) {
+  const x = h.x + FALL_DX * left;
+  const y = h.y + FALL_DY * left;
+  const r = h.fall === "rock" ? h.radius * 0.35 : h.fall === "drop" ? 9 : 11;
+  // Traînée
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = h.color;
+  ctx.lineWidth = r * 0.9;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + FALL_DX * 0.18, y + FALL_DY * 0.18);
+  ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = h.color;
+  if (h.fall === "rock") {
+    fillCircle(x, y, r, "#3a2416");
+    strokeCircle(x, y, r, h.color, 3);
+    fillCircle(x - r * 0.3, y - r * 0.2, r * 0.25, "#24160c");
+  } else if (h.fall === "drop") {
+    fillCircle(x, y, r, h.color);
+  } else {
+    drawStar(x, y, r, now / 200);
+  }
+  ctx.shadowBlur = 0;
+}
+
+function drawStar(x, y, r, angle) {
+  ctx.fillStyle = "#fff6c0";
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = angle + (i * Math.PI) / 5;
+    const d = i % 2 === 0 ? r : r * 0.45;
+    ctx.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
 const DRAWERS = {
   /** Zone ronde : disque qui se remplit depuis le centre jusqu'à l'impact, puis flaque. */
   circle(h, now) {

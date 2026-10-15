@@ -25,6 +25,8 @@ function sourceName(source) {
       return "Explosions";
     case "thorns":
       return "Épines";
+    case "event":
+      return "Événements";
     case "skill":
       return heroSkill().name;
     default:

@@ -58,6 +58,85 @@ export const SURVIVAL = {
  */
 export const STUN = { maxTicks: 75, immunity: 150 };
 
+/**
+ * Pendant un combat de boss (et tout le Boss Rush), la zone de combat se resserre : un carré de
+ * `size` de côté (la carte fait MAP_SIZE), centré sur le joueur sans sortir de la carte. Les murs
+ * avancent ou reculent de `speed` unités par tick (pas de téléportation du joueur).
+ */
+export const BOSS_ZONE = { size: 2100, speed: 10 };
+
+/**
+ * Événements aléatoires sur la carte (systems/mapEvents.js), à partir de la vague `fromWave`, jamais
+ * pendant un boss. Un bandeau les annonce `warning` ticks avant le premier impact, et chaque impact est
+ * marqué au sol avant de tomber (`delay`). Dégâts au joueur × multiplicateur de dégâts de la vague,
+ * dégâts aux ennemis (`enemyDamage`) × multiplicateur de PV de la vague : l'effet reste le même.
+ *  - asteroids : astéroïdes qui écrasent tout ce qui se trouve dessous ;
+ *  - acid      : gouttes qui laissent des flaques d'acide (ralentissent et rongent) ;
+ *  - vortex    : trou noir qui aspire (les ennemis bien plus que le joueur) et broie en son centre ;
+ *  - stars     : bonus, des étoiles filantes qui lâchent de l'XP (et parfois un soin).
+ * `aimed` : part des impacts qui visent le joueur (les autres tombent autour de lui, dans `spread`).
+ */
+export const MAP_EVENTS = {
+  fromWave: 3,
+  firstDelay: 900, // ticks après le début de la vague `fromWave`
+  interval: [2400, 3900], // ticks entre la fin d'un événement et le suivant (40 à 65 s)
+  warning: 150,
+  asteroids: {
+    weight: 3,
+    name: "PLUIE D'ASTÉROÏDES",
+    color: "#ff8c1a",
+    duration: 540,
+    every: 12,
+    delay: 75,
+    radius: [60, 95],
+    spread: 560,
+    aimed: 0.3,
+    damage: 16,
+    enemyDamage: 80,
+  },
+  acid: {
+    weight: 3,
+    name: "PLUIE ACIDE",
+    color: "#9dff00",
+    duration: 600,
+    every: 16,
+    delay: 60,
+    radius: [55, 85],
+    spread: 520,
+    aimed: 0.25,
+    damage: 10, // l'impact ; la flaque fait un quart de ces dégâts toutes les 0,5 s
+    pool: 420,
+    slow: 45,
+    enemyDamage: 30,
+  },
+  vortex: {
+    weight: 2,
+    name: "TROU NOIR",
+    color: "#aa66ff",
+    duration: 540,
+    distance: 380, // apparaît à cette distance du joueur
+    radius: 260, // portée de l'aspiration
+    core: 50, // centre qui broie
+    pull: 1.4, // aspiration du joueur par tick (vitesse de base : 4,7)
+    enemyPull: 3.2,
+    damage: 7, // au joueur dans le centre, toutes les 0,5 s
+    enemyDamage: 12, // aux ennemis dans le centre, toutes les 0,25 s
+  },
+  stars: {
+    weight: 2,
+    name: "PLUIE D'ÉTOILES",
+    color: "#ffd700",
+    duration: 420,
+    every: 22,
+    delay: 70,
+    radius: [40, 40],
+    spread: 420,
+    aimed: 0,
+    xp: 25, // XP de base d'une étoile (× bonus d'XP de la vague)
+    healChance: 0.15,
+  },
+};
+
 export const PLAYER_DEFAULTS = {
   size: 20,
   baseSpeed: 4.7,

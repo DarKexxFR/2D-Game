@@ -1,7 +1,7 @@
 // État mutable de la partie en cours. Les modules importent ces objets
 // et les modifient ; ils ne sont jamais réassignés (seulement réinitialisés).
 
-import { ACCOUNT_SCALING, MYSTERY_BOX, PLAYER_DEFAULTS } from "../config.js";
+import { ACCOUNT_SCALING, MAP_BOUNDS, MAP_EVENTS, MYSTERY_BOX, PLAYER_DEFAULTS } from "../config.js";
 
 export const game = { started: false, running: false, paused: false };
 export const camera = { x: 0, y: 0 };
@@ -64,6 +64,10 @@ export function resetGame() {
     hex: null, // duel : sort subi { type, ticks }
     // duel : récap de fin (vie % chaque seconde, attaques et sorts envoyés) ; t en ms depuis le début du duel
     duelLog: { hp: [], marks: [], sent: 0, cast: 0, lastT: -1e9 },
+    bounds: { ...MAP_BOUNDS }, // zone de combat actuelle (se resserre pendant un boss, voir systems/arena.js)
+    arena: null, // zone visée pendant un combat de boss { minX, maxX, minY, maxY }, sinon null
+    mapEvent: null, // événement de carte en cours (voir systems/mapEvents.js), sinon null
+    eventTimer: MAP_EVENTS.firstDelay, // ticks avant le prochain événement
   });
   for (const list of Object.values(world)) list.length = 0;
 }

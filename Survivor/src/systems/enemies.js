@@ -3,7 +3,7 @@
 import { game, player, world } from "../core/state.js";
 import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
-import { MAP_BOUNDS, SURVIVAL, TICK_MS } from "../config.js";
+import { SURVIVAL, TICK_MS } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -101,8 +101,8 @@ function moveEnemy(e, distToPlayer) {
     e.y += (my / len) * e.speed;
   }
   // Un recul (ultime, explosion...) ne doit pas sortir un ennemi de la zone de combat
-  e.x = clamp(e.x, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-  e.y = clamp(e.y, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+  e.x = clamp(e.x, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+  e.y = clamp(e.y, game.bounds.minY + e.size, game.bounds.maxY - e.size);
 }
 
 function rangedAttack(e, distToPlayer) {
@@ -208,13 +208,13 @@ function updateMiniboss(e) {
     e.rooted = 1;
     e.x = clamp(
       e.x + Math.cos(e.chargeAngle) * CRAB.chargeSpeed,
-      MAP_BOUNDS.minX + e.size,
-      MAP_BOUNDS.maxX - e.size,
+      game.bounds.minX + e.size,
+      game.bounds.maxX - e.size,
     );
     e.y = clamp(
       e.y + Math.sin(e.chargeAngle) * CRAB.chargeSpeed,
-      MAP_BOUNDS.minY + e.size,
-      MAP_BOUNDS.maxY - e.size,
+      game.bounds.minY + e.size,
+      game.bounds.maxY - e.size,
     );
     if (e.charging % 3 === 0) createParticles(e.x, e.y, "#ffaa00", 3);
     return;
@@ -376,8 +376,8 @@ function updateVoidReaper(e) {
   } else if (attack === "blink") {
     // Réapparaît derrière le joueur
     const a = Math.atan2(e.y - player.worldY, e.x - player.worldX) + Math.PI;
-    e.blinkX = clamp(player.worldX + Math.cos(a) * 140, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-    e.blinkY = clamp(player.worldY + Math.sin(a) * 140, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+    e.blinkX = clamp(player.worldX + Math.cos(a) * 140, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+    e.blinkY = clamp(player.worldY + Math.sin(a) * 140, game.bounds.minY + e.size, game.bounds.maxY - e.size);
     addCircle(e.blinkX, e.blinkY, 110, e.damage, { delay: 50, color: e.color });
     e.blinkIn = 50;
     e.rooted = 50;
@@ -593,13 +593,13 @@ function krakenDive(e) {
     const a = offset + (Math.PI * 2 * k) / count;
     const x = clamp(
       player.worldX + Math.cos(a) * KRAKEN.ringRadius,
-      MAP_BOUNDS.minX + 60,
-      MAP_BOUNDS.maxX - 60,
+      game.bounds.minX + 60,
+      game.bounds.maxX - 60,
     );
     const y = clamp(
       player.worldY + Math.sin(a) * KRAKEN.ringRadius,
-      MAP_BOUNDS.minY + 60,
-      MAP_BOUNDS.maxY - 60,
+      game.bounds.minY + 60,
+      game.bounds.maxY - 60,
     );
     addCircle(x, y, 60, e.damage * 0.6, { delay: KRAKEN.emerge, color: "#b46bff" });
     e.pending.push({ x, y });
@@ -624,8 +624,8 @@ function krakenWhirl(e) {
     if (isProtected()) return;
     const a = angleTo(player.worldX, player.worldY, e.x, e.y);
     const pull = Math.min(KRAKEN.whirlPull, dist(player.worldX, player.worldY, e.x, e.y));
-    player.worldX = clamp(player.worldX + Math.cos(a) * pull, MAP_BOUNDS.minX, MAP_BOUNDS.maxX);
-    player.worldY = clamp(player.worldY + Math.sin(a) * pull, MAP_BOUNDS.minY, MAP_BOUNDS.maxY);
+    player.worldX = clamp(player.worldX + Math.cos(a) * pull, game.bounds.minX, game.bounds.maxX);
+    player.worldY = clamp(player.worldY + Math.sin(a) * pull, game.bounds.minY, game.bounds.maxY);
     return;
   }
   if (--e.whirlTimer > 0) return;
@@ -691,8 +691,8 @@ function updateTwin(e) {
   const d = dist(e.x, e.y, tx, ty);
   const step = Math.min(d, pair.scissors > 0 ? 16 : e.speed * 1.6);
   if (d > 0) {
-    e.x = clamp(e.x + ((tx - e.x) / d) * step, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-    e.y = clamp(e.y + ((ty - e.y) / d) * step, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+    e.x = clamp(e.x + ((tx - e.x) / d) * step, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+    e.y = clamp(e.y + ((ty - e.y) / d) * step, game.bounds.minY + e.size, game.bounds.maxY - e.size);
   }
   if (pair.scissors > 0 || pair.warn > 0) return;
   if (--e.attackTimer <= 0) twinAttack(e, nextAttack(e, TWIN_CYCLES[e.type]));

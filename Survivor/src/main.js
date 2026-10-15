@@ -43,6 +43,8 @@ import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
 import { resetTrail, updateTrail } from "./systems/trail.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
+import { updateArena } from "./systems/arena.js";
+import { updateMapEvents } from "./systems/mapEvents.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
@@ -411,6 +413,8 @@ function update() {
 function simulate() {
   updateHex();
   updateSpawning();
+  updateArena();
+  updateMapEvents();
   updatePlayer();
   updateTrail();
   rebuildEnemyGrid();
@@ -568,6 +572,11 @@ function init() {
   on("biomeChange", (biome) =>
     versus.split ? splitBanner(biome.name, biome.color) : showBiomeBanner(biome),
   );
+  on("mapEvent", ({ name, color }) => {
+    if (versus.split) splitBanner(name, color);
+    else showBossWarning(name, false, color);
+    playSfx("meteor");
+  });
   on("bossWarning", (text) => {
     if (versus.split) splitBanner(text, "#ff2a6d");
     else showBossWarning(text);
