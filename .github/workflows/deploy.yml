@@ -29,5 +29,5 @@ jobs:
           lftp -u "$SFTP_USERNAME","$SFTP_PASSWORD" -p 22 "sftp://$SFTP_HOST" -e "
             set sftp:auto-confirm yes;
             set net:max-retries 2;
-            mirror --reverse --verbose --parallel=4 Survivor/ \"$IONOS_DIR\";
+            mirror --reverse --verbose --parallel=4 Survivor/ $IONOS_DIR;
             bye"
