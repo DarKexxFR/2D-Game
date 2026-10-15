@@ -4,9 +4,9 @@
 // (augmenté en consommant des doublons). Le prestige débloque des niveaux
 // supplémentaires, multiplie la puissance et rend l'objet plus imposant à l'écran.
 
-export const SLOTS = ["weapon", "armor", "hero", "pet"];
+export const SLOTS = ["weapon", "armor", "hero", "pet", "module"];
 /** Emplacement toujours occupé → objet par défaut (les autres peuvent rester vides). */
-export const DEFAULT_EQUIPPED = { weapon: "blaster", armor: null, hero: "pilot", pet: null };
+export const DEFAULT_EQUIPPED = { weapon: "blaster", armor: null, hero: "pilot", pet: null, module: null };
 
 export const MAX_PRESTIGE = 5;
 const MAX_SPEED_BONUS = 0.3; // bonus de vitesse plafonné à +30 %
@@ -21,6 +21,12 @@ export const levelUpCost = (item, level) => Math.floor(40 * level * RARITY_COST[
 export const maxLevel = (prestige) => prestige * LEVELS_PER_PRESTIGE;
 export const powerMult = (level, prestige) =>
   (1 + (level - 1) * LEVEL_BONUS) * (1 + (prestige - 1) * PRESTIGE_BONUS);
+/** Offre du jour (boutique) : prix selon la rareté. Les objets mythiques n'y sont jamais proposés. */
+export const DAILY_OFFER_PRICES = { common: 300, rare: 700, epic: 1600, legendary: 4000 };
+
+/** Équipements enregistrés (écran Équipement). */
+export const LOADOUT_COUNT = 3;
+
 /** Or rendu si on obtient un doublon d'un objet déjà au prestige maximum. */
 export const MAXED_DUPLICATE_GOLD = { common: 50, rare: 120, epic: 300, legendary: 800, mythic: 2000 };
 
@@ -183,15 +189,15 @@ export const WEAPONS = {
     icon: "star",
     rarity: "mythic",
     desc: "Trois étoiles perçantes qui explosent et foudroient les ennemis voisins.",
-    damage: 1.5,
-    cooldown: 0.7,
+    damage: 2,
+    cooldown: 0.65,
     projectiles: 3,
     spread: 0.18,
     speed: 13,
-    size: 8,
-    pierce: 3,
-    explosion: 55,
-    chain: 2,
+    size: 9,
+    pierce: 4,
+    explosion: 65,
+    chain: 3,
     color: "#ff3b30",
   },
 };
@@ -283,7 +289,7 @@ export const ARMORS = {
     icon: "aegis",
     rarity: "mythic",
     desc: "Armure des étoiles : énorme protection, régénération, vitesse et coups critiques.",
-    stats: { health: 170, defense: 10, speed: 0.12, regen: 3, crit: 0.08 },
+    stats: { health: 220, defense: 13, speed: 0.15, regen: 4, crit: 0.12 },
     color: "#ff3b30",
   },
 };
@@ -366,6 +372,16 @@ export const HEROES = {
     skill: "voidNova",
     color: "#8a6cff",
   },
+  seraph: {
+    name: "Archange",
+    icon: "wings",
+    rarity: "mythic",
+    desc: "Rapide, robuste et critique. Foudroie jusqu'à 14 ennemis d'un jugement céleste qui soigne.",
+    stats: { health: 80, speed: 0.12, crit: 0.12, regen: 1.5, defense: 3 },
+    hull: "seraph",
+    skill: "judgment",
+    color: "#fff0b3",
+  },
 };
 
 // --- FAMILIERS : compagnon qui suit le joueur ---
@@ -426,6 +442,84 @@ export const PETS = {
     power: { damage: 9, cooldown: 1300 },
     color: "#ff5a1f",
   },
+  phoenix: {
+    name: "Phénix",
+    icon: "phoenix",
+    rarity: "mythic",
+    desc: "Crache un rayon de feu qui traverse tout. Une fois par partie, vous ramène à la vie.",
+    power: { damage: 22, cooldown: 1100 },
+    revive: true, // une résurrection de plus par partie (voir systems/equipment.js)
+    color: "#ff4d2e",
+  },
+};
+
+// --- MODULES : puce de bonus (5e emplacement), mêmes règles que les armures ---
+// fireRate : cadence en plus, damage : dégâts en plus, xp : expérience en plus (en %).
+export const MODULES = {
+  critChip: {
+    name: "Puce de précision",
+    icon: "chip",
+    rarity: "common",
+    desc: "Plus de coups critiques.",
+    stats: { crit: 0.05 },
+    color: "#d000ff",
+  },
+  magnetChip: {
+    name: "Puce d'attraction",
+    icon: "chip",
+    rarity: "common",
+    desc: "Attire les gemmes de plus loin.",
+    stats: { magnet: 50 },
+    color: "#ffee55",
+  },
+  fireChip: {
+    name: "Puce de cadence",
+    icon: "chip",
+    rarity: "rare",
+    desc: "Vous tirez plus vite.",
+    stats: { fireRate: 0.08 },
+    color: "#ff8800",
+  },
+  xpChip: {
+    name: "Puce de savoir",
+    icon: "chip",
+    rarity: "rare",
+    desc: "Plus d'expérience à chaque gemme.",
+    stats: { xp: 0.1 },
+    color: "#00ff88",
+  },
+  powerChip: {
+    name: "Puce de puissance",
+    icon: "chip",
+    rarity: "epic",
+    desc: "Tous vos dégâts augmentent.",
+    stats: { damage: 0.1 },
+    color: "#ff2a6d",
+  },
+  lifeChip: {
+    name: "Puce de survie",
+    icon: "chip",
+    rarity: "epic",
+    desc: "Plus de PV et une régénération.",
+    stats: { health: 40, regen: 1 },
+    color: "#00ffcc",
+  },
+  overclock: {
+    name: "Processeur surcadencé",
+    icon: "cpu",
+    rarity: "legendary",
+    desc: "Dégâts, cadence et critiques en hausse.",
+    stats: { damage: 0.1, fireRate: 0.1, crit: 0.05 },
+    color: "#ffaa00",
+  },
+  singularity: {
+    name: "Cœur de singularité",
+    icon: "blackhole",
+    rarity: "mythic",
+    desc: "Le noyau d'une étoile morte : puissance, cadence, critiques et expérience.",
+    stats: { damage: 0.2, fireRate: 0.15, crit: 0.1, xp: 0.15 },
+    color: "#ff3b30",
+  },
 };
 
 const withSlot = (table, slot) => Object.entries(table).map(([id, v]) => [id, { ...v, id, slot }]);
@@ -434,6 +528,7 @@ export const ITEMS = Object.fromEntries([
   ...withSlot(ARMORS, "armor"),
   ...withSlot(HEROES, "hero"),
   ...withSlot(PETS, "pet"),
+  ...withSlot(MODULES, "module"),
 ]);
 
 export const STARTER_ITEMS = ["blaster", "pilot"];
@@ -443,7 +538,13 @@ export const STARTER_ITEMS = ["blaster", "pilot"];
 export const FREE_CHEST = { chestId: "basic", intervalHours: 4 };
 
 /** Emplacements tirés par chaque type de coffre. */
-export const CHEST_POOLS = { gear: ["weapon", "armor"], hero: ["hero"], pet: ["pet"] };
+export const CHEST_POOLS = {
+  gear: ["weapon", "armor"],
+  hero: ["hero"],
+  pet: ["pet"],
+  module: ["module"],
+  all: ["weapon", "armor", "hero", "pet", "module"],
+};
 
 export const CHESTS = [
   {
@@ -468,15 +569,16 @@ export const CHESTS = [
     icon: "crown",
     color: "#ffd700",
     cost: 3000,
-    odds: { rare: 38, epic: 44, legendary: 15, mythic: 3 },
+    odds: { rare: 40, epic: 45, legendary: 15 },
   },
   {
     id: "mythic",
+    pool: "all", // seule source d'objets mythiques, toutes catégories confondues
     name: "Coffre mythique",
     icon: "mythicChest",
     color: "#ff3b30",
     cost: 6000,
-    odds: { epic: 45, legendary: 40, mythic: 15 },
+    odds: { epic: 55, legendary: 40, mythic: 5 },
   },
   {
     id: "hero",
@@ -496,12 +598,21 @@ export const CHESTS = [
     cost: 800,
     odds: { common: 50, rare: 35, epic: 12, legendary: 3 },
   },
+  {
+    id: "module",
+    pool: "module",
+    name: "Coffre Modules",
+    icon: "cpu",
+    color: "#00e5ff",
+    cost: 900,
+    odds: { common: 50, rare: 33, epic: 13, legendary: 4 },
+  },
 ];
 
 /** Regroupement des coffres dans la boutique. */
 export const CHEST_GROUPS = [
   { title: "Armes & armures", ids: ["basic", "premium", "legendary", "mythic"] },
-  { title: "Héros & familiers", ids: ["hero", "pet"] },
+  { title: "Héros, familiers & modules", ids: ["hero", "pet", "module"] },
 ];
 
 /** Statistiques effectives d'une arme selon son niveau et son prestige. */
@@ -529,6 +640,12 @@ export function armorStats(id, level, prestige) {
 export function heroStats(id, level, prestige) {
   const h = HEROES[id];
   return { ...h, id, level, prestige, stats: scaleStats(h.stats, level, prestige) };
+}
+
+/** Bonus effectifs d'un module (mêmes règles que les armures). */
+export function moduleStats(id, level, prestige) {
+  const m = MODULES[id];
+  return { ...m, id, level, prestige, stats: scaleStats(m.stats, level, prestige) };
 }
 
 /** Puissance effective d'un familier : dégâts, soins, portée... (les délais ne changent pas). */

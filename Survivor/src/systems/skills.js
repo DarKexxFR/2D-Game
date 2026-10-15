@@ -7,6 +7,7 @@ import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, rebuildEnemyGrid, spawnProjectile } from "./combat.js";
 import { heal, isStunned } from "./player.js";
+import { perk } from "./perks.js";
 import {
   addFloatingText,
   addScreenShake,
@@ -24,6 +25,7 @@ export const SKILLS = {
   cannon: { name: "Coup de canon", activate: cannon },
   turrets: { name: "Tourelles", activate: turrets },
   voidNova: { name: "Nova du vide", activate: voidNova },
+  judgment: { name: "Jugement céleste", activate: judgment },
 };
 
 export function heroSkill() {
@@ -181,8 +183,9 @@ const TURRETS = { count: 2, duration: 480, offset: 70, range: 420, cooldown: 220
 function turrets() {
   playSfx("skillTitan");
   addFloatingText(player.worldX, player.worldY - 40, "TOURELLES !", "#00ff88", 22, 60);
-  for (let i = 0; i < TURRETS.count; i++) {
-    const a = player.aimAngle + Math.PI / 2 + Math.PI * i;
+  const count = perk("engineer")?.turrets || TURRETS.count;
+  for (let i = 0; i < count; i++) {
+    const a = player.aimAngle + Math.PI / 2 + (Math.PI * 2 * i) / count;
     const x = player.worldX + Math.cos(a) * TURRETS.offset;
     const y = player.worldY + Math.sin(a) * TURRETS.offset;
     world.turrets.push({ x, y, life: TURRETS.duration, lastShot: 0, angle: 0 });
@@ -234,5 +237,37 @@ function voidNova() {
     damageEnemy(e, NOVA.damage + player.attack * NOVA.attackMult, "skill");
     healed += NOVA.healPerHit;
   }
-  heal(Math.min(healed, player.maxHealth * NOVA.maxHeal));
+  heal(Math.min(healed, player.maxHealth * NOVA.maxHeal) * (perk("spectre")?.heal || 1));
+}
+
+// --- ARCHANGE : jugement céleste (foudroie les ennemis proches, soigne et protège) ---
+
+const JUDGMENT = { targets: 14, range: 560, damage: 200, attackMult: 5, radius: 70, heal: 0.15, shield: 90 };
+
+function judgment() {
+  playSfx("ultimate");
+  addScreenShake(18);
+  flashScreen("#fff0b3", 0.4);
+  addFloatingText(player.worldX, player.worldY - 40, "JUGEMENT CÉLESTE !", "#fff0b3", 24, 60);
+  const targets = enemiesNear(player.worldX, player.worldY, JUDGMENT.range)
+    .sort((a, b) => b.health - a.health) // les plus coriaces d'abord
+    .slice(0, JUDGMENT.targets);
+  for (const t of targets) {
+    world.bolts.push({
+      points: [
+        { x: t.x, y: t.y - 420 },
+        { x: t.x - 18, y: t.y - 200 },
+        { x: t.x, y: t.y },
+      ],
+      color: "#fff0b3",
+      life: 16,
+    });
+    createAoEEffect(t.x, t.y, JUDGMENT.radius);
+    createParticles(t.x, t.y, "#fff0b3", 8);
+    for (const e of enemiesNear(t.x, t.y, JUDGMENT.radius)) {
+      damageEnemy(e, JUDGMENT.damage + player.attack * JUDGMENT.attackMult, "skill");
+    }
+  }
+  heal(player.maxHealth * JUDGMENT.heal);
+  player.buffs.shield = Math.max(player.buffs.shield, JUDGMENT.shield);
 }

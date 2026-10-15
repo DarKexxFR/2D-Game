@@ -24,6 +24,7 @@ import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
 import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
+import { onHit, onKill, onShot } from "./perks.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -76,6 +77,7 @@ export function killEnemy(enemy) {
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
   recordKill(enemy.type, enemy.template.isBoss);
   emit("kill", enemy);
+  onKill(enemy);
   playSfx("kill");
 
   game.score += 10;
@@ -256,7 +258,7 @@ function throwBladeStorm() {
 function createPlayerProjectile(angle) {
   const ray = player.hasRayGun;
   const w = player.weapon;
-  world.projectiles.push({
+  const proj = {
     x: player.worldX,
     y: player.worldY,
     vx: Math.cos(angle) * w.speed,
@@ -273,7 +275,9 @@ function createPlayerProjectile(angle) {
     type: w.returns ? "disc" : undefined,
     age: 0,
     dead: false,
-  });
+  };
+  onShot(proj);
+  world.projectiles.push(proj);
 }
 
 export function spawnProjectile(props) {
@@ -306,6 +310,7 @@ export function updateProjectiles() {
       if (enemy.dead) break;
       if (proj.pierce > 0) {
         proj.pierce--;
+        if (proj.ramp) proj.damage *= 1 + proj.ramp; // Railgun ★3 : chaque ennemi transpercé renforce le tir
         (proj.hits ??= new Set()).add(enemy);
       } else {
         proj.dead = true;
@@ -321,6 +326,7 @@ export function updateProjectiles() {
 function hitEnemy(proj, enemy) {
   playSfx("hit");
   let damage = proj.damage;
+  if (enemy.template.isBoss) damage *= player.bossDamage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
     damage *= player.critMultiplier;
@@ -351,6 +357,7 @@ function hitEnemy(proj, enemy) {
   damageEnemy(enemy, damage, source);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
   if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
+  onHit(proj, enemy, damage, isCrit);
 }
 
 /** Disque laser : après un moment il revient vers le joueur et peut retoucher les ennemis. */
@@ -370,7 +377,7 @@ function steerBack(proj) {
 const CHAIN_RANGE = 170;
 
 /** Arc Tesla : l'éclair saute vers les ennemis proches pas encore touchés. */
-function chainLightning(from, damage, jumps, color, source) {
+export function chainLightning(from, damage, jumps, color, source) {
   const hit = new Set([from]);
   const points = [{ x: from.x, y: from.y }];
   let current = from;
@@ -409,7 +416,7 @@ function explode(x, y, radius, damage, exclude, source) {
 
 /** Rayon effectif de l'aura (l'évolution « Enfer » l'agrandit). */
 export function auraRadius() {
-  return player.auraRadius * (player.evolutions.inferno ? 1.6 : 1);
+  return player.auraRadius * (player.evolutions.inferno ? 1.6 : 1) * player.auraMult;
 }
 
 export function updateAura() {

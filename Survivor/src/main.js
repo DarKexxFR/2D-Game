@@ -38,6 +38,7 @@ import { updateEnemies } from "./systems/enemies.js";
 import { updateHazards } from "./systems/hazards.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
 import { applyEquipment } from "./systems/equipment.js";
+import { updatePerks } from "./systems/perks.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
@@ -415,6 +416,7 @@ function simulate() {
   updateTrail();
   rebuildEnemyGrid();
   updateAura();
+  updatePerks();
   updateMysteryBox();
   shoot();
   throwKunai();

@@ -12,7 +12,7 @@ test("une ancienne sauvegarde sans équipement est migrée", async ({ page }) =>
   // L'ancien drone acheté (niveau 2) devient le familier Drone, équipé
   expect(acc.items.drone).toEqual({ level: 2, prestige: 1, copies: 0 });
   expect(acc.petLevels.drone).toBe(0);
-  expect(acc.equipped).toEqual({ weapon: "blaster", armor: null, hero: "pilot", pet: "drone" });
+  expect(acc.equipped).toEqual({ weapon: "blaster", armor: null, hero: "pilot", pet: "drone", module: null });
 });
 
 test("ouvrir des coffres donne des objets et des doublons", async ({ page }) => {
@@ -81,17 +81,18 @@ for (const weapon of [
   });
 }
 
-test("coffre mythique : rareté mythique, objets mythiques et évolutions des nouvelles armes", async ({
-  page,
-}) => {
+test("coffre mythique : seule source d'objets mythiques, toutes catégories", async ({ page }) => {
   await withSave(page, { gold: 7000, lastFreeChest: Date.now() });
   await page.goto("/");
   await page.locator("#btnShop").click();
   const tile = page.locator(".chest-mythic");
   await expect(tile).toContainText("Coffre mythique");
-  await expect(tile.locator(".odds-chip", { hasText: "Mythique 15%" })).toBeVisible();
-  await expect(page.locator(".chest-legendary .odds-chip", { hasText: "Mythique 3%" })).toBeVisible();
-  // Tirage forcé sur la rareté mythique : seules des armes ou armures mythiques peuvent sortir
+  await expect(tile.locator(".odds-chip", { hasText: "Mythique 5%" })).toBeVisible();
+  // Aucun autre coffre ne donne d'objet mythique
+  await expect(
+    page.locator(".chest-tile:not(.chest-mythic) .odds-chip", { hasText: "Mythique" }),
+  ).toHaveCount(0);
+  // Tirage forcé sur la rareté mythique
   await game(page, () => {
     Math.random = () => 0.99;
   });
@@ -105,7 +106,7 @@ test("coffre mythique : rareté mythique, objets mythiques et évolutions des no
     owned: Object.keys(storage.account.items).filter((id) => items.ITEMS[id].rarity === "mythic"),
   }));
   expect(info.gold).toBe(1000);
-  expect(info.mythics.sort()).toEqual(["armor", "weapon"]);
+  expect(info.mythics.sort()).toEqual(["armor", "hero", "module", "pet", "weapon"]);
   expect(info.owned).toHaveLength(1);
   // Chaque arme a son évolution
   const missing = await game(page, ({ items, upgrades }) =>

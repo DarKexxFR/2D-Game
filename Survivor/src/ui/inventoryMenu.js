@@ -1,32 +1,52 @@
 // Écran Équipement : emplacements équipés, collection en grille et fiche détaillée de l'objet
 // sélectionné (équiper, niveau, prestige).
 
-import { CHESTS, CHEST_POOLS, ITEMS, MAX_PRESTIGE, maxLevel } from "../data/items.js";
+import { CHESTS, CHEST_POOLS, ITEMS, LOADOUT_COUNT, MAX_PRESTIGE, maxLevel } from "../data/items.js";
+import { SETS } from "../data/perks.js";
 import {
   canLevelUp,
   canPrestige,
   equip,
   getEquipped,
   getOwned,
+  isLoadoutActive,
   levelUp,
+  loadLoadout,
   levelUpPrice,
   prestigeCopiesNeeded,
   prestigeUp,
+  saveLoadout,
   unequip,
 } from "../services/inventory.js";
 import { account } from "../services/storage.js";
 import { $, el } from "./dom.js";
 import { setLabel } from "./icons.js";
-import { itemIcon, rarityColor, rarityTag, starsText, statsText } from "./itemView.js";
+import {
+  compareWith,
+  itemIcon,
+  perkInfo,
+  rarityColor,
+  rarityTag,
+  setInfo,
+  starsText,
+  statsText,
+} from "./itemView.js";
 import { showScreen } from "./screens.js";
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary", "mythic"];
-const TABS = { hero: "invTabHero", pet: "invTabPet", weapon: "invTabWeapon", armor: "invTabArmor" };
+const TABS = {
+  hero: "invTabHero",
+  pet: "invTabPet",
+  weapon: "invTabWeapon",
+  armor: "invTabArmor",
+  module: "invTabModule",
+};
 const EQUIPPED_SLOTS = [
   ["equippedHero", "hero", "Héros", "Aucun héros"],
   ["equippedPet", "pet", "Familier", "Aucun"],
   ["equippedWeapon", "weapon", "Arme", "Aucune"],
   ["equippedArmor", "armor", "Armure", "Aucune"],
+  ["equippedModule", "module", "Module", "Aucun"],
 ];
 let activeSlot = "weapon";
 let selectedId = null;
@@ -68,6 +88,8 @@ function act(fn) {
 export function renderInventory() {
   for (const [slot, tab] of Object.entries(TABS)) $(tab).classList.toggle("active", activeSlot === slot);
   for (const args of EQUIPPED_SLOTS) renderEquippedSlot(...args);
+  renderLoadouts();
+  renderActiveSet();
 
   const items = Object.values(ITEMS)
     .filter((it) => it.slot === activeSlot)
@@ -97,6 +119,33 @@ function renderEquippedSlot(id, slot, label, emptyText) {
     el("span", "slot-name", item.name),
     el("span", "slot-stars", `${starsText(eq.prestige)} · Nv ${eq.level}`),
   );
+}
+
+/** Équipements enregistrés : charger (le numéro) ou enregistrer l'équipement actuel (disquette). */
+function renderLoadouts() {
+  const boxes = [];
+  for (let i = 0; i < LOADOUT_COUNT; i++) {
+    const saved = !!account.loadouts[i];
+    const box = el("div", `loadout${isLoadoutActive(i) ? " active" : ""}`);
+    const load = el("button", "loadout-load", saved ? `ÉQUIP. ${i + 1}` : `VIDE ${i + 1}`);
+    load.disabled = !saved;
+    load.addEventListener("click", () => act(() => loadLoadout(i)));
+    const save = setLabel(el("button", "loadout-save"), "", "save");
+    save.title = "Enregistrer l'équipement actuel ici";
+    save.setAttribute("aria-label", `Enregistrer dans l'équipement ${i + 1}`);
+    save.addEventListener("click", () => act(() => saveLoadout(i)));
+    box.append(load, save);
+    boxes.push(box);
+  }
+  $("loadoutBar").replaceChildren(...boxes);
+}
+
+/** Bandeau de la panoplie active (arme + armure du même thème). */
+function renderActiveSet() {
+  const set = SETS.find((s) => account.equipped.weapon === s.weapon && account.equipped.armor === s.armor);
+  const box = $("activeSet");
+  box.style.display = set ? "" : "none";
+  if (set) box.replaceChildren(el("b", "", `Panoplie ${set.name} active`), el("span", "", ` · ${set.desc}`));
 }
 
 /** Vignette de la grille : icône, nom, étoiles ; grisée si l'objet n'est pas encore obtenu. */
@@ -192,6 +241,41 @@ function renderDetail(item) {
     progress,
     el("p", "item-desc", item.desc),
     el("p", "item-stats", statsText(item, owned.level, owned.prestige)),
+    ...extras(item, owned, isEquipped),
     actions,
   );
+}
+
+/** Effet ★3, panoplie et comparaison avec l'objet équipé. */
+function extras(item, owned, isEquipped) {
+  const out = [];
+  const perk = perkInfo(item, owned);
+  if (perk) {
+    const line = el("p", `perk-line${perk.unlocked ? " unlocked" : ""}`);
+    line.append(
+      el("b", "", `★3 · ${perk.name}`),
+      el("span", "", ` : ${perk.desc}${perk.unlocked ? "" : " (se débloque au prestige ★3)"}`),
+    );
+    out.push(line);
+  }
+  const set = setInfo(item, account.equipped);
+  if (set) {
+    const line = el("p", `set-line${set.active ? " active" : ""}`);
+    line.append(
+      el("b", "", `Panoplie ${set.name}`),
+      el("span", "", ` (avec ${set.partner.name}) : ${set.desc}`),
+    );
+    out.push(line);
+  }
+  if (owned && !isEquipped) {
+    const current = getEquipped(item.slot);
+    const diff = compareWith(item, owned, current && ITEMS[current.id], current);
+    if (diff.length > 0) {
+      const box = el("div", "compare");
+      box.append(el("span", "compare-title", `Par rapport à ${current ? ITEMS[current.id].name : "rien"} :`));
+      for (const d of diff) box.append(el("span", `compare-chip ${d.better ? "up" : "down"}`, d.text));
+      out.push(box);
+    }
+  }
+  return out;
 }

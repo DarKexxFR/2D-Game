@@ -224,7 +224,7 @@ button.item-card.rarity-card-mythic:not(.locked),
 /* --- Équipement : emplacements équipés --- */
 .equipped-slots {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -270,12 +270,112 @@ button.equipped-slot.active {
   font-size: 12px;
 }
 .inv-tabs {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 }
 .inv-tabs .lb-tab {
   padding: 10px 4px;
   font-size: 12px;
+}
+
+/* --- Panoplie active et équipements enregistrés --- */
+.active-set {
+  margin: -4px 0 10px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  background: rgba(0, 255, 136, 0.08);
+  color: #b8ffd9;
+  font-size: 12px;
+  text-align: center;
+}
+.active-set b {
+  color: #00ff88;
+}
+.loadout-bar {
+  overflow: visible;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.loadout {
+  display: flex;
+  gap: 4px;
+  border-radius: 10px;
+}
+.loadout.active {
+  box-shadow: 0 0 0 2px #00ffff;
+}
+.loadout button {
+  margin: 0;
+  padding: 8px 6px;
+  font-size: 11px;
+}
+.loadout-load {
+  flex: 1;
+}
+.loadout-save {
+  flex: 0 0 38px;
+  font-size: 15px !important;
+}
+
+/* --- Effet ★3, panoplie et comparaison (fiche détaillée) --- */
+.perk-line,
+.set-line {
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 6px 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #888;
+  border: 1px dashed #444;
+  text-align: left;
+}
+.perk-line b,
+.set-line b {
+  color: #aaa;
+}
+.perk-line.unlocked {
+  color: #ffe9a8;
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.07);
+}
+.perk-line.unlocked b {
+  color: #ffd700;
+}
+.set-line.active {
+  color: #b8ffd9;
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  background: rgba(0, 255, 136, 0.07);
+}
+.set-line.active b {
+  color: #00ff88;
+}
+.compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+  font-size: 11px;
+  text-align: left;
+}
+.compare-title {
+  width: 100%;
+  color: #999;
+}
+.compare-chip {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+.compare-chip.up {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.12);
+}
+.compare-chip.down {
+  color: #ff4d6d;
+  background: rgba(255, 42, 109, 0.12);
 }
 
 /* --- Équipement : collection + fiche détaillée --- */
@@ -518,9 +618,34 @@ button.item-card.locked {
   .slot-stars {
     display: none;
   }
+  .slot-label {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .slot-name {
+    font-size: 8px;
+    overflow-wrap: break-word;
+  }
   .inv-tabs .lb-tab {
+    font-size: 9px;
+    letter-spacing: 0;
+    padding: 8px 1px;
+  }
+  .active-set {
     font-size: 10px;
-    padding: 8px 2px;
+    padding: 5px 8px;
+  }
+  .loadout-bar {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .loadout button {
+    font-size: 9px;
+    padding: 6px 2px;
+    letter-spacing: 0;
+  }
+  .loadout-save {
+    flex-basis: 30px;
   }
   .inv-body {
     grid-template-columns: 1fr;
@@ -576,5 +701,19 @@ button.item-card.locked {
     min-width: 0;
     padding: 8px 10px;
     font-size: 12px;
+  }
+}
+
+/* --- Téléphones étroits : onglets de l'équipement sur deux lignes --- */
+@media (max-width: 480px) {
+  .inv-tabs {
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-flow: row;
+  }
+  .inv-tabs .lb-tab {
+    grid-column: span 2;
+  }
+  .inv-tabs .lb-tab:nth-child(4) {
+    grid-column: 2 / span 2;
   }
 }
