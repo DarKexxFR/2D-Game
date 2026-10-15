@@ -859,8 +859,8 @@ function updateSlimeBoss(e) {
 
 /** Début d'un saut : zone d'atterrissage annoncée là où se tient le joueur. */
 function startSlimeJump(e) {
-  const tx = clamp(player.worldX, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-  const ty = clamp(player.worldY, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+  const tx = clamp(player.worldX, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+  const ty = clamp(player.worldY, game.bounds.minY + e.size, game.bounds.maxY - e.size);
   const r = SLIME_KING.jumpRadius;
   addCircle(tx, ty, r, e.damage, { delay: SLIME_KING.jumpTicks, color: SLIME_GREEN });
   e.jump = { fromX: e.x, fromY: e.y, tx, ty, t: 0 };
