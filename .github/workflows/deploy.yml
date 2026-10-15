@@ -17,16 +17,17 @@ jobs:
       - name: Installation de lftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-      # Seul le dossier Survivor/ (le jeu) est envoyé, comme sur Netlify ; il est copié à la racine
-      # du site IONOS (rien n'est effacé sur le serveur).
+      # Seul le dossier Survivor/ (le jeu) est envoyé, dans le dossier de l'espace web relié à
+      # last-pulse.com : variable de dépôt IONOS_DIR (par défaut la racine). Rien n'est effacé sur le serveur.
       - name: Envoi du jeu en SFTP sur IONOS
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
           SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+          IONOS_DIR: ${{ vars.IONOS_DIR || './' }}
         run: |
           lftp -u "$SFTP_USERNAME","$SFTP_PASSWORD" -p 22 "sftp://$SFTP_HOST" -e "
             set sftp:auto-confirm yes;
             set net:max-retries 2;
-            mirror --reverse --verbose --parallel=4 Survivor/ ./;
+            mirror --reverse --verbose --parallel=4 Survivor/ \"$IONOS_DIR\";
             bye"
