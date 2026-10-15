@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -12,13 +13,21 @@ jobs:
       - name: Récupération du code
         uses: actions/checkout@v4
 
-      - name: Envoi des fichiers en SFTP sur IONOS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          protocol: sftp
-          port: 22
-          local-dir: ./ # Dossier de votre dépôt à envoyer (./ = tout le dépôt)
-          server-dir: ./ # Dossier de destination sur IONOS (ex: ./ ou /mon-site/)
+      # FTP-Deploy-Action ne sait pas faire de SFTP (seulement ftp / ftps) : on passe par lftp.
+      - name: Installation de lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      # Seul le dossier Survivor/ (le jeu) est envoyé, dans le dossier de l'espace web relié à
+      # last-pulse.com : `last-pulse` (IONOS refuse la racine), ou la variable de dépôt IONOS_DIR. Rien n'est effacé sur le serveur.
+      - name: Envoi du jeu en SFTP sur IONOS
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+          IONOS_DIR: ${{ vars.IONOS_DIR || 'last-pulse' }}
+        run: |
+          lftp -u "$SFTP_USERNAME","$SFTP_PASSWORD" -p 22 "sftp://$SFTP_HOST" -e "
+            set sftp:auto-confirm yes;
+            set net:max-retries 2;
+            mirror --reverse --verbose --parallel=4 Survivor/ \"$IONOS_DIR\";
+            bye"

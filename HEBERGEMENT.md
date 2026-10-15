@@ -6,46 +6,42 @@ La progression est enregistrée dans le navigateur, et chaque domaine a la sienn
 adresse (`darkexxfr.github.io/2D-Game/Survivor/`) devient donc une **passerelle** : elle emporte
 la progression du joueur vers last-pulse.com (`Survivor/src/transfer.js`), une seule fois.
 
-- **last-pulse.com** : servi par **Netlify** (gratuit), relié à ce dépôt, mis à jour à chaque
-  fusion sur `main` (réglages dans `netlify.toml`).
+- **last-pulse.com** : servi par **IONOS** (espace web du pack d'hébergement). À chaque push sur
+  `main`, GitHub Actions envoie le dossier `Survivor/` en SFTP (`.github/workflows/deploy.yml`).
+  Le cache du navigateur est réglé par `Survivor/.htaccess`. Netlify n'est plus utilisé.
 - **GitHub Pages** reste activé sur l'ancienne adresse, **sans domaine personnalisé** : sinon GitHub
   redirigerait lui-même vers last-pulse.com, avant que la passerelle ait pu emporter les données.
 
-## 1. Netlify
+## 1. Accès SFTP dans GitHub
 
-1. Créer un compte sur [netlify.com](https://www.netlify.com) avec « Sign up with GitHub ».
-2. **Add new site → Import an existing project → GitHub** → choisir `DarKexxFR/2D-Game`.
-3. Branche `main`. Les réglages sont lus dans `netlify.toml` (dossier publié : `Survivor`, aucune
-   commande de build) : laisser les champs tels quels → **Deploy**.
-4. Vérifier que le jeu marche sur l'adresse provisoire `https://<nom>.netlify.app`.
+1. IONOS → **Hébergement** → **SFTP & SSH** : noter le serveur (ex. `access-123456.webspace-host.com`)
+   et l'utilisateur, créer ou réinitialiser le mot de passe.
+2. GitHub → dépôt → **Settings → Secrets and variables → Actions → New repository secret** :
+   `SFTP_HOST` (le serveur, sans `sftp://`), `SFTP_USERNAME`, `SFTP_PASSWORD`. Jamais dans le code.
+3. Le jeu est envoyé dans le dossier `last-pulse` de l'espace web (IONOS refuse de relier un
+   domaine à la racine). Pour un autre dossier : onglet **Variables** → `IONOS_DIR`.
+4. **Actions → Déploiement sur IONOS → Run workflow** pour un premier envoi, et vérifier qu'il est vert.
 
-## 2. Domaine dans Netlify (Netlify DNS)
+## 2. Domaine chez IONOS
 
-**Domain management → Add a domain** → `last-pulse.com` → confirmer, puis **Set up Netlify DNS**.
-Netlify gère alors tous les enregistrements (`@`, `www`) et affiche 4 serveurs de noms
-(`dns1.p06.nsone.net` … `dns4.p06.nsone.net`).
+1. Si les serveurs de noms pointent encore vers Netlify (`dns1.p06.nsone.net`…) : IONOS →
+   **Domaines & SSL** → `last-pulse.com` → **Serveurs de noms** → revenir aux serveurs de noms IONOS.
+2. **Domaines & SSL** → `last-pulse.com` → **Utilisation du domaine** → **Espace web** → choisir le
+   dossier `/last-pulse` (créé au premier envoi, ou avec le crayon). Faire de même pour `www`.
+3. **Certificat SSL** : activer le certificat inclus pour `last-pulse.com` et `www`, puis
+   « Rediriger HTTP vers HTTPS ».
 
-## 3. Serveurs de noms chez IONOS
+Attendre la propagation (de quelques minutes à 48 h). Une fois le jeu affiché sur
+https://last-pulse.com, supprimer le site dans Netlify.
 
-IONOS → **Domaines & SSL** → `last-pulse.com` → **Serveurs de noms** → utiliser des serveurs de
-noms personnalisés → saisir les 4 serveurs affichés par Netlify → enregistrer.
-
-Attendre la propagation (de quelques minutes à 48 h). Pendant ce temps le navigateur peut afficher
-« Non sécurisé » : c'est normal. Netlify crée ensuite le certificat **HTTPS** tout seul
-(**Domain management → HTTPS** ; sinon « Verify DNS configuration » puis « Provision
-certificate ») ; cocher « Force HTTPS ».
-
-Des e-mails en `@last-pulse.com` chez IONOS demanderaient de recréer leurs enregistrements `MX`
-dans la zone DNS de Netlify.
-
-## 4. Connexion (Supabase et Google)
+## 3. Connexion (Supabase et Google)
 
 - Supabase → **Authentication → URL Configuration** : **Site URL** = `https://last-pulse.com/` ;
   **Redirect URLs** : ajouter `https://last-pulse.com/` et `https://www.last-pulse.com/`.
 - Google Cloud → client OAuth → **Origines JavaScript autorisées** : ajouter
   `https://last-pulse.com`. L'URI de redirection (celle de Supabase) ne change pas.
 
-## 5. Activer la passerelle
+## 4. Activer la passerelle
 
 Quand https://last-pulse.com affiche le jeu, demander à Claude d'**activer la redirection** :
 `REDIRECT_ENABLED = true` dans `Survivor/src/transfer.js`, et mise à jour des adresses dans le

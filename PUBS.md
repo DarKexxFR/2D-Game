@@ -12,7 +12,7 @@ Activer l'adaptateur sans cet accord peut mettre le compte AdSense en difficult�
 
 - Identifiant d'éditeur `ca-pub-8968329181870538` dans `ADS.adsense.client`.
 - Balise `<meta name="google-adsense-account">` dans `Survivor/index.html` (vérification du site).
-- `Survivor/ads.txt`, servi à la racine de last-pulse.com (dossier publié par Netlify).
+- `Survivor/ads.txt`, servi à la racine de last-pulse.com (dossier envoyé sur IONOS).
 - Adaptateur `adsense` : charge le script AdSense, lance `adBreak({ type: "reward" })` quand le joueur
   clique, et ne donne la récompense que si Google confirme la pub vue (`adViewed`). Pas de pub
   disponible, pub fermée ou script bloqué : pas de récompense, le joueur peut réessayer.

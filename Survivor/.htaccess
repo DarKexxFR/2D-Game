@@ -1,0 +1,8 @@
+# Hébergement IONOS (Apache). Les modules du jeu changent à chaque mise à jour : le navigateur
+# revérifie avant de réutiliser son cache (remplace l'ancien netlify.toml).
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=0, must-revalidate"
+</IfModule>
+
+# Les modules ES doivent être servis comme JavaScript.
+AddType text/javascript .js .mjs

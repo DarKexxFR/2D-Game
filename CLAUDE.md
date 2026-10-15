@@ -11,7 +11,8 @@ en JavaScript pur (modules ES), rendu sur `<canvas>`. Aucune dépendance côté 
 sert qu'aux outils (Prettier, Playwright).
 
 - En ligne (GitHub Pages) : https://darkexxfr.github.io/2D-Game/Survivor/
-- Déménagement en cours vers **https://last-pulse.com** (Netlify, `netlify.toml`) : voir
+- Déménagement en cours vers **https://last-pulse.com**, hébergé chez **IONOS** (envoi SFTP par
+  `.github/workflows/deploy.yml` à chaque push sur `main`, cache réglé dans `Survivor/.htaccess`) : voir
   `HEBERGEMENT.md`. L'ancienne adresse devient une passerelle (`src/transfer.js`, activée par
   `REDIRECT_ENABLED`) qui emporte la progression du navigateur. **Ne jamais** mettre le domaine
   personnalisé dans les réglages GitHub Pages : GitHub redirigerait avant le transfert.
