@@ -4,6 +4,8 @@
 //  - beam   : laser en ligne droite, d'abord un trait fin d'alerte puis le rayon ;
 //  - ring   : onde de choc qui s'élargit, à franchir au dash.
 // Option `stun` (ticks) : un coup étourdit le joueur (Titan de l'orage).
+// Zones rondes des événements de carte (systems/mapEvents.js) : `fall` = ce qui tombe du ciel pendant
+// l'alerte (dessin), `onImpact(h)` = effet en plus à l'impact (ennemis touchés, butin...).
 
 import { TICK_MS } from "../config.js";
 import { game, player, world } from "../core/state.js";
@@ -21,7 +23,7 @@ export function addCircle(
   y,
   radius,
   damage,
-  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0 } = {},
+  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0, fall = null, onImpact = null } = {},
 ) {
   world.hazards.push({
     kind: "circle",
@@ -35,6 +37,8 @@ export function addCircle(
     pool,
     slow,
     stun,
+    fall,
+    onImpact,
     hit: 0,
   });
 }
@@ -109,7 +113,10 @@ const UPDATERS = {
         createParticles(h.x, h.y, h.color, 10);
         addScreenShake(5);
         playSfx("explosion");
-        if (dist(player.worldX, player.worldY, h.x, h.y) < h.radius + player.size * 0.5) hurt(h);
+        if (h.onImpact) h.onImpact(h);
+        if (h.damage > 0 && dist(player.worldX, player.worldY, h.x, h.y) < h.radius + player.size * 0.5) {
+          hurt(h);
+        }
         if (h.pool <= 0) h.done = true;
       }
       return;
@@ -119,7 +126,9 @@ const UPDATERS = {
     if (game.time - h.hit < POOL_TICK * TICK_MS) return;
     if (dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
       h.hit = game.time;
-      if (!isProtected()) takeDamage(h.damage * 0.25);
+      if (isProtected()) return;
+      if (h.damage > 0) takeDamage(h.damage * 0.25);
+      if (h.slow) player.buffs.slow = Math.max(player.buffs.slow, h.slow); // flaque d'acide
     }
   },
 

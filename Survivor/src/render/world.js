@@ -3,6 +3,7 @@
 import { MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
 import { camera, game, mysteryBox as box, world } from "../core/state.js";
+import { arenaShrunk } from "../systems/arena.js";
 import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
@@ -76,6 +77,34 @@ export function drawMapBorder() {
   ctx.strokeStyle = "rgba(255, 0, 85, 0.25)";
   ctx.lineWidth = 2;
   ctx.strokeRect(MAP_BOUNDS.minX + 12, MAP_BOUNDS.minY + 12, MAP_SIZE - 24, MAP_SIZE - 24);
+  if (arenaShrunk()) drawArenaWalls();
+}
+
+/** Combat de boss : murs de l'arène, l'extérieur assombri. */
+function drawArenaWalls() {
+  const b = game.bounds;
+  const w = b.maxX - b.minX;
+  const h = b.maxY - b.minY;
+  const m = 60; // marge : tremblement de l'écran
+  ctx.fillStyle = "rgba(2, 0, 8, 0.55)";
+  ctx.beginPath();
+  ctx.rect(camera.x - m, camera.y - m, view.width + m * 2, view.height + m * 2);
+  ctx.rect(b.minX, b.minY, w, h);
+  ctx.fill("evenodd");
+  const pulse = 0.75 + Math.sin(performance.now() / 180) * 0.25;
+  ctx.globalAlpha = pulse;
+  ctx.strokeStyle = "#ff2a6d";
+  ctx.lineWidth = 4;
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = "#ff2a6d";
+  ctx.strokeRect(b.minX, b.minY, w, h);
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([18, 12]);
+  ctx.strokeRect(b.minX + 14, b.minY + 14, w - 28, h - 28);
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
 }
 
 export function drawMysteryBox() {

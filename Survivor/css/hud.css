@@ -338,6 +338,11 @@
   color: #ffd700;
   text-shadow: 4px 4px 0 #6a4a00;
 }
+/* Événement de carte : couleur de l'événement (écrite en ligne), lueur au lieu de l'ombre rouge */
+#bossWarning.event {
+  text-shadow: 0 0 16px currentColor;
+  animation: none;
+}
 @media (max-width: 760px), (max-height: 560px) {
   #bossBar {
     top: calc(126px + env(safe-area-inset-top));

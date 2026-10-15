@@ -1,6 +1,6 @@
 // Objets ramassables : gemmes d'XP, trousses de soin et sanctuaires (buffs).
 
-import { BUFF_DURATIONS, LIMITS, MAP_BOUNDS } from "../config.js";
+import { BUFF_DURATIONS, LIMITS } from "../config.js";
 import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import { addStat } from "../services/achievements.js";
@@ -15,7 +15,8 @@ const LOOTBOX_SPACING = 160; // distance minimale entre deux soins
 const PICKUP_MARGIN = 40; // les objets restent à l'intérieur de la zone de combat
 
 function insideArena(v, axis) {
-  const [min, max] = axis === "x" ? [MAP_BOUNDS.minX, MAP_BOUNDS.maxX] : [MAP_BOUNDS.minY, MAP_BOUNDS.maxY];
+  const [min, max] =
+    axis === "x" ? [game.bounds.minX, game.bounds.maxX] : [game.bounds.minY, game.bounds.maxY];
   return clamp(v, min + PICKUP_MARGIN, max - PICKUP_MARGIN);
 }
 
@@ -23,8 +24,8 @@ export function createGem(x, y, xp) {
   if (world.gems.length > LIMITS.gems) world.gems.shift();
   const color = xp > 50 ? "#3333ff" : xp > 10 ? "#33ff33" : "#ff3333";
   world.gems.push({
-    x: clamp(x, MAP_BOUNDS.minX + 20, MAP_BOUNDS.maxX - 20),
-    y: clamp(y, MAP_BOUNDS.minY + 20, MAP_BOUNDS.maxY - 20),
+    x: clamp(x, game.bounds.minX + 20, game.bounds.maxX - 20),
+    y: clamp(y, game.bounds.minY + 20, game.bounds.maxY - 20),
     xp,
     color,
     collected: false,

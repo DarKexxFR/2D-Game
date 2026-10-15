@@ -5,7 +5,8 @@ import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game, player, world } from "../core/state.js";
 import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
-import { drawBolts, drawBossChests, drawHazards, drawTurrets } from "./hazards.js";
+import { drawBolts, drawBossChests, drawFallers, drawHazards, drawTurrets } from "./hazards.js";
+import { drawVortex, drawWeather } from "./mapEvents.js";
 import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
 import { renderSplit } from "./versus.js";
 import { drawRivalView } from "./rivalView.js";
@@ -36,6 +37,7 @@ function drawScene(now) {
   drawMysteryBox();
   drawShrines(now);
   drawPickups();
+  drawVortex(now);
   drawHazards(now); // au sol, sous les entités
   drawBossChests(now);
   drawTurrets(now);
@@ -43,6 +45,7 @@ function drawScene(now) {
   drawEnemies();
   drawProjectiles();
   drawBolts();
+  drawFallers(now); // astéroïdes, gouttes et étoiles qui tombent
   drawSkillEffects();
   drawParticles();
   drawVisualEffects();
@@ -56,6 +59,7 @@ function drawScene(now) {
     ctx.globalAlpha = 1;
   }
 
+  drawWeather(now);
   if (game.hex?.type === "fog") drawFog();
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).

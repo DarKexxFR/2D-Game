@@ -155,6 +155,9 @@ export async function game(page, fn, arg) {
         enemies: await import("/src/systems/enemies.js"),
         input: await import("/src/core/input.js"),
         canvas: await import("/src/core/canvas.js"),
+        config: await import("/src/config.js"),
+        mapEvents: await import("/src/systems/mapEvents.js"),
+        arena: await import("/src/systems/arena.js"),
       };
       // eslint-disable-next-line no-new-func
       return new Function("mods", "arg", `return (${fnSrc})(mods, arg)`)(mods, arg);

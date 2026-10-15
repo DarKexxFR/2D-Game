@@ -100,8 +100,11 @@ export function showGoblinWarning() {
   showBossWarning("VOLEUR DORÉ !", true);
 }
 
-export function showBossWarning(text, gold = false) {
+/** Bandeau d'annonce (boss, Voleur doré, événement de carte : `color` = couleur de l'événement). */
+export function showBossWarning(text, gold = false, color = "") {
   setClass("bossWarning", "gold", gold);
+  setClass("bossWarning", "event", !!color);
+  document.getElementById("bossWarning").style.color = color;
   setText("bossWarning", text);
   setVisible("bossWarning", true);
   clearTimeout(bossWarningTimeout);
