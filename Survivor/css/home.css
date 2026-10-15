@@ -373,6 +373,48 @@ button.play-btn {
   }
 }
 
+/* --- Choix de la difficulté (sous JOUER) --- */
+.diff-picker {
+  display: flex;
+  gap: 6px;
+  width: min(100%, 380px);
+}
+button.diff-btn {
+  --diff: #00ffff;
+  flex: 1;
+  width: auto;
+  padding: 7px 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 10, 35, 0.75);
+  color: #aaa;
+  box-shadow: none;
+}
+button.diff-btn.active {
+  color: var(--diff);
+  border-color: var(--diff);
+  background: color-mix(in srgb, var(--diff) 14%, rgba(20, 10, 35, 0.85));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--diff) 45%, transparent);
+}
+button.diff-btn.locked {
+  opacity: 0.55;
+}
+.diff-btn .diff-lock {
+  display: none;
+  font-size: 10px;
+}
+.diff-btn.locked .diff-lock {
+  display: inline-block;
+}
+.diff-hint {
+  min-height: 1.2em;
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+}
+
 /* --- Barre du bas --- */
 .home-dock {
   grid-area: dock;

@@ -1,7 +1,7 @@
 // État mutable de la partie en cours. Les modules importent ces objets
 // et les modifient ; ils ne sont jamais réassignés (seulement réinitialisés).
 
-import { ACCOUNT_SCALING, MYSTERY_BOX, PLAYER_DEFAULTS } from "../config.js";
+import { ACCOUNT_SCALING, MAP_BOUNDS, MAP_EVENTS, MYSTERY_BOX, PLAYER_DEFAULTS } from "../config.js";
 
 export const game = { started: false, running: false, paused: false };
 export const camera = { x: 0, y: 0 };
@@ -49,6 +49,7 @@ export function resetGame() {
     isBossWave: false,
     nextWaveTimer: 0,
     adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
+    difficulty: "normal", // niveau de difficulté de la partie (voir services/difficulty.js)
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
     rush: null, // Boss Rush en cours : { stage, defeated } (voir systems/spawner.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
@@ -64,6 +65,10 @@ export function resetGame() {
     hex: null, // duel : sort subi { type, ticks }
     // duel : récap de fin (vie % chaque seconde, attaques et sorts envoyés) ; t en ms depuis le début du duel
     duelLog: { hp: [], marks: [], sent: 0, cast: 0, lastT: -1e9 },
+    bounds: { ...MAP_BOUNDS }, // zone de combat actuelle (se resserre pendant un boss, voir systems/arena.js)
+    arena: null, // zone visée pendant un combat de boss { minX, maxX, minY, maxY }, sinon null
+    mapEvent: null, // événement de carte en cours (voir systems/mapEvents.js), sinon null
+    eventTimer: MAP_EVENTS.firstDelay, // ticks avant le prochain événement
   });
   for (const list of Object.values(world)) list.length = 0;
 }
@@ -109,12 +114,23 @@ export function resetPlayer(accountLevel) {
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0 },
+    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0, haste: 0 },
+    hasteBonus: 0, // vitesse en plus pendant buffs.haste (Combinaison légère ★3)
+    // Effets d'équipement (systems/perks.js) : effets ★3 actifs, panoplie, minuteurs, zones
+    perks: {},
+    set: null,
+    perkTimers: {},
+    perkZones: [],
+    damageTaken: 1, // multiplicateur des dégâts reçus
+    healMult: 1, // efficacité des soins
+    bossDamage: 1, // multiplicateur des dégâts contre les boss
+    auraMult: 1, // taille de l'aura de feu
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)
     armor: null,
     hero: null,
+    module: null,
   });
   player.health = player.maxHealth;
   player.speed = player.baseSpeed;

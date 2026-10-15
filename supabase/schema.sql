@@ -54,6 +54,56 @@ create or replace view public.leaderboard with (security_invoker = true) as
 grant select on public.leaderboard to anon;
 
 -- =====================================================================
+-- Mode Cauchemar : classement mondial à part (mêmes règles que « scores »).
+-- =====================================================================
+
+create table if not exists public.nightmare_scores (
+  id bigint generated always as identity primary key,
+  name text not null check (char_length(btrim(name)) between 1 and 12),
+  wave int not null check (wave between 1 and 1000),
+  xp bigint not null check (xp between 0 and 100000000),
+  lvl int not null check (lvl between 1 and 1000),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists nightmare_scores_xp_idx on public.nightmare_scores (xp desc);
+
+alter table public.nightmare_scores enable row level security;
+
+drop policy if exists "Lecture publique" on public.nightmare_scores;
+create policy "Lecture publique" on public.nightmare_scores for select to anon using (true);
+
+drop policy if exists "Ajout public" on public.nightmare_scores;
+create policy "Ajout public" on public.nightmare_scores for insert to anon with check (true);
+
+revoke all on public.nightmare_scores from anon;
+grant select, insert on public.nightmare_scores to anon;
+
+create or replace function public.nightmare_scores_rate_limit() returns trigger
+language plpgsql as $$
+begin
+  if exists (
+    select 1 from public.nightmare_scores
+    where lower(name) = lower(new.name)
+      and created_at > now() - interval '10 seconds'
+  ) then
+    raise exception 'Trop de scores envoyés, réessaie plus tard';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists nightmare_scores_rate_limit on public.nightmare_scores;
+create trigger nightmare_scores_rate_limit before insert on public.nightmare_scores
+  for each row execute function public.nightmare_scores_rate_limit();
+
+create or replace view public.nightmare_leaderboard with (security_invoker = true) as
+  select distinct on (lower(name)) name, wave, xp, lvl, created_at
+  from public.nightmare_scores
+  order by lower(name), xp desc;
+
+grant select on public.nightmare_leaderboard to anon;
+
+-- =====================================================================
 -- Sauvegarde en ligne : la progression est rangée sous un code secret
 -- (XXXX-XXXX-XXXX). La table n'est PAS lisible directement : on passe
 -- uniquement par les deux fonctions ci-dessous, qui exigent le code.

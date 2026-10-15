@@ -4,7 +4,9 @@ import { ADS } from "../config.js";
 import { CHEST_GROUPS, CHESTS, FREE_CHEST, PRESTIGE_COPIES } from "../data/items.js";
 import { adsEnabled, showRewardedAd } from "../services/ads.js";
 import {
+  buyDailyOffer,
   canPrestige,
+  dailyOffer,
   freeChestRemainingMs,
   getOwned,
   adChestsLeft,
@@ -89,6 +91,35 @@ function freeChestCard() {
   );
 }
 
+/** Offre du jour : un objet précis à prix fixe, une fois par jour (le même pour tous). */
+function offerCard() {
+  const { item, price, bought } = dailyOffer();
+  const btn = bought
+    ? el("button", "shop-btn", "ACHETÉ")
+    : setLabel(el("button", "shop-btn"), `${price} `, "coin", { color: "#ffd700" });
+  btn.id = "btnDailyOffer";
+  btn.disabled = bought || account.gold < price;
+  btn.addEventListener("click", () => {
+    const outcome = buyDailyOffer();
+    if (!outcome) return;
+    lastChestId = null;
+    onChange();
+    showReveal(outcome);
+  });
+  const owned = getOwned(item.id);
+  const card = rewardCard(
+    "dailyOfferCard",
+    "chest-offer",
+    item.icon,
+    item.color,
+    item.name,
+    `${RARITY_LABELS[item.rarity]} · ${owned ? "doublon pour le prestige" : "nouvel objet"} · renouvelée chaque jour`,
+    btn,
+  );
+  card.style.setProperty("--chest", rarityColor(item.rarity));
+  return card;
+}
+
 /** Coffre bonus : un coffre basique de plus en regardant une pub (quelques fois par jour). */
 function adChestCard() {
   const chest = CHESTS.find((c) => c.id === FREE_CHEST.chestId);
@@ -119,7 +150,13 @@ function adChestCard() {
   );
 }
 
-const POOL_LABELS = { gear: "Armes & armures", hero: "Héros", pet: "Familiers" };
+const POOL_LABELS = {
+  gear: "Armes & armures",
+  hero: "Héros",
+  pet: "Familiers",
+  module: "Modules",
+  all: "Toutes catégories",
+};
 
 /** Tuile d'un coffre payant : grande icône, contenu, chances en barre colorée, prix. */
 function chestTile(chest) {
@@ -157,7 +194,14 @@ function chestTile(chest) {
 export function renderChests() {
   const free = el("div", "reward-row");
   free.append(freeChestCard(), ...(adsEnabled() ? [adChestCard()] : []));
-  const sections = [el("h3", "shop-section", "Récompenses"), free];
+  const offer = el("div", "reward-row offer-row");
+  offer.append(offerCard());
+  const sections = [
+    el("h3", "shop-section", "Récompenses"),
+    free,
+    el("h3", "shop-section", "Offre du jour"),
+    offer,
+  ];
   for (const group of CHEST_GROUPS) {
     const grid = el("div", `chest-grid cols-${group.ids.length}`);
     grid.append(...group.ids.map((id) => chestTile(CHESTS.find((c) => c.id === id))));

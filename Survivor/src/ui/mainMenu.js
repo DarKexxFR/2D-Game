@@ -1,9 +1,11 @@
 // Menu principal et compte (les coffres de la boutique sont dans chestMenu.js).
 
+import { DIFFICULTIES } from "../config.js";
 import { HEROES, PETS } from "../data/items.js";
 import { TALENTS } from "../data/talents.js";
 import { getDailyBest } from "../services/daily.js";
 import { getEquipped } from "../services/inventory.js";
+import { isDifficultyUnlocked, selectedDifficulty, setDifficulty } from "../services/difficulty.js";
 import { getWeeklyQuests } from "../services/quests.js";
 import { account, loadPseudo, resetProgress, savePseudo } from "../services/storage.js";
 import { $, setClass, setText, setWidth } from "./dom.js";
@@ -33,6 +35,9 @@ export function initMainMenu({ onPlay }) {
   $("playerPseudo").addEventListener("change", commitPseudo);
 
   $("btnPlay").addEventListener("click", onPlay);
+  for (const btn of document.querySelectorAll(".diff-btn")) {
+    btn.addEventListener("click", () => pickDifficulty(btn.dataset.diff));
+  }
   $("btnShop").addEventListener("click", () => showScreen("shopMenu"));
   $("btnLeaderboard").addEventListener("click", openLeaderboard);
   $("btnInventory").addEventListener("click", openInventory);
@@ -63,6 +68,7 @@ export function refreshAccountUI() {
   setWidth("acBarFill", account.currentXp / account.nextLevelXp);
   setText("acGoldDisplay", account.gold);
   refreshHomeTiles();
+  refreshDifficulty();
   setText("shopGoldDisplay", account.gold);
   setText("invGoldDisplay", account.gold);
   renderChests();
@@ -89,4 +95,29 @@ function refreshHomeTiles() {
   const done = quests.filter((q) => q.done).length;
   setText("questTileSub", ready ? "Or à récupérer !" : `${done} / ${quests.length} accomplies`);
   setClass("btnQuests", "has-new", ready > 0);
+}
+
+// --- DIFFICULTÉ ---
+
+let lockedHint = null; // niveau verrouillé touché : son indice reste affiché
+
+function pickDifficulty(id) {
+  lockedHint = setDifficulty(id) ? null : id;
+  refreshDifficulty();
+}
+
+function refreshDifficulty() {
+  const current = selectedDifficulty();
+  for (const btn of document.querySelectorAll(".diff-btn")) {
+    const id = btn.dataset.diff;
+    const unlocked = isDifficultyUnlocked(id);
+    btn.classList.toggle("active", id === current);
+    btn.classList.toggle("locked", !unlocked);
+    btn.setAttribute("aria-checked", String(id === current));
+    btn.style.setProperty("--diff", DIFFICULTIES[id].color);
+  }
+  const hint = lockedHint && !isDifficultyUnlocked(lockedHint) ? lockedHint : null;
+  const d = DIFFICULTIES[hint || current];
+  setText("difficultyHint", hint ? `Atteins la vague ${d.unlockWave} pour débloquer ${d.name}` : d.desc);
+  $("difficultyHint").style.color = hint ? "#ff2a6d" : "";
 }

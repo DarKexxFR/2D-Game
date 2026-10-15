@@ -17,6 +17,7 @@ const ROUTES = {
   achievementMenu: "succes",
   dailyMenu: "defi",
   questMenu: "quetes",
+  streakMenu: "serie",
   bossRushMenu: "boss-rush",
   talentMenu: "talents",
   skinMenu: "skins",

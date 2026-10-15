@@ -1,7 +1,7 @@
-// Classement : onglet mondial (Supabase), onglet local (ce navigateur) et classement ELO du duel en ligne.
+// Classement : onglet mondial (Supabase), onglet Cauchemar (mondial), onglet local (ce navigateur) et classement ELO du duel en ligne.
 
 import { fetchDuelRanking } from "../services/duelRanking.js";
-import { fetchTopScores, isOnlineEnabled } from "../services/onlineLeaderboard.js";
+import { fetchNightmareScores, fetchTopScores, isOnlineEnabled } from "../services/onlineLeaderboard.js";
 import { currentUser } from "../services/auth.js";
 import { getLeaderboard } from "../services/storage.js";
 import { $, el, setText } from "./dom.js";
@@ -13,6 +13,7 @@ let requestId = 0;
 export function initLeaderboardMenu({ onBack }) {
   $("btnLeaderboardBack").addEventListener("click", onBack);
   $("lbTabGlobal").addEventListener("click", () => selectTab("global"));
+  $("lbTabNightmare").addEventListener("click", () => selectTab("nightmare"));
   $("lbTabLocal").addEventListener("click", () => selectTab("local"));
   $("lbTabDuel").addEventListener("click", () => selectTab("duel"));
 }
@@ -25,6 +26,7 @@ export function openLeaderboard() {
 function selectTab(tab) {
   activeTab = tab;
   $("lbTabGlobal").classList.toggle("active", tab === "global");
+  $("lbTabNightmare").classList.toggle("active", tab === "nightmare");
   $("lbTabLocal").classList.toggle("active", tab === "local");
   $("lbTabDuel").classList.toggle("active", tab === "duel");
   setText("lbCol3", tab === "duel" ? "ELO" : "VAGUE");
@@ -32,10 +34,12 @@ function selectTab(tab) {
   setText("lbMe", "");
   if (tab === "local") renderRows(getLeaderboard(), "Aucun score enregistré");
   else if (tab === "duel") loadDuel();
-  else loadGlobal();
+  else if (tab === "nightmare")
+    loadGlobal(tab, fetchNightmareScores, "Aucun score en Cauchemar pour l'instant");
+  else loadGlobal(tab, fetchTopScores, "Aucun score mondial pour l'instant");
 }
 
-async function loadGlobal() {
+async function loadGlobal(tab, fetchRows, emptyText) {
   if (!isOnlineEnabled()) {
     renderMessage("Classement mondial non configuré");
     return;
@@ -43,11 +47,11 @@ async function loadGlobal() {
   const id = ++requestId;
   renderMessage("Chargement...");
   try {
-    const rows = await fetchTopScores();
-    if (id === requestId && activeTab === "global") renderRows(rows, "Aucun score mondial pour l'instant");
+    const rows = await fetchRows();
+    if (id === requestId && activeTab === tab) renderRows(rows, emptyText);
   } catch (err) {
     console.warn("Classement mondial indisponible :", err);
-    if (id === requestId && activeTab === "global") renderMessage("Classement mondial indisponible");
+    if (id === requestId && activeTab === tab) renderMessage("Classement mondial indisponible");
   }
 }
 

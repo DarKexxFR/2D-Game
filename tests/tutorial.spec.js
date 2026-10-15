@@ -56,6 +56,7 @@ test("PASSER le coupe pour de bon ; les Options permettent de le revoir", async 
 test("un joueur qui a déjà fini des parties ne le voit pas", async ({ page }) => {
   await withSave(page, { level: 3, gold: 100, achievementStats: { runs: 4 } });
   await page.goto("/");
+  await page.locator("#btnStreakClaim").click(); // série de connexion proposée à l'arrivée
   await startGame(page);
   await page.waitForTimeout(500);
   await expect(bubble(page)).toBeHidden();

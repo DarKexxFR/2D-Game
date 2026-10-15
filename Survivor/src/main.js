@@ -1,7 +1,7 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
-import { NET, TICK_MS, VERSUS } from "./config.js";
+import { DIFFICULTIES, NET, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -13,6 +13,7 @@ import { initCloudSave } from "./services/cloudSave.js";
 import { initAds } from "./services/ads.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
 import { applyTalents } from "./data/talents.js";
+import { difficultyModifier, selectedDifficulty } from "./services/difficulty.js";
 import { ensureStarterItems } from "./services/inventory.js";
 import { addStat, getStat, recordBest, recordCompletedRun } from "./services/achievements.js";
 import { BOSS_RUSH } from "./data/enemies.js";
@@ -38,11 +39,14 @@ import { updateEnemies } from "./systems/enemies.js";
 import { updateHazards } from "./systems/hazards.js";
 import { updateMysteryBox } from "./systems/mysteryBox.js";
 import { applyEquipment } from "./systems/equipment.js";
+import { updatePerks } from "./systems/perks.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
 import { resetTrail, updateTrail } from "./systems/trail.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
+import { updateArena } from "./systems/arena.js";
+import { updateMapEvents } from "./systems/mapEvents.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
@@ -65,6 +69,7 @@ import {
 import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initQuestMenu, openQuests } from "./ui/questMenu.js";
+import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
@@ -126,17 +131,19 @@ function startGame(mode = "normal") {
   restoreRandom();
   resetUpgradeMenu();
   setAutoPick(false);
-  setupRun(mode);
+  setupRun(mode, mode === "normal" ? selectedDifficulty() : "normal");
   if (mode === "normal") startTutorial();
   else stopTutorial();
   hideScreens();
   showHud(true);
 }
 
-/** Prépare une partie (aussi celle de chaque joueur en duel). */
-function setupRun(mode) {
+/** Prépare une partie (aussi celle de chaque joueur en duel, toujours en Normal). */
+function setupRun(mode, difficulty = "normal") {
   resetGame();
   resetTrail();
+  game.difficulty = difficulty;
+  if (difficulty !== "normal") game.modifier = difficultyModifier(difficulty);
   if (mode === "daily") {
     const daily = dailyChallenge();
     game.daily = daily;
@@ -337,11 +344,15 @@ function endGame() {
     setOnlineStatus("");
     return;
   }
-  const isNewRecord = saveToLeaderboard(pseudo, game.wave, game.totalRunXp, player.level);
+  // Facile : hors classements (local et mondial) ; Cauchemar : classement mondial à part
+  const easy = game.difficulty === "easy";
+  const nightmare = game.difficulty === "nightmare";
+  const isNewRecord = !easy && saveToLeaderboard(pseudo, game.wave, game.totalRunXp, player.level);
   showGameOver({
     pseudo,
     level: player.level,
     wave: game.wave,
+    waveLabel: game.difficulty === "normal" ? "Vague" : `Vague · ${DIFFICULTIES[game.difficulty].name}`,
     xp: game.totalRunXp,
     gold: game.runGold,
     isNewRecord,
@@ -349,11 +360,16 @@ function endGame() {
 
   const day = game.daily?.day;
   if (day) saveDailyBest(day, game.wave, game.totalRunXp);
+  if (easy) {
+    setOnlineStatus(isOnlineEnabled() ? "Mode Facile : hors classement mondial" : "");
+    return;
+  }
   setOnlineStatus(isOnlineEnabled() ? "Envoi du score au classement mondial..." : "");
   if (isOnlineEnabled()) {
-    const score = { name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level, day };
+    const score = { name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level, day, nightmare };
+    const prefix = day ? "Défi du jour : " : nightmare ? "Cauchemar : " : "";
     submitScore(score).then((status) =>
-      setOnlineStatus((day && status === "sent" ? "Défi du jour : " : "") + SUBMIT_MESSAGES[status]),
+      setOnlineStatus((status === "sent" ? prefix : "") + SUBMIT_MESSAGES[status]),
     );
   }
 }
@@ -411,10 +427,13 @@ function update() {
 function simulate() {
   updateHex();
   updateSpawning();
+  updateArena();
+  updateMapEvents();
   updatePlayer();
   updateTrail();
   rebuildEnemyGrid();
   updateAura();
+  updatePerks();
   updateMysteryBox();
   shoot();
   throwKunai();
@@ -471,6 +490,7 @@ function init() {
   initDuelPicks();
   initAchievementMenu({ onBack: showMainMenu });
   initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initStreakMenu({ onClose: showMainMenu });
 
   $("btnResume").addEventListener("click", togglePause);
   $("btnQuit").addEventListener("click", returnToMenu);
@@ -568,6 +588,11 @@ function init() {
   on("biomeChange", (biome) =>
     versus.split ? splitBanner(biome.name, biome.color) : showBiomeBanner(biome),
   );
+  on("mapEvent", ({ name, color }) => {
+    if (versus.split) splitBanner(name, color);
+    else showBossWarning(name, false, color);
+    playSfx("meteor");
+  });
   on("bossWarning", (text) => {
     if (versus.split) splitBanner(text, "#ff2a6d");
     else showBossWarning(text);
@@ -577,6 +602,8 @@ function init() {
 
   showMainMenu();
   initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
+  // Série de connexion : proposée à l'arrivée (pas à un tout nouveau joueur, qui commence par le tutoriel)
+  if (currentScreen() === "mainMenu" && account.achievementStats.runs > 0) offerLoginStreak();
   requestAnimationFrame(frame);
 }
 

@@ -70,6 +70,8 @@ const WEAPON_RECIPES = {
   flamer: { id: "dragonBreath", name: "Souffle du dragon", inventory: { "Aura de Feu": 2 } },
   disc: { id: "whirlwind", name: "Tourbillon", inventory: { "Orbe Protecteur": 2 } },
   tesla: { id: "ionStorm", name: "Tempête ionique", inventory: { "Multi-Tir": 2 } },
+  blades: { id: "chaosWheel", name: "Roue du chaos", inventory: { Kunai: 2 } },
+  nova: { id: "starfall", name: "Pluie d'étoiles", inventory: { Divinité: 1 } },
 };
 
 for (const [weapon, recipe] of Object.entries(WEAPON_RECIPES)) {

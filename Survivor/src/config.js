@@ -36,7 +36,7 @@ export const LIMITS = {
 };
 
 export const STAT_CAPS = {
-  speed: 10,
+  speed: 7, // vitesse de déplacement maximale (base 4,7) : au-delà le jeu devient injouable
   attackSpeed: 50,
   magnet: 600,
 };
@@ -57,6 +57,85 @@ export const SURVIVAL = {
  * Après un étourdissement, le joueur y est insensible un moment (pas d'enchaînement sans fin).
  */
 export const STUN = { maxTicks: 75, immunity: 150 };
+
+/**
+ * Pendant un combat de boss (et tout le Boss Rush), la zone de combat se resserre : un carré de
+ * `size` de côté (la carte fait MAP_SIZE), centré sur le joueur sans sortir de la carte. Les murs
+ * avancent ou reculent de `speed` unités par tick (pas de téléportation du joueur).
+ */
+export const BOSS_ZONE = { size: 2100, speed: 10 };
+
+/**
+ * Événements aléatoires sur la carte (systems/mapEvents.js), à partir de la vague `fromWave`, jamais
+ * pendant un boss. Un bandeau les annonce `warning` ticks avant le premier impact, et chaque impact est
+ * marqué au sol avant de tomber (`delay`). Dégâts au joueur × multiplicateur de dégâts de la vague,
+ * dégâts aux ennemis (`enemyDamage`) × multiplicateur de PV de la vague : l'effet reste le même.
+ *  - asteroids : astéroïdes qui écrasent tout ce qui se trouve dessous ;
+ *  - acid      : gouttes qui laissent des flaques d'acide (ralentissent et rongent) ;
+ *  - vortex    : trou noir qui aspire (les ennemis bien plus que le joueur) et broie en son centre ;
+ *  - stars     : bonus, des étoiles filantes qui lâchent de l'XP (et parfois un soin).
+ * `aimed` : part des impacts qui visent le joueur (les autres tombent autour de lui, dans `spread`).
+ */
+export const MAP_EVENTS = {
+  fromWave: 3,
+  firstDelay: 900, // ticks après le début de la vague `fromWave`
+  interval: [2400, 3900], // ticks entre la fin d'un événement et le suivant (40 à 65 s)
+  warning: 150,
+  asteroids: {
+    weight: 3,
+    name: "PLUIE D'ASTÉROÏDES",
+    color: "#ff8c1a",
+    duration: 540,
+    every: 12,
+    delay: 75,
+    radius: [60, 95],
+    spread: 560,
+    aimed: 0.3,
+    damage: 16,
+    enemyDamage: 80,
+  },
+  acid: {
+    weight: 3,
+    name: "PLUIE ACIDE",
+    color: "#9dff00",
+    duration: 600,
+    every: 16,
+    delay: 60,
+    radius: [55, 85],
+    spread: 520,
+    aimed: 0.25,
+    damage: 10, // l'impact ; la flaque fait un quart de ces dégâts toutes les 0,5 s
+    pool: 420,
+    slow: 45,
+    enemyDamage: 30,
+  },
+  vortex: {
+    weight: 2,
+    name: "TROU NOIR",
+    color: "#aa66ff",
+    duration: 540,
+    distance: 380, // apparaît à cette distance du joueur
+    radius: 260, // portée de l'aspiration
+    core: 50, // centre qui broie
+    pull: 1.4, // aspiration du joueur par tick (vitesse de base : 4,7)
+    enemyPull: 3.2,
+    damage: 7, // au joueur dans le centre, toutes les 0,5 s
+    enemyDamage: 12, // aux ennemis dans le centre, toutes les 0,25 s
+  },
+  stars: {
+    weight: 2,
+    name: "PLUIE D'ÉTOILES",
+    color: "#ffd700",
+    duration: 420,
+    every: 22,
+    delay: 70,
+    radius: [40, 40],
+    spread: 420,
+    aimed: 0,
+    xp: 25, // XP de base d'une étoile (× bonus d'XP de la vague)
+    healChance: 0.15,
+  },
+};
 
 export const PLAYER_DEFAULTS = {
   size: 20,
@@ -131,6 +210,7 @@ export const RARITIES = {
   rare: { weight: 50, color: "#0088ff" },
   epic: { weight: 15, color: "#aa00ff" },
   legendary: { weight: 3, color: "#ffaa00" },
+  mythic: { weight: 0, color: "#ff3b30" }, // équipement seulement (coffres), aucune carte en partie
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
 };
 
@@ -139,6 +219,40 @@ export const BOSS_CHEST = {
   weights: { rare: 40, epic: 40, legendary: 20 },
   gold: 40,
   goldPerWave: 8,
+};
+
+// Niveaux de difficulté (partie normale seulement : ni défi du jour, ni Boss Rush, ni duel).
+// Multiplicateurs appliqués via `game.modifier` ; `eliteShift` avance (+) ou recule (-) l'arrivée des
+// élites en vagues ; `rewards` multiplie l'XP et l'or. Cauchemar : débloqué au record de vague
+// `unlockWave`, classement mondial à part. Facile : pas de classement mondial.
+export const DIFFICULTIES = {
+  easy: {
+    name: "FACILE",
+    color: "#00ff88",
+    desc: "Ennemis plus faibles · XP et or ×0,7",
+    enemyHealth: 0.7,
+    enemyDamage: 0.6,
+    eliteShift: -4,
+    rewards: 0.7,
+  },
+  normal: { name: "NORMAL", color: "#00ffff", desc: "L'expérience prévue", rewards: 1 },
+  nightmare: {
+    name: "CAUCHEMAR",
+    color: "#ff2a6d",
+    desc: "Ennemis bien plus forts, élites dès la vague 3 · XP et or ×1,75",
+    enemyHealth: 1.6,
+    enemyDamage: 1.5,
+    enemySpeed: 1.1,
+    eliteShift: 5,
+    rewards: 1.75,
+    unlockWave: 10,
+  },
+};
+
+// Série de connexion : une récompense par jour de connexion d'affilée (heure locale), de plus en
+// plus grosse jusqu'au 7e jour ; un jour manqué remet la série à 1, après le 7e jour elle recommence.
+export const LOGIN_STREAK = {
+  rewards: [100, 150, 200, 300, 400, 600, 1200], // or des jours 1 à 7
 };
 
 // Quêtes hebdomadaires (data/quests.js) : renouvelées chaque lundi à 0 h (heure du joueur).
@@ -221,6 +335,8 @@ export const ONLINE = {
   leaderboardView: "leaderboard",
   dailyTable: "daily_scores",
   dailyView: "daily_leaderboard",
+  nightmareTable: "nightmare_scores",
+  nightmareView: "nightmare_leaderboard",
   topCount: 50,
   timeoutMs: 6000,
 };

@@ -744,6 +744,104 @@ const SHAPES = {
     dot(c, 0, 0, r * 0.12, "#ffffff", 12);
   },
 
+  /** Spore de la jungle : boule bosselée hérissée de pustules (éclate en sporelets). */
+  spore(c, r, color) {
+    const bumps = 9;
+    const path = () => {
+      c.beginPath();
+      for (let k = 0; k <= bumps * 2; k++) {
+        const a = (TAU * k) / (bumps * 2);
+        const rr = r * (k % 2 ? 0.82 : 1);
+        c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      c.closePath();
+    };
+    neonBody(c, path, color, 2, 12);
+    for (const [x, y, rr] of [
+      [0.35, -0.3, 0.2],
+      [-0.3, 0.35, 0.18],
+      [-0.25, -0.35, 0.14],
+      [0.3, 0.38, 0.12],
+    ]) {
+      dot(c, x * r, y * r, rr * r, "#eaff9a", 8);
+    }
+    eye(c, r * 0.1, 0, r * 0.2, "#ff2a6d");
+  },
+
+  /** Poseur de mines : scarabée blindé qui porte une mine sur le dos. */
+  bomber(c, r, color) {
+    c.strokeStyle = color;
+    c.lineWidth = 2;
+    glow(c, color, 6);
+    for (const s of [-1, 1]) {
+      for (const k of [-0.45, 0, 0.45]) {
+        c.beginPath();
+        c.moveTo(k * r, s * r * 0.5);
+        c.lineTo(k * r + r * 0.15, s * r * 1.05);
+        c.stroke();
+      }
+    }
+    noGlow(c);
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.ellipse(0, 0, r, r * 0.75, 0, 0, TAU);
+      },
+      color,
+      2.5,
+      10,
+    );
+    c.strokeStyle = shade(color, 0.6);
+    c.beginPath();
+    c.moveTo(-r * 0.9, 0);
+    c.lineTo(r * 0.55, 0);
+    c.stroke();
+    dot(c, -r * 0.25, 0, r * 0.32, "#ff3300", 12);
+    dot(c, -r * 0.25, 0, r * 0.12, "#ffee00", 6);
+    eye(c, r * 0.75, -r * 0.2, r * 0.11, "#ffffff");
+    eye(c, r * 0.75, r * 0.2, r * 0.11, "#ffffff");
+  },
+
+  /** Téléporteur : losange à facettes avec un cœur qui scintille. */
+  blinker(c, r, color) {
+    neonBody(
+      c,
+      () =>
+        polygon(c, [
+          [r * 1.15, 0],
+          [0, -r * 0.85],
+          [-r * 1.15, 0],
+          [0, r * 0.85],
+        ]),
+      color,
+      2.5,
+      14,
+    );
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(r * 1.15, 0);
+    c.lineTo(-r * 1.15, 0);
+    c.moveTo(0, -r * 0.85);
+    c.lineTo(0, r * 0.85);
+    c.stroke();
+    dot(c, 0, 0, r * 0.28, "#ffffff", 14);
+  },
+
+  /** Drone laser : soucoupe à canon, lentille rose. */
+  laser_drone(c, r, color) {
+    neonBody(c, () => c.rect(r * 0.2, -r * 0.18, r * 1.1, r * 0.36), color, 2, 8);
+    neonBody(c, () => regular(c, 6, r * 0.9, TAU / 12), color, 2.5, 12);
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(0, 0, r * 0.55, 0, TAU);
+    c.stroke();
+    dot(c, r * 1.3, 0, r * 0.14, "#ffffff", 12);
+    eye(c, 0, 0, r * 0.26, "#ff4fd8");
+  },
+
   /** Spectre (sbire du Faucheur) : petit fantôme. */
   phantom(c, r, color) {
     const path = () => {

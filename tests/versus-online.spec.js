@@ -181,7 +181,10 @@ for (const [mode, net] of [
     await kill(guest, { gold: 17 });
     await expect(page.locator("#versusWinner")).toHaveText("TU GAGNES !");
     await expect(guest.locator("#versusWinner")).toHaveText("Hote GAGNE !");
-    await expect(page.locator("#versusScore")).toContainText("+42 or");
+    // (la partie de l'hôte tourne jusqu'à l'annonce de la mort : il peut ramasser encore un peu d'or)
+    await expect(page.locator("#versusScore")).toContainText(/Tu empoches les deux parties : .*\+\d+ or/);
+    const shown = (await page.locator("#versusScore").textContent()).match(/\+(\d+) or/)[1];
+    expect(Number(shown)).toBeGreaterThanOrEqual(42);
     expect((await accountGold(page)) - gold).toBeGreaterThanOrEqual(42);
     await expect(guest.locator("#versusScore")).toHaveText("Hote empoche tes gains.");
     // Récap : courbes de vie des deux joueurs (la sienne et celle reçue de l'adversaire)

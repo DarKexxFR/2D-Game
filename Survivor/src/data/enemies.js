@@ -67,6 +67,23 @@ export const ENEMY_TYPES = {
   // Ennemis propres aux biomes (voir data/biomes.js)
   scorpion: { health: 40, damage: 14, speed: 3, size: 16, color: "#ff6a00", xp: 6, gold: 3 },
   golem: { health: 160, damage: 20, speed: 1.4, size: 28, color: "#7fdfff", xp: 12, gold: 6 },
+  // Jungle toxique : la spore éclate en sporelets, le poseur de mines sème des mines annoncées
+  spore: {
+    health: 45,
+    damage: 10,
+    speed: 2.2,
+    size: 19,
+    color: "#7dff3a",
+    xp: 5,
+    gold: 2,
+    splitTo: "sporeling",
+    splitCount: 3,
+  },
+  sporeling: { health: 10, damage: 6, speed: 4.2, size: 9, color: "#c8ff5a", xp: 1, gold: 1 },
+  bomber: { health: 55, damage: 12, speed: 2, size: 18, color: "#d4ff00", xp: 7, gold: 4 },
+  // Station orbitale : le téléporteur surgit près du joueur, le drone laser tire de loin
+  blinker: { health: 35, damage: 13, speed: 2.6, size: 15, color: "#c58bff", xp: 6, gold: 3 },
+  laser_drone: { health: 40, damage: 16, speed: 2, size: 16, color: "#ff4fd8", xp: 7, gold: 4 },
   hydra: {
     health: 3000,
     damage: 50,
@@ -194,6 +211,13 @@ export const ENEMY_TYPES = {
   },
 };
 
+/** Comportements des ennemis des nouveaux biomes (voir systems/enemies.js), en ticks. */
+export const BIOME_FOES = {
+  mine: { every: 150, range: 480, radius: 60, delay: 150, damage: 1.6 }, // poseur de mines
+  blink: { every: 200, minDist: 220, landDist: 130, warn: 35 }, // téléporteur
+  laser: { every: 240, range: 520, length: 700, width: 18, delay: 50, active: 14 }, // drone laser
+};
+
 /** Ennemis d'élite : plus gros, plus résistants, plus forts ; de plus en plus fréquents. */
 export const ELITE = {
   fromWave: 8,
@@ -222,6 +246,11 @@ export const ENEMY_NAMES = {
   slime_small: "Petit slime",
   scorpion: "Scorpion",
   golem: "Golem de glace",
+  spore: "Spore",
+  sporeling: "Sporelet",
+  bomber: "Poseur de mines",
+  blinker: "Téléporteur",
+  laser_drone: "Drone laser",
   hydra: "Nécro-Hydre",
   hydra_spawn: "Rejeton",
   colossus: "Colosse de givre",
@@ -236,8 +265,8 @@ export const ENEMY_NAMES = {
   goblin: "Voleur doré",
 };
 
-/** Taille maximale d'un ennemi (slime boss en saut), utile pour la grille spatiale. */
-export const MAX_ENEMY_SIZE = 90;
+/** Taille maximale d'un ennemi (Roi Slime grossi par BOSS_POWER, en plein saut), utile pour la grille spatiale. */
+export const MAX_ENEMY_SIZE = 130;
 
 // Probabilités d'apparition selon la vague (première table dont `untilWave` > vague).
 export const SPAWN_TABLES = [
@@ -289,6 +318,33 @@ export const BOSS_RUSH = {
 };
 
 export const BOSS_SPAWN_DELAY = 180; // ticks
+
+/**
+ * Puissance des boss (en plus de la montée par vague des ennemis) : ils combattent seuls, donc
+ * plus de PV, de dégâts et de taille. Les PV grimpent encore de `healthPerWave` par vague après
+ * `fromWave` : les boss tardifs sont bien plus solides. `minor` = boss qui gardent les petits
+ * ennemis autour d'eux (Crabe blindé), renforcés plus légèrement.
+ */
+export const BOSS_POWER = {
+  health: 1.6,
+  healthPerWave: 0.05,
+  fromWave: 5,
+  damage: 1.3,
+  size: 1.3,
+  minor: { health: 1.2, damage: 1.1, size: 1.15 },
+};
+
+/** Roi Slime : saut annoncé (enchaîné en furie), pluie de slime collante, absorption de ses petits. */
+export const SLIME_KING = {
+  jumpTicks: 50,
+  jumpRadius: 170,
+  jumpsEnraged: 3,
+  globs: 5,
+  globsEnraged: 8,
+  absorbRange: 380,
+  absorbHeal: 0.03, // part des PV max rendue par slime absorbé
+  reinforcements: 4, // petits slimes appelés s'il n'y a rien à absorber
+};
 
 /**
  * Kraken : tentacules qui sortent du sol autour du joueur ; quand toutes sont détruites, la tête

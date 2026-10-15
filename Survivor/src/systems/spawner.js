@@ -1,10 +1,11 @@
 // Gestion des vagues, apparition des ennemis, des boss et des sanctuaires.
 
-import { MAP_BOUNDS, NEXT_WAVE_DELAY, SURVIVAL, WAVE_DURATION } from "../config.js";
+import { NEXT_WAVE_DELAY, SURVIVAL, WAVE_DURATION } from "../config.js";
 import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import {
   BOSS_ARENA,
+  BOSS_POWER,
   BOSS_RUSH,
   BOSS_SPAWN_DELAY,
   BOSS_WAVES,
@@ -98,6 +99,7 @@ export function spawnWave() {
   game.isBossWave = false;
   if (game.rush) return spawnRushBoss();
   recordWave(game.wave);
+  if (game.difficulty === "nightmare") recordBest("nightmareWave", game.wave);
   const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
   if (!boss) {
     if (game.wave >= GOBLIN.fromWave && Math.random() < GOBLIN.chance) spawnGoblin();
@@ -165,8 +167,7 @@ function scheduleNextRushBoss() {
 function pickEnemyType() {
   const table = SPAWN_TABLES.find((t) => game.wave < t.untilWave);
   const entries = Object.entries(table.weights);
-  const extra = biomeForWave(game.wave).enemy;
-  if (extra) entries.push([extra.type, extra.weight]);
+  for (const extra of biomeForWave(game.wave).enemies) entries.push([extra.type, extra.weight]);
   return weightedPick(entries, ([, w]) => w)[0];
 }
 
@@ -202,21 +203,25 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
   const t = ENEMY_TYPES[type];
   // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
   const elite =
-    x === null && !t.isBoss && type !== "goblin" && (forceElite || Math.random() < eliteChance(game.wave));
+    x === null &&
+    !t.isBoss &&
+    type !== "goblin" &&
+    (forceElite || Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0)));
   if (x === null || y === null) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
     y = player.worldY + Math.sin(angle) * W.spawnDistance;
   }
-  x = clamp(x, MAP_BOUNDS.minX + 50, MAP_BOUNDS.maxX - 50);
-  y = clamp(y, MAP_BOUNDS.minY + 50, MAP_BOUNDS.maxY - 50);
+  x = clamp(x, game.bounds.minX + 50, game.bounds.maxX - 50);
+  y = clamp(y, game.bounds.minY + 50, game.bounds.maxY - 50);
   if (t.isBoss) createSpawnEffect(x, y, t.color);
 
   const wave = game.wave;
   const mod = game.modifier;
   const mult = waveMultipliers(wave);
   const eliteMult = (k) => (elite ? ELITE[k] : 1);
-  const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health");
+  const boss = bossPower(type, wave);
+  const health = t.health * mult.health * (mod.enemyHealth || 1) * eliteMult("health") * boss.health;
   const speed = Math.min(t.speed * W.maxSpeedMult, t.speed * (1 + wave * W.speed)) * (mod.enemySpeed || 1);
   world.enemies.push({
     id: ++enemyIds,
@@ -226,10 +231,10 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     template: t,
     health,
     maxHealth: health,
-    damage: t.damage * mult.damage * eliteMult("damage"),
+    damage: t.damage * mult.damage * (mod.enemyDamage || 1) * eliteMult("damage") * boss.damage,
     speed,
     baseSpeed: speed,
-    size: t.size * eliteMult("size"),
+    size: t.size * eliteMult("size") * boss.size,
     elite,
     color: t.color,
     xp: t.xp * (1 + wave * W.xp) * (mod.enemyXp || 1) * (elite ? ELITE.rewards : 1),
@@ -244,6 +249,16 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     isCharging: false,
     dead: false,
   });
+}
+
+const NO_BOOST = { health: 1, damage: 1, size: 1 };
+
+/** Renfort des boss (voir BOSS_POWER) : PV qui grimpent avec la vague, dégâts et taille. */
+export function bossPower(type, wave) {
+  if (!ENEMY_TYPES[type].isBoss) return NO_BOOST;
+  const P = BOSS_POWER;
+  if (!isQuietBoss(type)) return P.minor;
+  return { ...P, health: P.health * (1 + P.healthPerWave * Math.max(0, wave - P.fromWave)) };
 }
 
 /** Voleur doré : apparaît non loin du joueur et s'enfuit avec son or. */

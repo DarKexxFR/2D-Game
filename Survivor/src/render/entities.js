@@ -29,6 +29,11 @@ const ENEMY_LOOKS = {
   hydra_spawn: { sprite: "fast", mode: "face" },
   scorpion: { sprite: "scorpion", mode: "face" },
   golem: { sprite: "golem", mode: "face" },
+  spore: { sprite: "spore", mode: "spin", spin: 0.002 },
+  sporeling: { sprite: "spore", mode: "spin", spin: 0.004 },
+  bomber: { sprite: "bomber", mode: "face" },
+  blinker: { sprite: "blinker", mode: "spin", spin: 0.003 },
+  laser_drone: { sprite: "laser_drone", mode: "face" },
   colossus: { sprite: "colossus", mode: "face" },
   void_reaper: { sprite: "void_reaper", mode: "face" },
   storm_titan: { sprite: "storm_titan", mode: "face" },
@@ -56,6 +61,7 @@ export function drawPlayer(now) {
   }
   ctx.globalAlpha = 1;
   drawTrail(ctx, world.trail);
+  drawPerkZones(now);
 
   const aura = auraRadius();
   if (aura > 0) {
@@ -193,6 +199,22 @@ const HULLS = {
     [-0.15, 0.35],
     [-0.3, 1.1],
     [0.2, 0.45],
+  ],
+  seraph: [
+    [1.3, 0],
+    [0.45, -0.3],
+    [0.35, -0.75],
+    [0.05, -1.3],
+    [-0.35, -0.85],
+    [-0.95, -1.05],
+    [-0.65, -0.35],
+    [-0.9, 0],
+    [-0.65, 0.35],
+    [-0.95, 1.05],
+    [-0.35, 0.85],
+    [0.05, 1.3],
+    [0.35, 0.75],
+    [0.45, 0.3],
   ],
   // Formes supplémentaires des skins (data/skins.js)
   manta: [
@@ -496,7 +518,52 @@ Object.assign(PET_DRAWERS, {
     fillCircle(s * 0.5, s * 0.2, s * 0.14, "#ffee00");
     endNeon();
   },
+
+  /** Phénix : oiseau de feu aux grandes ailes, longue queue de flammes, tourné vers sa cible. */
+  phoenix(x, y, s, color, now) {
+    beginNeon(x, y + Math.sin(now / 200) * 4, color, 2);
+    ctx.rotate(pet.active ? pet.angle : 0);
+    const flap = Math.sin(now / 110) * 0.35;
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.rotate(side * (0.25 + flap));
+      ctx.beginPath();
+      ctx.moveTo(s * 0.3, 0);
+      ctx.quadraticCurveTo(-s * 0.2, side * s * 1.9, -s * 1.3, side * s * 1.6);
+      ctx.lineTo(-s * 0.5, side * s * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Queue de flammes
+    ctx.strokeStyle = "#ffd700";
+    for (const k of [-1, 0, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.5, 0);
+      ctx.quadraticCurveTo(-s * 1.3, k * s * 0.5 + Math.sin(now / 80 + k) * s * 0.2, -s * 2, k * s * 0.7);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.8, s * 0.4, 0, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    fillCircle(s * 0.45, 0, s * 0.14, "#ffffff");
+    endNeon();
+  },
 });
+
+/** Traînée spectrale (Cape ★3) : zones violettes qui ralentissent les ennemis. */
+function drawPerkZones(now) {
+  const zones = player.perkZones;
+  if (!zones?.length) return;
+  for (const z of zones) {
+    ctx.globalAlpha = (z.life / z.max) * 0.35;
+    fillCircle(z.x, z.y, z.radius * (0.9 + Math.sin(now / 150 + z.x) * 0.1), "#aa66ff");
+  }
+  ctx.globalAlpha = 1;
+}
 
 /** Dessine un familier hors partie (écran d'accueil). */
 export function drawPet(kind, x, y, size, color, now) {

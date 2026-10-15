@@ -159,6 +159,8 @@ const SKILL_CHECKS = {
   pirate: ({ state }) => state.world.projectiles.some((p) => p.type === "cannon"),
   engineer: ({ state }) => state.world.turrets.length === 2,
   spectre: ({ state }) => state.world.enemies.some((e) => e.health < e.maxHealth),
+  seraph: ({ state }) =>
+    state.world.enemies.some((e) => e.health < e.maxHealth) && state.world.bolts.length > 0,
 };
 
 for (const [hero, check] of Object.entries(SKILL_CHECKS)) {

@@ -11,13 +11,14 @@ export { isOnlineEnabled };
  *  "sent", "defaultName" (pseudo par défaut, partagé par tout le monde),
  *  "empty" (partie sans XP), "rateLimited" (anti-spam côté base) ou "error".
  */
-export async function submitScore({ name, wave, xp, lvl, day }) {
+export async function submitScore({ name, wave, xp, lvl, day, nightmare = false }) {
   if (name.trim().toLowerCase() === DEFAULT_PSEUDO.toLowerCase()) return "defaultName";
   if (Math.floor(xp) <= 0) return "empty";
-  // Avec `day`, le score va au classement du défi quotidien
+  // Avec `day`, le score va au classement du défi quotidien ; `nightmare` : classement Cauchemar
   const row = { name, wave, xp: Math.floor(xp), lvl, ...(day ? { day } : {}) };
+  const table = day ? ONLINE.dailyTable : nightmare ? ONLINE.nightmareTable : ONLINE.table;
   try {
-    await request(day ? ONLINE.dailyTable : ONLINE.table, {
+    await request(table, {
       method: "POST",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify(row),
@@ -43,6 +44,13 @@ export const SUBMIT_MESSAGES = {
 export async function fetchTopScores() {
   const query = `select=name,wave,xp,lvl&order=xp.desc&limit=${ONLINE.topCount}`;
   const res = await request(`${ONLINE.leaderboardView}?${query}`);
+  return res.json();
+}
+
+/** Classement du mode Cauchemar (meilleur score de chaque joueur). */
+export async function fetchNightmareScores() {
+  const query = `select=name,wave,xp,lvl&order=xp.desc&limit=${ONLINE.topCount}`;
+  const res = await request(`${ONLINE.nightmareView}?${query}`);
   return res.json();
 }
 

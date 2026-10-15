@@ -1,6 +1,6 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MAP_BOUNDS, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
+import { KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { emit } from "../core/events.js";
@@ -24,6 +24,7 @@ import { chargeUltimate, heal } from "./player.js";
 import { scheduleNextWave, spawnEnemy } from "./spawner.js";
 import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
+import { onHit, onKill, onShot } from "./perks.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -76,6 +77,7 @@ export function killEnemy(enemy) {
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
   recordKill(enemy.type, enemy.template.isBoss);
   emit("kill", enemy);
+  onKill(enemy);
   playSfx("kill");
 
   game.score += 10;
@@ -83,6 +85,7 @@ export function killEnemy(enemy) {
   game.stats.kills[enemy.type] = (game.stats.kills[enemy.type] || 0) + 1;
   addComboKill(enemy.x, enemy.y);
   if (enemy.template.isBoss) bossDefeated(enemy);
+  if (enemy.template.isBoss && game.difficulty === "nightmare") addStat("nightmareBosses");
   createGem(enemy.x, enemy.y, enemy.xp);
   game.runGold += Math.floor(
     enemy.gold * (1 + player.greed * 0.1) * (1 + player.goldBonus) * (game.modifier.goldMult || 1),
@@ -194,7 +197,7 @@ export function shoot() {
   const w = player.weapon;
   const extra = player.inventory["Multi-Tir"] || 0;
   const count = w.projectiles + extra;
-  // Arme en couronne (évolution « Tourbillon ») : projectiles répartis tout autour
+  // Arme en couronne (Couronne de lames, évolution « Tourbillon ») : projectiles répartis tout autour
   const spread = w.ring ? (Math.PI * 2) / count : w.spread || player.multishotSpread;
   for (let i = 0; i < count; i++) {
     const jitter = w.inaccuracy ? (Math.random() - 0.5) * w.inaccuracy : 0;
@@ -256,7 +259,7 @@ function throwBladeStorm() {
 function createPlayerProjectile(angle) {
   const ray = player.hasRayGun;
   const w = player.weapon;
-  world.projectiles.push({
+  const proj = {
     x: player.worldX,
     y: player.worldY,
     vx: Math.cos(angle) * w.speed,
@@ -273,7 +276,9 @@ function createPlayerProjectile(angle) {
     type: w.returns ? "disc" : undefined,
     age: 0,
     dead: false,
-  });
+  };
+  onShot(proj);
+  world.projectiles.push(proj);
 }
 
 export function spawnProjectile(props) {
@@ -288,10 +293,10 @@ export function updateProjectiles() {
     proj.y += proj.vy;
     if (
       --proj.life <= 0 ||
-      proj.x < MAP_BOUNDS.minX ||
-      proj.x > MAP_BOUNDS.maxX ||
-      proj.y < MAP_BOUNDS.minY ||
-      proj.y > MAP_BOUNDS.maxY ||
+      proj.x < game.bounds.minX ||
+      proj.x > game.bounds.maxX ||
+      proj.y < game.bounds.minY ||
+      proj.y > game.bounds.maxY ||
       !isOnScreen(proj.x, proj.y, 200)
     ) {
       proj.dead = true;
@@ -306,6 +311,7 @@ export function updateProjectiles() {
       if (enemy.dead) break;
       if (proj.pierce > 0) {
         proj.pierce--;
+        if (proj.ramp) proj.damage *= 1 + proj.ramp; // Railgun ★3 : chaque ennemi transpercé renforce le tir
         (proj.hits ??= new Set()).add(enemy);
       } else {
         proj.dead = true;
@@ -321,6 +327,7 @@ export function updateProjectiles() {
 function hitEnemy(proj, enemy) {
   playSfx("hit");
   let damage = proj.damage;
+  if (enemy.template.isBoss) damage *= player.bossDamage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
     damage *= player.critMultiplier;
@@ -351,6 +358,7 @@ function hitEnemy(proj, enemy) {
   damageEnemy(enemy, damage, source);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
   if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
+  onHit(proj, enemy, damage, isCrit);
 }
 
 /** Disque laser : après un moment il revient vers le joueur et peut retoucher les ennemis. */
@@ -370,7 +378,7 @@ function steerBack(proj) {
 const CHAIN_RANGE = 170;
 
 /** Arc Tesla : l'éclair saute vers les ennemis proches pas encore touchés. */
-function chainLightning(from, damage, jumps, color, source) {
+export function chainLightning(from, damage, jumps, color, source) {
   const hit = new Set([from]);
   const points = [{ x: from.x, y: from.y }];
   let current = from;
@@ -409,7 +417,7 @@ function explode(x, y, radius, damage, exclude, source) {
 
 /** Rayon effectif de l'aura (l'évolution « Enfer » l'agrandit). */
 export function auraRadius() {
-  return player.auraRadius * (player.evolutions.inferno ? 1.6 : 1);
+  return player.auraRadius * (player.evolutions.inferno ? 1.6 : 1) * player.auraMult;
 }
 
 export function updateAura() {

@@ -1,9 +1,9 @@
 // IA des ennemis : déplacement, séparation, attaques et comportements de boss.
 
 import { game, player, world } from "../core/state.js";
-import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
-import { MAP_BOUNDS, SURVIVAL, TICK_MS } from "../config.js";
+import { SURVIVAL, TICK_MS } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
 import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
@@ -46,11 +46,14 @@ export function updateEnemies() {
     if (e.dead) continue; // le Voleur doré a pu s'enfuir
     const d = dist(player.worldX, player.worldY, e.x, e.y);
     if (e.type === "scorpion") updateScorpion(e, d);
+    else if (e.type === "bomber") updateBomber(e, d);
+    else if (e.type === "blinker") updateBlinker(e, d);
+    else if (e.type === "laser_drone") updateLaserDrone(e, d);
     if (e.rooted > 0)
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
     if (e.type === "ranged") rangedAttack(e, d);
-    if (d < player.size + e.size && e.damage > 0 && !e.submerged) handleContact(e);
+    if (d < player.size + e.size && e.damage > 0 && !e.submerged && !e.airborne) handleContact(e);
   }
   updateEnemyProjectiles();
   removeWhere(enemies, (e) => e.dead);
@@ -69,7 +72,7 @@ function moveEnemy(e, distToPlayer) {
     // Anticipe légèrement la position du joueur
     tx += (player.worldX - e.x) * 0.2;
     ty += (player.worldY - e.y) * 0.2;
-  } else if (e.type === "ranged") {
+  } else if (e.type === "ranged" || e.type === "laser_drone") {
     if (distToPlayer < 250) {
       // Trop près : recule
       tx = e.x - (player.worldX - e.x);
@@ -97,12 +100,14 @@ function moveEnemy(e, distToPlayer) {
 
   const len = Math.hypot(mx, my);
   if (len > 0) {
-    e.x += (mx / len) * e.speed;
-    e.y += (my / len) * e.speed;
+    // Traînée spectrale (Cape ★3) : ennemi ralenti
+    const speed = e.speed * (e.slowUntil > game.time ? e.slowFactor : 1);
+    e.x += (mx / len) * speed;
+    e.y += (my / len) * speed;
   }
   // Un recul (ultime, explosion...) ne doit pas sortir un ennemi de la zone de combat
-  e.x = clamp(e.x, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-  e.y = clamp(e.y, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+  e.x = clamp(e.x, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+  e.y = clamp(e.y, game.bounds.minY + e.size, game.bounds.maxY - e.size);
 }
 
 function rangedAttack(e, distToPlayer) {
@@ -153,6 +158,55 @@ function updateScorpion(e, distToPlayer) {
     e.lungeCooldown = SCORPION_LUNGE.cooldown;
     e.speed = e.baseSpeed * SCORPION_LUNGE.speed;
   }
+}
+
+/** Poseur de mines : sème des mines (zones annoncées) quand il est près du joueur. */
+function updateBomber(e, distToPlayer) {
+  const m = BIOME_FOES.mine;
+  e.mineTimer = (e.mineTimer ?? m.every * Math.random()) - 1;
+  if (e.mineTimer > 0 || distToPlayer > m.range) return;
+  e.mineTimer = m.every;
+  addCircle(e.x, e.y, m.radius, e.damage * m.damage, { delay: m.delay, color: e.color });
+}
+
+/** Téléporteur : annonce son point d'arrivée près du joueur, puis y surgit. */
+function updateBlinker(e, distToPlayer) {
+  const b = BIOME_FOES.blink;
+  if (e.blinkTo) {
+    if (e.rooted % 5 === 0) createParticles(e.blinkTo.x, e.blinkTo.y, e.color, 2);
+    if (e.rooted > 1) return;
+    createParticles(e.x, e.y, e.color, 10);
+    e.x = e.blinkTo.x;
+    e.y = e.blinkTo.y;
+    e.blinkTo = null;
+    createParticles(e.x, e.y, e.color, 10);
+    return;
+  }
+  e.blinkTimer = (e.blinkTimer ?? b.every * Math.random()) - 1;
+  if (e.blinkTimer > 0 || distToPlayer < b.minDist) return;
+  e.blinkTimer = b.every;
+  const a = Math.random() * Math.PI * 2;
+  e.blinkTo = {
+    x: clamp(player.worldX + Math.cos(a) * b.landDist, game.bounds.minX + e.size, game.bounds.maxX - e.size),
+    y: clamp(player.worldY + Math.sin(a) * b.landDist, game.bounds.minY + e.size, game.bounds.maxY - e.size),
+  };
+  e.rooted = b.warn; // immobile pendant l'annonce
+}
+
+/** Drone laser : garde ses distances et tire un laser annoncé vers le joueur. */
+function updateLaserDrone(e, distToPlayer) {
+  const l = BIOME_FOES.laser;
+  e.laserTimer = (e.laserTimer ?? l.every * (0.5 + Math.random() * 0.5)) - 1;
+  if (e.laserTimer > 0 || distToPlayer > l.range) return;
+  e.laserTimer = l.every;
+  e.rooted = l.delay + l.active;
+  addBeam(e.x, e.y, aim(e), e.damage, {
+    length: l.length,
+    width: l.width,
+    delay: l.delay,
+    active: l.active,
+    color: e.color,
+  });
 }
 
 /** Voleur doré : file pendant quelques secondes puis disparaît avec son butin. */
@@ -208,13 +262,13 @@ function updateMiniboss(e) {
     e.rooted = 1;
     e.x = clamp(
       e.x + Math.cos(e.chargeAngle) * CRAB.chargeSpeed,
-      MAP_BOUNDS.minX + e.size,
-      MAP_BOUNDS.maxX - e.size,
+      game.bounds.minX + e.size,
+      game.bounds.maxX - e.size,
     );
     e.y = clamp(
       e.y + Math.sin(e.chargeAngle) * CRAB.chargeSpeed,
-      MAP_BOUNDS.minY + e.size,
-      MAP_BOUNDS.maxY - e.size,
+      game.bounds.minY + e.size,
+      game.bounds.maxY - e.size,
     );
     if (e.charging % 3 === 0) createParticles(e.x, e.y, "#ffaa00", 3);
     return;
@@ -376,8 +430,8 @@ function updateVoidReaper(e) {
   } else if (attack === "blink") {
     // Réapparaît derrière le joueur
     const a = Math.atan2(e.y - player.worldY, e.x - player.worldX) + Math.PI;
-    e.blinkX = clamp(player.worldX + Math.cos(a) * 140, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-    e.blinkY = clamp(player.worldY + Math.sin(a) * 140, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+    e.blinkX = clamp(player.worldX + Math.cos(a) * 140, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+    e.blinkY = clamp(player.worldY + Math.sin(a) * 140, game.bounds.minY + e.size, game.bounds.maxY - e.size);
     addCircle(e.blinkX, e.blinkY, 110, e.damage, { delay: 50, color: e.color });
     e.blinkIn = 50;
     e.rooted = 50;
@@ -593,13 +647,13 @@ function krakenDive(e) {
     const a = offset + (Math.PI * 2 * k) / count;
     const x = clamp(
       player.worldX + Math.cos(a) * KRAKEN.ringRadius,
-      MAP_BOUNDS.minX + 60,
-      MAP_BOUNDS.maxX - 60,
+      game.bounds.minX + 60,
+      game.bounds.maxX - 60,
     );
     const y = clamp(
       player.worldY + Math.sin(a) * KRAKEN.ringRadius,
-      MAP_BOUNDS.minY + 60,
-      MAP_BOUNDS.maxY - 60,
+      game.bounds.minY + 60,
+      game.bounds.maxY - 60,
     );
     addCircle(x, y, 60, e.damage * 0.6, { delay: KRAKEN.emerge, color: "#b46bff" });
     e.pending.push({ x, y });
@@ -624,8 +678,8 @@ function krakenWhirl(e) {
     if (isProtected()) return;
     const a = angleTo(player.worldX, player.worldY, e.x, e.y);
     const pull = Math.min(KRAKEN.whirlPull, dist(player.worldX, player.worldY, e.x, e.y));
-    player.worldX = clamp(player.worldX + Math.cos(a) * pull, MAP_BOUNDS.minX, MAP_BOUNDS.maxX);
-    player.worldY = clamp(player.worldY + Math.sin(a) * pull, MAP_BOUNDS.minY, MAP_BOUNDS.maxY);
+    player.worldX = clamp(player.worldX + Math.cos(a) * pull, game.bounds.minX, game.bounds.maxX);
+    player.worldY = clamp(player.worldY + Math.sin(a) * pull, game.bounds.minY, game.bounds.maxY);
     return;
   }
   if (--e.whirlTimer > 0) return;
@@ -691,8 +745,8 @@ function updateTwin(e) {
   const d = dist(e.x, e.y, tx, ty);
   const step = Math.min(d, pair.scissors > 0 ? 16 : e.speed * 1.6);
   if (d > 0) {
-    e.x = clamp(e.x + ((tx - e.x) / d) * step, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
-    e.y = clamp(e.y + ((ty - e.y) / d) * step, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+    e.x = clamp(e.x + ((tx - e.x) / d) * step, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+    e.y = clamp(e.y + ((ty - e.y) / d) * step, game.bounds.minY + e.size, game.bounds.maxY - e.size);
   }
   if (pair.scissors > 0 || pair.warn > 0) return;
   if (--e.attackTimer <= 0) twinAttack(e, nextAttack(e, TWIN_CYCLES[e.type]));
@@ -816,29 +870,99 @@ function segmentDist(px, py, ax, ay, bx, by) {
   return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
 }
 
+const SLIME_CYCLE = ["jump", "globs", "jump", "absorb"];
+const SLIME_GREEN = "#7dff3d";
+
+/**
+ * Roi Slime : saute sur le joueur (zone annoncée, onde de choc à l'atterrissage et petits slimes),
+ * crache une pluie de slime collante (flaques qui ralentissent) et absorbe ses petits pour se
+ * soigner : il vaut mieux les tuer vite. En furie (« MITOSE ») il se dédouble et enchaîne les sauts.
+ * Il se divise toujours à sa mort (`splitTo`).
+ */
 function updateSlimeBoss(e) {
-  e.skillTimer--;
-  if (!e.isCharging) {
-    if (e.skillTimer <= 0) {
-      e.isCharging = true;
-      e.skillTimer = 40;
-      addFloatingText(e.x, e.y, "JUMP!", "#00ff00", 24, 40);
-      for (let i = 0; i < 3; i++) spawnEnemy("slime_small", e.x, e.y);
+  e.baseSize ??= e.size;
+  if (enrage(e, "#d4ff00", 1.2, "MITOSE !")) {
+    for (let k = 0; k < 2; k++) spawnEnemy("slime_big", e.x + (k ? 60 : -60), e.y);
+  }
+  if (e.jump) return slimeJump(e);
+  if (--e.attackTimer > 0) return;
+  const pace = e.enraged ? 0.75 : 1;
+  const attack = nextAttack(e, SLIME_CYCLE);
+  if (attack === "jump") {
+    e.jumpsLeft = e.enraged ? SLIME_KING.jumpsEnraged : 1;
+    startSlimeJump(e);
+  } else if (attack === "globs") {
+    const count = e.enraged ? SLIME_KING.globsEnraged : SLIME_KING.globs;
+    for (let k = 0; k < count; k++) {
+      const off = k === 0 ? 0 : 80 + Math.random() * 170;
+      const a = Math.random() * Math.PI * 2;
+      addCircle(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 75, e.damage * 0.5, {
+        delay: 55 + k * 6,
+        color: SLIME_GREEN,
+        pool: 240,
+        slow: 60,
+      });
     }
+    addFloatingText(e.x, e.y - e.size - 10, "PLUIE DE SLIME !", SLIME_GREEN, 18, 40);
+    e.attackTimer = 110 * pace;
+  } else {
+    slimeAbsorb(e);
+    e.attackTimer = 90 * pace;
+  }
+}
+
+/** Début d'un saut : zone d'atterrissage annoncée là où se tient le joueur. */
+function startSlimeJump(e) {
+  const tx = clamp(player.worldX, game.bounds.minX + e.size, game.bounds.maxX - e.size);
+  const ty = clamp(player.worldY, game.bounds.minY + e.size, game.bounds.maxY - e.size);
+  const r = SLIME_KING.jumpRadius;
+  addCircle(tx, ty, r, e.damage, { delay: SLIME_KING.jumpTicks, color: SLIME_GREEN });
+  e.jump = { fromX: e.x, fromY: e.y, tx, ty, t: 0 };
+  addFloatingText(e.x, e.y - e.size, "SAUT !", SLIME_GREEN, 22, 40);
+}
+
+/** En l'air : il traverse l'arène en grossissant, puis retombe (onde de choc + petits slimes). */
+function slimeJump(e) {
+  const j = e.jump;
+  const k = ++j.t / SLIME_KING.jumpTicks;
+  e.rooted = 1;
+  e.airborne = true; // pas de contact pendant le saut
+  e.x = j.fromX + (j.tx - j.fromX) * k;
+  e.y = j.fromY + (j.ty - j.fromY) * k;
+  e.size = e.baseSize * (1 + Math.sin(Math.PI * k) * 0.25);
+  if (k < 1) return;
+  e.jump = null;
+  e.airborne = false;
+  e.size = e.baseSize;
+  addRing(e.x, e.y, 520, e.damage * 0.5, { color: SLIME_GREEN, speed: 7 });
+  createAoEEffect(e.x, e.y, SLIME_KING.jumpRadius);
+  addScreenShake(12);
+  for (let i = 0; i < 3; i++) spawnEnemy("slime_small", e.x, e.y);
+  if (--e.jumpsLeft > 0) startSlimeJump(e);
+  else e.attackTimer = e.enraged ? 70 : 100;
+}
+
+/** Absorption : les slimes proches rejoignent le roi et le soignent ; sinon il appelle des renforts. */
+function slimeAbsorb(e) {
+  let eaten = 0;
+  for (const s of enemyGrid.query(e.x, e.y, SLIME_KING.absorbRange)) {
+    if (s.dead || (s.type !== "slime_small" && s.type !== "slime_big")) continue;
+    if (dist(s.x, s.y, e.x, e.y) > SLIME_KING.absorbRange) continue;
+    s.dead = true; // absorbé : pas de récompense
+    createParticles(s.x, s.y, SLIME_GREEN, 6);
+    eaten++;
+  }
+  if (eaten > 0) {
+    const heal = SLIME_KING.absorbHeal * eaten;
+    e.health = Math.min(e.maxHealth, e.health + e.maxHealth * heal);
+    addFloatingText(e.x, e.y - e.size - 10, `ABSORPTION +${Math.round(heal * 100)}%`, SLIME_GREEN, 20, 60);
     return;
   }
-  // Saut vers le joueur puis onde de choc
-  e.x += (player.worldX - e.x) * 0.1;
-  e.y += (player.worldY - e.y) * 0.1;
-  e.size = 90;
-  if (e.skillTimer <= 0) {
-    e.isCharging = false;
-    e.size = 80;
-    e.skillTimer = 300;
-    createAoEEffect(e.x, e.y, 200);
-    addScreenShake(10);
-    if (dist(player.worldX, player.worldY, e.x, e.y) < 200 && player.buffs.shield <= 0) takeDamage(40);
+  for (let i = 0; i < SLIME_KING.reinforcements; i++) {
+    const a = (Math.PI * 2 * i) / SLIME_KING.reinforcements;
+    spawnEnemy("slime_small", e.x + Math.cos(a) * e.size * 1.4, e.y + Math.sin(a) * e.size * 1.4);
   }
+  addFloatingText(e.x, e.y - e.size - 10, "RENFORTS !", SLIME_GREEN, 20, 50);
 }
 
 /**
