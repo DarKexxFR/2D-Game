@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/quests.css" />
+    <link rel="stylesheet" href="css/streak.css" />
     <link rel="stylesheet" href="css/daily.css" />
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/ads.css" />
@@ -246,6 +247,14 @@
               aria-label="Pseudo"
             />
             <button id="btnPlay" class="play-btn"><i data-icon="play"></i> JOUER</button>
+            <div id="difficultyPicker" class="diff-picker" role="radiogroup" aria-label="Difficulté">
+              <button class="diff-btn" data-diff="easy" role="radio">FACILE</button>
+              <button class="diff-btn" data-diff="normal" role="radio">NORMAL</button>
+              <button class="diff-btn" data-diff="nightmare" role="radio">
+                <i data-icon="lock" class="diff-lock"></i> CAUCHEMAR
+              </button>
+            </div>
+            <small id="difficultyHint" class="diff-hint"></small>
           </div>
 
           <nav class="home-dock">
@@ -315,6 +324,7 @@
         <h2>CLASSEMENT</h2>
         <div class="lb-tabs">
           <button id="lbTabGlobal" class="lb-tab active"><i data-icon="globe"></i> MONDIAL</button>
+          <button id="lbTabNightmare" class="lb-tab"><i data-icon="skull"></i> CAUCHEMAR</button>
           <button id="lbTabLocal" class="lb-tab"><i data-icon="save"></i> MES SCORES</button>
           <button id="lbTabDuel" class="lb-tab"><i data-icon="sword"></i> DUEL ELO</button>
         </div>
@@ -423,6 +433,17 @@
         <div id="questList" class="quest-list"></div>
         <p id="questBonus" class="quest-bonus"></p>
         <button id="btnQuestsBack" class="secondary mt-15">RETOUR</button>
+      </div>
+
+      <!-- ===== SÉRIE DE CONNEXION ===== -->
+      <div id="streakMenu" class="menu-overlay">
+        <div class="menu-head">
+          <h2>SÉRIE DE CONNEXION</h2>
+          <p id="streakSub" class="menu-sub"></p>
+        </div>
+        <div id="streakDays" class="streak-days"></div>
+        <p class="streak-note">Reviens chaque jour : la récompense grossit jusqu'au 7e jour.</p>
+        <button id="btnStreakClaim" class="mt-15">RÉCUPÉRER</button>
       </div>
 
       <!-- ===== SUCCÈS ===== -->

@@ -98,6 +98,7 @@ export function spawnWave() {
   game.isBossWave = false;
   if (game.rush) return spawnRushBoss();
   recordWave(game.wave);
+  if (game.difficulty === "nightmare") recordBest("nightmareWave", game.wave);
   const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
   if (!boss) {
     if (game.wave >= GOBLIN.fromWave && Math.random() < GOBLIN.chance) spawnGoblin();
@@ -165,8 +166,7 @@ function scheduleNextRushBoss() {
 function pickEnemyType() {
   const table = SPAWN_TABLES.find((t) => game.wave < t.untilWave);
   const entries = Object.entries(table.weights);
-  const extra = biomeForWave(game.wave).enemy;
-  if (extra) entries.push([extra.type, extra.weight]);
+  for (const extra of biomeForWave(game.wave).enemies) entries.push([extra.type, extra.weight]);
   return weightedPick(entries, ([, w]) => w)[0];
 }
 
@@ -202,7 +202,10 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
   const t = ENEMY_TYPES[type];
   // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
   const elite =
-    x === null && !t.isBoss && type !== "goblin" && (forceElite || Math.random() < eliteChance(game.wave));
+    x === null &&
+    !t.isBoss &&
+    type !== "goblin" &&
+    (forceElite || Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0)));
   if (x === null || y === null) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
@@ -226,7 +229,7 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     template: t,
     health,
     maxHealth: health,
-    damage: t.damage * mult.damage * eliteMult("damage"),
+    damage: t.damage * mult.damage * (mod.enemyDamage || 1) * eliteMult("damage"),
     speed,
     baseSpeed: speed,
     size: t.size * eliteMult("size"),

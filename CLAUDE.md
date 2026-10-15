@@ -164,6 +164,17 @@ Principes :
   à côté), qui avancent quand le joueur fait l'action ; textes PC ou tactile, touches lues dans les réglages.
   Bouton « PASSER » ; fait ou passé = `account.tutorialDone` (synchronisé avec le compte ; vrai d'office
   pour une ancienne sauvegarde qui a déjà des parties). « REVOIR » dans les Options le repropose.
+- **Niveaux de difficulté** (`DIFFICULTIES` dans `config.js`, `services/difficulty.js`, choix sous JOUER) :
+  Facile / Normal / Cauchemar, partie normale seulement (défi du jour, Boss Rush et duel restent en Normal).
+  Appliqués via `game.modifier` (`enemyHealth`, `enemyDamage`, `enemySpeed`, `eliteShift`, `enemyXp`,
+  `goldMult`) ; choix dans `account.difficulty`. Cauchemar débloqué au record de vague 10, classement mondial
+  à part (table `nightmare_scores`, onglet « CAUCHEMAR »), succès dédiés ; Facile hors classements.
+- **Biomes** (`data/biomes.js`) : 5 biomes de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique,
+  Station orbitale), chacun ajoute ses ennemis (`enemies`). Jungle : spore (se divise en sporelets), poseur de
+  mines ; station : téléporteur, drone laser (réglages `BIOME_FOES` dans `data/enemies.js`).
+- **Série de connexion** (`services/loginStreak.js`, `ui/streakMenu.js`, `LOGIN_STREAK` dans `config.js`) :
+  or chaque jour d'affilée (jour local), cycle de 7 jours, un jour manqué = retour au jour 1. Fenêtre proposée
+  au chargement de l'accueil, sauf à un joueur sans partie terminée. État dans `account.loginStreak`.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -216,9 +227,9 @@ coffres de boss, 34 succès avec récompenses, Voleur doré, difficulté croissa
 montée exponentielle), connexion facultative Google / Discord / e-mail, duel (deux parties de survie, écran scindé ou en ligne, le gagnant empoche tout),
 Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins personnalisables,
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
-Kraken et Jumeaux, arène vidée pendant les boss.
+Kraken et Jumeaux, arène vidée pendant les boss, niveaux de difficulté (Facile / Normal / Cauchemar),
+biomes Jungle toxique et Station orbitale, série de connexion quotidienne.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
-Autres idées en attente : sons et musique, niveaux de difficulté,
-PWA installable, manette.
+Autres idées en attente : sons et musique, PWA installable, manette.
