@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, MAP_BOUNDS, STUN, SURVIVAL, VERSUS } from "../config.js";
+import { ADS, MAP_BOUNDS, STAT_CAPS, STUN, SURVIVAL, VERSUS } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, stickDirection } from "../core/input.js";
@@ -65,7 +65,8 @@ function updateDash() {
     }
     if (player.dashTimer <= 0) player.isDashing = false;
   } else {
-    player.speed = player.baseSpeed * (player.buffs.slow > 0 ? FROST_SLOW : 1);
+    // Plafond : améliorations, équipement, talents et niveau de compte compris
+    player.speed = Math.min(player.baseSpeed, STAT_CAPS.speed) * (player.buffs.slow > 0 ? FROST_SLOW : 1);
     if (game.hex?.type === "slow") player.speed *= VERSUS.spell.slow.speed; // sort du duel
   }
 }

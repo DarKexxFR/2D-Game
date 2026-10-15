@@ -236,8 +236,8 @@ export const ENEMY_NAMES = {
   goblin: "Voleur doré",
 };
 
-/** Taille maximale d'un ennemi (slime boss en saut), utile pour la grille spatiale. */
-export const MAX_ENEMY_SIZE = 90;
+/** Taille maximale d'un ennemi (Roi Slime grossi par BOSS_POWER, en plein saut), utile pour la grille spatiale. */
+export const MAX_ENEMY_SIZE = 130;
 
 // Probabilités d'apparition selon la vague (première table dont `untilWave` > vague).
 export const SPAWN_TABLES = [
@@ -289,6 +289,33 @@ export const BOSS_RUSH = {
 };
 
 export const BOSS_SPAWN_DELAY = 180; // ticks
+
+/**
+ * Puissance des boss (en plus de la montée par vague des ennemis) : ils combattent seuls, donc
+ * plus de PV, de dégâts et de taille. Les PV grimpent encore de `healthPerWave` par vague après
+ * `fromWave` : les boss tardifs sont bien plus solides. `minor` = boss qui gardent les petits
+ * ennemis autour d'eux (Crabe blindé), renforcés plus légèrement.
+ */
+export const BOSS_POWER = {
+  health: 1.6,
+  healthPerWave: 0.05,
+  fromWave: 5,
+  damage: 1.3,
+  size: 1.3,
+  minor: { health: 1.2, damage: 1.1, size: 1.15 },
+};
+
+/** Roi Slime : saut annoncé (enchaîné en furie), pluie de slime collante, absorption de ses petits. */
+export const SLIME_KING = {
+  jumpTicks: 50,
+  jumpRadius: 170,
+  jumpsEnraged: 3,
+  globs: 5,
+  globsEnraged: 8,
+  absorbRange: 380,
+  absorbHeal: 0.03, // part des PV max rendue par slime absorbé
+  reinforcements: 4, // petits slimes appelés s'il n'y a rien à absorber
+};
 
 /**
  * Kraken : tentacules qui sortent du sol autour du joueur ; quand toutes sont détruites, la tête

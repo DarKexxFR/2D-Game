@@ -1,6 +1,6 @@
 // Interface en jeu (panneau de stats, barres d'XP / dash / ultime).
 
-import { WAVE_DURATION } from "../config.js";
+import { STAT_CAPS, WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
@@ -36,7 +36,7 @@ export function updateHud() {
 
   setText("statAtk", Math.round(player.attack));
   setText("statDef", Math.round(player.defense));
-  setText("statSpd", player.baseSpeed.toFixed(1));
+  setText("statSpd", Math.min(player.baseSpeed, STAT_CAPS.speed).toFixed(1));
   setText("statMagnet", Math.round(player.magnetRadius));
   setText("statCrit", Math.round(player.critChance * 100) + "%");
   setText("statCdmg", Math.round(player.critMultiplier * 100) + "%");

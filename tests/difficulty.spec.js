@@ -112,3 +112,25 @@ test("corruption : les soins faiblissent avec les vagues, la Moisson sanglante e
   expect(r.healed).toBeCloseTo(10); // 1 % de 1000, une seule fois
   await killPlayer(page);
 });
+
+test("vitesse de déplacement plafonnée, et la carte Vitesse n'est plus proposée au plafond", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  const r = await page.evaluate(async () => {
+    const s = await import("/src/core/state.js");
+    const pl = await import("/src/systems/player.js");
+    const { STAT_CAPS } = await import("/src/config.js");
+    const { UPGRADES } = await import("/src/data/upgrades.js");
+    const p = s.player;
+    p.baseSpeed = 25; // équipement + talents + cartes empilés
+    pl.updatePlayer();
+    const card = UPGRADES.find((u) => u.canApply && u.canApply.toString().includes("STAT_CAPS.speed"));
+    return { speed: p.speed, cap: STAT_CAPS.speed, offered: card.canApply(p) };
+  });
+  expect(r.speed).toBe(r.cap);
+  expect(r.offered).toBe(false);
+  await expect(page.locator("#statSpd")).toHaveText(r.cap.toFixed(1));
+  await killPlayer(page);
+});

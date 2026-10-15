@@ -1,7 +1,7 @@
 // IA des ennemis : déplacement, séparation, attaques et comportements de boss.
 
 import { game, player, world } from "../core/state.js";
-import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
+import { GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
 import { MAP_BOUNDS, SURVIVAL, TICK_MS } from "../config.js";
 import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
@@ -50,7 +50,7 @@ export function updateEnemies() {
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
     if (e.type === "ranged") rangedAttack(e, d);
-    if (d < player.size + e.size && e.damage > 0 && !e.submerged) handleContact(e);
+    if (d < player.size + e.size && e.damage > 0 && !e.submerged && !e.airborne) handleContact(e);
   }
   updateEnemyProjectiles();
   removeWhere(enemies, (e) => e.dead);
@@ -816,29 +816,99 @@ function segmentDist(px, py, ax, ay, bx, by) {
   return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
 }
 
+const SLIME_CYCLE = ["jump", "globs", "jump", "absorb"];
+const SLIME_GREEN = "#7dff3d";
+
+/**
+ * Roi Slime : saute sur le joueur (zone annoncée, onde de choc à l'atterrissage et petits slimes),
+ * crache une pluie de slime collante (flaques qui ralentissent) et absorbe ses petits pour se
+ * soigner : il vaut mieux les tuer vite. En furie (« MITOSE ») il se dédouble et enchaîne les sauts.
+ * Il se divise toujours à sa mort (`splitTo`).
+ */
 function updateSlimeBoss(e) {
-  e.skillTimer--;
-  if (!e.isCharging) {
-    if (e.skillTimer <= 0) {
-      e.isCharging = true;
-      e.skillTimer = 40;
-      addFloatingText(e.x, e.y, "JUMP!", "#00ff00", 24, 40);
-      for (let i = 0; i < 3; i++) spawnEnemy("slime_small", e.x, e.y);
+  e.baseSize ??= e.size;
+  if (enrage(e, "#d4ff00", 1.2, "MITOSE !")) {
+    for (let k = 0; k < 2; k++) spawnEnemy("slime_big", e.x + (k ? 60 : -60), e.y);
+  }
+  if (e.jump) return slimeJump(e);
+  if (--e.attackTimer > 0) return;
+  const pace = e.enraged ? 0.75 : 1;
+  const attack = nextAttack(e, SLIME_CYCLE);
+  if (attack === "jump") {
+    e.jumpsLeft = e.enraged ? SLIME_KING.jumpsEnraged : 1;
+    startSlimeJump(e);
+  } else if (attack === "globs") {
+    const count = e.enraged ? SLIME_KING.globsEnraged : SLIME_KING.globs;
+    for (let k = 0; k < count; k++) {
+      const off = k === 0 ? 0 : 80 + Math.random() * 170;
+      const a = Math.random() * Math.PI * 2;
+      addCircle(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 75, e.damage * 0.5, {
+        delay: 55 + k * 6,
+        color: SLIME_GREEN,
+        pool: 240,
+        slow: 60,
+      });
     }
+    addFloatingText(e.x, e.y - e.size - 10, "PLUIE DE SLIME !", SLIME_GREEN, 18, 40);
+    e.attackTimer = 110 * pace;
+  } else {
+    slimeAbsorb(e);
+    e.attackTimer = 90 * pace;
+  }
+}
+
+/** Début d'un saut : zone d'atterrissage annoncée là où se tient le joueur. */
+function startSlimeJump(e) {
+  const tx = clamp(player.worldX, MAP_BOUNDS.minX + e.size, MAP_BOUNDS.maxX - e.size);
+  const ty = clamp(player.worldY, MAP_BOUNDS.minY + e.size, MAP_BOUNDS.maxY - e.size);
+  const r = SLIME_KING.jumpRadius;
+  addCircle(tx, ty, r, e.damage, { delay: SLIME_KING.jumpTicks, color: SLIME_GREEN });
+  e.jump = { fromX: e.x, fromY: e.y, tx, ty, t: 0 };
+  addFloatingText(e.x, e.y - e.size, "SAUT !", SLIME_GREEN, 22, 40);
+}
+
+/** En l'air : il traverse l'arène en grossissant, puis retombe (onde de choc + petits slimes). */
+function slimeJump(e) {
+  const j = e.jump;
+  const k = ++j.t / SLIME_KING.jumpTicks;
+  e.rooted = 1;
+  e.airborne = true; // pas de contact pendant le saut
+  e.x = j.fromX + (j.tx - j.fromX) * k;
+  e.y = j.fromY + (j.ty - j.fromY) * k;
+  e.size = e.baseSize * (1 + Math.sin(Math.PI * k) * 0.25);
+  if (k < 1) return;
+  e.jump = null;
+  e.airborne = false;
+  e.size = e.baseSize;
+  addRing(e.x, e.y, 520, e.damage * 0.5, { color: SLIME_GREEN, speed: 7 });
+  createAoEEffect(e.x, e.y, SLIME_KING.jumpRadius);
+  addScreenShake(12);
+  for (let i = 0; i < 3; i++) spawnEnemy("slime_small", e.x, e.y);
+  if (--e.jumpsLeft > 0) startSlimeJump(e);
+  else e.attackTimer = e.enraged ? 70 : 100;
+}
+
+/** Absorption : les slimes proches rejoignent le roi et le soignent ; sinon il appelle des renforts. */
+function slimeAbsorb(e) {
+  let eaten = 0;
+  for (const s of enemyGrid.query(e.x, e.y, SLIME_KING.absorbRange)) {
+    if (s.dead || (s.type !== "slime_small" && s.type !== "slime_big")) continue;
+    if (dist(s.x, s.y, e.x, e.y) > SLIME_KING.absorbRange) continue;
+    s.dead = true; // absorbé : pas de récompense
+    createParticles(s.x, s.y, SLIME_GREEN, 6);
+    eaten++;
+  }
+  if (eaten > 0) {
+    const heal = SLIME_KING.absorbHeal * eaten;
+    e.health = Math.min(e.maxHealth, e.health + e.maxHealth * heal);
+    addFloatingText(e.x, e.y - e.size - 10, `ABSORPTION +${Math.round(heal * 100)}%`, SLIME_GREEN, 20, 60);
     return;
   }
-  // Saut vers le joueur puis onde de choc
-  e.x += (player.worldX - e.x) * 0.1;
-  e.y += (player.worldY - e.y) * 0.1;
-  e.size = 90;
-  if (e.skillTimer <= 0) {
-    e.isCharging = false;
-    e.size = 80;
-    e.skillTimer = 300;
-    createAoEEffect(e.x, e.y, 200);
-    addScreenShake(10);
-    if (dist(player.worldX, player.worldY, e.x, e.y) < 200 && player.buffs.shield <= 0) takeDamage(40);
+  for (let i = 0; i < SLIME_KING.reinforcements; i++) {
+    const a = (Math.PI * 2 * i) / SLIME_KING.reinforcements;
+    spawnEnemy("slime_small", e.x + Math.cos(a) * e.size * 1.4, e.y + Math.sin(a) * e.size * 1.4);
   }
+  addFloatingText(e.x, e.y - e.size - 10, "RENFORTS !", SLIME_GREEN, 20, 50);
 }
 
 /**

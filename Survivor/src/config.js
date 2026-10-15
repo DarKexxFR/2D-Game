@@ -36,7 +36,7 @@ export const LIMITS = {
 };
 
 export const STAT_CAPS = {
-  speed: 10,
+  speed: 7, // vitesse de déplacement maximale (base 4,7) : au-delà le jeu devient injouable
   attackSpeed: 50,
   magnet: 600,
 };
