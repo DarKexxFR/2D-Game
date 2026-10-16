@@ -110,7 +110,8 @@ import {
   updateVersusHud,
 } from "./ui/versusMenu.js";
 import { initVersusTouch } from "./ui/versusTouch.js";
-import { initDuelMenu, openDuel, setDuelStatus } from "./ui/duelMenu.js";
+import { initDuelMenu, joinFriendDuel, openDuel, setDuelStatus } from "./ui/duelMenu.js";
+import { friendsRunStarted, initFriendsMenu, openFriends, stopChallenge } from "./ui/friendsMenu.js";
 import { initTutorial, startTutorial, stopTutorial, updateTutorial } from "./ui/tutorial.js";
 import { initDuelPicks, requestDuelPick, resetDuelPicks, tickDuelPick } from "./ui/duelPicks.js";
 
@@ -140,6 +141,7 @@ function startGame(mode = "normal") {
 
 /** Prépare une partie (aussi celle de chaque joueur en duel, toujours en Normal). */
 function setupRun(mode, difficulty = "normal") {
+  friendsRunStarted();
   resetGame();
   resetTrail();
   game.difficulty = difficulty;
@@ -387,6 +389,7 @@ const MENUS = {
   questMenu: openQuests,
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
+  friendsMenu: openFriends,
   talentMenu: openTalents,
   skinMenu: openSkins,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
@@ -396,6 +399,7 @@ const MENUS = {
 function navigate(id) {
   const screen = currentScreen();
   if (!game.started) {
+    if (screen === "friendsMenu") stopChallenge();
     if (MENUS[id]) MENUS[id]();
     else if (screen === "loginMenu")
       closeLogin(); // ouverte depuis les options : retour aux options
@@ -543,7 +547,14 @@ function init() {
 
   $("btnVersus").addEventListener("click", openDuel);
   $("btnVersusPause").addEventListener("click", pause);
-  initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu });
+  initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu, onFriends: openFriends });
+  initFriendsMenu({
+    // « menu » : libre pour un défi ; une partie de duel en préparation compte comme occupé
+    getStatus: () => (game.started ? (versus.active ? "duel" : "jeu") : net.role ? "duel" : "menu"),
+    onBack: openDuel,
+    onLogin: () => openLogin("friendsMenu"),
+    onAccept: joinFriendDuel,
+  });
   initVersusMenu({ onReplay: replayDuel, onMenu: returnToMenu });
   initVersusTouch();
   setNetHandlers({

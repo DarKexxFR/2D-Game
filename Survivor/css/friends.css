@@ -1,0 +1,177 @@
+/* Amis : écran « Amis », pastille des demandes reçues, fenêtre de défi reçu */
+
+/* Nombre de demandes d'ami reçues (bouton DUEL 1V1 de l'accueil, MES AMIS de l'écran Duel) */
+.friend-badge {
+  display: inline-block;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff2a6d;
+  color: #fff;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  box-shadow: 0 0 8px #ff2a6d;
+}
+.friend-badge:empty {
+  display: none;
+}
+
+button.duel-friends-btn {
+  margin-top: 10px;
+  background: linear-gradient(180deg, #aa66ff, #6a2fbf);
+  color: #fff;
+}
+
+#friendsMenu {
+  width: min(620px, calc(100vw - 30px));
+  min-width: 0;
+}
+.friend-code-pill {
+  color: #ccc;
+  font-size: 12px;
+  letter-spacing: 1px;
+  user-select: text;
+}
+.friend-code-pill b {
+  color: #ffd700;
+  font-family: "Press Start 2P", monospace;
+  font-size: 14px;
+  letter-spacing: 3px;
+  user-select: text;
+}
+.friends-login p {
+  margin-bottom: 14px;
+  color: #ccc;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.friends-add {
+  margin-top: 0;
+}
+.friends-add input {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: none;
+}
+.friends-section h3 {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #aa66ff;
+  text-align: left;
+}
+.friends-empty {
+  color: #888;
+  font-size: 12px;
+  text-align: left;
+}
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(170, 102, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.friend-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+}
+.friend-row[data-state="menu"] .friend-dot {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+.friend-row[data-state="jeu"] .friend-dot,
+.friend-row[data-state="duel"] .friend-dot {
+  background: #ffd700;
+  box-shadow: 0 0 8px #ffd700;
+}
+.friend-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friend-name small {
+  color: #999;
+  font-size: 11px;
+  font-weight: 400;
+}
+.friend-row[data-state="menu"] .friend-name small {
+  color: #00ff88;
+}
+button.friend-btn {
+  width: auto;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+button.friend-remove {
+  padding: 8px 10px;
+}
+
+/* Défi reçu : bandeau en haut de l'écran, au-dessus des menus (masqué en pleine partie) */
+.friend-invite {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 2px solid #aa66ff;
+  border-radius: 14px;
+  background: rgba(15, 8, 30, 0.97);
+  box-shadow: 0 0 30px rgba(170, 102, 255, 0.6);
+  z-index: 200;
+  text-align: center;
+  pointer-events: auto;
+}
+.friend-invite p {
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.friend-invite b {
+  color: #ffd700;
+}
+.friend-invite .btn-grid button {
+  padding: 10px;
+  font-size: 13px;
+}
+body[data-screen=""] .friend-invite {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .friends-add input {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .friend-row {
+    gap: 8px;
+    padding: 7px 8px;
+  }
+  .friend-name {
+    font-size: 12px;
+  }
+  button.friend-btn {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+}

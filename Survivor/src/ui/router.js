@@ -27,6 +27,7 @@ const ROUTES = {
   gameOver: "fin",
   versusOver: "fin-duel",
   duelMenu: "duel",
+  friendsMenu: "amis",
 };
 const PLAYING = "#jeu";
 

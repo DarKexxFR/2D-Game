@@ -7,6 +7,7 @@ export const test = base.extend({
   supabase: async ({}, use) => {
     // accounts : sauvegardes liées à un compte (par adresse) ; emails : codes demandés ;
     // duel : classement ELO simulé (ratings par adresse, déclarations par duel)
+    // friends : profils (par identifiant) et liens d'amitié { requester, addressee, accepted }
     await use({
       scores: [],
       mode: "ok",
@@ -15,6 +16,7 @@ export const test = base.extend({
       accounts: {},
       emails: [],
       duel: { ratings: {}, reports: {}, settled: {} },
+      friends: { profiles: {}, links: [] },
     });
   },
   page: async ({ page, supabase }, use) => {
@@ -37,6 +39,8 @@ export function routeSupabase(page, supabase) {
     if (auth) return auth;
     const duel = fakeDuelRanking(route, req, supabase);
     if (duel) return duel;
+    const friends = fakeFriends(route, req, supabase);
+    if (friends) return friends;
     // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
     const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
     if (rpc === "save_progress") {
@@ -243,4 +247,134 @@ function fakeDuelRanking(route, req, supabase) {
   rating(l).losses++;
   d.settled[p_match] = { winner: w, delta };
   return route.fulfill(result(p_won ? delta : -delta));
+}
+
+/**
+ * Faux serveur Supabase Realtime (protocole Phoenix) partagé par les pages du test :
+ * rejoint les canaux et retransmet les diffusions aux autres membres du canal.
+ */
+export function fakeRealtime() {
+  const rooms = new Map(); // topic → Set de connexions
+  let held = null; // diffusions retenues (voir `hold`)
+  const realtime = async (page) => {
+    await page.routeWebSocket(/\/realtime\/v1\/websocket/, (ws) => {
+      const topics = new Set();
+      const reply = (msg, status = "ok") =>
+        ws.send(
+          JSON.stringify({
+            topic: msg.topic,
+            event: "phx_reply",
+            payload: { status, response: {} },
+            ref: msg.ref,
+          }),
+        );
+      ws.onMessage((raw) => {
+        const msg = JSON.parse(raw);
+        if (msg.event === "phx_join") {
+          if (!rooms.has(msg.topic)) rooms.set(msg.topic, new Set());
+          rooms.get(msg.topic).add(ws);
+          topics.add(msg.topic);
+          reply(msg);
+        } else if (msg.event === "heartbeat") reply(msg);
+        else if (msg.event === "phx_leave") rooms.get(msg.topic)?.delete(ws);
+        else if (msg.event === "broadcast") {
+          for (const other of rooms.get(msg.topic) || []) {
+            if (other === ws) continue;
+            const out = JSON.stringify({ topic: msg.topic, event: "broadcast", payload: msg.payload });
+            if (held) held.push(() => other.send(out));
+            else other.send(out);
+          }
+        }
+      });
+      ws.onClose(() => {
+        for (const t of topics) rooms.get(t)?.delete(ws);
+      });
+    });
+  };
+  /** Retient les messages (true) puis les délivre tous (false) : simule un réseau lent. */
+  realtime.hold = (on) => {
+    if (on) held ??= [];
+    else for (const send of held?.splice(0) ?? []) send();
+    if (!on) held = null;
+  };
+  return realtime;
+}
+
+/** Session de connexion du faux Supabase (voir fixtures.js) enregistrée avant le chargement. */
+export function logIn(page, email) {
+  const session = {
+    accessToken: `tok-${email}`,
+    refreshToken: `ref-${email}`,
+    expiresAt: Date.now() + 3_600_000,
+    user: { id: `id-${email}`, email, provider: "email" },
+  };
+  return page.addInitScript((s) => localStorage.setItem("survivor_auth", JSON.stringify(s)), session);
+}
+
+/** Amis (mêmes règles que friends_sync / friend_request... dans supabase/schema.sql), présence comprise. */
+function fakeFriends(route, req, supabase) {
+  const rpc = req.url().match(/\/rpc\/(friends_sync|friend_request|friend_respond|friend_remove)$/)?.[1];
+  if (!rpc) return null;
+  const email = userFromToken(req);
+  if (!email) return route.fulfill(json({ message: "Non connecté" }, 401));
+  const me = `id-${email}`;
+  const { profiles } = supabase.friends;
+  const args = req.postDataJSON();
+  const fail = (reason) => route.fulfill(json({ code: "P0001", message: `ami:${reason}` }, 400));
+  const pair = (a, b) =>
+    supabase.friends.links.find(
+      (l) => (l.requester === a && l.addressee === b) || (l.requester === b && l.addressee === a),
+    );
+  const drop = (link) => (supabase.friends.links = supabase.friends.links.filter((l) => l !== link));
+  if (rpc === "friends_sync") {
+    const code = profiles[me]?.code ?? email.slice(0, 6).toUpperCase().padEnd(6, "X");
+    profiles[me] = { id: me, name: args.p_name || "Pilote", code, status: args.p_status, seen: Date.now() };
+    const other = (l) => profiles[l.requester === me ? l.addressee : l.requester];
+    const links = supabase.friends.links.filter((l) => l.requester === me || l.addressee === me);
+    const brief = (p) => ({ id: p.id, name: p.name });
+    return route.fulfill(
+      json({
+        code,
+        friends: links
+          .filter((l) => l.accepted)
+          .map(other)
+          .map((p) => ({
+            ...brief(p),
+            online: Date.now() - p.seen < 75_000,
+            status: p.status,
+            rating: supabase.duel.ratings[p.id.replace(/^id-/, "")]?.rating ?? null,
+          })),
+        incoming: links.filter((l) => !l.accepted && l.addressee === me).map((l) => brief(other(l))),
+        outgoing: links.filter((l) => !l.accepted && l.requester === me).map((l) => brief(other(l))),
+      }),
+    );
+  }
+  if (rpc === "friend_request") {
+    const q = args.p_query.trim();
+    let target = Object.values(profiles).find((p) => p.code === q.toUpperCase());
+    if (!target) {
+      const named = Object.values(profiles).filter(
+        (p) => p.id !== me && p.name.toLowerCase() === q.toLowerCase(),
+      );
+      if (named.length > 1) return fail("ambigu");
+      target = named[0];
+    }
+    if (!target) return fail("introuvable");
+    if (target.id === me) return fail("soi");
+    const link = pair(me, target.id);
+    if (link && !link.accepted && link.requester === target.id) {
+      link.accepted = true;
+      return route.fulfill(json({ status: "accepted", id: target.id, name: target.name }));
+    }
+    if (link) return fail("deja");
+    supabase.friends.links.push({ requester: me, addressee: target.id, accepted: false });
+    return route.fulfill(json({ status: "sent", id: target.id, name: target.name }));
+  }
+  const link = pair(me, args.p_id);
+  if (rpc === "friend_respond" && link && !link.accepted && link.addressee === me) {
+    if (args.p_accept) link.accepted = true;
+    else drop(link);
+  }
+  if (rpc === "friend_remove" && link) drop(link);
+  return route.fulfill({ status: 204, body: "" });
 }
