@@ -24,11 +24,11 @@ const regular = (extra = {}) => ({
   ...extra,
 });
 
-/** Sert config.js avec une clé VAPID (aussi aux requêtes du service worker). */
-async function withPushKey(context) {
+/** Sert config.js avec la clé VAPID voulue (aussi aux requêtes du service worker). */
+async function withPushKey(context, key = VAPID) {
   await context.route("**/src/config.js", async (route) => {
     const res = await route.fetch();
-    const body = (await res.text()).replace('vapidPublicKey: ""', `vapidPublicKey: "${VAPID}"`);
+    const body = (await res.text()).replace(/vapidPublicKey: "[^"]*"/, `vapidPublicKey: "${key}"`);
     await route.fulfill({ response: res, body });
   });
 }
@@ -278,7 +278,8 @@ test("notifications refusées par le navigateur : expliqué, pas de nouvelle dem
   expect(supabase.push).toEqual([]);
 });
 
-test("sans clé VAPID, rien n'apparaît (notifications pas encore configurées)", async ({ page }) => {
+test("sans clé VAPID, rien n'apparaît (notifications pas encore configurées)", async ({ page, context }) => {
+  await withPushKey(context, "");
   await page.goto("/");
   await page.locator("#btnOptions").click();
   await expect(page.locator("#optionsMenu")).toBeVisible();
