@@ -120,10 +120,7 @@ input {
   color: #fff;
 }
 
-/* Sur tactile : pas d'aide clavier, HUD compact */
-body.touch #controls {
-  display: none;
-}
+/* Sur tactile : HUD compact */
 body.touch #levelIndicator {
   font-size: 18px;
   bottom: 18px;
@@ -131,28 +128,38 @@ body.touch #levelIndicator {
 
 /* --- Petits écrans (téléphones) --- */
 @media (max-width: 760px), (max-height: 560px) {
+  /* Téléphone : vague, compteurs et vie seulement (dash et compétence ont leurs boutons) */
   #ui {
     top: calc(8px + env(safe-area-inset-top));
     left: calc(8px + env(safe-area-inset-left));
-    min-width: 0;
-    width: 200px;
-    padding: 8px 10px;
-    font-size: 12px;
+    width: 236px;
+    padding: 7px 9px 8px;
+    border-radius: 10px;
   }
-  .ui-header {
-    margin-bottom: 4px;
+  .ui-wave {
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+  .ui-counters {
+    gap: 8px;
+    font-size: 11px;
+  }
+  .ui-count .ico {
+    font-size: 11px;
   }
   .stat-grid,
-  .ui-divider,
-  .skill-box {
+  .skill-row {
     display: none;
   }
   .health-bar {
-    height: 16px;
+    height: 14px;
   }
-  #runGoldContainer {
+  .health-text {
+    font-size: 10px;
+  }
+  .ui-badge {
     margin-top: 6px;
-    font-size: 14px;
+    font-size: 9px;
   }
   #boxIndicator {
     top: calc(110px + env(safe-area-inset-top));

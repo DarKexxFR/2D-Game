@@ -40,13 +40,15 @@ test("réassigner une touche dans les Options", async ({ page, isMobile }) => {
   await page.keyboard.press("Escape");
   await expect(page.locator('.key-row[data-action="pause"] button')).toHaveText("P / ÉCHAP");
 
-  // Les touches sont conservées et utilisées en jeu ; l'aide affiche les nouvelles touches
+  // Les touches sont conservées et utilisées en jeu (plus d'aide des touches à l'écran)
   await page.reload();
   await startGame(page);
-  await expect(page.locator("#controls")).toContainText("F : Tir auto");
+  await expect(page.locator("#controls")).toHaveCount(0);
   expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(true); // tir auto par défaut
+  await expect(page.locator("#autoShootOff")).toBeHidden();
   await page.keyboard.press("f");
   expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(false);
+  await expect(page.locator("#autoShootOff")).toBeVisible(); // rappel dans le panneau
   await page.keyboard.press("t");
   expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(false);
   await killPlayer(page);

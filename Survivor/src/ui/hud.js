@@ -65,7 +65,7 @@ export function updateHud() {
   setText("statCrit", Math.round(player.critChance * 100) + "%");
   setText("statCdmg", Math.round(player.critMultiplier * 100) + "%");
   setText("uiRunGold", game.runGold);
-  setText("autoShootState", player.autoShoot ? "ON" : "OFF");
+  setVisible("autoShootOff", !player.autoShoot);
 
   setWidth("ultBar", player.ultCharge / player.maxUltCharge);
   setText("ultName", heroSkill().name.toUpperCase());
