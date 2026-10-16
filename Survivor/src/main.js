@@ -402,7 +402,7 @@ const MENUS = {
   questMenu: openQuests,
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
-  friendsMenu: openFriends,
+  friendsMenu: () => openFriends(),
   talentMenu: openTalents,
   skinMenu: openSkins,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
@@ -561,12 +561,13 @@ function init() {
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
 
   $("btnVersus").addEventListener("click", openDuel);
+  $("btnFriends").addEventListener("click", () => openFriends());
   $("btnVersusPause").addEventListener("click", pause);
   initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu, onFriends: openFriends });
   initFriendsMenu({
     // « menu » : libre pour un défi ; une partie de duel en préparation compte comme occupé
     getStatus: () => (game.started ? (versus.active ? "duel" : "jeu") : net.role ? "duel" : "menu"),
-    onBack: openDuel,
+    onBack: (from) => (from === "duel" ? openDuel() : showMainMenu()),
     onLogin: () => openLogin("friendsMenu"),
     onAccept: joinFriendDuel,
   });
