@@ -4,6 +4,7 @@ import { DIFFICULTIES, STAT_CAPS, WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
+import { healFactor } from "../systems/player.js";
 import { heroSkill } from "../systems/skills.js";
 import { $, setClass, setText, setVisible, setWidth } from "./dom.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
@@ -17,6 +18,22 @@ export function showHud(visible) {
     setVisible("bossBar", false);
   }
   showTouchControls(visible);
+}
+
+/** Pourcentage de soins perdus à cause de la corruption (0 avant la vague SURVIVAL.healFatigueFrom). */
+export function corruptionPercent() {
+  return Math.round((1 - healFactor()) * 100);
+}
+
+/** Cœur fissuré à côté de la barre de vie, avec la réduction des soins au survol. */
+function updateCorruption() {
+  const pct = corruptionPercent();
+  setVisible("healCorruption", pct > 0);
+  const node = $("healCorruption");
+  if (pct > 0 && node.dataset.pct !== String(pct)) {
+    node.dataset.pct = pct;
+    node.dataset.tip = `Corruption : soins −${pct} %`;
+  }
 }
 
 export function updateHud() {
@@ -33,6 +50,7 @@ export function updateHud() {
   setText("kills", game.kills);
   setText("healthText", `${Math.round(Math.max(0, player.health))}/${Math.round(player.maxHealth)}`);
   setWidth("playerHealth", player.health / player.maxHealth);
+  updateCorruption();
   setWidth("timerBar", game.waveTimer / WAVE_DURATION);
   setWidth("dashBar", 1 - player.dashCooldownTimer / player.dashCooldown);
   setWidth("xpBar", player.xp / player.xpToNextLevel);

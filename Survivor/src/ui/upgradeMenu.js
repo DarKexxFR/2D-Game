@@ -4,7 +4,7 @@
 import { BOSS_CHEST, RARITIES, VERSUS } from "../config.js";
 import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
-import { applyUpgrade, availableEvolutions, availableUpgrades } from "../data/upgrades.js";
+import { applyUpgrade, availableEvolutions, availableUpgrades, evolutionsFor } from "../data/upgrades.js";
 import { addStat } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
@@ -187,6 +187,24 @@ function startAutoPick() {
   );
 }
 
+/**
+ * Bas de carte : icône (et nom) des évolutions que cette carte rapproche, quand l'autre ingrédient de
+ * la recette est déjà possédé (ex. Perçage avec le Railgun équipé → Lance ionique).
+ */
+export function evolutionHint(u, p) {
+  const evos = evolutionsFor(u, p);
+  if (evos.length === 0) return null;
+  const color = RARITIES.evolution.color;
+  const hint = el("div", "upg-evo");
+  hint.title = evos.map((e) => `${e.name} (${e.recipe})`).join("\n");
+  for (const e of evos) {
+    const tag = el("span", "upg-evo-item");
+    tag.append(icon(e.icon, color), el("span", "", e.name));
+    hint.append(tag);
+  }
+  return hint;
+}
+
 function renderChoices(picks) {
   const p = current.target;
   $("btnReroll").textContent = p.rerolls > 0 ? `RELANCER (${p.rerolls})` : "";
@@ -202,6 +220,8 @@ function renderChoices(picks) {
     const level = p.inventory[u.name] || 0;
     info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
     if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
+    const hint = evolutionHint(u, p);
+    if (hint) info.append(hint);
     const ico = el("div", "icon");
     ico.append(icon(u.icon, RARITIES[u.rarity].color));
     const key = el("span", "upg-key", String(i + 1));

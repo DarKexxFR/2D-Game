@@ -3,6 +3,8 @@
 import { game, player } from "../core/state.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
 import { $, el, isVisible } from "./dom.js";
+import { corruptionPercent } from "./hud.js";
+import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
 
 export function canTogglePause() {
@@ -17,8 +19,24 @@ export function togglePause() {
     hideScreens();
     return;
   }
+  renderCorruption();
   renderInventory();
   showScreen("pauseMenu");
+}
+
+/** Rappel de la corruption des soins (vague 12+), aussi pour les écrans tactiles sans survol. */
+function renderCorruption() {
+  const box = $("pauseCorruption");
+  box.replaceChildren();
+  const add = (prefix = "") => {
+    const pct = corruptionPercent();
+    if (pct <= 0) return;
+    const row = el("div", "corruption-row");
+    row.append(icon("heartCrack", "#aa66ff"), el("span", "", `${prefix}Corruption : soins −${pct} %`));
+    box.append(row);
+  };
+  if (versus.split) for (const i of [0, 1]) withRun(i, () => add(fighterName(i) + " · "));
+  else add();
 }
 
 function renderInventory() {
