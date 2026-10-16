@@ -34,6 +34,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Last Pulse" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Application installable (PWA) : voir manifest.webmanifest, sw.js et src/services/pwa.js -->
+    <link rel="manifest" href="manifest.webmanifest" />
     <!-- Vérification du site par AdSense (voir PUBS.md) -->
     <meta name="google-adsense-account" content="ca-pub-8968329181870538" />
     <!-- Déménagement vers last-pulse.com : doit passer avant le jeu (voir src/transfer.js) -->
@@ -54,6 +57,7 @@
     <link rel="stylesheet" href="css/versus.css" />
     <link rel="stylesheet" href="css/friends.css" />
     <link rel="stylesheet" href="css/skins.css" />
+    <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
   <body>
@@ -199,6 +203,9 @@
               </button>
               <button id="btnLogin" class="home-login-btn" aria-label="Se connecter">
                 <i data-icon="user"></i><span id="btnLoginLabel">SE CONNECTER</span>
+              </button>
+              <button id="btnInstall" class="home-icon-btn home-install-btn" aria-label="Installer le jeu">
+                <i data-icon="download"></i><span id="installBadge" class="install-badge"></span>
               </button>
               <button id="btnOptions" class="home-icon-btn" aria-label="Options">
                 <i data-icon="cog"></i>
@@ -532,6 +539,18 @@
           <button id="btnTutorialReplay" class="secondary">REVOIR</button>
         </div>
         <p id="tutorialReplayHint" class="option-hint"></p>
+        <div id="optAppRow" class="option-row option-account-row">
+          <span><i data-icon="download"></i> Application</span>
+          <button id="btnOptionsInstall" class="secondary">INSTALLER</button>
+        </div>
+        <div id="optPushSection" class="option-push">
+          <div class="option-row option-account-row">
+            <span><i data-icon="bell"></i> Notifications</span>
+            <button id="optPush" class="toggle-btn"></button>
+          </div>
+          <div id="pushTopics" class="push-topics"></div>
+          <p id="pushHint" class="option-hint"></p>
+        </div>
         <div id="optAccountRow" class="option-row option-account-row">
           <span><i data-icon="user"></i> Compte <small class="optional-tag">facultatif</small></span>
           <button id="btnOptionsAccount" class="secondary">SE CONNECTER</button>
@@ -566,6 +585,36 @@
         >
         <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
         <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
+      </div>
+
+      <!-- ===== INSTALLER LE JEU (ui/appMenu.js) ===== -->
+      <div id="installMenu" class="menu-overlay install-menu">
+        <div class="menu-head">
+          <h2>INSTALLER LE JEU</h2>
+          <p class="menu-sub">Gratuit, sans passer par une boutique d'applications</p>
+        </div>
+        <ul class="install-perks">
+          <li><i data-icon="homeAdd"></i> Une icône sur ton écran d'accueil, le jeu en plein écran</li>
+          <li><i data-icon="cloud"></i> Jouable même sans connexion</li>
+          <li><i data-icon="bell"></i> Rappels de série et de quêtes, si tu le veux</li>
+          <li>
+            <i data-icon="coin" data-color="#ffd700"></i>
+            <span><b id="installReward"></b> à la première ouverture depuis l'icône</span>
+          </li>
+        </ul>
+        <div id="installPrompt">
+          <button id="btnInstallNow" class="play-btn"><i data-icon="download"></i> INSTALLER</button>
+        </div>
+        <ol id="installIos" class="install-steps">
+          <li>Touche <b>Partager</b> <i data-icon="iosShare"></i> dans la barre du navigateur</li>
+          <li>Choisis <b>« Sur l'écran d'accueil »</b> <i data-icon="homeAdd"></i></li>
+          <li>Ouvre Last Pulse depuis sa nouvelle icône</li>
+        </ol>
+        <p id="installDone" class="install-note">Le jeu est installé sur cet appareil. Merci !</p>
+        <p id="installUnavailable" class="install-note">
+          Ton navigateur ne sait pas installer d'application : essaie avec Chrome, Edge ou Safari.
+        </p>
+        <button id="btnInstallBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <!-- ===== CONNEXION (compte facultatif) ===== -->
@@ -792,6 +841,18 @@
       <div class="btn-grid">
         <button id="btnInviteAccept">ACCEPTER</button>
         <button id="btnInviteDecline" class="secondary">REFUSER</button>
+      </div>
+    </div>
+
+    <!-- Proposition des notifications, au bon moment (ui/appMenu.js) -->
+    <div id="pushAsk" class="push-ask" role="alertdialog" aria-labelledby="pushAskText">
+      <p id="pushAskText">
+        <i data-icon="bell" data-color="#ffd700"></i> Être prévenu avant de perdre ta série et quand les
+        nouvelles quêtes arrivent ?
+      </p>
+      <div class="btn-grid">
+        <button id="btnPushAskYes">OUI</button>
+        <button id="btnPushAskNo" class="secondary">PLUS TARD</button>
       </div>
     </div>
 

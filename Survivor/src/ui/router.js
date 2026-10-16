@@ -10,6 +10,7 @@
 const ROUTES = {
   optionsMenu: "option",
   loginMenu: "connexion",
+  installMenu: "installer",
   shopMenu: "boutique",
   inventoryMenu: "equipement",
   chestReveal: "coffre",

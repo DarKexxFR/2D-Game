@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   dailyBest: "survivor_daily_best",
   auth: "survivor_auth", // session de connexion (Google ou e-mail), facultative
   accountSync: "survivor_account_sync", // dernière version échangée avec le compte (anti-écrasement)
+  app: "survivor_app", // état propre à l'appareil : abonnement aux notifications (voir services/appState.js)
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.
@@ -368,6 +369,37 @@ export const FRIENDS = {
   syncMs: 30000, // présence et liste d'amis rafraîchies (un ami est « en ligne » 75 s après son dernier signe)
   inviteMs: 30000, // un défi sans réponse est annulé
   resendMs: 3000, // le défi est renvoyé tant que l'ami n'a pas répondu (il a pu ouvrir le jeu entre-temps)
+};
+
+// Application installable (PWA, voir services/pwa.js et sw.js) : icône sur l'écran d'accueil, plein écran,
+// jeu jouable hors connexion. Aucune boutique d'applications : tout passe par le navigateur.
+export const PWA = {
+  installReward: 500, // or offert à la première ouverture depuis l'icône (une fois par compte)
+  offerMinRuns: 1, // parties terminées avant d'afficher le bouton « Installer » (pas pendant le tutoriel)
+};
+
+// Notifications (services/notifications.js, envoi par supabase/functions/send-push, voir
+// supabase/NOTIFICATIONS.md). Le jeu calcule lui-même quand prévenir (heure locale du joueur) et
+// envoie ces rappels au serveur ; le serveur ne fait que les expédier à l'heure dite.
+export const PUSH = {
+  // Clé publique VAPID (elle est faite pour être publique). Vide = notifications désactivées.
+  // La clé privée va UNIQUEMENT dans les secrets Supabase, jamais dans le dépôt.
+  vapidPublicKey: "",
+  streakHour: 19, // rappel « ta série est en danger » le lendemain du dernier jour récupéré
+  questsHour: 10, // lundi : nouvelles quêtes de la semaine
+  comebackHour: 18, // rappels de retour, après une absence
+  comebackDays: [3, 10], // jours d'absence avant chaque rappel de retour (repoussés à chaque visite)
+  askCooldownDays: 14, // proposition « Être prévenu ? » refusée : reproposée au bout de ce délai
+  askMinRuns: 2, // parties terminées avant de proposer les notifications
+  syncDebounceMs: 2000, // regroupe les sauvegardes rapprochées en un seul envoi au serveur
+  resyncHours: 12, // renvoi même sans changement (le serveur note que l'appareil est actif)
+  // Thèmes réglables dans les Options ; chacun regroupe un ou plusieurs types de rappel
+  topics: {
+    streak: { label: "Série de connexion", kinds: ["streak"] },
+    quests: { label: "Quêtes de la semaine", kinds: ["quests"] },
+    friends: { label: "Amis (demandes, réponses)", kinds: ["friends"] },
+    comeback: { label: "Rappels après une absence", kinds: ["comeback1", "comeback2"] },
+  },
 };
 
 export const MUSIC = {

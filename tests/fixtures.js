@@ -8,6 +8,7 @@ export const test = base.extend({
     // accounts : sauvegardes liées à un compte (par adresse) ; emails : codes demandés ;
     // duel : classement ELO simulé (ratings par adresse, déclarations par duel)
     // friends : profils (par identifiant) et liens d'amitié { requester, addressee, accepted }
+    // push : appels des RPC de notifications { rpc, args, token } (voir services/notifications.js)
     await use({
       scores: [],
       mode: "ok",
@@ -17,6 +18,7 @@ export const test = base.extend({
       emails: [],
       duel: { ratings: {}, reports: {}, settled: {} },
       friends: { profiles: {}, links: [] },
+      push: [],
     });
   },
   page: async ({ page, supabase }, use) => {
@@ -43,6 +45,10 @@ export function routeSupabase(page, supabase) {
     if (friends) return friends;
     // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
     const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
+    if (rpc === "push_subscribe" || rpc === "push_unsubscribe") {
+      supabase.push.push({ rpc, args: req.postDataJSON(), token: userFromToken(req) });
+      return route.fulfill({ status: 204, body: "" });
+    }
     if (rpc === "save_progress") {
       const { p_code, p_data } = req.postDataJSON();
       supabase.cloud[p_code] = p_data;

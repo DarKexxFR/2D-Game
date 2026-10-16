@@ -6,3 +6,6 @@
 
 # Les modules ES doivent être servis comme JavaScript.
 AddType text/javascript .js .mjs
+# Manifeste de l'application installable (PWA). sw.js suit la règle ci-dessus : toujours revérifié,
+# donc une nouvelle version du service worker est vue dès la visite suivante.
+AddType application/manifest+json .webmanifest

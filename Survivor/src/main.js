@@ -71,7 +71,7 @@ import {
   showShrineReward,
   showUpgradeMenu,
 } from "./ui/upgradeMenu.js";
-import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
+import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initQuestMenu, openQuests } from "./ui/questMenu.js";
 import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
@@ -119,6 +119,9 @@ import { initDuelMenu, joinFriendDuel, openDuel, setDuelStatus } from "./ui/duel
 import { friendsRunStarted, initFriendsMenu, openFriends, stopChallenge } from "./ui/friendsMenu.js";
 import { initTutorial, startTutorial, stopTutorial, updateTutorial } from "./ui/tutorial.js";
 import { initDuelPicks, requestDuelPick, resetDuelPicks, tickDuelPick } from "./ui/duelPicks.js";
+import { claimInstallReward, initPwa } from "./services/pwa.js";
+import { initNotifications } from "./services/notifications.js";
+import { closeInstall, initAppMenu, maybeAskPush, openInstall, renderApp } from "./ui/appMenu.js";
 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
@@ -337,6 +340,7 @@ function returnToMenu() {
   stopMusic();
   showHud(false);
   showMainMenu();
+  maybeAskPush(); // retour d'une partie : proposé aux joueurs habitués seulement (voir PUSH.askMinRuns)
 }
 
 function endGame() {
@@ -411,6 +415,7 @@ const MENUS = {
   talentMenu: openTalents,
   skinMenu: openSkins,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
+  installMenu: () => openInstall("mainMenu"),
 };
 
 /** Retour / avancer du navigateur : ferme l'écran ouvert. En partie, ne quitte jamais la partie. */
@@ -422,6 +427,8 @@ function navigate(id) {
     else if (screen === "loginMenu")
       closeLogin(); // ouverte depuis les options : retour aux options
     else if (screen === "chestReveal") showScreen("shopMenu");
+    else if (screen === "installMenu")
+      closeInstall(); // ouvert depuis les options : retour aux options
     else showMainMenu();
     return;
   }
@@ -431,6 +438,7 @@ function navigate(id) {
   } else if (screen === "pauseMenu") togglePause();
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
+  else if (screen === "installMenu") closeInstall();
   else if (screen === "shareMenu") showScreen("gameOver");
   else if (screen === "gameOver" || screen === "versusOver") returnToMenu();
   // amélioration et revivre : le choix reste à faire, l'adresse est simplement remise
@@ -504,6 +512,7 @@ function frame(now) {
 function init() {
   hydrateIcons();
   loadAccount();
+  initPwa();
   initCloudSave();
   initAds();
   ensureStarterItems();
@@ -516,7 +525,12 @@ function init() {
   initDuelPicks();
   initAchievementMenu({ onBack: showMainMenu });
   initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
-  initStreakMenu({ onClose: showMainMenu });
+  initStreakMenu({
+    onClose: () => {
+      showMainMenu();
+      maybeAskPush(); // juste après la série du jour : le bon moment pour proposer un rappel
+    },
+  });
 
   $("btnResume").addEventListener("click", togglePause);
   $("btnQuit").addEventListener("click", returnToMenu);
@@ -529,6 +543,8 @@ function init() {
   initOptionsMenu();
   initKeyBindings();
   initTutorial();
+  initAppMenu();
+  initNotifications();
   // Connexion facultative : vérifie la progression du compte sans bloquer le démarrage
   initAccount({ onConflictFound: () => !game.started && openLogin("mainMenu") });
 
@@ -638,6 +654,13 @@ function init() {
   });
 
   showMainMenu();
+  // Première ouverture depuis l'icône de l'écran d'accueil : cadeau de bienvenue (une fois par compte)
+  const installGold = claimInstallReward();
+  if (installGold) {
+    showToast(`Merci d'avoir installé Last Pulse : +${installGold} or`, "coin");
+    refreshAccountUI();
+    renderApp();
+  }
   initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
   // Série de connexion : proposée à l'arrivée (pas à un tout nouveau joueur, qui commence par le tutoriel)
   if (currentScreen() === "mainMenu" && account.achievementStats.runs > 0) offerLoginStreak();

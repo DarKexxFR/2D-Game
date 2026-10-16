@@ -68,6 +68,15 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   vaisseau (forme, couleurs, traînée), tutoriel de première partie.
 - **Compte facultatif** (Google, Discord ou code par e-mail) pour retrouver sa progression sur tous ses appareils.
 
+**Application**
+
+- **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
+  connexion, 500 or offerts à la première ouverture depuis l'icône (bouton « Installer » de l'accueil, marche à
+  suivre sur iPhone).
+- **Notifications** facultatives : série de connexion en danger, nouvelles quêtes du lundi, demandes d'ami,
+  rappels après une absence. Thèmes réglables dans les Options. Mise en place :
+  [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
+
 ## Développement
 
 ```bash
@@ -96,6 +105,8 @@ passent par [Supabase](https://supabase.com). Sans Supabase, le jeu fonctionne a
 - Schéma complet (tables, vues, RPC, règles anti-spam) : [`supabase/schema.sql`](supabase/schema.sql), à
   exécuter dans **SQL Editor** après chaque changement.
 - Connexion Google / Discord / e-mail : [`supabase/CONNEXION.md`](supabase/CONNEXION.md).
+- Notifications (clés VAPID, fonction Edge `send-push`, envoi planifié) :
+  [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
 - Seule la clé publique `sb_publishable_…` va dans `Survivor/src/config.js`, jamais une clé secrète.
 
 Publicités récompensées (revivre, coffre bonus) : démo interne pour l'instant, AdSense en préparation
@@ -106,6 +117,8 @@ Publicités récompensées (revivre, coffre bonus) : démo interne pour l'instan
 ```
 Survivor/
 ├── index.html            # Structure HTML
+├── manifest.webmanifest  # Application installable : nom, icônes, raccourcis
+├── sw.js                 # Service worker : jeu hors connexion et notifications
 ├── legal.html            # CGU et confidentialité
 ├── assets/               # Logo, icônes, musiques
 ├── css/                  # Un fichier par écran (base, hud, menus, home, inventory, versus...)
@@ -120,7 +133,7 @@ Survivor/
     ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, sons, pubs
     └── utils/            # Maths, grille spatiale
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)
-supabase/                 # Schéma de la base et guide de connexion
+supabase/                 # Schéma, guides (connexion, notifications), fonction d'envoi des notifications
 ```
 
 ### Ajouter du contenu

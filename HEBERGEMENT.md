@@ -9,6 +9,8 @@ la progression du joueur vers last-pulse.com (`Survivor/src/transfer.js`), une s
 - **last-pulse.com** : servi par **IONOS** (espace web du pack d'hébergement). À chaque push sur
   `main`, GitHub Actions envoie le dossier `Survivor/` en SFTP (`.github/workflows/deploy.yml`).
   Le cache du navigateur est réglé par `Survivor/.htaccess`. Netlify n'est plus utilisé.
+  Le service worker (`Survivor/sw.js`, jeu hors connexion) doit rester servi depuis la racine du jeu et
+  toujours revérifié (règle `max-age=0` du `.htaccess`) : sinon les joueurs garderaient une ancienne version.
 - **GitHub Pages** reste activé sur l'ancienne adresse, **sans domaine personnalisé** : sinon GitHub
   redirigerait lui-même vers last-pulse.com, avant que la passerelle ait pu emporter les données.
 

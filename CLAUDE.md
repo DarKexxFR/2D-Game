@@ -27,7 +27,7 @@ sert qu'aux outils (Prettier, Playwright).
 npm start            # sert le jeu sur http://localhost:8000 (python3 http.server)
 npm run lint         # Prettier (largeur 110) + vérification de syntaxe (scripts/check-syntax.mjs)
 npm run format       # corrige le formatage
-npm run typecheck    # vérifie les types (TypeScript sur le JavaScript, via JSDoc + checkJs)
+npm run typecheck    # vérifie les types (TypeScript sur le JavaScript, via JSDoc + checkJs ; sw.js à part)
 npx playwright test  # tests de bout en bout (projets « desktop » et « mobile » Pixel 7)
 npx playwright test tests/home.spec.js --project=mobile --repeat-each=5   # traquer un test instable
 ```
@@ -228,6 +228,22 @@ Principes :
   bouton « PARTAGER » de l'écran de fin ; image 1080×1350 (vague, stats, build, « tué par ») tirée d'un
   résumé figé par `showGameOver` (`runSummary`). Partage natif si le navigateur sait partager un fichier,
   COPIER (presse-papiers, pour Discord) et TÉLÉCHARGER (PNG). Pas en duel.
+- **Application installable (PWA)** : `Survivor/manifest.webmanifest`, `Survivor/sw.js` (service worker),
+  `services/pwa.js` (enregistrement, installation, cadeau `PWA.installReward` à la première ouverture depuis
+  l'icône = `account.appInstalled`), écran `ui/appMenu.js` (`installMenu`, `#modal=installer`, bouton
+  `#btnInstall` de l'accueil après une partie terminée, marche à suivre sur iPhone). Pas de boutique
+  d'applications (choix du propriétaire : gratuit). Cache du service worker : **réseau d'abord** pour le
+  code (jamais de mélange d'anciens et de nouveaux modules), cache d'abord pour images / sons / polices ;
+  aucune liste de fichiers à tenir à jour. Ne changer `VERSION` dans `sw.js` que si son comportement change.
+- **Notifications (Web Push)** : `services/notifications.js` calcule les rappels à l'heure locale
+  (`buildReminders` : série le lendemain à 19 h, quêtes le lundi, retours après 3 et 10 jours, réglages `PUSH`)
+  et les envoie avec l'abonnement (RPC `push_subscribe`, seulement si quelque chose a changé). Le serveur ne fait
+  qu'expédier : fonction Edge `supabase/functions/send-push` (textes des notifications, lots `push_claim` /
+  `push_report`, `for update skip locked`), planifiée par pg_cron ; demandes d'ami par déclencheur SQL.
+  État propre à l'appareil dans `survivor_app` (`services/appState.js`), jamais dans la sauvegarde du compte.
+  Clé publique VAPID dans `PUSH.vapidPublicKey` (vide = notifications masquées) ; la clé privée ne va que
+  dans les secrets Supabase. Mise en place : `supabase/NOTIFICATIONS.md`. Proposition « Être prévenu ? »
+  (`maybeAskPush`) après la série du jour ou au retour d'une partie, jamais redemandée avant 14 jours.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -260,6 +276,11 @@ save)` (injecte une sauvegarde avant le chargement), `startGame(page, { invincib
 levelUps })`, `killPlayer(page)`.
 - Chaque fonctionnalité a son fichier `*.spec.js`. Ajouter ou mettre à jour un test avec
   chaque changement de comportement.
+- Le service worker est bloqué dans les tests (`serviceWorkers: "block"` dans `playwright.config.js`) sauf
+  dans `tests/pwa.spec.js` et `tests/pwa-push.spec.js` (Chromium complet : le « headless shell » refuse
+  les notifications) : `page.route` ne voit pas les requêtes qu'il sert. Les notifications y sont
+  simulées (`fakePushService`, clé VAPID injectée dans `config.js` par `context.route`) ; les RPC de
+  notifications du faux Supabase sont dans `supabase.push`.
 - Un test instable n'est **jamais** « juste un flake » : reproduire (`--repeat-each`),
   trouver la cause, corriger. Ne jamais désactiver ni sauter un test pour passer au vert.
 - Pour vérifier un rendu : capture Playwright (Chromium est préinstallé, ne pas lancer
@@ -289,8 +310,9 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
-synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »), carte de score à partager.
+synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
+application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
-Autres idées en attente : sons et musique, PWA installable, manette.
+Autres idées en attente : sons et musique, manette.

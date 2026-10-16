@@ -123,4 +123,9 @@ export const ICONS = {
   friends: `${circle(9, 8, 3.5)} M2 20c0-3.9 3.1-6.2 7-6.2s7 2.3 7 6.2 ${circle(17, 7, 3)} M17 13c3 0 5 2 5 5.5`,
   eye: `M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z ${circle(12, 12, 3.5)} ${circle(12, 12, 1)}`,
   paw: `${circle(6, 10, 2)} ${circle(10, 5.5, 2)} ${circle(14, 5.5, 2)} ${circle(18, 10, 2)} M12 11c-3 0-6 4-6 7 0 2 2 3 3.5 2.5 1-.3 1.7-.8 2.5-.8s1.5.5 2.5.8C16 21 18 20 18 18c0-3-3-7-6-7z`,
+  // --- Application (installation, notifications) ---
+  download: "M12 3v12 M7 10l5 5 5-5 M4 17v3h16v-3",
+  bell: "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z M10 21h4 M12 3v2",
+  iosShare: "M12 3v12 M8 7l4-4 4 4 M8 10H5v11h14V10h-3",
+  homeAdd: "M4 4h16v16H4z M12 8v8 M8 12h8",
 };
