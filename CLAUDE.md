@@ -91,6 +91,9 @@ Principes :
   **Roi Slime** : saut annoncé (enchaîné en furie), pluie de slime collante, absorbe ses petits pour se soigner,
   « mitose » en furie, se divise à sa mort (`SLIME_KING`).
   Vitesse de déplacement du joueur plafonnée à `STAT_CAPS.speed` (tous bonus compris).
+  **Les boss ne se poussent pas** : tout recul ou attraction d'ennemi passe par `systems/knockback.js`
+  (`knockEnemy`, `pullEnemy`, `pushEnemy`), qui ignore les boss (choix du propriétaire) ; seuls leurs
+  propres mouvements (sauts, charges, téléportations) les déplacent.
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
   la vague 12 (`SURVIVAL` dans `config.js`) ; cœur fissuré violet `#healCorruption` près de la barre de vie

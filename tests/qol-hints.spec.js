@@ -52,6 +52,7 @@ test("évolutions : la carte qui complète une recette montre l'évolution visé
     };
     Object.assign(player.inventory, { Vampirisme: 1 });
     r.withVampire = names("Régénération");
+    delete player.inventory.Vampirisme; // sinon la carte Régénération montrerait aussi un indice à l'écran
     player.evolutions.solarBlaster = true; // déjà obtenue : plus d'indice
     r.afterEvolution = names("Force Brute");
     player.evolutions.solarBlaster = false;

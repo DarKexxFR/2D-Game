@@ -8,6 +8,7 @@ import { addFloatingText, createHealEffect, createParticles, createShockwave } f
 import { playSfx } from "../services/sfx.js";
 import { heal } from "./player.js";
 import { perk } from "./perks.js";
+import { knockEnemy } from "./knockback.js";
 
 const DRONE_RANGE = 300;
 const DRONE_PROJECTILE_SPEED = 8;
@@ -139,10 +140,8 @@ function updateGuardian() {
   if (rampart) {
     createShockwave(player.worldX, player.worldY, rampart.radius, pet.color);
     for (const e of enemyGrid.query(player.worldX, player.worldY, rampart.radius)) {
-      if (e.dead || e.template.isBoss) continue;
-      const a = angleTo(player.worldX, player.worldY, e.x, e.y);
-      e.x += Math.cos(a) * rampart.push;
-      e.y += Math.sin(a) * rampart.push;
+      if (e.dead) continue;
+      knockEnemy(e, angleTo(player.worldX, player.worldY, e.x, e.y), rampart.push);
     }
   }
   playSfx("petHeal");

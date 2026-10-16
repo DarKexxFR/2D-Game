@@ -17,6 +17,7 @@ import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
 import { clampToZone } from "./arena.js";
+import { knockEnemy } from "./knockback.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
 
@@ -143,9 +144,7 @@ function handleContact(e) {
   takeDamage(dmg);
   if (e.type === "golem") freezePlayer();
   e.lastDamage = game.time;
-  const a = angleTo(player.worldX, player.worldY, e.x, e.y);
-  e.x += Math.cos(a) * 20;
-  e.y += Math.sin(a) * 20;
+  knockEnemy(e, angleTo(player.worldX, player.worldY, e.x, e.y), 20);
   if (player.thorns > 0) {
     addFloatingText(e.x, e.y, Math.round(dmg * player.thorns), "#aa00ff", 12);
     damageEnemy(e, dmg * player.thorns, "thorns");

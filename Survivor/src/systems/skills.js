@@ -16,6 +16,7 @@ import {
   createShockwave,
   flashScreen,
 } from "./effects.js";
+import { knockEnemy, pullEnemy } from "./knockback.js";
 
 export const SKILLS = {
   shockwave: { name: "Onde de choc", activate: shockwave },
@@ -62,8 +63,7 @@ function shockwave() {
   createAoEEffect(player.worldX, player.worldY, 400);
   for (const e of enemiesNear(player.worldX, player.worldY, ULTIMATE.radius)) {
     const a = angleTo(player.worldX, player.worldY, e.x, e.y);
-    e.x += Math.cos(a) * ULTIMATE.knockback;
-    e.y += Math.sin(a) * ULTIMATE.knockback;
+    knockEnemy(e, a, ULTIMATE.knockback);
     addFloatingText(e.x, e.y, "ULT!", "#ff6600", 24);
     damageEnemy(e, ULTIMATE.damage, "skill");
   }
@@ -229,10 +229,8 @@ function voidNova() {
   createShockwave(x, y, NOVA.radius, "#8a6cff");
   let healed = 0;
   for (const e of enemiesNear(x, y, NOVA.radius)) {
-    // Aspiré vers le joueur (les boss bougent moins)
-    const pull = e.template.isBoss ? NOVA.pull / 4 : NOVA.pull;
-    e.x += (x - e.x) * pull;
-    e.y += (y - e.y) * pull;
+    // Aspiré vers le joueur (pas les boss)
+    pullEnemy(e, x, y, NOVA.pull);
     createParticles(e.x, e.y, "#8a6cff", 3);
     damageEnemy(e, NOVA.damage + player.attack * NOVA.attackMult, "skill");
     healed += NOVA.healPerHit;
