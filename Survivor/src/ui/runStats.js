@@ -33,6 +33,8 @@ function sourceName(source) {
       return "Brûlure";
     case "perk":
       return "Effets d'équipement";
+    case "revive":
+      return "Renaissance";
     case "synergy":
       return player.synergy?.name || "Synergie";
     default:

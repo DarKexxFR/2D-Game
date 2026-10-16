@@ -59,6 +59,14 @@ export const SURVIVAL = {
 export const STUN = { maxTicks: 75, immunity: 150 };
 
 /**
+ * Retour à la vie (talent Seconde chance, Phénix, Renaissance céleste, pub) : animation de renaissance
+ * et onde de choc. Les ennemis à moins de `killRadius` meurent (corps à corps), les boss perdent
+ * `bossDamage` de leur vie max sans être tués ni repoussés ; les autres ennemis jusqu'à `pushRadius`
+ * sont repoussés. `slowMo` en ticks de ralenti, `animTicks` = durée de l'animation.
+ */
+export const REVIVE = { killRadius: 170, bossDamage: 0.08, pushRadius: 300, slowMo: 40, animTicks: 80 };
+
+/**
  * Pendant un combat de boss (et tout le Boss Rush), la zone de combat se resserre : un carré de
  * `size` de côté (la carte fait MAP_SIZE), centré sur le joueur sans sortir de la carte. Les murs
  * avancent ou reculent de `speed` unités par tick (pas de téléportation du joueur).
