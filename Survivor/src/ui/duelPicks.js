@@ -59,7 +59,11 @@ function open(i) {
     if (kind === "chest") game.runGold += gold = chestGold();
     if (list.length === 0) heal(50); // plus rien à proposer : soin de secours
     box.querySelector(".dp-sub").textContent =
-      kind === "chest" ? `Coffre de boss · +${gold} or` : `Niveau ${player.level} · choisis une amélioration`;
+      kind === "chest"
+        ? `Coffre de boss · +${gold} or`
+        : kind === "shrine"
+          ? "Sanctuaire maudit · choisis une carte"
+          : `Niveau ${player.level} · choisis une amélioration`;
     return list.map((u) => ({ u, level: player.inventory[u.name] || 0 }));
   });
   if (cards.length === 0) return next(i);
@@ -76,6 +80,7 @@ function open(i) {
     ico.append(icon(u.icon, color));
     const info = el("div", "dp-info");
     info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
+    if (u.malus) info.append(el("p", "upg-malus", u.malus));
     card.style.borderColor = color;
     card.append(ico, info);
     card.addEventListener("click", () => choose(i, n));

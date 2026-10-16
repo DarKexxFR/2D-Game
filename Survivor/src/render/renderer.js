@@ -7,7 +7,14 @@ import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./en
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawFallers, drawHazards, drawTurrets } from "./hazards.js";
 import { drawVortex, drawWeather } from "./mapEvents.js";
-import { drawGrid, drawMapBorder, drawMysteryBox, drawPickups, drawShrines } from "./world.js";
+import {
+  drawCursedShrines,
+  drawGrid,
+  drawMapBorder,
+  drawMysteryBox,
+  drawPickups,
+  drawShrines,
+} from "./world.js";
 import { renderSplit } from "./versus.js";
 import { drawRivalView } from "./rivalView.js";
 import { rival } from "../systems/versusOnline.js";
@@ -36,6 +43,7 @@ function drawScene(now) {
   drawMapBorder();
   drawMysteryBox();
   drawShrines(now);
+  drawCursedShrines(now);
   drawPickups();
   drawVortex(now);
   drawHazards(now); // au sol, sous les entités

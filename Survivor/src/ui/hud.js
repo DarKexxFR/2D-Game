@@ -34,7 +34,7 @@ export function updateHud() {
   setText("healthText", `${Math.round(Math.max(0, player.health))}/${Math.round(player.maxHealth)}`);
   setWidth("playerHealth", player.health / player.maxHealth);
   setWidth("timerBar", game.waveTimer / WAVE_DURATION);
-  setWidth("dashBar", 1 - player.dashCooldownTimer / player.dashCooldown);
+  setWidth("dashBar", player.noDash ? 0 : 1 - player.dashCooldownTimer / player.dashCooldown);
   setWidth("xpBar", player.xp / player.xpToNextLevel);
   setText("lvlVal", player.level);
   updateCombo();
@@ -57,7 +57,7 @@ export function updateHud() {
   if (isTouchDevice) {
     setVisible("btnTouchBox", mysteryBox.state === "IDLE" && isPlayerNearBox());
     setClass("btnTouchUlt", "ready", player.isUltReady);
-    setClass("btnTouchDash", "cooldown", player.dashCooldownTimer > 0);
+    setClass("btnTouchDash", "cooldown", player.noDash || player.dashCooldownTimer > 0);
   }
 }
 

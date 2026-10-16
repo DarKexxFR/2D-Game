@@ -33,7 +33,7 @@ import {
   updateOrbitals,
   updateProjectiles,
 } from "./systems/combat.js";
-import { updateEffects } from "./systems/effects.js";
+import { addFloatingText, updateEffects } from "./systems/effects.js";
 import { activateSkill, updateSkills } from "./systems/skills.js";
 import { updateEnemies } from "./systems/enemies.js";
 import { updateHazards } from "./systems/hazards.js";
@@ -47,6 +47,7 @@ import { resetTrail, updateTrail } from "./systems/trail.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { updateArena } from "./systems/arena.js";
 import { updateMapEvents } from "./systems/mapEvents.js";
+import { updateCursedShrines } from "./systems/cursedShrines.js";
 import { $ } from "./ui/dom.js";
 import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
@@ -64,6 +65,7 @@ import {
   resetUpgradeMenu,
   setAutoPick,
   showBossChest,
+  showShrineReward,
   showUpgradeMenu,
 } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements } from "./ui/achievementMenu.js";
@@ -167,6 +169,17 @@ function setupRun(mode, difficulty = "normal") {
   player.autoShoot = true; // tir automatique par défaut (la touche T le coupe pour viser à la souris)
   camera.x = player.worldX - view.width / 2;
   camera.y = player.worldY - view.height / 2;
+  if (player.synergy) {
+    const s = player.synergy;
+    addFloatingText(
+      player.worldX,
+      player.worldY - 70,
+      `SYNERGIE : ${s.name.toUpperCase()}`,
+      s.color,
+      18,
+      120,
+    );
+  }
   spawnWave();
 }
 
@@ -429,6 +442,7 @@ function simulate() {
   updateSpawning();
   updateArena();
   updateMapEvents();
+  updateCursedShrines();
   updatePlayer();
   updateTrail();
   rebuildEnemyGrid();
@@ -534,6 +548,7 @@ function init() {
 
   on("levelUp", () => (versus.split ? requestDuelPick(versus.current, "level") : showUpgradeMenu()));
   on("bossChest", () => (versus.split ? requestDuelPick(versus.current, "chest") : showBossChest()));
+  on("cursedReward", () => (versus.split ? requestDuelPick(versus.current, "shrine") : showShrineReward()));
   on("goblin", () => {
     if (versus.split) splitBanner("VOLEUR DORÉ !", "#ffd700");
     else showGoblinWarning();

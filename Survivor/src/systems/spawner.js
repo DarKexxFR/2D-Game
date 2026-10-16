@@ -165,7 +165,7 @@ function scheduleNextRushBoss() {
   game.nextWaveTimer = BOSS_RUSH.breather;
 }
 
-function pickEnemyType() {
+export function pickEnemyType() {
   const table = SPAWN_TABLES.find((t) => game.wave < t.untilWave);
   const entries = Object.entries(table.weights);
   for (const extra of biomeForWave(game.wave).enemies) entries.push([extra.type, extra.weight]);
@@ -199,15 +199,15 @@ export function eliteChance(wave) {
 
 let enemyIds = 0; // identifiant de chaque ennemi (suivi d'un ennemi dans l'aperçu du duel en ligne)
 
-/** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel). */
+/** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel, sanctuaire maudit). */
 export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElite = false) {
   const t = ENEMY_TYPES[type];
-  // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
+  // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations),
+  // sauf élite imposée (attaque du duel, horde d'un sanctuaire maudit)
   const elite =
-    x === null &&
     !t.isBoss &&
     type !== "goblin" &&
-    (forceElite || Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0)));
+    (forceElite || (x === null && Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0))));
   if (x === null || y === null) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;

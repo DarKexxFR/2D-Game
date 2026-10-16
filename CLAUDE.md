@@ -187,6 +187,15 @@ Principes :
 - **Série de connexion** (`services/loginStreak.js`, `ui/streakMenu.js`, `LOGIN_STREAK` dans `config.js`) :
   or chaque jour d'affilée (jour local), cycle de 7 jours, un jour manqué = retour au jour 1. Fenêtre proposée
   au chargement de l'accueil, sauf à un joueur sans partie terminée. État dans `account.loginStreak`.
+- **Cartes « Corrompues »** (`CORRUPTED_UPGRADES` dans `data/upgrades.js`, rareté `corrupted`) : gros bonus
+  contre un malus (`malus`, affiché en rouge), une fois par partie chacune ; jamais dans un coffre de boss ni
+  un sanctuaire maudit. Surcharge moteur, Singularité, Pacte de sang, Cœur de verre, Fièvre de l'or.
+- **Sanctuaires maudits** (`systems/cursedShrines.js`, `CURSED_SHRINE` dans `config.js`) : totem rouge dès la
+  vague 3 ; entrer dans le cercle lance le défi (élites en deux salves), tenir 5 s = carte rare / épique
+  (`showShrineReward`, choix « shrine ») ou or. Jamais pendant un boss ni en Boss Rush.
+- **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
+  Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
+  Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -241,7 +250,8 @@ Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins pe
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
 Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre mythique seulement), effets ★3, panoplies, modules, Archange et Phénix,
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
-biomes Jungle toxique et Station orbitale, série de connexion quotidienne.
+biomes Jungle toxique et Station orbitale, série de connexion quotidienne, cartes corrompues,
+sanctuaires maudits, synergies familier + arme.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

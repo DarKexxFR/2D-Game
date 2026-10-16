@@ -198,6 +198,17 @@
     0 0 40px rgba(255, 215, 0, 0.45);
   animation: pulseGold 1.6s infinite;
 }
+/* Récompense d'un sanctuaire maudit : cadre rouge */
+#upgradeMenu.cursed-reward {
+  border-color: #ff1f4b;
+  box-shadow:
+    0 0 50px black,
+    0 0 40px rgba(255, 31, 75, 0.45);
+}
+.menu-overlay#upgradeMenu.cursed-reward h2 {
+  color: #ff5a78;
+  text-shadow: 0 0 18px #ff1f4b;
+}
 .menu-overlay#upgradeMenu.boss-chest h2 {
   text-shadow: 0 0 18px #ffaa00;
   letter-spacing: 3px;
@@ -264,6 +275,20 @@
   background: linear-gradient(90deg, rgba(255, 42, 109, 0.18), rgba(255, 215, 0, 0.08));
   box-shadow: 0 0 18px rgba(255, 42, 109, 0.45);
   animation: pulseGold 1.2s infinite;
+}
+/* Carte « Corrompue » : bonus fort contre un malus (affiché en rouge) */
+.rarity-corrupted {
+  border: 1px solid rgba(255, 31, 75, 0.55);
+  border-left: 4px solid #ff1f4b;
+  background: linear-gradient(90deg, rgba(120, 0, 30, 0.35), rgba(40, 0, 20, 0.2));
+}
+.upg-info p.upg-malus,
+.dp-info p.upg-malus {
+  margin-top: 3px;
+  color: #ff5a78;
+}
+.upg-malus::before {
+  content: "▼ ";
 }
 .upg-recipe {
   margin-top: 4px;

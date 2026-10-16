@@ -322,7 +322,8 @@ button.equipped-slot.active {
 
 /* --- Effet ★3, panoplie et comparaison (fiche détaillée) --- */
 .perk-line,
-.set-line {
+.set-line,
+.synergy-line {
   font-size: 12px;
   line-height: 1.4;
   margin: 6px 0;
@@ -333,7 +334,8 @@ button.equipped-slot.active {
   text-align: left;
 }
 .perk-line b,
-.set-line b {
+.set-line b,
+.synergy-line b {
   color: #aaa;
 }
 .perk-line.unlocked {
@@ -716,4 +718,12 @@ button.item-card.locked {
   .inv-tabs .lb-tab:nth-child(4) {
     grid-column: 2 / span 2;
   }
+}
+.synergy-line.active {
+  color: #c9f6ff;
+  border: 1px solid rgba(0, 255, 255, 0.6);
+  background: rgba(0, 255, 255, 0.07);
+}
+.synergy-line.active b {
+  color: #00ffff;
 }

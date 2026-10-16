@@ -1,8 +1,8 @@
 // Décor et objets posés au sol : grille, bordure, boîte mystère, sanctuaires, butin.
 
-import { MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
+import { CURSED_SHRINE, MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
-import { camera, game, mysteryBox as box, world } from "../core/state.js";
+import { camera, game, mysteryBox as box, player, world } from "../core/state.js";
 import { arenaShrunk } from "../systems/arena.js";
 import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
@@ -169,6 +169,91 @@ export function drawShrines(now) {
     strokeCircle(s.x, s.y, s.size + 6 + pulse * 4, s.color, 1);
     drawIcon(s.icon, s.x, s.y, s.size * 1.1, s.color);
   }
+}
+
+/**
+ * Sanctuaires maudits : cercle à tenir, totem rouge (obélisque) et jauge de progression. Hors de
+ * l'écran, une flèche rouge près du joueur indique la direction du totem.
+ */
+export function drawCursedShrines(now) {
+  const R = CURSED_SHRINE.radius;
+  const CURSED_COLOR = CURSED_SHRINE.color;
+  for (const s of world.cursedShrines) {
+    const active = s.state === "active";
+    const pulse = Math.sin(now / (active ? 90 : 220));
+    if (!isOnScreen(s.x, s.y, R)) {
+      drawShrineArrow(s);
+      continue;
+    }
+    // Cercle au sol (plein quand le défi est lancé)
+    ctx.globalAlpha = active ? 0.16 + pulse * 0.04 : 0.07;
+    fillCircle(s.x, s.y, R, CURSED_COLOR);
+    ctx.globalAlpha = 1;
+    ctx.setLineDash(active ? [] : [10, 8]);
+    strokeCircle(s.x, s.y, R, CURSED_COLOR, 2);
+    ctx.setLineDash([]);
+    // Totem : obélisque rouge lumineux
+    const h = 46;
+    const bob = pulse * 2;
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = CURSED_COLOR;
+    ctx.fillStyle = "#2a0010";
+    ctx.strokeStyle = CURSED_COLOR;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y - h + bob);
+    ctx.lineTo(s.x + 12, s.y - h + 14 + bob);
+    ctx.lineTo(s.x + 9, s.y + 8);
+    ctx.lineTo(s.x - 9, s.y + 8);
+    ctx.lineTo(s.x - 12, s.y - h + 14 + bob);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    fillCircle(s.x, s.y - h + 24 + bob, 4 + (active ? 2 : 0), active ? "#fff" : CURSED_COLOR, 10);
+    if (active) {
+      // Jauge : arc qui fait le tour du cercle
+      const pct = s.progress / CURSED_SHRINE.hold;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = "#ffd700";
+      ctx.strokeStyle = "#ffd700";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, R + 8, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      const left = Math.ceil(((CURSED_SHRINE.hold - s.progress) / 60) * 10) / 10;
+      const warn = s.out > 0;
+      drawText(
+        warn ? "REVENEZ DANS LE CERCLE !" : `${left.toFixed(1)} s`,
+        s.x,
+        s.y - R - 18,
+        "bold 14px Orbitron",
+        warn ? "#ff5a78" : "#ffd700",
+      );
+    } else {
+      drawText("SANCTUAIRE MAUDIT", s.x, s.y - h - 14, "bold 11px Orbitron", CURSED_COLOR);
+    }
+  }
+}
+
+/** Flèche près du joueur vers un sanctuaire maudit hors de l'écran. */
+function drawShrineArrow(s) {
+  const a = Math.atan2(s.y - player.worldY, s.x - player.worldX);
+  const x = player.worldX + Math.cos(a) * 70;
+  const y = player.worldY + Math.sin(a) * 70;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(a);
+  ctx.fillStyle = CURSED_SHRINE.color;
+  ctx.globalAlpha = s.state === "active" ? 0.95 : 0.7;
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(-6, -7);
+  ctx.lineTo(-6, 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 export function drawPickups() {
