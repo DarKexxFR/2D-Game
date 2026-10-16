@@ -72,3 +72,37 @@ test("Phénix : sa résurrection passe en premier, avec des ailes de feu", async
   expect(r2.texts).toContain("SECONDE CHANCE !");
   await killPlayer(page);
 });
+
+test("l'animation de renaissance reste légère (pas de lueur floue en mode « lighter »)", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "une seule plateforme suffit");
+  // Chrome recalcule une ombre sur tout le canvas pour chaque dessin flou en mode « lighter » :
+  // une douzaine par image suffisait à figer le jeu après une Seconde chance.
+  await page.addInitScript(() => {
+    window.__slowDraws = 0;
+    const P = CanvasRenderingContext2D.prototype;
+    for (const name of ["fillRect", "fill", "stroke", "strokeRect", "drawImage"]) {
+      const orig = P[name];
+      P[name] = function (...args) {
+        if (this.globalCompositeOperation !== "source-over" && this.shadowBlur > 0) window.__slowDraws++;
+        return orig.apply(this, args);
+      };
+    }
+  });
+  await page.goto("/");
+  await startGame(page);
+  await game(page, ({ state, player }) => {
+    state.player.revives = 2;
+    state.player.phoenixRevive = true;
+    player.takeDamage(1e12);
+    player.takeDamage(1e12); // Phénix puis Seconde chance coup sur coup
+  });
+  expect(await game(page, ({ state }) => state.world.visualEffects.some((e) => e.type === "rebirth"))).toBe(
+    true,
+  );
+  await page.waitForTimeout(300); // quelques images dessinées avec l'animation
+  expect(await page.evaluate(() => window.__slowDraws)).toBe(0);
+  await killPlayer(page);
+});
