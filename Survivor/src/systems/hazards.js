@@ -100,7 +100,7 @@ export function updateHazards() {
 
 function hurt(h) {
   if (isProtected()) return;
-  takeDamage(h.damage);
+  takeDamage(h.damage, h.fall); // sans `fall`, c'est un boss (voir noteKiller)
   if (h.slow) player.buffs.slow = Math.max(player.buffs.slow, h.slow);
   if (h.stun) stunPlayer(h.stun);
 }
@@ -127,7 +127,7 @@ const UPDATERS = {
     if (dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
       h.hit = game.time;
       if (isProtected()) return;
-      if (h.damage > 0) takeDamage(h.damage * 0.25);
+      if (h.damage > 0) takeDamage(h.damage * 0.25, h.fall);
       if (h.slow) player.buffs.slow = Math.max(player.buffs.slow, h.slow); // flaque d'acide
     }
   },

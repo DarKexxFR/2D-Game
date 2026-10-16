@@ -49,7 +49,9 @@ import { updateArena } from "./systems/arena.js";
 import { updateMapEvents } from "./systems/mapEvents.js";
 import { updateCursedShrines } from "./systems/cursedShrines.js";
 import { $ } from "./ui/dom.js";
-import { setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
+import { initKillCamButton, setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
+import { drawKillCam, killCamActive, stopKillCam } from "./render/killCam.js";
+import { recordKillCam } from "./systems/killCam.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
 import { commitPseudo, getPseudo, initMainMenu, refreshAccountUI, showMainMenu } from "./ui/mainMenu.js";
 import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
@@ -127,6 +129,7 @@ let lastMode = "normal"; // « REJOUER » relance le même mode
  */
 function startGame(mode = "normal") {
   lastMode = mode;
+  stopKillCam();
   stopVersus();
   showVersusHud(false);
   commitPseudo();
@@ -314,6 +317,7 @@ function applyModifierToPlayer(mod) {
 }
 
 function returnToMenu() {
+  stopKillCam();
   restoreRandom();
   saveAccount(); // garde la progression des succès (kills...) même en quittant une partie
   game.started = false;
@@ -437,6 +441,7 @@ function update() {
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
   simulate();
+  if (!versus.active) recordKillCam();
   updateTutorial();
 }
 
@@ -480,7 +485,8 @@ function frame(now) {
       accumulator -= TICK_MS;
     }
     if (versus.online) netTick(now);
-    render();
+    if (killCamActive()) drawKillCam(now);
+    else render();
     if (!versus.split) updateHud();
     if (versus.active) updateVersusHud();
   } else {
@@ -514,6 +520,7 @@ function init() {
   $("btnQuit").addEventListener("click", returnToMenu);
   $("btnReplay").addEventListener("click", () => startGame(lastMode));
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
+  initKillCamButton();
   $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
   initOptionsMenu();

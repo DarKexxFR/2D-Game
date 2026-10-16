@@ -209,6 +209,11 @@ Principes :
 - **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
   Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
   Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
+- **Ralenti de la mort** (`systems/killCam.js` enregistre, `render/killCam.js` rejoue, réglages `KILL_CAM`) :
+  les 4 dernières secondes (vaisseau, ennemis, tirs, attaques de zone autour du vaisseau) sont gardées dans
+  `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,
+  explosion, « TUÉ PAR » + viseur sur le coupable). `takeDamage(montant, source)` : source = l'ennemi, son type
+  ou un événement de carte ; sans source, c'est le boss en vie. Pas en duel.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -266,7 +271,7 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
-synergies familier + arme.
+synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
