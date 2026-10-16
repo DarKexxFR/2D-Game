@@ -149,7 +149,7 @@ Principes :
     points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
-  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par « MES AMIS » de l'écran Duel) : joueurs
+  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par le bouton « AMIS » de l'accueil, avec amis en ligne et demandes reçues, ou par « MES AMIS » de l'écran Duel ; RETOUR ramène à l'écran d'origine) : joueurs
     connectés seulement. Ajout par pseudo (s'il est unique) ou code ami, demande à accepter (tables
     `player_profiles` / `friendships`, RPC `friends_sync` / `friend_request` / `friend_respond` / `friend_remove`).
     Présence : `friends_sync` toutes les `FRIENDS.syncMs` (en ligne = vu depuis moins de 75 s, statut menu / jeu /

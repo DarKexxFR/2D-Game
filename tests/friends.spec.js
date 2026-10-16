@@ -4,7 +4,7 @@ import { expect, fakeRealtime, logIn, routeSupabase, test } from "./fixtures.js"
 
 test.use({ launchOptions: { args: ["--disable-features=WebRtcHideLocalIpsWithMdns"] } });
 
-/** Ouvre le jeu connecté au compte `email` avec le pseudo `pseudo`, puis l'écran Amis. */
+/** Ouvre le jeu connecté au compte `email` avec le pseudo `pseudo`, puis l'écran Amis (bouton de l'accueil). */
 async function openFriends(page, realtime, email, pseudo) {
   await realtime(page);
   if (email) await logIn(page, email);
@@ -15,8 +15,7 @@ async function openFriends(page, realtime, email, pseudo) {
   });
   await page.locator("#playerPseudo").fill(pseudo);
   await page.locator("#playerPseudo").dispatchEvent("change");
-  await page.locator("#btnVersus").click();
-  await page.locator("#btnDuelFriends").click();
+  await page.locator("#btnFriends").click();
   await expect(page.locator("#friendsMenu")).toBeVisible();
 }
 
@@ -43,13 +42,33 @@ async function makeFriends(page, browser, supabase, realtime) {
   await expect(row(page, "friendsOutgoing", "Invite")).toBeVisible();
 
   // L'autre joueur est prévenu en direct : pastille, puis demande à accepter
+  await expect(other.locator("#friendsBadge")).toHaveText("1");
   await expect(other.locator("#duelFriendsBadge")).toHaveText("1");
   await row(other, "friendsIncoming", "Hote").getByText("ACCEPTER").click();
   await expect(row(other, "friendsList", "Hote")).toContainText("En ligne");
   await expect(row(page, "friendsList", "Invite")).toContainText("En ligne");
   await expect(page.locator("#friendsOutgoing .friend-row")).toHaveCount(0);
+  await expect(page.locator("#friendsOnline")).toHaveText("1"); // amis en ligne, sur le bouton AMIS
+  await expect(other.locator("#friendsBadge")).toHaveText("");
   return { other, errors };
 }
+
+test("amis : bouton de l'accueil, retour à l'écran d'origine", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#btnFriends")).toBeVisible();
+  await page.locator("#btnFriends").click();
+  await expect(page.locator("#friendsMenu")).toBeVisible();
+  await expect(page).toHaveURL(/#modal=amis$/);
+  await page.locator("#btnFriendsBack").click();
+  await expect(page.locator("#mainMenu")).toBeVisible();
+
+  // Ouvert depuis l'écran Duel, le retour y ramène
+  await page.locator("#btnVersus").click();
+  await page.locator("#btnDuelFriends").click();
+  await expect(page.locator("#friendsMenu")).toBeVisible();
+  await page.locator("#btnFriendsBack").click();
+  await expect(page.locator("#duelMenu")).toBeVisible();
+});
 
 test("amis : il faut être connecté", async ({ page, isMobile }) => {
   test.skip(isMobile, "même écran sur mobile");

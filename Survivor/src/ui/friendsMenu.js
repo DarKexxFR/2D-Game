@@ -1,4 +1,4 @@
-// Écran « Amis » (ouvert depuis l'écran Duel) : code ami, ajout par pseudo ou code, demandes reçues
+// Écran « Amis » (bouton AMIS de l'accueil, ou MES AMIS de l'écran Duel) : code ami, ajout par pseudo ou code, demandes reçues
 // et envoyées, amis avec leur présence et bouton « DÉFIER ». Plus la fenêtre de défi reçu, affichée
 // par-dessus les menus. Logique et réseau : services/friends.js.
 
@@ -38,15 +38,16 @@ const STATUS_LABELS = { menu: "En ligne", jeu: "En partie", duel: "En duel" };
 
 let busy = false;
 let challenged = null; // ami défié, en attente de sa réponse ou de la connexion
+let from = "main"; // écran d'où il a été ouvert (« main » ou « duel »), pour le retour
 
 /**
- * `getStatus()` : « menu », « jeu » ou « duel » ; `onBack` : retour à l'écran Duel ; `onLogin` : connexion ;
+ * `getStatus()` : « menu », « jeu » ou « duel » ; `onBack(from)` : retour à l'écran d'origine ; `onLogin` : connexion ;
  * `onAccept(room)` : rejoint la partie de duel d'un ami qui nous a défié.
  */
 export function initFriendsMenu({ getStatus, onBack, onLogin, onAccept }) {
   $("btnFriendsBack").addEventListener("click", () => {
     stopChallenge();
-    onBack();
+    onBack(from);
   });
   $("btnFriendsLogin").addEventListener("click", onLogin);
   $("btnFriendAdd").addEventListener("click", add);
@@ -72,7 +73,9 @@ export function initFriendsMenu({ getStatus, onBack, onLogin, onAccept }) {
   });
 }
 
-export function openFriends() {
+/** `origin` : « main » (accueil, par défaut) ou « duel » ; le bouton RETOUR y ramène. */
+export function openFriends(origin = "main") {
+  from = origin === "duel" ? "duel" : "main";
   busy = false;
   setStatus("");
   showScreen("friendsMenu");
@@ -157,6 +160,8 @@ function render() {
   const pending = friends.incoming.length;
   setText("friendsBadge", pending || "");
   setText("duelFriendsBadge", pending || "");
+  const online = friends.list.filter((f) => f.online).length;
+  setText("friendsOnline", online || "");
   if (currentScreen() !== "friendsMenu") return;
   const logged = canUseFriends();
   setVisible("friendsLogin", !logged);

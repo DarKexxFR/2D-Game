@@ -17,7 +17,7 @@ let busy = false;
 export function initDuelMenu({ onLocal, onBack, onFriends }) {
   $("btnDuelFriends").addEventListener("click", () => {
     leaveRoom();
-    onFriends();
+    onFriends("duel");
   });
   $("btnDuelLocal").addEventListener("click", () => {
     leaveRoom();
