@@ -580,3 +580,252 @@ language sql security definer set search_path = public as $$
   delete from friendships where auth.uid() in (requester, addressee);
   delete from player_profiles where user_id = auth.uid();
 $$;
+
+-- =====================================================================
+-- Notifications (Web Push) : abonnements des appareils et rappels à envoyer.
+-- Le jeu calcule lui-même ses rappels (heure locale du joueur) et les envoie avec push_subscribe ;
+-- la fonction Edge « send-push » (supabase/functions/send-push) passe régulièrement, prend les
+-- rappels arrivés à échéance (push_claim) et rend compte de l'envoi (push_report).
+-- Mise en place complète (clés, fonction, planification) : supabase/NOTIFICATIONS.md.
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  endpoint text not null unique check (char_length(endpoint) <= 1024),
+  p256dh text not null check (char_length(p256dh) <= 128),
+  auth text not null check (char_length(auth) <= 64),
+  user_id uuid references auth.users (id) on delete set null, -- joueur connecté (demandes d'ami)
+  topics text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  failures int not null default 0, -- échecs d'envoi d'affilée (abonnement supprimé à 5)
+  sent_day date,
+  sent_count int not null default 0 -- notifications envoyées le jour sent_day (plafond quotidien)
+);
+create index if not exists push_subscriptions_user_idx on public.push_subscriptions (user_id)
+  where user_id is not null;
+
+-- Un rappel par type et par appareil : la liste envoyée par le jeu remplace la précédente.
+create table if not exists public.push_reminders (
+  subscription_id uuid not null references public.push_subscriptions (id) on delete cascade,
+  kind text not null check (kind in ('streak', 'quests', 'friends', 'comeback1', 'comeback2')),
+  send_at timestamptz not null,
+  data jsonb not null default '{}',
+  claimed_at timestamptz, -- pris par un envoi en cours
+  primary key (subscription_id, kind)
+);
+create index if not exists push_reminders_due_idx on public.push_reminders (send_at);
+
+alter table public.push_subscriptions enable row level security;
+alter table public.push_reminders enable row level security;
+revoke all on public.push_subscriptions, public.push_reminders from anon, authenticated;
+
+-- Seuls les services de notification des navigateurs sont acceptés (Chrome / Android, Firefox,
+-- Safari / iPhone, Edge / Windows) : la fonction d'envoi ne contacte jamais une autre adresse.
+create or replace function public.push_endpoint_ok(p text) returns boolean
+language sql immutable as $$
+  select p ~ '^https://(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)/'
+$$;
+
+-- Abonnement de l'appareil + rappels voulus. Appelé par le jeu à chaque changement (et au plus
+-- toutes les 12 h sans changement). Un joueur connecté relie l'appareil à son compte.
+create or replace function public.push_subscribe(
+  p_endpoint text, p_p256dh text, p_auth text, p_topics text[], p_reminders jsonb
+) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  sub uuid;
+  r jsonb;
+  k text;
+  v_at timestamptz;
+  v_topics text[];
+begin
+  if not push_endpoint_ok(coalesce(p_endpoint, '')) then
+    raise exception 'Adresse de notification refusée';
+  end if;
+  if coalesce(p_p256dh, '') !~ '^[A-Za-z0-9_-]{80,100}$' or coalesce(p_auth, '') !~ '^[A-Za-z0-9_-]{16,32}$' then
+    raise exception 'Clés de notification invalides';
+  end if;
+  if jsonb_typeof(p_reminders) is distinct from 'array' or jsonb_array_length(p_reminders) > 10 then
+    raise exception 'Rappels invalides';
+  end if;
+  -- Garde-fou contre une rafale d'abonnements inventés
+  if not exists (select 1 from push_subscriptions where endpoint = p_endpoint)
+     and (select count(*) from push_subscriptions where created_at > now() - interval '1 minute') >= 300 then
+    raise exception 'Trop de demandes, réessaie plus tard';
+  end if;
+  v_topics := array(
+    select distinct t from unnest(coalesce(p_topics, '{}')) t
+    where t in ('streak', 'quests', 'friends', 'comeback')
+  );
+
+  insert into push_subscriptions (endpoint, p256dh, auth, user_id, topics)
+  values (p_endpoint, p_p256dh, p_auth, auth.uid(), v_topics)
+  on conflict (endpoint) do update
+    set p256dh = excluded.p256dh, auth = excluded.auth, user_id = excluded.user_id,
+        topics = excluded.topics, last_seen = now(), failures = 0
+  returning id into sub;
+
+  -- La liste du jeu remplace l'ancienne (les demandes d'ami viennent du serveur : gardées si voulues)
+  delete from push_reminders
+  where subscription_id = sub
+    and claimed_at is null
+    and (kind <> 'friends' or not ('friends' = any(v_topics)));
+  for r in select * from jsonb_array_elements(p_reminders) loop
+    k := r->>'kind';
+    if k not in ('streak', 'quests', 'comeback1', 'comeback2') then continue; end if;
+    begin
+      v_at := (r->>'at')::timestamptz;
+    exception when others then continue;
+    end;
+    if v_at <= now() or v_at > now() + interval '35 days' then continue; end if;
+    -- Seuls des nombres sont gardés (jour de série, or, record de vague) : le texte est écrit par le serveur
+    insert into push_reminders (subscription_id, kind, send_at, data)
+    values (sub, k, v_at, (
+      select coalesce(jsonb_object_agg(key, (value #>> '{}')::int), '{}')
+      from jsonb_each(case when jsonb_typeof(r->'data') = 'object' then r->'data' else '{}' end)
+      where key in ('day', 'gold', 'best') and (value #>> '{}') ~ '^[0-9]{1,6}$'
+    ))
+    on conflict (subscription_id, kind) do update
+      set send_at = excluded.send_at, data = excluded.data, claimed_at = null;
+  end loop;
+end;
+$$;
+
+-- Désabonnement (notifications coupées dans les Options).
+create or replace function public.push_unsubscribe(p_endpoint text) returns void
+language sql security definer set search_path = public as $$
+  delete from push_subscriptions where endpoint = p_endpoint;
+$$;
+
+-- Envoi (fonction Edge, clé de service) : prend au plus p_limit rappels arrivés à échéance.
+-- « skip locked » : plusieurs envois en même temps ne prennent jamais le même rappel.
+-- Un rappel pris mais jamais rendu (envoi interrompu) redevient disponible au bout de 10 minutes.
+create or replace function public.push_claim(p_limit int default 500)
+returns table (subscription_id uuid, kind text, data jsonb, endpoint text, p256dh text, auth text)
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  -- Rappels trop en retard (envois arrêtés longtemps) : abandonnés plutôt qu'envoyés à contretemps
+  delete from push_reminders r where r.send_at < now() - interval '1 day';
+  -- Plafond : 2 notifications par appareil et par jour, hors réponses d'amis
+  delete from push_reminders r
+  using push_subscriptions s
+  where s.id = r.subscription_id and r.send_at <= now() and r.kind <> 'friends' and r.claimed_at is null
+    and s.sent_day = current_date and s.sent_count >= 2;
+
+  return query
+  with due as (
+    select r.subscription_id, r.kind
+    from push_reminders r
+    where r.send_at <= now() and (r.claimed_at is null or r.claimed_at < now() - interval '10 minutes')
+    order by r.send_at
+    limit least(greatest(coalesce(p_limit, 500), 1), 1000)
+    for update skip locked
+  ), claimed as (
+    update push_reminders r set claimed_at = now()
+    from due
+    where r.subscription_id = due.subscription_id and r.kind = due.kind
+    returning r.subscription_id, r.kind, r.data
+  )
+  select c.subscription_id, c.kind, c.data, s.endpoint, s.p256dh, s.auth
+  from claimed c join push_subscriptions s on s.id = c.subscription_id;
+end;
+$$;
+
+-- Compte rendu de l'envoi : [{ "id": abonnement, "kind": type, "status": "sent" | "gone" | "retry" }].
+-- gone = abonnement expiré ou révoqué (supprimé) ; retry = nouvel essai dans 15 minutes.
+create or replace function public.push_report(p_results jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  -- Envoyés : retirés (sauf s'ils ont été reprogrammés entre-temps par le jeu : claimed_at remis à null)
+  delete from push_reminders r
+  using jsonb_to_recordset(coalesce(p_results, '[]')) as x(id uuid, kind text, status text)
+  where x.status = 'sent' and r.subscription_id = x.id and r.kind = x.kind and r.claimed_at is not null;
+  update push_subscriptions s
+  set failures = 0,
+      sent_count = case when s.sent_day = current_date then s.sent_count + n.count else n.count end,
+      sent_day = current_date
+  from (
+    select x.id, count(*)::int as count
+    from jsonb_to_recordset(coalesce(p_results, '[]')) as x(id uuid, kind text, status text)
+    where x.status = 'sent' group by x.id
+  ) n
+  where s.id = n.id;
+
+  delete from push_subscriptions s
+  using jsonb_to_recordset(coalesce(p_results, '[]')) as x(id uuid, kind text, status text)
+  where x.status = 'gone' and s.id = x.id;
+
+  update push_reminders r set claimed_at = null, send_at = now() + interval '15 minutes'
+  from jsonb_to_recordset(coalesce(p_results, '[]')) as x(id uuid, kind text, status text)
+  where x.status = 'retry' and r.subscription_id = x.id and r.kind = x.kind;
+  update push_subscriptions s set failures = s.failures + 1
+  from (
+    select distinct x.id
+    from jsonb_to_recordset(coalesce(p_results, '[]')) as x(id uuid, kind text, status text)
+    where x.status = 'retry'
+  ) n
+  where s.id = n.id;
+  delete from push_subscriptions where failures >= 5;
+end;
+$$;
+
+-- Demandes d'ami : prévient le joueur visé (demande reçue) ou le demandeur (demande acceptée).
+-- Une erreur ici ne doit jamais empêcher l'amitié elle-même.
+create or replace function public.push_friend_event() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  target uuid;
+  actor uuid;
+  ev text;
+begin
+  if tg_op = 'INSERT' and not new.accepted then
+    target := new.addressee; actor := new.requester; ev := 'request';
+  elsif tg_op = 'UPDATE' and new.accepted and not old.accepted then
+    target := new.requester; actor := new.addressee; ev := 'accepted';
+  else
+    return new;
+  end if;
+  begin
+    insert into push_reminders (subscription_id, kind, send_at, data)
+    select s.id, 'friends', now(), jsonb_build_object(
+      'event', ev,
+      'name', coalesce((select p.name from player_profiles p where p.user_id = actor), 'Un pilote')
+    )
+    from push_subscriptions s
+    where s.user_id = target and 'friends' = any(s.topics)
+    on conflict (subscription_id, kind) do update
+      set send_at = excluded.send_at, data = excluded.data, claimed_at = null;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists friendships_push on public.friendships;
+create trigger friendships_push
+  after insert or update of accepted on public.friendships
+  for each row execute function public.push_friend_event();
+
+revoke all on function public.push_endpoint_ok(text) from public;
+revoke all on function public.push_subscribe(text, text, text, text[], jsonb) from public;
+revoke all on function public.push_unsubscribe(text) from public;
+revoke all on function public.push_claim(int) from public;
+revoke all on function public.push_report(jsonb) from public;
+revoke all on function public.push_friend_event() from public;
+grant execute on function public.push_subscribe(text, text, text, text[], jsonb) to anon, authenticated;
+grant execute on function public.push_unsubscribe(text) to anon, authenticated;
+grant execute on function public.push_claim(int) to service_role;
+grant execute on function public.push_report(jsonb) to service_role;
+
+-- Droit à l'effacement (remplace les versions plus haut) : sauvegarde, duel, amis, et les appareils
+-- abonnés aux notifications ne sont plus reliés au compte.
+create or replace function public.delete_account_progress() returns void
+language sql security definer set search_path = public as $$
+  delete from account_saves where user_id = auth.uid();
+  delete from duel_reports where user_id = auth.uid();
+  delete from duel_ratings where user_id = auth.uid();
+  delete from friendships where auth.uid() in (requester, addressee);
+  delete from player_profiles where user_id = auth.uid();
+  update push_subscriptions set user_id = null where user_id = auth.uid();
+$$;

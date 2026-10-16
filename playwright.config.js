@@ -15,6 +15,9 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Le service worker (sw.js) n'est actif que dans tests/pwa*.spec.js : ailleurs, il gênerait
+    // le faux Supabase et les fichiers simulés (page.route ne voit pas ses requêtes).
+    serviceWorkers: "block",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },

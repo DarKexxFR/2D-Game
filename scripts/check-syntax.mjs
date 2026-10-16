@@ -12,7 +12,7 @@ function* jsFiles(dir) {
 }
 
 let failed = 0;
-for (const file of jsFiles("Survivor/src")) {
+for (const file of [...jsFiles("Survivor/src"), "Survivor/sw.js"]) {
   try {
     execFileSync(process.execPath, ["--check", file], { stdio: "pipe" });
   } catch (err) {

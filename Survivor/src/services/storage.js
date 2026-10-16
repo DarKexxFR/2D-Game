@@ -45,6 +45,7 @@ export const account = {
   weekly: null, // quêtes de la semaine : { week, quests: [{ id, progress, claimed }], bonusClaimed }
   loadouts: [null, null, null], // équipements enregistrés : { weapon, armor, hero, pet, module } ou null
   dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
+  appInstalled: false, // récompense de la première ouverture depuis l'icône déjà versée (voir services/pwa.js)
 };
 
 export function loadAccount() {
@@ -76,6 +77,7 @@ export function loadAccount() {
   account.dailyOffer = { day: "", bought: false, ...saved.dailyOffer };
   account.difficulty = saved.difficulty || "normal";
   account.loginStreak = { day: "", count: 0, ...saved.loginStreak };
+  account.appInstalled = saved.appInstalled === true;
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;
 }
