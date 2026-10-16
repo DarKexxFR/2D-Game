@@ -202,6 +202,8 @@ const evolution = ({ id, name, icon, desc, base, baseMax, partner }) => ({
   icon,
   desc,
   rarity: "evolution",
+  base,
+  partner,
   recipe: `${base} niv. ${baseMax} + ${partner}`,
   canApply: (p) => !p.evolutions[id] && count(p, base) >= baseMax && count(p, partner) >= 1,
   apply: (p) => (p.evolutions[id] = true),
@@ -255,6 +257,7 @@ const weaponEvolution = ({ id, name, desc, weapon, partner, count: needed, stats
   desc,
   rarity: "evolution",
   weapon,
+  partner,
   recipe: `${WEAPONS[weapon].name} équipé + ${partner} ×${needed}`,
   canApply: (p) => !p.evolutions[id] && p.weapon?.id === weapon && count(p, partner) >= needed,
   apply: (p) => evolveWeapon(p, id, name, stats),
@@ -389,6 +392,20 @@ export function availableUpgrades(p) {
 
 export function availableEvolutions(p) {
   return [...WEAPON_EVOLUTIONS, ...EVOLUTIONS].filter((e) => e.canApply(p));
+}
+
+/**
+ * Évolutions encore à obtenir dont la carte `upgrade` est un ingrédient, l'autre ingrédient étant déjà
+ * possédé : arme équipée (évolution d'arme), ou l'autre amélioration de la recette au moins une fois.
+ */
+export function evolutionsFor(upgrade, p) {
+  if (upgrade.rarity === "evolution") return [];
+  const has = (name) => count(p, name) >= 1;
+  return [...WEAPON_EVOLUTIONS, ...EVOLUTIONS].filter((e) => {
+    if (p.evolutions[e.id]) return false;
+    if (e.weapon) return e.partner === upgrade.name && p.weapon?.id === e.weapon;
+    return (e.partner === upgrade.name && has(e.base)) || (e.base === upgrade.name && has(e.partner));
+  });
 }
 
 export function applyUpgrade(upgrade, p) {

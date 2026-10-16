@@ -10,7 +10,7 @@ import { heal } from "../systems/player.js";
 import { VERSUS_KEYS, fighterName, versus, withRun } from "../systems/versus.js";
 import { $, el, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
-import { chestGold, drawChoices } from "./upgradeMenu.js";
+import { chestGold, drawChoices, evolutionHint } from "./upgradeMenu.js";
 
 const CONFIRM_DELAY_MS = 350; // un dash en cours ne doit pas valider la carte
 
@@ -60,7 +60,7 @@ function open(i) {
     if (list.length === 0) heal(50); // plus rien à proposer : soin de secours
     box.querySelector(".dp-sub").textContent =
       kind === "chest" ? `Coffre de boss · +${gold} or` : `Niveau ${player.level} · choisis une amélioration`;
-    return list.map((u) => ({ u, level: player.inventory[u.name] || 0 }));
+    return list.map((u) => ({ u, level: player.inventory[u.name] || 0, hint: evolutionHint(u, player) }));
   });
   if (cards.length === 0) return next(i);
 
@@ -69,13 +69,14 @@ function open(i) {
   box.querySelector(".dp-title").style.color = VERSUS.colors[i];
   const list = box.querySelector(".dp-cards");
   list.replaceChildren();
-  for (const [n, { u, level }] of cards.entries()) {
+  for (const [n, { u, level, hint }] of cards.entries()) {
     const card = el("div", `dp-card rarity-${u.rarity}`);
     const color = RARITIES[u.rarity]?.color || "#fff";
     const ico = el("div", "icon");
     ico.append(icon(u.icon, color));
     const info = el("div", "dp-info");
     info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
+    if (hint) info.append(hint);
     card.style.borderColor = color;
     card.append(ico, info);
     card.addEventListener("click", () => choose(i, n));

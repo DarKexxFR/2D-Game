@@ -270,6 +270,31 @@
   font-size: 11px;
   color: #ff7aa8;
 }
+/* Bas de carte : évolution que cette carte rapproche (l'autre ingrédient est déjà possédé) */
+.upg-evo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 5px;
+}
+.upg-evo-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #ff7aa8;
+  border: 1px solid rgba(255, 42, 109, 0.6);
+  border-radius: 10px;
+  background: rgba(255, 42, 109, 0.1);
+}
+.upg-evo-item .ico {
+  font-size: 13px;
+}
+.upg-evo-item::before {
+  content: "→";
+  color: #ff2a6d;
+}
 .icon {
   width: 45px;
   height: 45px;
@@ -325,6 +350,29 @@
 }
 
 /* --- Pause --- */
+/* Menu Pause : rappel de la corruption des soins */
+.pause-corruption {
+  margin-bottom: 10px;
+  color: #d4b3ff;
+  font-size: 13px;
+}
+.pause-corruption:empty {
+  display: none;
+}
+.corruption-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(170, 102, 255, 0.6);
+  border-radius: 6px;
+  background: rgba(170, 102, 255, 0.12);
+}
+.corruption-row .ico {
+  font-size: 18px;
+}
 .inv-list {
   max-height: 200px;
   overflow-y: auto;

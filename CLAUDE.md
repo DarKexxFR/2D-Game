@@ -92,7 +92,8 @@ Principes :
   Vitesse de déplacement du joueur plafonnée à `STAT_CAPS.speed` (tous bonus compris).
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
-  la vague 12 (`SURVIVAL` dans `config.js`). Objectif : même le meilleur build finit par mourir
+  la vague 12 (`SURVIVAL` dans `config.js`) ; cœur fissuré violet `#healCorruption` près de la barre de vie
+  (% au survol) et rappel dans la Pause. Objectif : même le meilleur build finit par mourir
   (vers la vague 30). Mesuré avec un banc d'essai (build fixe, morts par minute selon la vague).
 - **Succès** : `data/achievements.js` (catégorie, statistique suivie, seuil, or gagné) ; les statistiques
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
@@ -159,6 +160,8 @@ Principes :
   l'achat. Purement cosmétique, ignoré en duel (chaque joueur garde sa couleur).
 - **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
   (ex. Blaster + Force Brute ×3 → Blaster solaire) ; l'arme garde sa couleur.
+  Une carte qui rapproche une évolution dont l'autre ingrédient est déjà possédé affiche l'évolution visée
+  en bas (`evolutionsFor` / `evolutionHint`).
 - **Quêtes hebdomadaires** (`data/quests.js`, `services/quests.js`, écran `ui/questMenu.js`) : 3 quêtes
   par semaine, les mêmes pour tous (tirage à graine sur la semaine), renouvelées le lundi à 0 h (heure
   locale). Elles suivent les statistiques des succès (`trackQuest` / `trackQuestBest` appelés par
@@ -204,7 +207,8 @@ Principes :
   `#00ff88`, or `#ffd700`), polices Orbitron et « Press Start 2P ». `base.css` contient
   `* { overflow: hidden }` : penser à `overflow: visible` pour les lueurs et badges qui débordent.
 - **Effets de survol** : uniquement sous `@media (hover: hover)`. Sur écran tactile le
-  survol reste « collé » ; un bouton qui bouge au survol tremble en boucle (cassait la CI).
+  survol reste « collé » ; un bouton qui bouge au survol tremble en boucle (cassait la CI). Les boutons ne se
+  déplacent plus au survol (un pointeur posé sur leur bord les faisait trembler).
 
 ## Tests (`tests/`)
 
