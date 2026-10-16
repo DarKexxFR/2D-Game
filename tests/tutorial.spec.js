@@ -31,6 +31,31 @@ test("première partie : les bulles suivent les actions jusqu'à la fin du tutor
   await expect(bubble(page)).toBeHidden({ timeout: 8000 });
 });
 
+test("compétence lancée puis rechargée aussitôt par ses éliminations : le tutoriel se termine", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startGame(page);
+  await expect(text(page)).toContainText(/Déplace-toi|glisse pour te déplacer/);
+  await game(page, ({ state }) => (state.player.worldX += 300));
+  await expect(text(page)).toContainText("tire tout seul");
+  await game(page, ({ state }) => (state.game.kills = 5));
+  await expect(text(page)).toContainText(/dash/i);
+  await page.keyboard.down("Space");
+  await expect(text(page)).toContainText("cristaux d'XP");
+  await page.keyboard.up("Space");
+  await game(page, ({ state }) => (state.player.level = 2));
+  // Une foule autour du vaisseau : l'onde de choc en tue assez pour remplir de nouveau la jauge
+  await game(page, ({ state, spawner }) => {
+    const { worldX: x, worldY: y } = state.player;
+    for (let i = 0; i < 70; i++) spawner.spawnEnemy("normal", x + Math.cos(i) * 60, y + Math.sin(i) * 60);
+    state.player.isUltReady = true;
+  });
+  await expect(text(page)).toContainText("est chargée");
+  await page.keyboard.press("r");
+  await expect(text(page)).toContainText("Tutoriel terminé");
+});
+
 test("PASSER le coupe pour de bon ; les Options permettent de le revoir", async ({ page }) => {
   await page.goto("/");
   await startGame(page);
