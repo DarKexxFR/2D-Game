@@ -84,20 +84,22 @@ function drawRebirth(e) {
   if (e.kind === "phoenix") drawFireWings(x, y, t, fade, e.color);
 
   // Étincelles en spirale qui se resserrent puis montent
+  // Pas de shadowBlur ici : en mode « lighter », Chrome recalcule une ombre sur tout le canvas à
+  // chaque dessin (12 par image), ce qui faisait tomber le jeu à quelques images par seconde.
+  // La lueur est un carré plus large et transparent sous chaque étincelle.
   ctx.fillStyle = e.color;
-  ctx.shadowColor = e.color;
-  ctx.shadowBlur = 12;
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2 + t * 7;
     const r = 90 * (1 - t) + 18;
     const sx = x + Math.cos(a) * r;
     const sy = y + Math.sin(a) * r * 0.5 - t * 120 - (i % 3) * 14 * t;
+    ctx.globalAlpha = 0.35 * fade;
+    ctx.fillRect(sx - 7, sy - 7, 14, 14);
     ctx.globalAlpha = fade;
     ctx.fillRect(sx - 3, sy - 3, 6, 6);
   }
 
   // Anneau au sol qui tourne
-  ctx.shadowBlur = 0;
   ctx.globalAlpha = 0.9 * fade;
   ctx.strokeStyle = e.color;
   ctx.lineWidth = 3;
