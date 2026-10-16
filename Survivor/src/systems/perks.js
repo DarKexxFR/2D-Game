@@ -8,6 +8,7 @@ import { angleTo, dist } from "../utils/math.js";
 import { chainLightning, damageEnemy, enemyGrid, spawnProjectile } from "./combat.js";
 import { addFloatingText, createAoEEffect, createParticles, createShockwave } from "./effects.js";
 import { chargeUltimate, heal } from "./player.js";
+import { knockEnemy, pullEnemy } from "./knockback.js";
 
 const BURN_STEP = 15; // ticks entre deux dégâts de brûlure
 
@@ -207,11 +208,7 @@ export function onHurt() {
   if (p.heavy && ready("heavy", p.heavy.cooldown)) {
     createShockwave(x, y, p.heavy.radius, "#cc8833");
     for (const e of enemiesNear(x, y, p.heavy.radius)) {
-      const a = angleTo(x, y, e.x, e.y);
-      if (!e.template.isBoss) {
-        e.x += Math.cos(a) * p.heavy.push;
-        e.y += Math.sin(a) * p.heavy.push;
-      }
+      knockEnemy(e, angleTo(x, y, e.x, e.y), p.heavy.push);
       damageEnemy(e, player.attack * p.heavy.damage, "perk");
     }
   }
@@ -317,9 +314,7 @@ function blackHole(s) {
   createShockwave(x, y, s.radius, "#ff3b30");
   createParticles(x, y, "#ff3b30", 16);
   for (const e of enemiesNear(x, y, s.radius)) {
-    const pull = e.template.isBoss ? s.pull / 4 : s.pull;
-    e.x += (x - e.x) * pull;
-    e.y += (y - e.y) * pull;
+    pullEnemy(e, x, y, s.pull);
     damageEnemy(e, player.attack * s.damage, "perk");
   }
 }

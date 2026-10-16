@@ -596,3 +596,41 @@ test("Roi Slime : saut annoncé, pluie de slime, absorption de ses petits, mitos
     .toBe(2);
   await killPlayer(page);
 });
+
+test("un boss ne se fait jamais pousser ni attirer, un ennemi normal oui", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  const moved = await game(page, async ({ state, spawner, combat }) => {
+    const kb = await import("/src/systems/knockback.js");
+    state.game.spawnTimer = 1e9;
+    state.world.enemies.length = 0;
+    const { worldX: x, worldY: y } = state.player;
+    spawner.spawnEnemy("twin_fire", x + 400, y);
+    spawner.spawnEnemy("tank", x - 400, y);
+    const boss = state.world.enemies.find((e) => e.template.isBoss);
+    const mob = state.world.enemies.find((e) => e.type === "tank");
+    const before = [boss.x, boss.y, mob.x, mob.y];
+    for (const e of [boss, mob]) {
+      kb.knockEnemy(e, 0.5, 80);
+      kb.pullEnemy(e, x, y, 0.5);
+    }
+    const boss1 = boss.x === before[0] && boss.y === before[1];
+    const mob1 = mob.x !== before[2] || mob.y !== before[3];
+    // Orbes au contact des deux ennemis
+    state.player.orbitals = 4;
+    for (const e of [boss, mob]) {
+      e.x = x + state.player.orbitalRadius;
+      e.y = y;
+    }
+    const placed = [boss.x, boss.y, mob.x, mob.y];
+    combat.rebuildEnemyGrid();
+    combat.updateOrbitals();
+    return {
+      boss: boss1,
+      mob: mob1,
+      bossOrb: boss.x === placed[0] && boss.y === placed[1],
+    };
+  });
+  expect(moved).toEqual({ boss: true, mob: true, bossOrb: true });
+  await killPlayer(page);
+});

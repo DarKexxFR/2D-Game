@@ -25,6 +25,7 @@ import { scheduleNextWave, spawnEnemy } from "./spawner.js";
 import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
 import { onHit, onKill, onShot } from "./perks.js";
+import { knockEnemy } from "./knockback.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -366,8 +367,7 @@ function hitEnemy(proj, enemy) {
   }
 
   const k = angleTo(proj.x, proj.y, enemy.x, enemy.y);
-  enemy.x += Math.cos(k) * 10 * player.knockbackMult;
-  enemy.y += Math.sin(k) * 10 * player.knockbackMult;
+  knockEnemy(enemy, k, 10 * player.knockbackMult);
   if (gfx.damageNumbers)
     addFloatingText(
       enemy.x,
@@ -513,8 +513,7 @@ export function updateOrbitals() {
   for (const orb of getOrbitalPositions()) {
     for (const e of enemyGrid.query(orb.x, orb.y, o.size).slice()) {
       if (e.dead || dist(e.x, e.y, orb.x, orb.y) >= e.size + o.size) continue;
-      e.x += Math.cos(orb.angle) * o.push;
-      e.y += Math.sin(orb.angle) * o.push;
+      knockEnemy(e, orb.angle, o.push);
       damageEnemy(e, o.damage, "orbit");
     }
   }
