@@ -16,6 +16,7 @@ export const world = {
   gems: [],
   lootBoxes: [],
   shrines: [],
+  cursedShrines: [], // sanctuaires maudits (voir systems/cursedShrines.js)
   particles: [],
   visualEffects: [],
   floatingTexts: [],
@@ -125,6 +126,12 @@ export function resetPlayer(accountLevel) {
     healMult: 1, // efficacité des soins
     bossDamage: 1, // multiplicateur des dégâts contre les boss
     auraMult: 1, // taille de l'aura de feu
+    rangeMult: 1, // portée des armes à courte portée (lance-flammes, fusil...)
+    projScale: 1, // taille des tirs et des explosions (carte Singularité)
+    noDash: false, // dash désactivé (carte Surcharge moteur)
+    bloodPact: null, // carte Pacte de sang : { ms, heal } ; pactUntil = fin de la fenêtre de soins
+    pactUntil: 0,
+    synergy: null, // duo familier + arme actif (data/perks.js SYNERGIES)
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

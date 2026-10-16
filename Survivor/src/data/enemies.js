@@ -209,6 +209,11 @@ export const ENEMY_TYPES = {
     noExecute: true,
     chest: 1,
   },
+  // Nouveaux ennemis (ajoutés en fin de liste : l'aperçu du duel en ligne repère les types par leur rang)
+  shield: { health: 45, damage: 10, speed: 2, size: 18, color: "#4fa8ff", xp: 6, gold: 3 },
+  swarm: { health: 6, damage: 4, speed: 3.6, size: 8, color: "#ffe14d", xp: 1, gold: 1, group: 6 },
+  healer: { health: 35, damage: 6, speed: 2.2, size: 15, color: "#00ff88", xp: 8, gold: 4 },
+  magnet: { health: 70, damage: 10, speed: 1.8, size: 20, color: "#ff5577", xp: 9, gold: 5 },
 };
 
 /** Comportements des ennemis des nouveaux biomes (voir systems/enemies.js), en ticks. */
@@ -216,6 +221,12 @@ export const BIOME_FOES = {
   mine: { every: 150, range: 480, radius: 60, delay: 150, damage: 1.6 }, // poseur de mines
   blink: { every: 200, minDist: 220, landDist: 130, warn: 35 }, // téléporteur
   laser: { every: 240, range: 520, length: 700, width: 18, delay: 50, active: 14 }, // drone laser
+  // Porte-bouclier : bloque les tirs reçus de face (demi-angle `arc`), tourne lentement vers le joueur
+  shield: { arc: 1.1, turn: 0.025, block: 0.15 },
+  // Soigneur : rend une part des PV max aux ennemis proches (pas aux boss)
+  heal: { every: 150, radius: 200, amount: 0.15 },
+  // Aimant : annonce (`warn`) puis attire le joueur vers lui pendant `duration` ticks
+  magnet: { every: 300, range: 420, warn: 45, duration: 60, pull: 2.2 },
 };
 
 /** Ennemis d'élite : plus gros, plus résistants, plus forts ; de plus en plus fréquents. */
@@ -263,20 +274,26 @@ export const ENEMY_NAMES = {
   twin_ice: "Jumeau de glace",
   phantom: "Spectre",
   goblin: "Voleur doré",
+  shield: "Porte-bouclier",
+  swarm: "Essaim",
+  healer: "Soigneur",
+  magnet: "Aimant",
 };
 
 /** Taille maximale d'un ennemi (Roi Slime grossi par BOSS_POWER, en plein saut), utile pour la grille spatiale. */
 export const MAX_ENEMY_SIZE = 130;
+
+// Mélange de fin de partie (dès la vague 8), complété par le Soigneur puis l'Aimant.
+const LATE_MIX = { normal: 0.3, fast: 0.2, ranged: 0.2, tank: 0.15, kamikaze: 0.1, slime_big: 0.05 };
 
 // Probabilités d'apparition selon la vague (première table dont `untilWave` > vague).
 export const SPAWN_TABLES = [
   { untilWave: 3, weights: { normal: 0.8, fast: 0.2 } },
   { untilWave: 5, weights: { normal: 0.5, fast: 0.3, kamikaze: 0.2 } },
   { untilWave: 8, weights: { normal: 0.5, fast: 0.2, ranged: 0.2, kamikaze: 0.1 } },
-  {
-    untilWave: Infinity,
-    weights: { normal: 0.3, fast: 0.2, ranged: 0.2, tank: 0.15, kamikaze: 0.1, slime_big: 0.05 },
-  },
+  { untilWave: 10, weights: LATE_MIX },
+  { untilWave: 12, weights: { ...LATE_MIX, healer: 0.08 } },
+  { untilWave: Infinity, weights: { ...LATE_MIX, healer: 0.08, magnet: 0.07 } },
 ];
 
 // Vagues de boss, testées dans l'ordre.

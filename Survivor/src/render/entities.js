@@ -4,6 +4,7 @@ import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
 import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../systems/combat.js";
 import { hydraHeads, tetherWidth } from "../systems/enemies.js";
+import { BIOME_FOES } from "../data/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
 import { drawTrail } from "./trail.js";
@@ -44,6 +45,10 @@ const ENEMY_LOOKS = {
   twin_ice: { sprite: "twin_ice", mode: "spin", spin: -0.0015 },
   phantom: { sprite: "phantom", mode: "face" },
   goblin: { sprite: "goblin", mode: "flee" },
+  shield: { sprite: "shield", mode: "shield" },
+  swarm: { sprite: "swarm", mode: "face" },
+  healer: { sprite: "healer", mode: "face" },
+  magnet: { sprite: "magnet", mode: "face" },
 };
 
 export function drawPlayer(now) {
@@ -658,16 +663,40 @@ export function drawEnemies() {
       const pulse = e.type === "kamikaze" ? 1 + Math.sin(t / 60) * 0.08 : 1;
       drawSprite(ctx, sprite, e.x, e.y, t * look.spin, scale * pulse);
     } else {
-      let angle = Math.atan2(player.worldY - e.y, player.worldX - e.x);
+      // Porte-bouclier : tourné vers où pointe son bouclier (il pivote lentement)
+      let angle = e.facing ?? Math.atan2(player.worldY - e.y, player.worldX - e.x);
       if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
+    if (e.magnetWarn > 0 || e.pulling > 0) drawMagnetPull(e, now);
     if (e.enraged) drawFury(e, now);
     if (e.elite) drawElite(e, now);
 
     if (e.health < e.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
+}
+
+/** Aimant : anneau qui se resserre pendant l'annonce, puis lignes de champ vers le joueur. */
+function drawMagnetPull(e, now) {
+  ctx.globalAlpha = 0.7;
+  if (e.magnetWarn > 0) {
+    const k = e.magnetWarn / BIOME_FOES.magnet.warn;
+    strokeCircle(e.x, e.y, e.size + 10 + k * 90, e.color, 3);
+  } else {
+    ctx.strokeStyle = e.color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 10]);
+    ctx.lineDashOffset = now / 25;
+    for (const off of [-6, 0, 6]) {
+      ctx.beginPath();
+      ctx.moveTo(e.x + off, e.y + off);
+      ctx.lineTo(player.worldX, player.worldY);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  ctx.globalAlpha = 1;
 }
 
 /** Kraken sous l'eau : silhouette sombre, remous et, pendant un tourbillon, spirale qui aspire. */

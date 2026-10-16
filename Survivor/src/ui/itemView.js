@@ -10,7 +10,7 @@ import {
   petStats,
   weaponStats,
 } from "../data/items.js";
-import { PERKS, PERK_PRESTIGE, setOf } from "../data/perks.js";
+import { PERKS, PERK_PRESTIGE, SYNERGIES, setOf } from "../data/perks.js";
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
 
@@ -163,6 +163,18 @@ export function setInfo(item, equipped) {
     desc: s.desc,
     partner,
     active: equipped.weapon === s.weapon && equipped.armor === s.armor,
+  };
+}
+
+/** Synergie familier + arme de l'objet : { name, desc, partner, active } ou null. */
+export function synergyInfo(item, equipped) {
+  const s = SYNERGIES.find((s) => s.pet === item.id || s.weapon === item.id);
+  if (!s) return null;
+  return {
+    name: s.name,
+    desc: s.desc,
+    partner: ITEMS[item.slot === "pet" ? s.weapon : s.pet],
+    active: equipped.pet === s.pet && equipped.weapon === s.weapon,
   };
 }
 

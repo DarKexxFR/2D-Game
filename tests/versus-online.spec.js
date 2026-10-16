@@ -1,62 +1,11 @@
 // Duel en ligne : deux navigateurs, un salon avec code (Supabase Realtime simulé ici),
 // puis connexion directe (WebRTC) ou, à défaut, messages relayés par Supabase. Chacun joue sa
 // partie de survie et voit celle de l'adversaire ; le gagnant empoche l'XP et l'or des deux.
-import { expect, routeSupabase, test } from "./fixtures.js";
+import { expect, fakeRealtime, logIn, routeSupabase, test } from "./fixtures.js";
 
 // Chromium masque les adresses locales derrière des noms « .local » : inutile entre deux onglets
 // de la même machine, et parfois impossible à résoudre dans la CI.
 test.use({ launchOptions: { args: ["--disable-features=WebRtcHideLocalIpsWithMdns"] } });
-
-/**
- * Faux serveur Supabase Realtime (protocole Phoenix) partagé par les pages du test :
- * rejoint les canaux et retransmet les diffusions aux autres membres du canal.
- */
-function fakeRealtime() {
-  const rooms = new Map(); // topic → Set de connexions
-  let held = null; // diffusions retenues (voir `hold`)
-  const realtime = async (page) => {
-    await page.routeWebSocket(/\/realtime\/v1\/websocket/, (ws) => {
-      const topics = new Set();
-      const reply = (msg, status = "ok") =>
-        ws.send(
-          JSON.stringify({
-            topic: msg.topic,
-            event: "phx_reply",
-            payload: { status, response: {} },
-            ref: msg.ref,
-          }),
-        );
-      ws.onMessage((raw) => {
-        const msg = JSON.parse(raw);
-        if (msg.event === "phx_join") {
-          if (!rooms.has(msg.topic)) rooms.set(msg.topic, new Set());
-          rooms.get(msg.topic).add(ws);
-          topics.add(msg.topic);
-          reply(msg);
-        } else if (msg.event === "heartbeat") reply(msg);
-        else if (msg.event === "phx_leave") rooms.get(msg.topic)?.delete(ws);
-        else if (msg.event === "broadcast") {
-          for (const other of rooms.get(msg.topic) || []) {
-            if (other === ws) continue;
-            const out = JSON.stringify({ topic: msg.topic, event: "broadcast", payload: msg.payload });
-            if (held) held.push(() => other.send(out));
-            else other.send(out);
-          }
-        }
-      });
-      ws.onClose(() => {
-        for (const t of topics) rooms.get(t)?.delete(ws);
-      });
-    });
-  };
-  /** Retient les messages (true) puis les délivre tous (false) : simule un réseau lent. */
-  realtime.hold = (on) => {
-    if (on) held ??= [];
-    else for (const send of held?.splice(0) ?? []) send();
-    if (!on) held = null;
-  };
-  return realtime;
-}
 
 /** Exécute `fn(mods, arg)` dans la page ; `mods` : state, player, versus, online, config. */
 function run(page, fn, arg) {
@@ -109,17 +58,6 @@ async function openDuelMenu(page, realtime, pseudo, net = {}) {
   await page.locator("#playerPseudo").dispatchEvent("change");
   await page.locator("#btnVersus").click();
   await expect(page.locator("#duelMenu")).toBeVisible();
-}
-
-/** Session de connexion du faux Supabase (voir fixtures.js) enregistrée avant le chargement. */
-function logIn(page, email) {
-  const session = {
-    accessToken: `tok-${email}`,
-    refreshToken: `ref-${email}`,
-    expiresAt: Date.now() + 3_600_000,
-    user: { id: `id-${email}`, email, provider: "email" },
-  };
-  return page.addInitScript((s) => localStorage.setItem("survivor_auth", JSON.stringify(s)), session);
 }
 
 /**

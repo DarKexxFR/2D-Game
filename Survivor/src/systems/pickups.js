@@ -95,6 +95,8 @@ function updateGems() {
       playSfx("pickup");
       gainXp(g.xp);
       onGem();
+      // Carte « Pacte de sang » : juste après un coup reçu, chaque gemme soigne un peu
+      if (player.bloodPact && game.time < player.pactUntil) heal(player.maxHealth * player.bloodPact.heal);
     }
   }
   removeWhere(world.gems, (g) => g.collected);

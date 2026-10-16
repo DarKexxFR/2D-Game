@@ -5,10 +5,10 @@ import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
-import { GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
-import { angleTo, dist } from "../utils/math.js";
+import { angleDiff, angleTo, dist } from "../utils/math.js";
 import {
   addComboKill,
   addFloatingText,
@@ -109,9 +109,10 @@ export function killEnemy(enemy) {
   }
 
   if (player.explosionChance > 0 && Math.random() < player.explosionChance) {
-    createAoEEffect(enemy.x, enemy.y, 60);
-    for (const e of enemyGrid.query(enemy.x, enemy.y, 60).slice()) {
-      if (e.dead || dist(e.x, e.y, enemy.x, enemy.y) >= 60) continue;
+    const r = 60 * player.projScale;
+    createAoEEffect(enemy.x, enemy.y, r);
+    for (const e of enemyGrid.query(enemy.x, enemy.y, r).slice()) {
+      if (e.dead || dist(e.x, e.y, enemy.x, enemy.y) >= r) continue;
       addFloatingText(e.x, e.y, "BOOM", "#ffaa00", 14);
       damageEnemy(e, player.attack * 2, "explosion");
     }
@@ -264,12 +265,12 @@ function createPlayerProjectile(angle) {
     y: player.worldY,
     vx: Math.cos(angle) * w.speed,
     vy: Math.sin(angle) * w.speed,
-    size: ray ? Math.max(8, w.size) : w.size,
+    size: (ray ? Math.max(8, w.size) : w.size) * player.projScale,
     damage: player.attack * w.damage,
     color: ray ? "#00ff88" : resolveColor(currentSkin().shot, w.color),
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
-    explosion: w.explosion || 0,
-    life: w.range || w.lifetime || Infinity,
+    explosion: (w.explosion || 0) * player.projScale,
+    life: w.range ? w.range * player.rangeMult : w.lifetime || Infinity,
     fade: w.fade || 0,
     returns: w.returns || 0,
     chain: w.chain || 0,
@@ -306,6 +307,10 @@ export function updateProjectiles() {
     for (const enemy of candidates) {
       if (enemy.dead || proj.hits?.has(enemy)) continue;
       if (dist(enemy.x, enemy.y, proj.x, proj.y) >= enemy.size + proj.size) continue;
+      if (shieldBlocks(enemy, proj)) {
+        blockShot(proj, enemy);
+        break;
+      }
       hitEnemy(proj, enemy);
       // Comme dans la version d'origine, une balle qui tue continue sa course.
       if (enemy.dead) break;
@@ -322,6 +327,24 @@ export function updateProjectiles() {
   let w = 0;
   for (const p of world.projectiles) if (!p.dead) world.projectiles[w++] = p;
   world.projectiles.length = w;
+}
+
+/** Porte-bouclier : un tir qui arrive par sa face avant s'écrase sur le bouclier. */
+function shieldBlocks(enemy, proj) {
+  if (enemy.type !== "shield" || enemy.facing == null) return false;
+  return Math.abs(angleDiff(angleTo(enemy.x, enemy.y, proj.x, proj.y), enemy.facing)) < BIOME_FOES.shield.arc;
+}
+
+/** Tir bloqué : quelques étincelles, dégâts réduits, et le tir s'arrête (même perforant). */
+function blockShot(proj, enemy) {
+  proj.dead = true;
+  createParticles(proj.x, proj.y, "#bfe3ff", 3);
+  if (game.time - (enemy.blockedAt ?? -1e9) > 600) {
+    enemy.blockedAt = game.time;
+    addFloatingText(enemy.x, enemy.y - enemy.size - 10, "BLOQUÉ", "#bfe3ff", 12, 25);
+  }
+  const source = proj.source || (proj.type === "kunai" ? "kunai" : "weapon");
+  damageEnemy(enemy, proj.damage * BIOME_FOES.shield.block, source);
 }
 
 function hitEnemy(proj, enemy) {
@@ -358,7 +381,32 @@ function hitEnemy(proj, enemy) {
   damageEnemy(enemy, damage, source);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
   if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
+  if (source === "weapon" && player.synergy?.shards && enemy.frozenUntil > game.time) shatter(enemy, damage);
   onHit(proj, enemy, damage, isCrit);
+}
+
+/** Synergie Cristal de givre + Railgun : l'ennemi gelé touché éclate en éclats de glace (une fois par gel). */
+function shatter(enemy, damage) {
+  const s = player.synergy;
+  enemy.frozenUntil = 0;
+  createParticles(enemy.x, enemy.y, s.color, 10);
+  const offset = Math.random() * Math.PI;
+  for (let i = 0; i < s.shards; i++) {
+    const a = offset + (Math.PI * 2 * i) / s.shards;
+    spawnProjectile({
+      x: enemy.x,
+      y: enemy.y,
+      vx: Math.cos(a) * s.speed,
+      vy: Math.sin(a) * s.speed,
+      size: 4,
+      damage: damage * s.damage,
+      color: s.color,
+      pierce: 1,
+      life: s.life,
+      hits: new Set([enemy]),
+      source: "synergy",
+    });
+  }
 }
 
 /** Disque laser : après un moment il revient vers le joueur et peut retoucher les ennemis. */

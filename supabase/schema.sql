@@ -401,3 +401,182 @@ language sql security definer set search_path = public as $$
   delete from duel_reports where user_id = auth.uid();
   delete from duel_ratings where user_id = auth.uid();
 $$;
+
+-- =====================================================================
+-- Amis : profil public (pseudo, code ami, présence), demandes d'ami à accepter.
+-- Les défis passent par Supabase Realtime (canal « amis-<id> » de l'ami, voir services/friends.js) ;
+-- le duel lancé est le duel en ligne habituel, classé ELO comme les autres (report_duel).
+-- Toutes les lectures et écritures passent par les fonctions ci-dessous (joueurs connectés seulement).
+create table if not exists public.player_profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 12),
+  friend_code text not null unique,
+  status text not null default 'menu' check (status in ('menu', 'jeu', 'duel')),
+  last_seen timestamptz not null default now()
+);
+create index if not exists player_profiles_name_idx on public.player_profiles (lower(name));
+
+-- Une ligne par paire : demande en attente (accepted = false) ou amitié (accepted = true)
+create table if not exists public.friendships (
+  requester uuid not null references auth.users (id) on delete cascade,
+  addressee uuid not null references auth.users (id) on delete cascade,
+  accepted boolean not null default false,
+  created_at timestamptz not null default now(),
+  primary key (requester, addressee),
+  check (requester <> addressee)
+);
+create index if not exists friendships_addressee_idx on public.friendships (addressee);
+
+alter table public.player_profiles enable row level security;
+alter table public.friendships enable row level security;
+revoke all on public.player_profiles, public.friendships from anon, authenticated;
+
+-- Profil (créé au besoin) + présence, puis amis, demandes reçues et envoyées. Appelé régulièrement
+-- par le jeu : un ami est « en ligne » s'il s'est manifesté depuis moins de 75 secondes.
+create or replace function public.friends_sync(p_name text, p_status text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  n text := left(coalesce(nullif(btrim(p_name), ''), 'Pilote'), 12);
+  st text := case when p_status in ('menu', 'jeu', 'duel') then p_status else 'menu' end;
+  fresh interval := interval '75 seconds';
+begin
+  if me is null then
+    raise exception 'Non connecté';
+  end if;
+  update player_profiles set name = n, status = st, last_seen = now() where user_id = me;
+  if not found then
+    loop
+      begin
+        insert into player_profiles (user_id, name, friend_code, status)
+        values (me, n, (
+          select string_agg(substr('ABCDEFGHJKMNPQRSTUVWXYZ23456789', 1 + floor(random() * 31)::int, 1), '')
+          from generate_series(1, 6)
+        ), st)
+        on conflict (user_id) do nothing;
+        exit;
+      exception when unique_violation then
+        -- code ami déjà pris : on en tire un autre
+      end;
+    end loop;
+  end if;
+  return jsonb_build_object(
+    'code', (select friend_code from player_profiles where user_id = me),
+    'friends', coalesce((
+      select jsonb_agg(jsonb_build_object(
+          'id', p.user_id, 'name', p.name, 'online', p.last_seen > now() - fresh,
+          'status', p.status, 'rating', r.rating
+        ) order by p.last_seen > now() - fresh desc, lower(p.name))
+      from friendships f
+      join player_profiles p on p.user_id = case when f.requester = me then f.addressee else f.requester end
+      left join duel_ratings r on r.user_id = p.user_id
+      where f.accepted and me in (f.requester, f.addressee)
+    ), '[]'::jsonb),
+    'incoming', coalesce((
+      select jsonb_agg(jsonb_build_object('id', p.user_id, 'name', p.name) order by f.created_at)
+      from friendships f join player_profiles p on p.user_id = f.requester
+      where f.addressee = me and not f.accepted
+    ), '[]'::jsonb),
+    'outgoing', coalesce((
+      select jsonb_agg(jsonb_build_object('id', p.user_id, 'name', p.name) order by f.created_at)
+      from friendships f join player_profiles p on p.user_id = f.addressee
+      where f.requester = me and not f.accepted
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+-- Demande d'ami par code ami ou par pseudo (si un seul joueur le porte). Si l'autre joueur nous a
+-- déjà demandé, l'amitié est acceptée directement. Erreurs « ami:<raison> », lues par le jeu.
+create or replace function public.friend_request(p_query text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  q text := btrim(coalesce(p_query, ''));
+  target uuid;
+  target_name text;
+  matches int;
+begin
+  if me is null then
+    raise exception 'Non connecté';
+  end if;
+  if not exists (select 1 from player_profiles where user_id = me) then
+    raise exception 'ami:introuvable';
+  end if;
+  select user_id, name into target, target_name from player_profiles
+  where friend_code = upper(regexp_replace(q, '^#', ''));
+  if target is null then
+    select count(*) into matches from player_profiles where lower(name) = lower(q) and user_id <> me;
+    if matches > 1 then
+      raise exception 'ami:ambigu';
+    end if;
+    select user_id, name into target, target_name from player_profiles
+    where lower(name) = lower(q) and user_id <> me;
+  end if;
+  if target is null then
+    raise exception 'ami:introuvable';
+  end if;
+  if target = me then
+    raise exception 'ami:soi';
+  end if;
+  if exists (select 1 from friendships where requester = target and addressee = me and not accepted) then
+    update friendships set accepted = true where requester = target and addressee = me;
+    return jsonb_build_object('status', 'accepted', 'id', target, 'name', target_name);
+  end if;
+  if exists (
+    select 1 from friendships
+    where (requester = me and addressee = target) or (requester = target and addressee = me)
+  ) then
+    raise exception 'ami:deja';
+  end if;
+  -- Anti-spam : 100 amis et demandes au plus, 30 demandes en attente, une demande toutes les 3 secondes
+  if (select count(*) from friendships where me in (requester, addressee)) >= 100
+     or (select count(*) from friendships where requester = me and not accepted) >= 30
+     or exists (select 1 from friendships where requester = me and created_at > now() - interval '3 seconds') then
+    raise exception 'ami:trop';
+  end if;
+  insert into friendships (requester, addressee) values (me, target);
+  return jsonb_build_object('status', 'sent', 'id', target, 'name', target_name);
+end;
+$$;
+
+-- Réponse à une demande reçue (accepter ou refuser)
+create or replace function public.friend_respond(p_id uuid, p_accept boolean) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Non connecté';
+  end if;
+  if p_accept then
+    update friendships set accepted = true where requester = p_id and addressee = auth.uid() and not accepted;
+  else
+    delete from friendships where requester = p_id and addressee = auth.uid() and not accepted;
+  end if;
+end;
+$$;
+
+-- Retire un ami, ou annule une demande envoyée
+create or replace function public.friend_remove(p_id uuid) returns void
+language sql security definer set search_path = public as $$
+  delete from friendships
+  where (requester = auth.uid() and addressee = p_id) or (requester = p_id and addressee = auth.uid());
+$$;
+
+revoke all on function public.friends_sync(text, text) from public;
+revoke all on function public.friend_request(text) from public;
+revoke all on function public.friend_respond(uuid, boolean) from public;
+revoke all on function public.friend_remove(uuid) from public;
+grant execute on function public.friends_sync(text, text) to authenticated;
+grant execute on function public.friend_request(text) to authenticated;
+grant execute on function public.friend_respond(uuid, boolean) to authenticated;
+grant execute on function public.friend_remove(uuid) to authenticated;
+
+-- Droit à l'effacement (remplace les versions plus haut) : sauvegarde, duel et amis.
+create or replace function public.delete_account_progress() returns void
+language sql security definer set search_path = public as $$
+  delete from account_saves where user_id = auth.uid();
+  delete from duel_reports where user_id = auth.uid();
+  delete from duel_ratings where user_id = auth.uid();
+  delete from friendships where auth.uid() in (requester, addressee);
+  delete from player_profiles where user_id = auth.uid();
+$$;

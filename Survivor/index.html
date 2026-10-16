@@ -52,6 +52,7 @@
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/versus.css" />
+    <link rel="stylesheet" href="css/friends.css" />
     <link rel="stylesheet" href="css/skins.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
@@ -83,9 +84,14 @@
           <div>KILLS <span id="kills" class="c-pink">0</span></div>
         </div>
         <div id="timerContainer"><div id="timerBar"></div></div>
-        <div class="health-bar">
-          <div class="health-text" id="healthText">100/100</div>
-          <div class="health-fill" id="playerHealth"></div>
+        <div class="health-row">
+          <div class="health-bar">
+            <div class="health-text" id="healthText">100/100</div>
+            <div class="health-fill" id="playerHealth"></div>
+          </div>
+          <div id="healCorruption" class="heal-corruption" data-tip="">
+            <i data-icon="heartCrack" data-color="#aa66ff"></i>
+          </div>
         </div>
         <div class="ui-divider"></div>
         <div class="stat-grid">
@@ -260,7 +266,9 @@
           <nav class="home-dock">
             <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
             <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
-            <button id="btnVersus" class="dock-btn"><i data-icon="sword"></i> DUEL 1V1</button>
+            <button id="btnVersus" class="dock-btn">
+              <i data-icon="sword"></i> DUEL 1V1 <span id="friendsBadge" class="friend-badge"></span>
+            </button>
             <button id="btnBossRush" class="dock-btn dock-rush"><i data-icon="crown"></i> BOSS RUSH</button>
           </nav>
           <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
@@ -473,6 +481,7 @@
       <!-- ===== PAUSE ===== -->
       <div id="pauseMenu" class="menu-overlay">
         <h2>PAUSE</h2>
+        <div id="pauseCorruption" class="pause-corruption"></div>
         <div class="inv-list" id="pauseInventory"></div>
         <button id="btnResume">REPRENDRE</button>
         <div class="btn-grid">
@@ -661,6 +670,9 @@
         <h2>DUEL 1 CONTRE 1</h2>
         <p class="menu-sub">Chacun sa partie de survie · le dernier en vie empoche l'XP et l'or des deux</p>
         <button id="btnDuelLocal">SUR CET ÉCRAN</button>
+        <button id="btnDuelFriends" class="duel-friends-btn">
+          <i data-icon="friends"></i> MES AMIS <span id="duelFriendsBadge" class="friend-badge"></span>
+        </button>
         <div class="duel-online">
           <h3>EN LIGNE</h3>
           <p class="duel-ranked">Classé (ELO) quand les deux joueurs sont connectés à leur compte</p>
@@ -682,6 +694,40 @@
           <p id="duelStatus" class="duel-status"></p>
         </div>
         <button id="btnDuelBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== AMIS ===== -->
+      <div id="friendsMenu" class="menu-overlay">
+        <div class="menu-head">
+          <h2>AMIS</h2>
+          <p class="menu-sub">Défie tes amis en direct · duels classés ELO</p>
+          <div class="gold-pill friend-code-pill" title="Donne ce code à tes amis pour qu'ils t'ajoutent">
+            CODE AMI <b id="friendCode">…</b>
+          </div>
+        </div>
+        <div id="friendsLogin" class="friends-login">
+          <p>Connecte-toi à ton compte pour ajouter des amis et les défier en duel classé.</p>
+          <button id="btnFriendsLogin">SE CONNECTER</button>
+        </div>
+        <div id="friendsBody" class="friends-body">
+          <div class="duel-join friends-add">
+            <input
+              type="text"
+              id="friendQuery"
+              placeholder="PSEUDO OU CODE AMI"
+              maxlength="12"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Pseudo ou code ami"
+            />
+            <button id="btnFriendAdd">AJOUTER</button>
+          </div>
+          <p id="friendsStatus" class="duel-status"></p>
+          <div id="friendsIncoming" class="friends-section"></div>
+          <div id="friendsList" class="friends-section"></div>
+          <div id="friendsOutgoing" class="friends-section"></div>
+        </div>
+        <button id="btnFriendsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
       <div id="versusOver" class="menu-overlay">
@@ -717,6 +763,15 @@
           <button id="btnReplay">REJOUER</button>
           <button id="btnGameOverMenu" class="secondary">MENU</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Défi d'un ami, par-dessus les menus (ui/friendsMenu.js) -->
+    <div id="friendInvite" class="friend-invite" role="alertdialog" aria-labelledby="friendInviteText">
+      <p id="friendInviteText"><b id="friendInviteName"></b> te défie en duel classé !</p>
+      <div class="btn-grid">
+        <button id="btnInviteAccept">ACCEPTER</button>
+        <button id="btnInviteDecline" class="secondary">REFUSER</button>
       </div>
     </div>
 

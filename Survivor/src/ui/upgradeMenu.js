@@ -4,7 +4,7 @@
 import { BOSS_CHEST, RARITIES, VERSUS } from "../config.js";
 import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
-import { applyUpgrade, availableEvolutions, availableUpgrades } from "../data/upgrades.js";
+import { applyUpgrade, availableEvolutions, availableUpgrades, evolutionsFor } from "../data/upgrades.js";
 import { addStat } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
@@ -20,11 +20,20 @@ const RARITY_NAMES = {
   epic: "Épique",
   legendary: "Légendaire",
   evolution: "Évolution",
+  corrupted: "Corrompue",
+};
+
+// Cartes autorisées selon l'origine du choix : un coffre de boss ne propose ni commune ni corrompue,
+// un sanctuaire maudit seulement des rares et des épiques.
+const ALLOWED = {
+  level: () => true,
+  chest: (u) => u.rarity !== "common" && u.rarity !== "corrupted",
+  shrine: (u) => u.rarity === "rare" || u.rarity === "epic",
 };
 
 /** Choix en attente (un coffre ramassé pendant qu'un autre choix est affiché, par exemple). */
 const queue = [];
-// Choix affiché : { kind: "level" | "chest", target (joueur qui reçoit) }
+// Choix affiché : { kind: "level" | "chest" | "shrine", target (joueur qui reçoit) }
 let current = null;
 // Duel en ligne : choix automatique au bout de quelques secondes (l'adversaire, lui, continue)
 let autoPick = false;
@@ -37,8 +46,7 @@ const CONFIRM_DELAY_MS = 350;
 function drawUpgrades(count, req = current) {
   const chest = req.kind === "chest";
   const p = req.target;
-  // Coffre de boss : pas de cartes communes
-  const allowed = (u) => !chest || u.rarity !== "common";
+  const allowed = ALLOWED[req.kind];
   const pool = availableUpgrades(p).filter(allowed);
   const weight = (u) => (chest ? BOSS_CHEST.weights[u.rarity] : RARITIES[u.rarity]?.weight) ?? 10;
   const picks = availableEvolutions(p).filter(allowed).slice(0, 1); // une évolution prête passe en premier
@@ -135,6 +143,11 @@ export function showBossChest() {
   request({ kind: "chest", target: player });
 }
 
+/** Sanctuaire maudit réussi : une carte rare ou épique au choix. */
+export function showShrineReward() {
+  request({ kind: "shrine", target: player });
+}
+
 function request(req) {
   if (current) queue.push(req);
   else open(req);
@@ -159,9 +172,14 @@ function open(req) {
 
   game.running = false;
   game.paused = true;
-  setText("upgradeTitle", chest ? "COFFRE DE BOSS" : "CHOISISSEZ !");
-  setText("upgradeSubtitle", chest ? `+${gold} or · choisis une augmentation` : "");
+  const shrine = req.kind === "shrine";
+  setText("upgradeTitle", chest ? "COFFRE DE BOSS" : shrine ? "SANCTUAIRE MAUDIT" : "CHOISISSEZ !");
+  setText(
+    "upgradeSubtitle",
+    chest ? `+${gold} or · choisis une augmentation` : shrine ? "Défi relevé · choisis une carte" : "",
+  );
   setClass("upgradeMenu", "boss-chest", chest);
+  setClass("upgradeMenu", "cursed-reward", shrine);
   renderChoices(picks);
   showScreen("upgradeMenu");
   startAutoPick();
@@ -187,6 +205,24 @@ function startAutoPick() {
   );
 }
 
+/**
+ * Bas de carte : icône (et nom) des évolutions que cette carte rapproche, quand l'autre ingrédient de
+ * la recette est déjà possédé (ex. Perçage avec le Railgun équipé → Lance ionique).
+ */
+export function evolutionHint(u, p) {
+  const evos = evolutionsFor(u, p);
+  if (evos.length === 0) return null;
+  const color = RARITIES.evolution.color;
+  const hint = el("div", "upg-evo");
+  hint.title = evos.map((e) => `${e.name} (${e.recipe})`).join("\n");
+  for (const e of evos) {
+    const tag = el("span", "upg-evo-item");
+    tag.append(icon(e.icon, color), el("span", "", e.name));
+    hint.append(tag);
+  }
+  return hint;
+}
+
 function renderChoices(picks) {
   const p = current.target;
   $("btnReroll").textContent = p.rerolls > 0 ? `RELANCER (${p.rerolls})` : "";
@@ -201,7 +237,10 @@ function renderChoices(picks) {
     const info = el("div", "upg-info");
     const level = p.inventory[u.name] || 0;
     info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
+    if (u.malus) info.append(el("p", "upg-malus", u.malus));
     if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
+    const hint = evolutionHint(u, p);
+    if (hint) info.append(hint);
     const ico = el("div", "icon");
     ico.append(icon(u.icon, RARITIES[u.rarity].color));
     const key = el("span", "upg-key", String(i + 1));

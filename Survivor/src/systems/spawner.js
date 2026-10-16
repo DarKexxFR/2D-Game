@@ -165,7 +165,7 @@ function scheduleNextRushBoss() {
   game.nextWaveTimer = BOSS_RUSH.breather;
 }
 
-function pickEnemyType() {
+export function pickEnemyType() {
   const table = SPAWN_TABLES.find((t) => game.wave < t.untilWave);
   const entries = Object.entries(table.weights);
   for (const extra of biomeForWave(game.wave).enemies) entries.push([extra.type, extra.weight]);
@@ -199,22 +199,29 @@ export function eliteChance(wave) {
 
 let enemyIds = 0; // identifiant de chaque ennemi (suivi d'un ennemi dans l'aperçu du duel en ligne)
 
-/** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel). */
+/** `forceElite` : élite d'office (attaque envoyée par l'adversaire en duel, sanctuaire maudit). */
 export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElite = false) {
   const t = ENEMY_TYPES[type];
-  // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations)
+  // Seuls les ennemis ordinaires qui arrivent du bord peuvent être des élites (pas les invocations),
+  // sauf élite imposée (attaque du duel, horde d'un sanctuaire maudit)
   const elite =
-    x === null &&
     !t.isBoss &&
     type !== "goblin" &&
-    (forceElite || Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0)));
-  if (x === null || y === null) {
+    (forceElite || (x === null && Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0))));
+  const fromEdge = x === null || y === null;
+  if (fromEdge) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
     y = player.worldY + Math.sin(angle) * W.spawnDistance;
   }
   ({ x, y } = clampToZone(x, y, 50));
   if (t.isBoss) createSpawnEffect(x, y, t.color);
+  // Essaim : le reste de la nuée arrive groupé autour du premier (avant lui : il reste le dernier ajouté)
+  if (t.group && fromEdge) {
+    for (let i = 1; i < t.group; i++) {
+      spawnEnemy(type, x + (Math.random() - 0.5) * 70, y + (Math.random() - 0.5) * 70);
+    }
+  }
 
   const wave = game.wave;
   const mod = game.modifier;

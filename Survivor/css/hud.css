@@ -38,7 +38,15 @@
 }
 
 /* --- Barres --- */
+/* Barre de vie + cœur fissuré de la corruption (vague 12+) */
+.health-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+}
 .health-bar {
+  flex: 1;
   width: 100%;
   height: 22px;
   background: #220000;
@@ -354,5 +362,47 @@
   }
   .boss-bar-track {
     height: 7px;
+  }
+}
+
+/* Cœur fissuré : soins réduits ; le pourcentage s'affiche au survol (et dans le menu Pause) */
+.heal-corruption {
+  display: none;
+  position: relative;
+  flex: none;
+  font-size: 18px;
+  line-height: 0;
+  overflow: visible;
+  pointer-events: auto;
+  cursor: help;
+  animation: corruptionPulse 1.6s ease-in-out infinite;
+}
+.heal-corruption::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 5px 8px;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: bold;
+  color: #e0c8ff;
+  background: rgba(20, 5, 40, 0.95);
+  border: 1px solid #aa66ff;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  z-index: 5;
+}
+@media (hover: hover) {
+  .heal-corruption:hover::after {
+    opacity: 1;
+  }
+}
+@keyframes corruptionPulse {
+  50% {
+    opacity: 0.6;
   }
 }

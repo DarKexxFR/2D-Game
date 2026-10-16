@@ -193,6 +193,27 @@ export const MYSTERY_BOX = {
   overchargeAttackSpeed: 50,
 };
 
+// Sanctuaire maudit : totem rouge à activer en restant `hold` ticks dans son cercle pendant qu'une
+// mini-horde d'élites arrive (en deux salves). Sortir plus de `grace` ticks = échec. Jamais pendant un
+// boss ni en Boss Rush. Réussi : une carte rare / épique au choix (`cardChance`), sinon un gros tas d'or.
+export const CURSED_SHRINE = {
+  color: "#ff1f4b",
+  fromWave: 3,
+  chance: 0.0006, // par tick, quand aucun totem n'est posé (un toutes les ~30 s en moyenne)
+  distance: 520, // apparaît à cette distance du joueur
+  radius: 110,
+  hold: 300, // 5 s dans le cercle
+  grace: 120, // 2 s hors du cercle avant l'échec
+  idleLife: 2700, // un totem jamais activé s'éteint au bout de 45 s
+  elites: 4,
+  elitesPerWave: 0.25,
+  maxElites: 10,
+  hordeDistance: 420, // les élites arrivent à cette distance du totem
+  cardChance: 0.5,
+  gold: 150,
+  goldPerWave: 25,
+};
+
 export const BUFF_DURATIONS = {
   frenzy: 600,
   shield: 600,
@@ -212,6 +233,7 @@ export const RARITIES = {
   legendary: { weight: 3, color: "#ffaa00" },
   mythic: { weight: 0, color: "#ff3b30" }, // équipement seulement (coffres), aucune carte en partie
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
+  corrupted: { weight: 10, color: "#ff1f4b" }, // cartes « Corrompues » : bonus fort contre un malus
 };
 
 // Coffre lâché par un boss : une augmentation au choix (raretés hautes favorisées) + de l'or.
@@ -318,6 +340,13 @@ export const NET = {
   eloRetryMs: 1500, // duel classé : nouvelle demande tant que l'adversaire n'a pas déclaré le résultat
   eloRetries: 4,
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
+};
+
+// Amis (services/friends.js, ui/friendsMenu.js) : liste et présence par Supabase, défis en direct par Realtime
+export const FRIENDS = {
+  syncMs: 30000, // présence et liste d'amis rafraîchies (un ami est « en ligne » 75 s après son dernier signe)
+  inviteMs: 30000, // un défi sans réponse est annulé
+  resendMs: 3000, // le défi est renvoyé tant que l'ami n'a pas répondu (il a pu ouvrir le jeu entre-temps)
 };
 
 export const MUSIC = {

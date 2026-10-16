@@ -92,7 +92,8 @@ Principes :
   Vitesse de déplacement du joueur plafonnée à `STAT_CAPS.speed` (tous bonus compris).
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
-  la vague 12 (`SURVIVAL` dans `config.js`). Objectif : même le meilleur build finit par mourir
+  la vague 12 (`SURVIVAL` dans `config.js`) ; cœur fissuré violet `#healCorruption` près de la barre de vie
+  (% au survol) et rappel dans la Pause. Objectif : même le meilleur build finit par mourir
   (vers la vague 30). Mesuré avec un banc d'essai (build fixe, morts par minute selon la vague).
 - **Succès** : `data/achievements.js` (catégorie, statistique suivie, seuil, or gagné) ; les statistiques
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
@@ -147,6 +148,13 @@ Principes :
     points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
+  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par « MES AMIS » de l'écran Duel) : joueurs
+    connectés seulement. Ajout par pseudo (s'il est unique) ou code ami, demande à accepter (tables
+    `player_profiles` / `friendships`, RPC `friends_sync` / `friend_request` / `friend_respond` / `friend_remove`).
+    Présence : `friends_sync` toutes les `FRIENDS.syncMs` (en ligne = vu depuis moins de 75 s, statut menu / jeu /
+    duel). Chaque joueur écoute son canal Realtime `amis-<id>` : « DÉFIER » crée une partie de duel et y envoie
+    le code, l'ami accepte (fenêtre `#friendInvite`) et rejoint ; duel en ligne habituel, donc classé ELO avec
+    les mêmes règles anti-abus. En partie, un défi reçu est refusé « occupé ». Tests : faux RPC dans `fixtures.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
@@ -159,6 +167,8 @@ Principes :
   l'achat. Purement cosmétique, ignoré en duel (chaque joueur garde sa couleur).
 - **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
   (ex. Blaster + Force Brute ×3 → Blaster solaire) ; l'arme garde sa couleur.
+  Une carte qui rapproche une évolution dont l'autre ingrédient est déjà possédé affiche l'évolution visée
+  en bas (`evolutionsFor` / `evolutionHint`).
 - **Quêtes hebdomadaires** (`data/quests.js`, `services/quests.js`, écran `ui/questMenu.js`) : 3 quêtes
   par semaine, les mêmes pour tous (tirage à graine sur la semaine), renouvelées le lundi à 0 h (heure
   locale). Elles suivent les statistiques des succès (`trackQuest` / `trackQuestBest` appelés par
@@ -182,11 +192,23 @@ Principes :
   `goldMult`) ; choix dans `account.difficulty`. Cauchemar débloqué au record de vague 10, classement mondial
   à part (table `nightmare_scores`, onglet « CAUCHEMAR »), succès dédiés ; Facile hors classements.
 - **Biomes** (`data/biomes.js`) : 5 biomes de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique,
-  Station orbitale), chacun ajoute ses ennemis (`enemies`). Jungle : spore (se divise en sporelets), poseur de
-  mines ; station : téléporteur, drone laser (réglages `BIOME_FOES` dans `data/enemies.js`).
+  Station orbitale), chacun ajoute ses ennemis (`enemies`). Cité néon : porte-bouclier (bloque les tirs de
+  face, pivote lentement), essaim (nuée de 6, `group`) ; jungle : spore (se divise en sporelets), poseur de
+  mines ; station : téléporteur, drone laser. Partout : soigneur dès la vague 10, aimant (attire le joueur, le
+  dash libère) dès la vague 12 (`SPAWN_TABLES`). Réglages `BIOME_FOES` dans `data/enemies.js`. Nouveau type
+  d'ennemi = toujours en fin de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang).
 - **Série de connexion** (`services/loginStreak.js`, `ui/streakMenu.js`, `LOGIN_STREAK` dans `config.js`) :
   or chaque jour d'affilée (jour local), cycle de 7 jours, un jour manqué = retour au jour 1. Fenêtre proposée
   au chargement de l'accueil, sauf à un joueur sans partie terminée. État dans `account.loginStreak`.
+- **Cartes « Corrompues »** (`CORRUPTED_UPGRADES` dans `data/upgrades.js`, rareté `corrupted`) : gros bonus
+  contre un malus (`malus`, affiché en rouge), une fois par partie chacune ; jamais dans un coffre de boss ni
+  un sanctuaire maudit. Surcharge moteur, Singularité, Pacte de sang, Cœur de verre, Fièvre de l'or.
+- **Sanctuaires maudits** (`systems/cursedShrines.js`, `CURSED_SHRINE` dans `config.js`) : totem rouge dès la
+  vague 3 ; entrer dans le cercle lance le défi (élites en deux salves), tenir 5 s = carte rare / épique
+  (`showShrineReward`, choix « shrine ») ou or. Jamais pendant un boss ni en Boss Rush.
+- **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
+  Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
+  Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -204,7 +226,8 @@ Principes :
   `#00ff88`, or `#ffd700`), polices Orbitron et « Press Start 2P ». `base.css` contient
   `* { overflow: hidden }` : penser à `overflow: visible` pour les lueurs et badges qui débordent.
 - **Effets de survol** : uniquement sous `@media (hover: hover)`. Sur écran tactile le
-  survol reste « collé » ; un bouton qui bouge au survol tremble en boucle (cassait la CI).
+  survol reste « collé » ; un bouton qui bouge au survol tremble en boucle (cassait la CI). Les boutons ne se
+  déplacent plus au survol (un pointeur posé sur leur bord les faisait trembler).
 
 ## Tests (`tests/`)
 
@@ -241,7 +264,9 @@ Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins pe
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
 Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre mythique seulement), effets ★3, panoplies, modules, Archange et Phénix,
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
-biomes Jungle toxique et Station orbitale, série de connexion quotidienne.
+biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
+nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
+synergies familier + arme.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

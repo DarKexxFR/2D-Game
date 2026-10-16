@@ -2,7 +2,7 @@
 // sélectionné (équiper, niveau, prestige).
 
 import { CHESTS, CHEST_POOLS, ITEMS, LOADOUT_COUNT, MAX_PRESTIGE, maxLevel } from "../data/items.js";
-import { SETS } from "../data/perks.js";
+import { SETS, synergyOf } from "../data/perks.js";
 import {
   canLevelUp,
   canPrestige,
@@ -28,6 +28,7 @@ import {
   rarityColor,
   rarityTag,
   setInfo,
+  synergyInfo,
   starsText,
   statsText,
 } from "./itemView.js";
@@ -140,12 +141,22 @@ function renderLoadouts() {
   $("loadoutBar").replaceChildren(...boxes);
 }
 
-/** Bandeau de la panoplie active (arme + armure du même thème). */
+/** Bandeau des bonus actifs : panoplie (arme + armure du même thème) et synergie familier + arme. */
 function renderActiveSet() {
-  const set = SETS.find((s) => account.equipped.weapon === s.weapon && account.equipped.armor === s.armor);
+  const eq = account.equipped;
+  const set = SETS.find((s) => eq.weapon === s.weapon && eq.armor === s.armor);
+  const synergy = synergyOf(eq.pet, eq.weapon);
+  const line = (title, desc) => {
+    const row = el("div", "");
+    row.append(el("b", "", title), el("span", "", ` · ${desc}`));
+    return row;
+  };
+  const rows = [];
+  if (set) rows.push(line(`Panoplie ${set.name} active`, set.desc));
+  if (synergy) rows.push(line(`Synergie ${synergy.name} active`, synergy.desc));
   const box = $("activeSet");
-  box.style.display = set ? "" : "none";
-  if (set) box.replaceChildren(el("b", "", `Panoplie ${set.name} active`), el("span", "", ` · ${set.desc}`));
+  box.style.display = rows.length > 0 ? "" : "none";
+  box.replaceChildren(...rows);
 }
 
 /** Vignette de la grille : icône, nom, étoiles ; grisée si l'objet n'est pas encore obtenu. */
@@ -264,6 +275,15 @@ function extras(item, owned, isEquipped) {
     line.append(
       el("b", "", `Panoplie ${set.name}`),
       el("span", "", ` (avec ${set.partner.name}) : ${set.desc}`),
+    );
+    out.push(line);
+  }
+  const synergy = synergyInfo(item, account.equipped);
+  if (synergy) {
+    const line = el("p", `synergy-line${synergy.active ? " active" : ""}`);
+    line.append(
+      el("b", "", `Synergie ${synergy.name}`),
+      el("span", "", ` (avec ${synergy.partner.name}) : ${synergy.desc}`),
     );
     out.push(line);
   }
