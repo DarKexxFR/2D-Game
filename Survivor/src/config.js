@@ -384,7 +384,7 @@ export const PWA = {
 export const PUSH = {
   // Clé publique VAPID (elle est faite pour être publique). Vide = notifications désactivées.
   // La clé privée va UNIQUEMENT dans les secrets Supabase, jamais dans le dépôt.
-  vapidPublicKey: "",
+  vapidPublicKey: "BIfS_ZpxwgZm3SzovaYyKJicO-D2Nqt9lOLsROZJuub-FNRuFN5jCYODGX-kcEBbOwSeQ2jtMsttq9ManyRBiyE",
   streakHour: 19, // rappel « ta série est en danger » le lendemain du dernier jour récupéré
   questsHour: 10, // lundi : nouvelles quêtes de la semaine
   comebackHour: 18, // rappels de retour, après une absence
