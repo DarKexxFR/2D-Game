@@ -47,7 +47,15 @@ const SHOCKWAVE_TICKS = 30;
 
 /** Onde de choc : anneau épais qui s'élargit jusqu'à `radius` puis s'estompe. */
 export function createShockwave(x, y, radius, color = "#ffffff") {
-  world.visualEffects.push({ type: "shockwave", x, y, radius: 0, max: radius, life: SHOCKWAVE_TICKS, color });
+  const fx = world.visualEffects;
+  let count = 0;
+  for (const e of fx) if (e.type === "shockwave") count++;
+  if (count >= LIMITS.shockwaves)
+    fx.splice(
+      fx.findIndex((e) => e.type === "shockwave"),
+      1,
+    ); // la plus ancienne
+  fx.push({ type: "shockwave", x, y, radius: 0, max: radius, life: SHOCKWAVE_TICKS, color });
 }
 
 /** Flash plein écran d'une couleur, qui s'estompe en quelques images. */
@@ -111,4 +119,5 @@ export function updateEffects() {
 
   for (const b of world.bolts) b.life--;
   removeWhere(world.bolts, (b) => b.life <= 0);
+  if (world.bolts.length > LIMITS.bolts) world.bolts.splice(0, world.bolts.length - LIMITS.bolts);
 }

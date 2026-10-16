@@ -31,7 +31,10 @@ export const LIMITS = {
   gems: 300,
   particles: 1000,
   particlesLowQuality: 200,
-  floatingTexts: 200,
+  floatingTexts: 80, // au-delà, les plus anciens disparaissent (une cadence de tir folle en crée des centaines)
+  shockwaves: 24, // ondes de choc à l'écran (explosions en chaîne)
+  bolts: 40, // éclairs à l'écran
+  ticksPerFrame: 5, // ticks rattrapés au plus par image : un appareil débordé ralentit au lieu de geler
   leaderboard: 10,
 };
 

@@ -1,7 +1,7 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
-import { DIFFICULTIES, NET, TICK_MS, VERSUS } from "./config.js";
+import { DIFFICULTIES, LIMITS, NET, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -482,7 +482,13 @@ function frame(now) {
     // Ralenti à la mort d'un boss (écran scindé : géré partie par partie)
     const timeScale = game.slowMo > 0 && !versus.split ? 0.3 : 1;
     accumulator += Math.min(now - lastFrame, 250) * timeScale; // borne : évite la « spirale » après un onglet en arrière-plan
-    while (accumulator >= TICK_MS) {
+    // Au plus LIMITS.ticksPerFrame ticks par image : un appareil qui n'arrive plus à suivre fait
+    // ralentir la partie au lieu d'enchaîner des images de plus en plus lourdes (gel).
+    for (let n = 0; accumulator >= TICK_MS; n++) {
+      if (n >= LIMITS.ticksPerFrame) {
+        accumulator = 0;
+        break;
+      }
       update();
       accumulator -= TICK_MS;
     }

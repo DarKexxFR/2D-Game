@@ -30,14 +30,17 @@ export function drawVisualEffects() {
   ctx.globalAlpha = 1;
 }
 
-/** Onde de choc : anneau lumineux épais doublé d'un anneau fin, qui s'amincit en s'élargissant. */
+/**
+ * Onde de choc : anneau lumineux épais doublé d'un anneau fin, qui s'amincit en s'élargissant.
+ * Pas de shadowBlur : son coût grandit avec la taille de l'anneau, et une cadence de tir élevée en
+ * fait exploser des dizaines à la fois (le jeu gelait). La lueur est un anneau plus large et transparent.
+ */
 function drawShockwave(e) {
   const t = e.life / 30;
+  ctx.globalAlpha = t * 0.3;
+  strokeCircle(e.x, e.y, e.radius, e.color, 10 + 16 * t);
   ctx.globalAlpha = t;
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = e.color;
   strokeCircle(e.x, e.y, e.radius, e.color, 2 + 10 * t);
-  ctx.shadowBlur = 0;
   ctx.globalAlpha = t * 0.6;
   strokeCircle(e.x, e.y, e.radius * 0.8, "#ffffff", 1.5);
 }
@@ -133,16 +136,16 @@ function drawFireWings(x, y, t, fade, color) {
   }
 }
 
+/** Textes flottants : ombre noire décalée d'un pixel (un shadowBlur par texte coûtait trop cher). */
 export function drawFloatingTexts() {
   ctx.textAlign = "center";
-  ctx.shadowColor = "black";
-  ctx.shadowBlur = 2;
   for (const t of world.floatingTexts) {
     ctx.globalAlpha = Math.min(1, t.life / 20);
-    ctx.fillStyle = t.color;
     ctx.font = `bold ${t.size}px Orbitron`;
+    ctx.fillStyle = "black";
+    ctx.fillText(t.text, t.x + 1, t.y + 1);
+    ctx.fillStyle = t.color;
     ctx.fillText(t.text, t.x, t.y);
   }
-  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 }

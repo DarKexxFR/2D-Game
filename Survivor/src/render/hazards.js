@@ -178,15 +178,14 @@ export function drawTurrets(now) {
   ctx.globalAlpha = 1;
 }
 
-/** Éclairs en zigzag entre plusieurs points. */
+/**
+ * Éclairs en zigzag entre plusieurs points. Lueur = même tracé plus large et transparent (pas de
+ * shadowBlur : une arme électrique rapide en dessine des dizaines par image).
+ */
 export function drawBolts() {
   ctx.lineCap = "round";
   for (const b of world.bolts) {
-    ctx.globalAlpha = b.life / 10;
     ctx.strokeStyle = b.color;
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = b.color;
-    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(b.points[0].x, b.points[0].y);
     for (let i = 1; i < b.points.length; i++) {
@@ -199,8 +198,13 @@ export function drawBolts() {
       }
       ctx.lineTo(p1.x, p1.y);
     }
+    const fade = b.life / 10;
+    ctx.globalAlpha = fade * 0.3;
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.globalAlpha = fade;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
   }
-  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 }
