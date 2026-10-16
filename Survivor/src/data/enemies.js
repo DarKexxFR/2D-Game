@@ -173,7 +173,7 @@ export const ENEMY_TYPES = {
   },
   // Jumeaux : deux boss reliés par un lien d'énergie ; le survivant se venge (voir TWINS)
   twin_fire: {
-    health: 1500,
+    health: 1900,
     damage: 46,
     speed: 2.4,
     size: 46,
@@ -185,7 +185,7 @@ export const ENEMY_TYPES = {
     noExecute: true,
   },
   twin_ice: {
-    health: 1500,
+    health: 1900,
     damage: 46,
     speed: 2.4,
     size: 46,
@@ -392,6 +392,24 @@ export const TWINS = {
   tetherDamage: 0.35, // part des dégâts du boss
   tetherTick: 30,
   scissors: 110, // durée du croisement
+  // Éclipse (attaque commune) : lasers tournants des deux jumeaux, en sens contraires
+  eclipse: {
+    every: 600,
+    everyFury: 420,
+    beams: 2,
+    beamsFury: 3,
+    length: 750,
+    delay: 60,
+    active: 150,
+    spin: 0.011,
+  },
+  // Lien vital : toutes les `every` ticks, si l'écart de vie dépasse `gap`, le plus abîmé récupère `heal`
+  vital: { every: 300, gap: 0.2, heal: 0.06 },
+  // Furie commune (sous 50 % de vie à eux deux) : rotation, épaisseur du lien, cadence des attaques
+  fury: { orbit: 1.6, tether: 1.5, cadence: 0.75 },
+  firewall: { count: 7, spacing: 70, radius: 55, delay: 50, step: 6, pool: 180 },
+  prison: { cells: 10, radius: 150, cell: 50, delay: 55, pool: 150, core: 120, coreDelay: 85 },
+  ringMax: 520, // portée des ondes (Nova, Givre)
   revengeHeal: 0.35,
   revengeSpeed: 1.35,
   syncWindow: 300,

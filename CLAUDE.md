@@ -82,7 +82,9 @@ Principes :
   Le **Kraken** reste sous l'eau (`e.submerged` : ni touché, ni visé, ni dans la grille) tant que ses
   tentacules (`kraken_tentacle`) tiennent, aspire le joueur (tourbillon), puis expose sa tête (`KRAKEN`).
   Les **Jumeaux** (`twin_fire` fait apparaître `twin_ice`) sont reliés par un lien qui blesse, se croisent
-  (« ciseaux »), le survivant se venge ; un seul coffre, bonus « SYNCHRO » si tués presque ensemble (`TWINS`).
+  (« ciseaux »), lancent ensemble « Éclipse » (lasers tournants en sens contraires), le lien soigne le plus
+  abîmé (« Lien vital »), furie commune sous 50 % de vie à eux deux ; feu : mur de feu, nova ; glace : prison de glace
+  (une sortie), vague de givre. Le survivant se venge ; un seul coffre, bonus « SYNCHRO » si tués presque ensemble (`TWINS`).
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
   Combat de boss : à l'arrivée d'un boss les petits ennemis disparaissent et plus aucun n'apparaît tant
