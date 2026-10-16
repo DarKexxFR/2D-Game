@@ -600,3 +600,50 @@ body.kill-cam #gameContainer > :not(#gameCanvas) {
     font-size: 14px;
   }
 }
+
+/* Fin de partie : ralenti de la mort et carte de score côte à côte */
+.end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.end-actions button.kill-cam-btn {
+  margin-top: 0;
+}
+button.share-run-btn {
+  background: linear-gradient(180deg, #aa66ff, #5a1fa8);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(170, 102, 255, 0.45);
+}
+
+/* Carte de score à partager (ui/shareMenu.js) */
+.share-menu {
+  min-width: 0;
+  width: min(560px, calc(100vw - 24px));
+  padding: 20px;
+}
+.share-menu h2 {
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+#shareCanvas {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 240px);
+  margin: 0 auto;
+  aspect-ratio: 1080 / 1350;
+  border-radius: 12px;
+}
+.share-status {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #00ff88;
+}
+.share-actions button {
+  padding: 10px;
+  font-size: 13px;
+}

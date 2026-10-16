@@ -5,6 +5,7 @@ import { hasKillCam } from "../systems/killCam.js";
 import { $, setText, setVisible } from "./dom.js";
 import { renderRunStats } from "./runStats.js";
 import { showScreen } from "./screens.js";
+import { runSummary, setShareSummary } from "./shareMenu.js";
 
 const SKIP_AFTER_MS = 400; // le clic qui lance le ralenti ne doit pas l'arrêter aussitôt
 
@@ -18,6 +19,7 @@ export function showGameOver({ pseudo, level, wave, waveLabel = "Vague", xp, gol
   setVisible("newRecordMsg", isNewRecord);
   setVisible("btnKillCam", hasKillCam());
   renderRunStats();
+  setShareSummary(runSummary({ pseudo, wave, valueLabel: waveLabel.split(" · ")[0], isNewRecord }));
   showScreen("gameOver");
 }
 

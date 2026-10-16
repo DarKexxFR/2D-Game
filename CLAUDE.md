@@ -224,6 +224,10 @@ Principes :
   `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,
   explosion, « TUÉ PAR » + viseur sur le coupable). `takeDamage(montant, source)` : source = l'ennemi, son type
   ou un événement de carte ; sans source, c'est le boss en vie. Pas en duel.
+- **Carte de score** (`render/shareCard.js` dessine, `ui/shareMenu.js` écran `shareMenu`, `#modal=partage`) :
+  bouton « PARTAGER » de l'écran de fin ; image 1080×1350 (vague, stats, build, « tué par ») tirée d'un
+  résumé figé par `showGameOver` (`runSummary`). Partage natif si le navigateur sait partager un fichier,
+  COPIER (presse-papiers, pour Discord) et TÉLÉCHARGER (PNG). Pas en duel.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -285,7 +289,7 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
-synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »).
+synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »), carte de score à partager.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

@@ -762,10 +762,26 @@
         <div id="runStats" class="run-stats"></div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>
         <div id="onlineStatus"></div>
-        <button id="btnKillCam" class="kill-cam-btn">▶ REVOIR MA MORT</button>
+        <div class="end-actions">
+          <button id="btnKillCam" class="kill-cam-btn">▶ REVOIR MA MORT</button>
+          <button id="btnShareRun" class="share-run-btn"><i data-icon="share"></i> PARTAGER</button>
+        </div>
         <div class="btn-grid">
           <button id="btnReplay">REJOUER</button>
           <button id="btnGameOverMenu" class="secondary">MENU</button>
+        </div>
+      </div>
+
+      <!-- Carte de score à partager (ui/shareMenu.js) -->
+      <div id="shareMenu" class="menu-overlay share-menu">
+        <h2>Partager ma partie</h2>
+        <canvas id="shareCanvas" width="1080" height="1350"></canvas>
+        <p id="shareStatus" class="share-status" aria-live="polite"></p>
+        <div class="btn-grid share-actions">
+          <button id="btnShareNative">PARTAGER</button>
+          <button id="btnShareCopy">COPIER</button>
+          <button id="btnShareDownload">TÉLÉCHARGER</button>
+          <button id="btnShareBack" class="secondary">RETOUR</button>
         </div>
       </div>
     </div>

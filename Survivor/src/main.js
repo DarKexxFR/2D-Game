@@ -50,6 +50,7 @@ import { updateMapEvents } from "./systems/mapEvents.js";
 import { updateCursedShrines } from "./systems/cursedShrines.js";
 import { $ } from "./ui/dom.js";
 import { initKillCamButton, setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
+import { initShareMenu } from "./ui/shareMenu.js";
 import { drawKillCam, killCamActive, stopKillCam } from "./render/killCam.js";
 import { recordKillCam } from "./systems/killCam.js";
 import { showBiomeBanner, showBossWarning, showGoblinWarning, showHud, updateHud } from "./ui/hud.js";
@@ -430,6 +431,7 @@ function navigate(id) {
   } else if (screen === "pauseMenu") togglePause();
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
+  else if (screen === "shareMenu") showScreen("gameOver");
   else if (screen === "gameOver" || screen === "versusOver") returnToMenu();
   // amélioration et revivre : le choix reste à faire, l'adresse est simplement remise
 }
@@ -521,6 +523,7 @@ function init() {
   $("btnReplay").addEventListener("click", () => startGame(lastMode));
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
   initKillCamButton();
+  initShareMenu();
   $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
   initOptionsMenu();

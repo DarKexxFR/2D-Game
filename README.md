@@ -1,182 +1,132 @@
 # Last Pulse
 
-Jeu de survie 2D en vagues (style *Vampire Survivors*) en JavaScript pur, rendu sur `<canvas>`.
+Jeu de survie 2D en vagues (style _Vampire Survivors_), style néon / cyber, en JavaScript pur (modules ES),
+rendu sur `<canvas>`. Le jeu n'a aucune dépendance : npm ne sert qu'aux outils (Prettier, TypeScript pour
+vérifier les types, Playwright pour les tests).
 
-## Lancer le jeu
+## Jouer
 
-**Jouer en ligne :** https://darkexxfr.github.io/2D-Game/Survivor/
-
-**En local :** le code utilise des **modules ES**, il faut donc passer par un petit
-serveur local (ouvrir `index.html` en double-cliquant ne fonctionne pas)
+- **En ligne** : https://last-pulse.com (hébergé chez IONOS, voir [`HEBERGEMENT.md`](HEBERGEMENT.md)).
+  L'ancienne adresse https://darkexxfr.github.io/2D-Game/Survivor/ reste en place et transfère la progression.
+- **En local** : les modules ES demandent un petit serveur (ouvrir `index.html` en double-cliquant ne marche pas).
 
 ```bash
-cd Survivor
-python3 -m http.server 8000
-# puis ouvrir http://localhost:8000
+npm start   # sert Survivor/ sur http://localhost:8000
 ```
-
-Alternatives : `npx serve Survivor`, ou l'extension **Live Server** de VS Code.
 
 ## Contrôles
 
-| Touche | Action |
-| --- | --- |
-| Souris | Viser |
-| ZQSD / WASD | Se déplacer |
-| Espace | Dash |
-| R | Ultime |
-| E | Ouvrir la boîte mystère |
-| A | Activer / désactiver le tir automatique |
-| P / Échap | Pause |
+| Touche          | Action                         |
+| --------------- | ------------------------------ |
+| Souris          | Viser                          |
+| ZQSD / WASD     | Se déplacer                    |
+| Espace          | Dash                           |
+| R               | Compétence du héros            |
+| E               | Ouvrir la boîte mystère        |
+| T               | Tir automatique (actif par défaut) |
+| F               | Lancer un sort (duel)          |
+| P / Échap       | Pause                          |
+| 1 / 2 / 3       | Choisir une amélioration       |
 
-**Sur mobile / tablette** : joystick virtuel sur la moitié gauche de l'écran (posez le doigt n'importe où),
-boutons **DASH** et **ULT** à droite, bouton **📦** quand vous êtes près de la boîte mystère, **II** pour la pause.
-Le tir est automatique (vise l'ennemi le plus proche). La vue est dézoomée sur petit écran
-pour voir autant de terrain que sur PC ; portrait et paysage sont tous deux jouables.
+Toutes les touches se changent dans les **Options**. **Sur mobile** : joystick sur la moitié gauche de l'écran,
+boutons DASH et compétence à droite, tir automatique ; portrait et paysage sont jouables.
 
-## Équipement et coffres
+## Contenu du jeu
 
-Dans la **Boutique**, l'or du compte permet d'ouvrir des **coffres** (basique, premium, légendaire)
-qui donnent une **arme** ou une **armure** selon des probabilités de rareté.
+**Partie**
 
-- **Armes** (remplacent le tir) : Blaster, Mitrailleur, Fusil à pompe, Railgun, Lance-roquettes, Canon plasma.
-- **Armures** (bonus de stats) : Gilet tactique, Combinaison légère, Armure renforcée, Cuirasse lourde, Cape spectrale, Exosquelette.
-- **Niveau** : amélioré avec de l'or (+2 % de puissance par niveau).
-- **Prestige ★1 → ★5** : obtenu en consommant des **doublons** (1, 2, 3 puis 5). Chaque étoile ajoute
-  10 niveaux maximum, +15 % de puissance et rend l'objet plus imposant en jeu
-  (canon plus long et lumineux, armure plus épaisse, pointes en orbite dès ★3, halo doré à ★5).
-- Un doublon d'un objet déjà ★5 est converti en or.
-- Un **coffre gratuit** (basique) est offert toutes les 4 heures (`FREE_CHEST` dans `items.js`) ;
-  un badge 🎁 apparaît sur le bouton Boutique quand il est disponible.
+- **5 biomes** de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale), chacun avec
+  ses ennemis ; 16 types d'ennemis (porte-bouclier, essaim, soigneur, aimant, spores, téléporteurs...), élites
+  dès la vague 8, difficulté qui devient exponentielle après la vague 10.
+- **Boss** à attaques annoncées (zones, lasers, ondes de choc) et phase de furie : Roi Slime, Titan de l'orage,
+  Sentinelle prismatique, Kraken, Jumeaux de feu et de glace, Colosse de givre, Faucheur du vide... Pendant un
+  boss l'arène se resserre et les petits ennemis disparaissent ; les boss ne peuvent pas être repoussés.
+  Un boss vaincu lâche un coffre d'augmentation.
+- **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
+  contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
+  (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
+- **Renaissance** : Seconde chance, Phénix ou pub déclenchent une onde de choc autour du vaisseau.
+- **Fin de partie** : statistiques détaillées, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
+  et **carte de score à partager** (image 1080×1350 avec vague, build et coupable, à partager depuis le
+  téléphone, copier pour Discord ou télécharger).
 
-Tout l'équilibrage se trouve dans [`Survivor/src/data/items.js`](Survivor/src/data/items.js).
+**Modes**
 
-## Options
+- Survie en **Facile / Normal / Cauchemar** (Cauchemar débloqué à la vague 10, classement à part).
+- **Défi du jour** (même partie pour tout le monde), **Boss Rush**.
+- **Duel 1 contre 1** : sur un écran (écran scindé) ou en ligne (code de salon, connexion directe WebRTC).
+  Les éliminations envoient des ennemis et des sorts à l'adversaire ; le gagnant empoche l'XP et l'or des deux
+  parties. **Classement ELO** pour les joueurs connectés.
+- **Amis** : ajout par pseudo ou code ami, présence en ligne et défi direct en duel classé.
 
-Menu **⚙️ Options** (menu principal ou pause) : volume de la musique, volume des effets sonores
-(générés en direct avec la Web Audio API, aucun fichier), vibrations sur mobile, et qualité graphique :
+**Progression**
 
-| Qualité | Effets lumineux | Particules | Netteté | Chiffres de dégâts |
-| --- | --- | --- | --- | --- |
-| Basse | ✗ | 30 % | ×1 | ✗ |
-| Moyenne (défaut mobile) | ✓ | 60 % | ×1 | ✓ |
-| Haute (défaut PC) | ✓ | 100 % | ×1,5 | ✓ |
+- **Équipement** en 5 emplacements (héros, familier, arme, armure, module), raretés commun → légendaire puis
+  **mythique** (coffre mythique), niveaux, prestige ★1 à ★5, effets ★3, panoplies, synergies familier + arme,
+  3 équipements enregistrés, offre du jour en boutique.
+- Talents, succès avec récompenses, **quêtes hebdomadaires**, **série de connexion** sur 7 jours, **skins** du
+  vaisseau (forme, couleurs, traînée), tutoriel de première partie.
+- **Compte facultatif** (Google, Discord ou code par e-mail) pour retrouver sa progression sur tous ses appareils.
 
-## Tests automatiques
-
-À chaque pull request (et à chaque push sur `main`), GitHub Actions lance :
-
-- **Format & syntaxe** : Prettier + vérification de chaque module JS ;
-- **Jeu (PC + mobile)** : [Playwright](https://playwright.dev) ouvre le jeu dans Chromium, sur un écran de PC
-  et sur un téléphone simulé, et joue réellement : menus, partie, pause, améliorations, mort, rejouer,
-  joystick tactile, coffres, prestige, chacune des 6 armes, coffre gratuit, classement (Supabase simulé),
-  options. Toute erreur JavaScript fait échouer le test.
-
-En local (Node.js requis, uniquement pour les tests — le jeu n'a aucune dépendance) :
+## Développement
 
 ```bash
 npm install
-npx playwright install chromium   # une seule fois
-npm test                           # tous les tests
-npm run lint                       # format + syntaxe
-npm run format                     # reformate le code
+npm run lint         # Prettier (largeur 110) + vérification de syntaxe
+npm run format       # corrige le formatage
+npm run typecheck    # types vérifiés par TypeScript sur le JavaScript (JSDoc + checkJs)
+npx playwright test  # tests de bout en bout, PC et mobile (Pixel 7)
 ```
 
-En cas d'échec sur GitHub, le rapport (captures d'écran, traces) est téléchargeable dans l'onglet
-**Actions** → le run → **Artifacts**.
+Le jeu reste en JavaScript sans compilation : TypeScript ne fait que vérifier les types écrits en commentaires
+JSDoc (`jsconfig.json`). Chromium doit être disponible pour Playwright (`npx playwright install chromium`).
 
-## Classement mondial (Supabase)
+**GitHub Actions** : [`tests.yml`](.github/workflows/tests.yml) lance lint, typecheck et tous les tests sur
+chaque PR ; [`deploy.yml`](.github/workflows/deploy.yml) envoie `Survivor/` chez IONOS (SFTP) à chaque push
+sur `main`. En cas d'échec, le rapport Playwright (captures, traces) est dans l'onglet **Actions** → le run →
+**Artifacts**.
 
-Les scores de fin de partie sont envoyés à une base [Supabase](https://supabase.com) gratuite.
-Sans configuration, le jeu fonctionne normalement avec le classement local uniquement.
+Les règles du projet et les pièges connus sont dans [`CLAUDE.md`](CLAUDE.md).
 
-1. Dans Supabase, ouvrir **SQL Editor → New query**, coller le contenu de
-   [`supabase/schema.sql`](supabase/schema.sql) puis cliquer sur **Run**.
-2. Dans **Project Settings → API**, copier l'**URL du projet** et la clé **anon public**.
-3. Les coller dans `ONLINE` en bas de [`Survivor/src/config.js`](Survivor/src/config.js).
+## Services en ligne (Supabase)
 
-La clé *anon* est faite pour être publique : les règles de sécurité de la base autorisent
-seulement la lecture et l'ajout de scores (pas de modification ni de suppression), avec des
-limites de valeurs et un envoi maximum toutes les 10 secondes par pseudo.
-Les scores du pseudo par défaut (« Joueur ») et des parties sans XP ne sont pas envoyés.
+Classements mondiaux (Normal, Cauchemar, défi du jour, duel ELO), comptes, sauvegarde, amis et salons de duel
+passent par [Supabase](https://supabase.com). Sans Supabase, le jeu fonctionne avec le classement local.
 
-## Structure du projet
+- Schéma complet (tables, vues, RPC, règles anti-spam) : [`supabase/schema.sql`](supabase/schema.sql), à
+  exécuter dans **SQL Editor** après chaque changement.
+- Connexion Google / Discord / e-mail : [`supabase/CONNEXION.md`](supabase/CONNEXION.md).
+- Seule la clé publique `sb_publishable_…` va dans `Survivor/src/config.js`, jamais une clé secrète.
+
+Publicités récompensées (revivre, coffre bonus) : démo interne pour l'instant, AdSense en préparation
+(voir [`PUBS.md`](PUBS.md)).
+
+## Structure
 
 ```
-.github/workflows/tests.yml  # Tests automatiques (GitHub Actions)
-tests/                      # Tests Playwright (PC + mobile)
-supabase/schema.sql         # Base du classement mondial
 Survivor/
-├── index.html              # Structure HTML (aucun script ni style inline)
-├── assets/audio/           # Musiques
-├── css/
-│   ├── base.css            # Reset, polices, boutons, utilitaires
-│   ├── hud.css             # Interface en jeu
-│   ├── menus.css           # Menus / boutique / classement / pause / fin
-│   ├── home.css            # Écran d'accueil
-│   ├── inventory.css       # Coffres et écran Équipement
-│   ├── options.css         # Menu Options
-│   ├── touch.css           # Commandes tactiles + petits écrans
-│   └── animations.css      # @keyframes
+├── index.html            # Structure HTML
+├── legal.html            # CGU et confidentialité
+├── assets/               # Logo, icônes, musiques
+├── css/                  # Un fichier par écran (base, hud, menus, home, inventory, versus...)
 └── src/
-    ├── main.js             # Point d'entrée : cycle de vie d'une partie + boucle principale
-    ├── config.js           # Toutes les constantes d'équilibrage
-    ├── core/
-    │   ├── canvas.js       # Canvas, vue logique (zoom mobile, écrans haute densité)
-    │   ├── input.js        # Clavier / souris
-    │   ├── events.js       # Bus d'événements (systèmes -> UI)
-    │   └── state.js        # État de la partie (game, player, world...) + reset
-    ├── data/
-    │   ├── enemies.js      # Types d'ennemis, tables d'apparition, vagues de boss
-    │   ├── items.js        # Armes, armures, coffres, règles de niveau / prestige
-    │   └── upgrades.js     # Améliorations de montée de niveau
-    ├── systems/            # Logique de jeu (aucun accès au DOM)
-    │   ├── player.js       # Déplacement, dash, vie, XP, ultime
-    │   ├── combat.js       # Tirs, dégâts, mort des ennemis, aura, orbes, ultime
-    │   ├── enemies.js      # IA des ennemis et des boss, projectiles ennemis
-    │   ├── spawner.js      # Vagues, apparitions, sanctuaires
-    │   ├── pickups.js      # Gemmes, soins, sanctuaires
-    │   ├── mysteryBox.js   # Boîte mystère
-    │   ├── pet.js          # Drone de combat
-    │   ├── equipment.js    # Applique l'arme / l'armure équipées au joueur
-    │   └── effects.js      # Particules, textes flottants, ondes
-    ├── render/             # Dessin sur le canvas (lecture seule de l'état)
-    │   ├── renderer.js     # Ordre des couches
-    │   ├── menuScene.js    # Scène animée de l'accueil (héros, ligne de pouls)
-    │   ├── world.js        # Grille, bordure, boîte, sanctuaires, butin
-    │   ├── entities.js     # Joueur, drone, ennemis, projectiles
-    │   ├── effects.js      # Particules, ondes, textes
-    │   └── draw.js         # Primitives de dessin
-    ├── ui/                 # Tout ce qui touche au DOM
-    │   ├── dom.js          # Cache d'éléments + écritures uniquement si changement
-    │   ├── screens.js      # Affichage d'un menu à la fois
-    │   ├── hud.js          # Interface en jeu
-    │   ├── mainMenu.js     # Menu principal, boutique
-    │   ├── leaderboardMenu.js # Classement mondial / local
-    │   ├── chestMenu.js    # Coffres de la boutique + ouverture
-    │   ├── inventoryMenu.js # Écran Équipement
-    │   ├── itemView.js     # Étoiles, stats et rareté des objets
-    │   ├── upgradeMenu.js  # Choix d'amélioration
-    │   ├── pauseMenu.js    # Pause + inventaire
-    │   ├── gameOverScreen.js
-    │   ├── optionsMenu.js  # Menu Options
-    │   └── touchControls.js # Joystick et boutons tactiles
-    ├── services/
-    │   ├── storage.js      # Sauvegarde (compte, pseudo, classement local)
-    │   ├── settings.js     # Préférences (volumes, vibrations, qualité)
-    │   ├── sfx.js          # Effets sonores synthétisés + vibrations
-    │   ├── onlineLeaderboard.js # Classement mondial (Supabase)
-    │   ├── inventory.js    # Coffres, niveau, prestige, équipement
-    │   └── audio.js        # Musique
-    └── utils/
-        ├── math.js         # clamp, distance, tirage pondéré...
-        └── spatialHash.js  # Grille spatiale pour les collisions
+    ├── main.js           # Point d'entrée : cycle de vie d'une partie et boucle à 60 ticks/s
+    ├── config.js         # Constantes et équilibrage
+    ├── core/             # État global, canvas, entrées, bus d'événements
+    ├── data/             # Données pures : ennemis, objets, améliorations, biomes, succès, quêtes, icônes
+    ├── systems/          # Logique par tick : joueur, ennemis, combat, boss, duel, événements...
+    ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
+    ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
+    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, sons, pubs
+    └── utils/            # Maths, grille spatiale
+tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)
+supabase/                 # Schéma de la base et guide de connexion
 ```
 
 ### Ajouter du contenu
 
-- **Un ennemi** : ajouter une entrée dans `ENEMY_TYPES` puis dans une `SPAWN_TABLES` (`src/data/enemies.js`).
-  Un comportement spécial se branche dans `BOSS_BEHAVIORS` (`src/systems/enemies.js`).
-- **Une amélioration** : ajouter un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
-- **Une récompense de boîte mystère** : ajouter une entrée dans `REWARDS` (`src/systems/mysteryBox.js`).
-- **Équilibrage** : `src/config.js`.
+- **Un ennemi** : une entrée **en fin** de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang),
+  puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`).
+- **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
+- **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
+- **Équilibrage** : `src/config.js` et `src/data/`, jamais en dur dans la logique.
