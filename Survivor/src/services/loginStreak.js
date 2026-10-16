@@ -16,7 +16,10 @@ export function localDayKey(date = new Date()) {
 
 /** Nombre de jours entre deux clés AAAA-MM-JJ. */
 function daysBetween(a, b) {
-  const t = (key) => Date.UTC(...key.split("-").map((n, i) => Number(n) - (i === 1 ? 1 : 0)));
+  const t = (key) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
   return Math.round((t(b) - t(a)) / 86400000);
 }
 

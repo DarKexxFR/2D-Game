@@ -55,7 +55,7 @@ function playDemoAd() {
         <button class="secondary ad-close">FERMER (sans récompense)</button>
       </div>`;
     document.body.append(overlay);
-    const fill = overlay.querySelector(".ad-bar-fill");
+    const fill = /** @type {HTMLElement} */ (overlay.querySelector(".ad-bar-fill"));
     const timer = overlay.querySelector(".ad-timer");
     const start = performance.now();
     let frame;

@@ -29,7 +29,7 @@ export function initOptionsMenu() {
     render();
   });
 
-  for (const btn of document.querySelectorAll("#optionsMenu [data-quality]")) {
+  for (const btn of document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-quality]"))) {
     btn.addEventListener("click", () => {
       updateSettings({ quality: btn.dataset.quality });
       render();
@@ -132,7 +132,7 @@ function render() {
   const vib = $("optVibration");
   vib.textContent = settings.vibration ? "ACTIVÉES" : "DÉSACTIVÉES";
   vib.classList.toggle("on", settings.vibration);
-  for (const btn of document.querySelectorAll("#optionsMenu [data-quality]")) {
+  for (const btn of document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-quality]"))) {
     btn.classList.toggle("active", btn.dataset.quality === settings.quality);
   }
 }

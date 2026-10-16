@@ -4,7 +4,7 @@
 
 import { onSettingsChange } from "../services/settings.js";
 
-export const canvas = document.getElementById("gameCanvas");
+export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 export const ctx = canvas.getContext("2d");
 
 // Niveaux de qualité graphique (menu Options). Les ombres lumineuses (shadowBlur)

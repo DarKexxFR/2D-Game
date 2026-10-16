@@ -18,7 +18,10 @@ export function equippedLoadout() {
   };
 }
 
-/** Applique un équipement (par défaut celui du joueur ; le défi quotidien impose le sien). */
+/**
+ * Applique un équipement (par défaut celui du joueur ; le défi quotidien impose le sien).
+ * @param {Partial<ReturnType<typeof equippedLoadout>>} [loadout]
+ */
 export function applyEquipment(loadout = equippedLoadout()) {
   const w = loadout.weapon || { id: "blaster", level: 1, prestige: 1 };
   player.weapon = weaponStats(w.id, w.level, w.prestige);

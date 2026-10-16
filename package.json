@@ -7,10 +7,12 @@
     "start": "python3 -m http.server 8000 --directory Survivor",
     "test": "playwright test",
     "lint": "prettier --check \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\" && node scripts/check-syntax.mjs",
-    "format": "prettier --write \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\""
+    "format": "prettier --write \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\"",
+    "typecheck": "tsc -p jsconfig.json"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
-    "prettier": "3.8.1"
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
   }
 }

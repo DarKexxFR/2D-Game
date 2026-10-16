@@ -27,12 +27,13 @@ sert qu'aux outils (Prettier, Playwright).
 npm start            # sert le jeu sur http://localhost:8000 (python3 http.server)
 npm run lint         # Prettier (largeur 110) + vérification de syntaxe (scripts/check-syntax.mjs)
 npm run format       # corrige le formatage
+npm run typecheck    # vérifie les types (TypeScript sur le JavaScript, via JSDoc + checkJs)
 npx playwright test  # tests de bout en bout (projets « desktop » et « mobile » Pixel 7)
 npx playwright test tests/home.spec.js --project=mobile --repeat-each=5   # traquer un test instable
 ```
 
-La CI GitHub (`.github/workflows/tests.yml`) lance `npm run lint` puis tous les tests
-Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
+La CI GitHub (`.github/workflows/tests.yml`) lance `npm run lint`, `npm run typecheck` puis tous les tests
+Playwright sur chaque PR. Toujours lancer les trois en local avant de pousser.
 
 ## Architecture (`Survivor/src/`)
 
@@ -221,6 +222,10 @@ Principes :
   commits ou les messages. Le schéma (tables, vues, RPC, triggers anti-spam) est dans
   `supabase/schema.sql` ; le propriétaire l'exécute lui-même dans Supabase. Supabase
   n'est pas joignable depuis l'environnement de Claude : les tests le simulent.
+- **Types (JSDoc + checkJs)** : le jeu reste en JavaScript, sans compilation (le dossier `Survivor/` est
+  envoyé tel quel). TypeScript ne sert qu'à vérifier le code (`jsconfig.json`, mode non strict). Préciser
+  les types en commentaires JSDoc (`@param`, `@type`, `@typedef`, conversion `/** @type {HTMLElement} */ (x)`) ;
+  les globales (`window.…`) se déclarent dans `types/globals.d.ts`. Ne pas passer en `.ts`.
 - **Formatage** : Prettier, largeur 110 (`.prettierrc`). Lancer `npm run format` après édition.
 - **Styles** : couleurs néon (cyan `#00ffff`, rose `#ff2a6d`, violet `#aa66ff`, vert
   `#00ff88`, or `#ffd700`), polices Orbitron et « Press Start 2P ». `base.css` contient

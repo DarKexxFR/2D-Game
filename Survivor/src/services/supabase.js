@@ -32,6 +32,10 @@ export function authRequest(path, options) {
   return send(authUrl(path), options);
 }
 
+/**
+ * @param {string} url
+ * @param {RequestInit & { token?: string }} [opts]
+ */
 async function send(url, { token, ...options } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ONLINE.timeoutMs);

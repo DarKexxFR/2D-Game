@@ -212,7 +212,7 @@ function startDuel(online = null, names = []) {
       mysteryBox.active = false; // à deux sur un clavier, pas de touche libre pour l'ouvrir
     });
   }
-  document.activeElement?.blur?.(); // ESPACE / ENTRÉE (dash) ne doivent pas recliquer un bouton
+  /** @type {HTMLElement} */ (document.activeElement)?.blur?.(); // ESPACE / ENTRÉE (dash) ne doivent pas recliquer un bouton
   hideScreens();
   showHud(!!online); // écran scindé : chaque moitié a son propre bandeau
   showVersusHud(true);
@@ -526,7 +526,7 @@ function init() {
   document.addEventListener("pointerdown", unlockAudio);
   document.addEventListener("keydown", unlockAudio);
   document.addEventListener("click", (e) => {
-    if (e.target.closest("button:not(.touch-btn)")) playSfx("click");
+    if (/** @type {Element} */ (e.target).closest("button:not(.touch-btn)")) playSfx("click");
   });
 
   const pause = () => {
