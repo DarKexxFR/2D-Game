@@ -192,6 +192,11 @@
               <div class="home-gold" title="Or en banque">
                 <i data-icon="coin" data-color="#ffd700"></i><span id="acGoldDisplay">0</span>
               </div>
+              <button id="btnFriends" class="home-friends-btn" aria-label="Amis">
+                <i data-icon="friends"></i><span class="home-friends-label">AMIS</span>
+                <span id="friendsOnline" class="friends-online" title="Amis en ligne"></span>
+                <span id="friendsBadge" class="friend-badge" title="Demandes d'ami reçues"></span>
+              </button>
               <button id="btnLogin" class="home-login-btn" aria-label="Se connecter">
                 <i data-icon="user"></i><span id="btnLoginLabel">SE CONNECTER</span>
               </button>
@@ -266,9 +271,7 @@
           <nav class="home-dock">
             <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
             <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
-            <button id="btnVersus" class="dock-btn">
-              <i data-icon="sword"></i> DUEL 1V1 <span id="friendsBadge" class="friend-badge"></span>
-            </button>
+            <button id="btnVersus" class="dock-btn"><i data-icon="sword"></i> DUEL 1V1</button>
             <button id="btnBossRush" class="dock-btn dock-rush"><i data-icon="crown"></i> BOSS RUSH</button>
           </nav>
           <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
@@ -759,6 +762,7 @@
         <div id="runStats" class="run-stats"></div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>
         <div id="onlineStatus"></div>
+        <button id="btnKillCam" class="kill-cam-btn">▶ REVOIR MA MORT</button>
         <div class="btn-grid">
           <button id="btnReplay">REJOUER</button>
           <button id="btnGameOverMenu" class="secondary">MENU</button>

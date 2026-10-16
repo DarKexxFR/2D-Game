@@ -197,7 +197,7 @@ export const UPGRADES = [
 // Une seule fois par partie chacune ; jamais dans un coffre de boss ni un sanctuaire maudit.
 // `malus` est affiché en rouge sous la description.
 const once =
-  (name, extra = () => true) =>
+  (name, extra = (/** @type {any} */ p) => true) =>
   (p) =>
     !p.inventory[name] && extra(p);
 const BLOOD_PACT = { ms: 5000, heal: 0.012 }; // soin par gemme : 1,2 % des PV max

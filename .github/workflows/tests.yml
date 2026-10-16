@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   lint:
-    name: Format & syntaxe
+    name: Format, syntaxe & types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +24,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Vérification des types (JSDoc)
+        run: npm run typecheck
 
   e2e:
     name: Jeu (PC + mobile)

@@ -72,6 +72,7 @@ function bonusStats(item, level, prestige) {
 // --- Comparaison avec l'objet équipé ---
 
 // [clé, libellé, en pourcentage ?, plus petit = mieux ?]
+/** @type {[string, string, boolean][]} */
 const WEAPON_KEYS = [
   ["damage", "DMG", false],
   ["rate", "cadence", false],
@@ -80,6 +81,7 @@ const WEAPON_KEYS = [
   ["explosion", "explosion", false],
   ["chain", "rebonds", false],
 ];
+/** @type {[string, string, boolean][]} */
 const BONUS_KEYS = [
   ["health", "PV", false],
   ["defense", "DEF", false],
@@ -95,6 +97,7 @@ const BONUS_KEYS = [
   ["thorns", "épines", true],
   ["auraDamage", "dégâts d'aura", false],
 ];
+/** @type {[string, string, boolean][]} */
 const PET_KEYS = [
   ["damage", "dégâts", false],
   ["heal", "soin", false],

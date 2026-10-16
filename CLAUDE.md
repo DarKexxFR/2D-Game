@@ -27,12 +27,13 @@ sert qu'aux outils (Prettier, Playwright).
 npm start            # sert le jeu sur http://localhost:8000 (python3 http.server)
 npm run lint         # Prettier (largeur 110) + vérification de syntaxe (scripts/check-syntax.mjs)
 npm run format       # corrige le formatage
+npm run typecheck    # vérifie les types (TypeScript sur le JavaScript, via JSDoc + checkJs)
 npx playwright test  # tests de bout en bout (projets « desktop » et « mobile » Pixel 7)
 npx playwright test tests/home.spec.js --project=mobile --repeat-each=5   # traquer un test instable
 ```
 
-La CI GitHub (`.github/workflows/tests.yml`) lance `npm run lint` puis tous les tests
-Playwright sur chaque PR. Toujours lancer les deux en local avant de pousser.
+La CI GitHub (`.github/workflows/tests.yml`) lance `npm run lint`, `npm run typecheck` puis tous les tests
+Playwright sur chaque PR. Toujours lancer les trois en local avant de pousser.
 
 ## Architecture (`Survivor/src/`)
 
@@ -81,7 +82,9 @@ Principes :
   Le **Kraken** reste sous l'eau (`e.submerged` : ni touché, ni visé, ni dans la grille) tant que ses
   tentacules (`kraken_tentacle`) tiennent, aspire le joueur (tourbillon), puis expose sa tête (`KRAKEN`).
   Les **Jumeaux** (`twin_fire` fait apparaître `twin_ice`) sont reliés par un lien qui blesse, se croisent
-  (« ciseaux »), le survivant se venge ; un seul coffre, bonus « SYNCHRO » si tués presque ensemble (`TWINS`).
+  (« ciseaux »), lancent ensemble « Éclipse » (lasers tournants en sens contraires), le lien soigne le plus
+  abîmé (« Lien vital »), furie commune sous 50 % de vie à eux deux ; feu : mur de feu, nova ; glace : prison de glace
+  (une sortie), vague de givre. Le survivant se venge ; un seul coffre, bonus « SYNCHRO » si tués presque ensemble (`TWINS`).
   Un boss vaincu lâche un **coffre d'augmentation** (`chest` dans `data/enemies.js`) : choix d'une
   amélioration rare+ et or (`BOSS_CHEST` dans `config.js`). Le **Voleur doré** fuit et lâche de l'or.
   Combat de boss : à l'arrivée d'un boss les petits ennemis disparaissent et plus aucun n'apparaît tant
@@ -90,6 +93,9 @@ Principes :
   **Roi Slime** : saut annoncé (enchaîné en furie), pluie de slime collante, absorbe ses petits pour se soigner,
   « mitose » en furie, se divise à sa mort (`SLIME_KING`).
   Vitesse de déplacement du joueur plafonnée à `STAT_CAPS.speed` (tous bonus compris).
+  **Les boss ne se poussent pas** : tout recul ou attraction d'ennemi passe par `systems/knockback.js`
+  (`knockEnemy`, `pullEnemy`, `pushEnemy`), qui ignore les boss (choix du propriétaire) ; seuls leurs
+  propres mouvements (sauts, charges, téléportations) les déplacent.
 - **Difficulté** : linéaire jusqu'à la vague 10, puis PV / dégâts ennemis exponentiels
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
   la vague 12 (`SURVIVAL` dans `config.js`) ; cœur fissuré violet `#healCorruption` près de la barre de vie
@@ -148,7 +154,7 @@ Principes :
     points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
-  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par « MES AMIS » de l'écran Duel) : joueurs
+  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par le bouton « AMIS » de l'accueil, avec amis en ligne et demandes reçues, ou par « MES AMIS » de l'écran Duel ; RETOUR ramène à l'écran d'origine) : joueurs
     connectés seulement. Ajout par pseudo (s'il est unique) ou code ami, demande à accepter (tables
     `player_profiles` / `friendships`, RPC `friends_sync` / `friend_request` / `friend_respond` / `friend_remove`).
     Présence : `friends_sync` toutes les `FRIENDS.syncMs` (en ligne = vu depuis moins de 75 s, statut menu / jeu /
@@ -209,6 +215,15 @@ Principes :
 - **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
   Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
   Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
+- **Renaissance** (`rebirth` dans `systems/player.js`, réglages `REVIVE` dans `config.js`) : chaque retour à la vie
+  (Seconde chance, Phénix consommé en premier avec ses ailes de feu, Renaissance céleste, pub) joue une animation
+  (effet `rebirth` dans `render/effects.js`) et une onde de choc : ennemis tués au corps à corps, boss et tentacules
+  seulement blessés (ni tués ni repoussés), les autres proches repoussés, tirs ennemis effacés.
+- **Ralenti de la mort** (`systems/killCam.js` enregistre, `render/killCam.js` rejoue, réglages `KILL_CAM`) :
+  les 4 dernières secondes (vaisseau, ennemis, tirs, attaques de zone autour du vaisseau) sont gardées dans
+  `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,
+  explosion, « TUÉ PAR » + viseur sur le coupable). `takeDamage(montant, source)` : source = l'ennemi, son type
+  ou un événement de carte ; sans source, c'est le boss en vie. Pas en duel.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -221,6 +236,10 @@ Principes :
   commits ou les messages. Le schéma (tables, vues, RPC, triggers anti-spam) est dans
   `supabase/schema.sql` ; le propriétaire l'exécute lui-même dans Supabase. Supabase
   n'est pas joignable depuis l'environnement de Claude : les tests le simulent.
+- **Types (JSDoc + checkJs)** : le jeu reste en JavaScript, sans compilation (le dossier `Survivor/` est
+  envoyé tel quel). TypeScript ne sert qu'à vérifier le code (`jsconfig.json`, mode non strict). Préciser
+  les types en commentaires JSDoc (`@param`, `@type`, `@typedef`, conversion `/** @type {HTMLElement} */ (x)`) ;
+  les globales (`window.…`) se déclarent dans `types/globals.d.ts`. Ne pas passer en `.ts`.
 - **Formatage** : Prettier, largeur 110 (`.prettierrc`). Lancer `npm run format` après édition.
 - **Styles** : couleurs néon (cyan `#00ffff`, rose `#ff2a6d`, violet `#aa66ff`, vert
   `#00ff88`, or `#ffd700`), polices Orbitron et « Press Start 2P ». `base.css` contient
@@ -266,7 +285,7 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
-synergies familier + arme.
+synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

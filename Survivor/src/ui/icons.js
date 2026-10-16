@@ -20,7 +20,14 @@ export function icon(name, color) {
   return span;
 }
 
-/** Remplit un élément avec du texte suivi (ou précédé) d'une icône. */
+/**
+ * Remplit un élément avec du texte suivi (ou précédé) d'une icône.
+ * @template {Element} T
+ * @param {T} node
+ * @param {string} text
+ * @param {string} name
+ * @param {{ before?: boolean, color?: string }} [opts]
+ */
 export function setLabel(node, text, name, { before = false, color } = {}) {
   const parts = [document.createTextNode(text), icon(name, color)];
   if (before) parts.reverse();
@@ -30,7 +37,7 @@ export function setLabel(node, text, name, { before = false, color } = {}) {
 
 /** Remplace chaque <i data-icon="nom"> statique de la page par l'icône correspondante. */
 export function hydrateIcons(root = document) {
-  for (const i of root.querySelectorAll("i[data-icon]")) {
+  for (const i of root.querySelectorAll(/** @type {"i"} */ ("i[data-icon]"))) {
     const ico = icon(i.dataset.icon, i.dataset.color);
     i.replaceWith(ico);
   }

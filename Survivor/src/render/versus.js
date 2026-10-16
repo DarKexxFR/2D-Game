@@ -44,7 +44,7 @@ function bar(x, y, w, h, pct, color) {
   ctx.fillRect(x, y, w * Math.max(0, Math.min(1, pct)), h);
 }
 
-function text(str, x, y, size, color, align = "left") {
+function text(str, x, y, size, color, align = /** @type {CanvasTextAlign} */ ("left")) {
   ctx.font = `bold ${size}px ${FONT}`;
   ctx.textAlign = align;
   ctx.fillStyle = color;

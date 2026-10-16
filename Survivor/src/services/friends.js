@@ -15,13 +15,14 @@ let opts = {
   getName: () => "",
   getStatus: () => "menu", // « menu » : libre pour un défi ; « jeu » / « duel » : occupé
   onChange() {},
-  onInvite() {}, // défi reçu { from, name, room }
+  onInvite(_invite) {}, // défi reçu { from, name, room }
   onInviteGone() {}, // défi annulé par l'ami ou expiré
 };
 let inbox = null; // canal de ce joueur
 let inboxUser = null;
 let syncTimer = null;
 let syncing = null;
+/** @type {{ from: string, name: string, room: string, timer?: ReturnType<typeof setTimeout> } | null} */
 let pending = null; // défi reçu en attente de réponse
 let challenge = null; // défi envoyé
 

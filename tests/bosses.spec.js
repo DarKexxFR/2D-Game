@@ -500,7 +500,7 @@ test("Jumeaux : les ciseaux font passer le lien de l'autre côté du joueur", as
     });
   await game(page, ({ state }) => {
     const fire = state.world.enemies.find((e) => e.type === "twin_fire");
-    fire.turn = 1; // prochaine attaque : ciseaux
+    fire.turn = 2; // prochaine attaque : ciseaux
     fire.attackTimer = 1;
     state.player.isDashing = true; // le test regarde le lien, pas les dégâts
   });
@@ -514,6 +514,68 @@ test("Jumeaux : les ciseaux font passer le lien de l'autre côté du joueur", as
   expect(await side()).toBe(-before);
   await game(page, ({ state }) => (state.player.isDashing = false));
   await killPlayer(page);
+});
+
+test("Jumeaux : Éclipse, Lien vital, furie commune et nouvelles attaques", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page, { invincible: true });
+  await spawnAlone(page, "twin_fire");
+  await expect.poll(() => game(page, ({ state }) => state.world.enemies.length)).toBe(2);
+  const r = await game(page, ({ state, enemies }) => {
+    state.game.running = false;
+    const [fire, ice] = state.world.enemies;
+    const pair = fire.pair;
+    const hz = state.world.hazards;
+    // Éclipse : lasers tournants des deux jumeaux, en sens contraires, et le duo s'arrête
+    hz.length = 0;
+    fire.attackTimer = ice.attackTimer = 1e9;
+    pair.eclipse = 1;
+    enemies.updateEnemies();
+    const spins = hz.filter((h) => h.kind === "beam").map((h) => Math.sign(h.spin));
+    const at = { x: fire.x, y: fire.y };
+    for (let i = 0; i < 20; i++) enemies.updateEnemies();
+    const held = fire.x === at.x && fire.y === at.y && pair.hold > 0;
+    // Lien vital : le jumeau le plus abîmé est soigné
+    ice.health = ice.maxHealth * 0.5;
+    pair.vital = 1;
+    enemies.updateEnemies();
+    const healed = ice.health / ice.maxHealth;
+    // Furie commune sous 50 % de vie à eux deux
+    fire.health = fire.maxHealth * 0.3;
+    ice.health = ice.maxHealth * 0.3;
+    enemies.updateEnemies();
+    const fury = { pair: pair.fury, fire: fire.enraged, ice: ice.enraged };
+    // Prison de glace : un cercle de zones autour du joueur avec une sortie, puis le centre
+    hz.length = 0;
+    pair.hold = 0;
+    pair.eclipse = 1e9;
+    ice.turn = 0; // prochaine attaque : prison
+    ice.attackTimer = 1;
+    enemies.updateEnemies();
+    const prison = hz.filter((h) => h.kind === "circle").length;
+    // Mur de feu et nova du jumeau de feu
+    hz.length = 0;
+    fire.turn = 0; // prochaine attaque : mur de feu
+    fire.attackTimer = 1;
+    enemies.updateEnemies();
+    const wall = hz.filter((h) => h.kind === "circle" && h.pool > 0).length;
+    hz.length = 0;
+    fire.turn = 3; // prochaine attaque : nova
+    fire.attackTimer = 1;
+    enemies.updateEnemies();
+    const rings = hz.filter((h) => h.kind === "ring").length;
+    state.game.running = true;
+    return { spins, held, healed, fury, prison, wall, rings };
+  });
+  expect(r.spins.filter((s) => s > 0).length).toBe(2);
+  expect(r.spins.filter((s) => s < 0).length).toBe(2);
+  expect(r.held).toBe(true);
+  expect(r.healed).toBeCloseTo(0.56, 2);
+  expect(r.fury).toEqual({ pair: true, fire: true, ice: true });
+  expect(r.prison).toBe(9); // 10 cases moins 2 pour la sortie, plus le centre
+  expect(r.wall).toBe(7);
+  expect(r.rings).toBe(2); // furie : deux ondes
+  await expect(page.locator("#bossBarName")).toContainText("FURIE");
 });
 
 test("boss renforcés : plus de PV, de dégâts et de taille, et encore plus de PV aux vagues tardives", async ({
@@ -594,5 +656,43 @@ test("Roi Slime : saut annoncé, pluie de slime, absorption de ses petits, mitos
   await expect
     .poll(() => game(page, ({ state }) => state.world.enemies.filter((e) => e.type === "slime_big").length))
     .toBe(2);
+  await killPlayer(page);
+});
+
+test("un boss ne se fait jamais pousser ni attirer, un ennemi normal oui", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  const moved = await game(page, async ({ state, spawner, combat }) => {
+    const kb = await import("/src/systems/knockback.js");
+    state.game.spawnTimer = 1e9;
+    state.world.enemies.length = 0;
+    const { worldX: x, worldY: y } = state.player;
+    spawner.spawnEnemy("twin_fire", x + 400, y);
+    spawner.spawnEnemy("tank", x - 400, y);
+    const boss = state.world.enemies.find((e) => e.template.isBoss);
+    const mob = state.world.enemies.find((e) => e.type === "tank");
+    const before = [boss.x, boss.y, mob.x, mob.y];
+    for (const e of [boss, mob]) {
+      kb.knockEnemy(e, 0.5, 80);
+      kb.pullEnemy(e, x, y, 0.5);
+    }
+    const boss1 = boss.x === before[0] && boss.y === before[1];
+    const mob1 = mob.x !== before[2] || mob.y !== before[3];
+    // Orbes au contact des deux ennemis
+    state.player.orbitals = 4;
+    for (const e of [boss, mob]) {
+      e.x = x + state.player.orbitalRadius;
+      e.y = y;
+    }
+    const placed = [boss.x, boss.y, mob.x, mob.y];
+    combat.rebuildEnemyGrid();
+    combat.updateOrbitals();
+    return {
+      boss: boss1,
+      mob: mob1,
+      bossOrb: boss.x === placed[0] && boss.y === placed[1],
+    };
+  });
+  expect(moved).toEqual({ boss: true, mob: true, bossOrb: true });
   await killPlayer(page);
 });

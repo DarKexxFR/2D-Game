@@ -58,6 +58,7 @@ export function resetGame() {
     combo: 0, // éliminations enchaînées (voir systems/effects.js)
     comboTimer: 0,
     slowMo: 0, // ticks de ralenti restants (mort d'un boss)
+    killCam: { frames: [], tick: 0, killer: null }, // ralenti de la mort (voir systems/killCam.js)
     flash: null, // flash plein écran { color, alpha }
     banner: null, // duel sur un écran : annonce dans la moitié d'écran (voir systems/versus.js)
     duelAttack: 0, // duel : éliminations vers la prochaine attaque (voir systems/duelAttacks.js)
@@ -111,6 +112,7 @@ export function resetPlayer(accountLevel) {
     xpBonus: 0, // bonus d'XP en % (talent Sagesse)
     rerolls: 0, // relances des améliorations restantes (talent Relance)
     revives: 0, // résurrections restantes (talent Seconde chance)
+    phoenixRevive: false, // la résurrection du Phénix n'a pas encore servi
     executionThreshold: 0,
     hasRayGun: false,
     ultCharge: 0,

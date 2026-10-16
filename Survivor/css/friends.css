@@ -1,6 +1,6 @@
 /* Amis : écran « Amis », pastille des demandes reçues, fenêtre de défi reçu */
 
-/* Nombre de demandes d'ami reçues (bouton DUEL 1V1 de l'accueil, MES AMIS de l'écran Duel) */
+/* Nombre de demandes d'ami reçues (bouton AMIS de l'accueil, MES AMIS de l'écran Duel) */
 .friend-badge {
   display: inline-block;
   min-width: 20px;
@@ -18,6 +18,68 @@
 }
 .friend-badge:empty {
   display: none;
+}
+
+/* Bouton AMIS de la barre du haut de l'accueil : nombre d'amis en ligne (vert) et demandes reçues */
+button.home-friends-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(170, 102, 255, 0.6);
+  background: rgba(35, 15, 60, 0.75);
+  color: #cfa8ff;
+  font-size: 12px;
+  overflow: visible;
+}
+.home-friends-btn .ico {
+  font-size: 18px;
+}
+.friends-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #00ff88;
+  font-size: 11px;
+}
+.friends-online::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+}
+.friends-online:empty {
+  display: none;
+}
+.home-friends-btn .friend-badge {
+  margin-left: 0;
+}
+/* Peu de place : icône seule, la pastille des demandes passe dans le coin */
+@media (max-width: 760px) {
+  button.home-friends-btn {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .home-friends-label,
+  .home-friends-btn .friends-online {
+    display: none;
+  }
+  .home-friends-btn .ico {
+    font-size: 22px;
+  }
+  .home-friends-btn .friend-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+  }
 }
 
 button.duel-friends-btn {

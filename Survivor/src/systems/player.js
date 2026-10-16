@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, STAT_CAPS, STUN, SURVIVAL, VERSUS } from "../config.js";
+import { ADS, REVIVE, STAT_CAPS, STUN, SURVIVAL, VERSUS } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, stickDirection } from "../core/input.js";
@@ -13,9 +13,14 @@ import {
   createParticles,
   createShockwave,
   createSpawnEffect,
+  flashScreen,
+  slowMotion,
 } from "./effects.js";
+import { damageEnemy } from "./combat.js";
+import { pushEnemy } from "./knockback.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 import { onDash, onHurt, onLevelUp } from "./perks.js";
+import { noteKiller } from "./killCam.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -133,7 +138,8 @@ export function heal(amount) {
   player.health = Math.min(player.maxHealth, player.health + amount * healFactor() * player.healMult);
 }
 
-export function takeDamage(amount) {
+/** `source` (facultatif) : ce qui a porté le coup, pour le ralenti de la mort (systems/killCam.js). */
+export function takeDamage(amount, source) {
   if (game.over) return;
   amount *= player.damageTaken;
   player.health -= amount;
@@ -142,15 +148,18 @@ export function takeDamage(amount) {
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
   if (player.health <= 0 && player.revives > 0) {
-    // Talent « Seconde chance »
+    // Talent « Seconde chance », Phénix (consommé en premier) ou Renaissance céleste
     player.revives--;
+    const phoenix = player.phoenixRevive;
+    player.phoenixRevive = false;
     player.health = player.maxHealth * 0.5;
     player.buffs.shield = 120;
-    addFloatingText(player.worldX, player.worldY - 40, "SECONDE CHANCE !", "#00ffcc", 26, 90);
-    addScreenShake(10);
+    if (phoenix) rebirth("#ff6a1f", "RENAISSANCE DU PHÉNIX !", "phoenix");
+    else rebirth("#00ffcc", "SECONDE CHANCE !");
     return;
   }
   if (player.health <= 0) {
+    noteKiller(source);
     game.over = true;
     playSfx("death");
     vibrate(300);
@@ -170,18 +179,52 @@ export function reviveFromAd() {
   game.paused = false;
   player.health = player.maxHealth * ADS.reviveHealth;
   player.buffs.shield = 180;
+  rebirth("#ffd700", "DE RETOUR !", "ad", ADS.reviveClearRadius);
+}
+
+/**
+ * Renaissance : animation autour du joueur et onde de choc. Les ennemis au corps à corps meurent,
+ * les boss (et tentacules du Kraken) perdent une part de leur vie (jamais tués d'un coup ni repoussés), les autres proches
+ * sont repoussés et les tirs ennemis effacés.
+ */
+function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) {
   const { worldX: x, worldY: y } = player;
   for (const e of world.enemies) {
+    if (e.dead || e.submerged) continue;
     const d = dist(e.x, e.y, x, y);
-    if (d >= ADS.reviveClearRadius) continue;
-    const a = angleTo(x, y, e.x, e.y);
-    e.x = x + Math.cos(a) * ADS.reviveClearRadius;
-    e.y = y + Math.sin(a) * ADS.reviveClearRadius;
+    if (e.template.isBoss || e.template.noExecute) {
+      if (d < REVIVE.killRadius + e.size) {
+        damageEnemy(e, Math.max(0, Math.min(e.health - 1, e.maxHealth * REVIVE.bossDamage)), "revive");
+      }
+      continue;
+    }
+    if (d < REVIVE.killRadius + e.size) {
+      createParticles(e.x, e.y, color, 6);
+      damageEnemy(e, e.health + 1, "revive");
+    } else if (d < pushRadius) {
+      const a = angleTo(x, y, e.x, e.y);
+      pushEnemy(e, x + Math.cos(a) * pushRadius - e.x, y + Math.sin(a) * pushRadius - e.y);
+    }
   }
   world.enemyProjectiles.length = 0;
-  createShockwave(x, y, ADS.reviveClearRadius, "#ffd700");
-  addFloatingText(x, y - 40, "DE RETOUR !", "#ffd700", 26, 90);
-  addScreenShake(10);
+  world.visualEffects.push({
+    type: "rebirth",
+    x,
+    y,
+    life: REVIVE.animTicks,
+    max: REVIVE.animTicks,
+    color,
+    kind,
+  });
+  createShockwave(x, y, REVIVE.killRadius, "#ffffff");
+  createShockwave(x, y, pushRadius, color);
+  createParticles(x, y, color, 40);
+  flashScreen(color, 0.45);
+  slowMotion(REVIVE.slowMo);
+  addFloatingText(x, y - 40, label, color, 26, 90);
+  addScreenShake(14);
+  playSfx("levelUp");
+  vibrate([80, 40, 120]);
 }
 
 export function gainXp(amount) {

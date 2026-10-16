@@ -508,6 +508,18 @@
   min-height: 15px;
 }
 
+/* Ralenti de la mort (render/killCam.js) : l'écran de fin et le HUD s'effacent pendant le replay */
+button.kill-cam-btn {
+  display: none;
+  margin-top: 14px;
+  background: linear-gradient(180deg, #ff2a6d, #a0103e);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 42, 109, 0.45);
+}
+body.kill-cam #gameContainer > :not(#gameCanvas) {
+  visibility: hidden !important;
+}
+
 /* Statistiques de fin de partie */
 .run-stats {
   margin: 12px 0;

@@ -35,7 +35,7 @@ export function initMainMenu({ onPlay }) {
   $("playerPseudo").addEventListener("change", commitPseudo);
 
   $("btnPlay").addEventListener("click", onPlay);
-  for (const btn of document.querySelectorAll(".diff-btn")) {
+  for (const btn of document.querySelectorAll(/** @type {"button"} */ (".diff-btn"))) {
     btn.addEventListener("click", () => pickDifficulty(btn.dataset.diff));
   }
   $("btnShop").addEventListener("click", () => showScreen("shopMenu"));
@@ -108,7 +108,7 @@ function pickDifficulty(id) {
 
 function refreshDifficulty() {
   const current = selectedDifficulty();
-  for (const btn of document.querySelectorAll(".diff-btn")) {
+  for (const btn of document.querySelectorAll(/** @type {"button"} */ (".diff-btn"))) {
     const id = btn.dataset.diff;
     const unlocked = isDifficultyUnlocked(id);
     btn.classList.toggle("active", id === current);

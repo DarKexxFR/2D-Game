@@ -18,7 +18,10 @@ export function equippedLoadout() {
   };
 }
 
-/** Applique un équipement (par défaut celui du joueur ; le défi quotidien impose le sien). */
+/**
+ * Applique un équipement (par défaut celui du joueur ; le défi quotidien impose le sien).
+ * @param {Partial<ReturnType<typeof equippedLoadout>>} [loadout]
+ */
 export function applyEquipment(loadout = equippedLoadout()) {
   const w = loadout.weapon || { id: "blaster", level: 1, prestige: 1 };
   player.weapon = weaponStats(w.id, w.level, w.prestige);
@@ -39,7 +42,10 @@ export function applyEquipment(loadout = equippedLoadout()) {
     player.magnetRadius += pet.power.magnet;
     player.goldBonus += pet.power.gold;
   }
-  if (pet?.revive) player.revives++; // Phénix : une résurrection de plus
+  if (pet?.revive) {
+    player.revives++; // Phénix : une résurrection de plus
+    player.phoenixRevive = true; // consommée en premier, avec l'animation du phénix
+  }
 
   const m = loadout.module;
   player.module = m ? moduleStats(m.id, m.level, m.prestige) : null;

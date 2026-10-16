@@ -17,6 +17,7 @@ import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
 import { clampToZone } from "./arena.js";
+import { knockEnemy } from "./knockback.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
 
@@ -124,12 +125,12 @@ function rangedAttack(e, distToPlayer) {
   if (distToPlayer >= e.attackRange || game.time - e.lastShot <= e.shootCooldown) return;
   e.lastShot = game.time;
   const a = angleTo(e.x, e.y, player.worldX, player.worldY);
-  fireEnemyProjectile(e.x, e.y, a, 6, { size: 6, damage: e.damage, color: "#ff0000" });
+  fireEnemyProjectile(e.x, e.y, a, 6, { size: 6, damage: e.damage, color: "#ff0000", from: e.type });
 }
 
 function handleContact(e) {
   if (e.type === "kamikaze") {
-    takeDamage(e.damage);
+    takeDamage(e.damage, e);
     createAoEEffect(e.x, e.y, 40);
     playSfx("explosion");
     killEnemy(e);
@@ -140,12 +141,10 @@ function handleContact(e) {
   // Défense : réduction en pourcentage à rendements décroissants (elle ne peut plus tout annuler)
   const reduction = player.defense / (player.defense + SURVIVAL.armorCurve);
   const dmg = Math.max(1, e.damage * (1 - reduction));
-  takeDamage(dmg);
+  takeDamage(dmg, e);
   if (e.type === "golem") freezePlayer();
   e.lastDamage = game.time;
-  const a = angleTo(player.worldX, player.worldY, e.x, e.y);
-  e.x += Math.cos(a) * 20;
-  e.y += Math.sin(a) * 20;
+  knockEnemy(e, angleTo(player.worldX, player.worldY, e.x, e.y), 20);
   if (player.thorns > 0) {
     addFloatingText(e.x, e.y, Math.round(dmg * player.thorns), "#aa00ff", 12);
     damageEnemy(e, dmg * player.thorns, "thorns");
@@ -774,15 +773,17 @@ function updateTentacle(e) {
 // --- JUMEAUX ---
 
 const TWIN_CYCLES = {
-  twin_fire: ["flames", "meteors", "scissors"],
-  twin_ice: ["shards", "spikes"],
-  revenge: ["flames", "shards", "meteors", "spikes"],
+  twin_fire: ["flames", "firewall", "meteors", "scissors", "nova"],
+  twin_ice: ["shards", "prison", "spikes", "frostring"],
+  revenge: ["flames", "prison", "meteors", "spikes", "firewall", "shards", "nova", "frostring"],
 };
 
 /**
  * Jumeaux de feu et de glace : ils tournent autour du joueur, reliés par un lien d'énergie qui
- * blesse. « Ciseaux » : ils changent de côté et le lien balaie le joueur. Si l'un meurt, l'autre
- * se venge : il récupère de la vie et enchaîne les attaques des deux.
+ * blesse. « Ciseaux » : ils changent de côté et le lien balaie le joueur. Ensemble ils lancent
+ * régulièrement « Éclipse » (lasers tournants en sens contraires) et le lien soigne celui qui est
+ * le plus abîmé (« Lien vital ») : il faut les blesser tous les deux. Sous 50 % de vie à eux deux :
+ * furie commune. Si l'un meurt, l'autre se venge : il récupère de la vie et enchaîne les attaques des deux.
  */
 function updateTwin(e) {
   if (!e.pair) linkTwins(e);
@@ -794,8 +795,9 @@ function updateTwin(e) {
   }
   const pair = e.pair;
   if (e.type === "twin_fire") updatePair(e, pair);
-  // Chacun rejoint sa place sur le cercle autour du joueur
+  // Chacun rejoint sa place sur le cercle autour du joueur (sauf pendant l'Éclipse : ils tiennent leurs lasers)
   e.rooted = 1;
+  if (pair.hold > 0) return;
   const angle = pair.theta + (e.type === "twin_ice" ? pair.gap : 0);
   const tx = player.worldX + Math.cos(angle) * TWINS.orbit;
   const ty = player.worldY + Math.sin(angle) * TWINS.orbit;
@@ -814,16 +816,21 @@ function linkTwins(e) {
   spawnEnemy(e.type === "twin_fire" ? "twin_ice" : "twin_fire", e.x + 120, e.y);
   const other = world.enemies[world.enemies.length - 1];
   const pair = { theta: angleTo(player.worldX, player.worldY, e.x, e.y), gap: TWINS.gap };
-  Object.assign(pair, { scissors: 0, warn: 0, hit: -1e9 });
+  Object.assign(pair, { scissors: 0, warn: 0, hit: -1e9, hold: 0, fury: false });
+  Object.assign(pair, { eclipse: TWINS.eclipse.every, vital: TWINS.vital.every });
   e.pair = other.pair = pair;
   e.partner = other;
   other.partner = e;
   other.attackTimer = e.attackTimer + 45; // attaques décalées
 }
 
-/** Rotation du duo, ciseaux et dégâts du lien (gérés une fois par tick, par le Jumeau de feu). */
+/**
+ * Rotation du duo, ciseaux, Éclipse, Lien vital, furie commune et dégâts du lien (gérés une fois
+ * par tick, par le Jumeau de feu).
+ */
 function updatePair(fire, pair) {
-  pair.theta += TWINS.orbitSpeed;
+  const ice = fire.partner;
+  pair.theta += TWINS.orbitSpeed * (pair.fury ? TWINS.fury.orbit : 1);
   if (pair.warn > 0 && --pair.warn === 0) pair.scissors = TWINS.scissors;
   if (pair.scissors > 0) {
     // L'écart passe de `from` à 2π - from : les jumeaux échangent leurs côtés
@@ -831,7 +838,11 @@ function updatePair(fire, pair) {
     pair.gap = pair.from + (Math.PI * 2 - 2 * pair.from) * t;
     if (pair.scissors === 0) pair.gap = Math.PI * 2 - pair.from;
   }
-  const ice = fire.partner;
+  if (pair.hold > 0) pair.hold--;
+  else if (pair.scissors === 0 && pair.warn === 0 && --pair.eclipse <= 0) twinEclipse(fire, ice, pair);
+  if (--pair.vital <= 0) vitalLink(fire, ice, pair);
+  if (!pair.fury && fire.health + ice.health < (fire.maxHealth + ice.maxHealth) * 0.5)
+    twinFury(fire, ice, pair);
   if (game.time - pair.hit < TWINS.tetherTick * TICK_MS || isProtected()) return;
   const width = tetherWidth(pair);
   if (
@@ -843,13 +854,64 @@ function updatePair(fire, pair) {
   }
 }
 
-/** Épaisseur du lien entre les jumeaux (plus large pendant les ciseaux). Partagée avec le rendu. */
+/** Épaisseur du lien entre les jumeaux (plus large en furie et pendant les ciseaux). Partagée avec le rendu. */
 export function tetherWidth(pair) {
-  return pair.scissors > 0 ? TWINS.tetherWidth * 2 : TWINS.tetherWidth;
+  const width = pair.fury ? TWINS.tetherWidth * TWINS.fury.tether : TWINS.tetherWidth;
+  return pair.scissors > 0 ? width * 2 : width;
+}
+
+/**
+ * Éclipse : les deux jumeaux s'arrêtent et tirent des lasers qui tournent en sens contraires (feu
+ * dans un sens, glace dans l'autre). Les lasers démarrent de côté pour laisser le temps de bouger.
+ */
+function twinEclipse(fire, ice, pair) {
+  const c = TWINS.eclipse;
+  const count = pair.fury ? c.beamsFury : c.beams;
+  for (const [e, dir] of [
+    [fire, 1],
+    [ice, -1],
+  ]) {
+    const base = aim(e) + (Math.PI / 2) * dir;
+    for (let k = 0; k < count; k++) {
+      addBeam(e.x, e.y, base + (Math.PI * 2 * k) / count, e.damage * 0.55, {
+        length: c.length,
+        width: 28,
+        delay: c.delay,
+        active: c.active,
+        color: e.color,
+        spin: c.spin * dir,
+      });
+    }
+    e.attackTimer = Math.max(e.attackTimer, 30); // une attaque juste après, pas en même temps
+  }
+  pair.hold = c.delay + c.active;
+  pair.eclipse = pair.fury ? c.everyFury : c.every;
+  addFloatingText(player.worldX, player.worldY - 80, "ÉCLIPSE !", "#ffffff", 24, 60);
+  addScreenShake(6);
+}
+
+/** Lien vital : si l'un des deux est bien plus abîmé que l'autre, le lien le soigne. */
+function vitalLink(fire, ice, pair) {
+  pair.vital = TWINS.vital.every;
+  const gap = fire.health / fire.maxHealth - ice.health / ice.maxHealth;
+  if (Math.abs(gap) < TWINS.vital.gap) return;
+  const weak = gap < 0 ? fire : ice;
+  weak.health = Math.min(weak.maxHealth, weak.health + weak.maxHealth * TWINS.vital.heal);
+  createParticles(weak.x, weak.y, "#00ff88", 14);
+  addFloatingText(weak.x, weak.y - weak.size - 16, "LIEN VITAL", "#00ff88", 18, 60);
+}
+
+/** Furie commune (sous 50 % de vie à eux deux) : lien plus large, rotation et attaques plus rapides. */
+function twinFury(fire, ice, pair) {
+  pair.fury = fire.enraged = ice.enraged = true;
+  addFloatingText(player.worldX, player.worldY - 90, "FURIE JUMELLE !", "#ffd700", 26, 80);
+  addScreenShake(12);
+  playSfx("boss");
 }
 
 function twinAttack(e, attack) {
-  const fast = e.revenge ? 0.7 : 1;
+  const fast = e.revenge ? 0.7 : e.pair?.fury ? TWINS.fury.cadence : 1;
+  const fury = e.enraged;
   if (attack === "flames") {
     const base = aim(e);
     for (let k = 0; k < 9; k++) {
@@ -862,17 +924,35 @@ function twinAttack(e, attack) {
     }
     e.attackTimer = 90 * fast;
   } else if (attack === "meteors") {
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < (fury ? 5 : 3); k++) {
       const off = k === 0 ? 0 : 90 + Math.random() * 90;
       const a = Math.random() * Math.PI * 2;
-      addCircle(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 75, e.damage * 0.8, {
-        delay: 60 + k * 10,
-        color: "#ff5a00",
-        pool: 150,
-      });
+      const at = clampToZone(player.worldX + Math.cos(a) * off, player.worldY + Math.sin(a) * off, 40);
+      addCircle(at.x, at.y, 75, e.damage * 0.8, { delay: 60 + k * 10, color: "#ff5a00", pool: 150 });
     }
     addFloatingText(e.x, e.y - e.size - 10, "MÉTÉORES !", "#ff7a1a", 18, 40);
     e.attackTimer = 120 * fast;
+  } else if (attack === "firewall") {
+    // Mur de feu : une traînée de zones part du jumeau, passe par le joueur et laisse le sol en feu
+    const base = aim(e);
+    const c = TWINS.firewall;
+    for (let k = 0; k < c.count; k++) {
+      const r = 90 + k * c.spacing;
+      const at = clampToZone(e.x + Math.cos(base) * r, e.y + Math.sin(base) * r, 40);
+      addCircle(at.x, at.y, c.radius, e.damage * 0.7, {
+        delay: c.delay + k * c.step,
+        color: "#ff5a00",
+        pool: c.pool,
+      });
+    }
+    addFloatingText(e.x, e.y - e.size - 10, "MUR DE FEU !", "#ff7a1a", 18, 40);
+    e.attackTimer = 120 * fast;
+  } else if (attack === "nova") {
+    // Nova : onde de flammes autour du jumeau (deux en furie), à franchir au dash
+    addRing(e.x, e.y, TWINS.ringMax, e.damage * 0.6, { color: "#ff7a1a", speed: 6 });
+    if (fury) addRing(e.x, e.y, TWINS.ringMax, e.damage * 0.6, { color: "#ff5a00", speed: 4 });
+    addFloatingText(e.x, e.y - e.size - 10, "NOVA !", "#ff7a1a", 18, 40);
+    e.attackTimer = 100 * fast;
   } else if (attack === "shards") {
     const count = e.revenge ? 16 : 12;
     const offset = Math.random();
@@ -885,9 +965,40 @@ function twinAttack(e, attack) {
       });
     }
     e.attackTimer = 90 * fast;
+  } else if (attack === "prison") {
+    // Prison de glace : un cercle de zones gelées entoure le joueur (une seule sortie), puis le
+    // centre explose. Il faut sortir par l'ouverture ou passer au dash.
+    const c = TWINS.prison;
+    const gapAt = Math.floor(Math.random() * c.cells);
+    const start = Math.random() * Math.PI * 2;
+    for (let k = 0; k < c.cells; k++) {
+      if (k === gapAt || k === (gapAt + 1) % c.cells) continue; // la sortie
+      const a = start + (Math.PI * 2 * k) / c.cells;
+      const at = clampToZone(
+        player.worldX + Math.cos(a) * c.radius,
+        player.worldY + Math.sin(a) * c.radius,
+        40,
+      );
+      addCircle(at.x, at.y, c.cell, e.damage * 0.5, {
+        delay: c.delay,
+        color: "#7fd8ff",
+        pool: c.pool,
+        slow: 90,
+      });
+    }
+    const center = clampToZone(player.worldX, player.worldY, 40);
+    addCircle(center.x, center.y, c.core, e.damage, { delay: c.coreDelay, color: "#bdf3ff", slow: 120 });
+    addFloatingText(player.worldX, player.worldY - 70, "PRISON DE GLACE !", "#7fd8ff", 20, 50);
+    e.attackTimer = 130 * fast;
+  } else if (attack === "frostring") {
+    // Vague de givre : onde qui ralentit fortement (deux en furie)
+    addRing(e.x, e.y, TWINS.ringMax, e.damage * 0.5, { color: "#9fe8ff", speed: 5, slow: 150 });
+    if (fury) addRing(e.x, e.y, TWINS.ringMax, e.damage * 0.5, { color: "#bdf3ff", speed: 3.5, slow: 150 });
+    addFloatingText(e.x, e.y - e.size - 10, "GIVRE !", "#7fd8ff", 18, 40);
+    e.attackTimer = 100 * fast;
   } else if (attack === "spikes") {
     const base = aim(e);
-    for (const off of [-0.3, 0, 0.3]) {
+    for (const off of fury ? [-0.45, -0.22, 0, 0.22, 0.45] : [-0.3, 0, 0.3]) {
       addBeam(e.x, e.y, base + off, e.damage * 0.7, {
         length: 600,
         width: 36,
@@ -1124,7 +1235,7 @@ function updateEnemyProjectiles() {
     const d = dist(p.x, p.y, player.worldX, player.worldY);
     if (d < player.size + p.size * 0.5) {
       if (!isProtected()) {
-        takeDamage(p.damage);
+        takeDamage(p.damage, p.from);
         if (p.slow) freezePlayer(p.slow);
         if (p.stun) stunPlayer(p.stun);
       }

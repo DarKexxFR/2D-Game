@@ -24,7 +24,8 @@ export function strokeCircle(x, y, r, color, lineWidth = 1) {
   ctx.stroke();
 }
 
-export function drawText(text, x, y, font, color, align = "center") {
+/** @param {CanvasTextAlign} [align] */
+export function drawText(text, x, y, font, color, align = /** @type {CanvasTextAlign} */ ("center")) {
   ctx.font = font;
   ctx.fillStyle = color;
   ctx.textAlign = align;
