@@ -25,6 +25,7 @@ const ROUTES = {
   pauseMenu: "pause",
   reviveMenu: "revivre",
   gameOver: "fin",
+  shareMenu: "partage",
   versusOver: "fin-duel",
   duelMenu: "duel",
   friendsMenu: "amis",

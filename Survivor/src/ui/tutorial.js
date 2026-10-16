@@ -4,6 +4,7 @@
 // plus (`account.tutorialDone`, sauvegardé avec le compte).
 
 import { TUTORIAL } from "../config.js";
+import { on } from "../core/events.js";
 import { bindingsOf, keyLabel } from "../core/input.js";
 import { game, mysteryBox, player } from "../core/state.js";
 import { account, saveAccount } from "../services/storage.js";
@@ -54,7 +55,8 @@ const STEPS = [
     text: () =>
       `Ta compétence ${heroSkill().name.toUpperCase()} est chargée : ` +
       (isTouchDevice ? "touche ULT pour la lancer !" : `appuie sur ${key("skill")} pour la lancer !`),
-    done: () => !player.isUltReady,
+    // Ses éliminations peuvent remplir de nouveau la jauge aussitôt : le lancement suffit
+    done: (t) => t.skillUsed || !player.isUltReady,
   },
 ];
 
@@ -75,12 +77,16 @@ const tutorial = {
   shown: null, // étape affichée
   shownFor: 0, // ticks depuis son affichage
   boxSeen: false,
+  skillUsed: false, // compétence lancée pendant que sa bulle est affichée
   endTimer: 0, // ticks du message de fin
   startX: 0,
   startY: 0,
 };
 
 export function initTutorial() {
+  on("skillUsed", () => {
+    if (tutorial.active && tutorial.shown?.id === "skill") tutorial.skillUsed = true;
+  });
   $("btnTutorialSkip").addEventListener("click", (e) => {
     e.currentTarget.blur(); // ESPACE (dash) ne doit pas recliquer le bouton
     finish();
@@ -95,6 +101,7 @@ export function startTutorial() {
     shown: null,
     shownFor: 0,
     boxSeen: false,
+    skillUsed: false,
     endTimer: 0,
     startX: player.worldX,
     startY: player.worldY,

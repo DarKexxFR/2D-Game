@@ -2,6 +2,7 @@
 // Chaque héros a la sienne ; le Pilote garde l'onde de choc d'origine.
 
 import { ULTIMATE } from "../config.js";
+import { emit } from "../core/events.js";
 import { game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { angleTo, dist, removeWhere } from "../utils/math.js";
@@ -40,6 +41,7 @@ export function activateSkill() {
   vibrate(150);
   rebuildEnemyGrid(); // déclenchée hors du tick : la grille doit refléter les ennemis actuels
   heroSkill().activate();
+  emit("skillUsed");
 }
 
 export function updateSkills() {
