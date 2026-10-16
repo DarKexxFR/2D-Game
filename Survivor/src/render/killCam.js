@@ -192,11 +192,13 @@ function drawExplosion(x, y, k) {
   ctx.save();
   ctx.globalAlpha = Math.max(0, 1 - e);
   fillCircle(x, y, 20 + e * 70, "#ffffff", 40);
-  for (const [color, mult] of [
+  /** @type {[string, number][]} */
+  const rings = [
     [PINK, 1],
     ["#00ffff", 1.5],
     ["#ffd700", 2],
-  ]) {
+  ];
+  for (const [color, mult] of rings) {
     ctx.globalAlpha = Math.max(0, 1 - e) * 0.9;
     strokeCircle(x, y, 10 + e * 90 * mult, color, 4);
   }

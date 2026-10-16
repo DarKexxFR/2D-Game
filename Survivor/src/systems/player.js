@@ -17,6 +17,7 @@ import {
   slowMotion,
 } from "./effects.js";
 import { damageEnemy } from "./combat.js";
+import { pushEnemy } from "./knockback.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 import { onDash, onHurt, onLevelUp } from "./perks.js";
 import { noteKiller } from "./killCam.js";
@@ -202,8 +203,7 @@ function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) 
       damageEnemy(e, e.health + 1, "revive");
     } else if (d < pushRadius) {
       const a = angleTo(x, y, e.x, e.y);
-      e.x = x + Math.cos(a) * pushRadius;
-      e.y = y + Math.sin(a) * pushRadius;
+      pushEnemy(e, x + Math.cos(a) * pushRadius - e.x, y + Math.sin(a) * pushRadius - e.y);
     }
   }
   world.enemyProjectiles.length = 0;
