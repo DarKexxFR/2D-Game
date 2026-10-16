@@ -42,7 +42,10 @@ export function applyEquipment(loadout = equippedLoadout()) {
     player.magnetRadius += pet.power.magnet;
     player.goldBonus += pet.power.gold;
   }
-  if (pet?.revive) player.revives++; // Phénix : une résurrection de plus
+  if (pet?.revive) {
+    player.revives++; // Phénix : une résurrection de plus
+    player.phoenixRevive = true; // consommée en premier, avec l'animation du phénix
+  }
 
   const m = loadout.module;
   player.module = m ? moduleStats(m.id, m.level, m.prestige) : null;

@@ -111,6 +111,7 @@ export function resetPlayer(accountLevel) {
     xpBonus: 0, // bonus d'XP en % (talent Sagesse)
     rerolls: 0, // relances des améliorations restantes (talent Relance)
     revives: 0, // résurrections restantes (talent Seconde chance)
+    phoenixRevive: false, // la résurrection du Phénix n'a pas encore servi
     executionThreshold: 0,
     hasRayGun: false,
     ultCharge: 0,
