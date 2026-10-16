@@ -58,6 +58,9 @@ test("évolutions : la carte qui complète une recette montre l'évolution visé
     player.weapon = { ...player.weapon, id: "railgun" };
     r.railgun = { pierce: names("Perçage"), force: names("Force Brute") };
     player.weapon = { ...player.weapon, id: "blaster" };
+    // Retour à l'inventaire de départ : sinon la carte Régénération (Vampirisme possédé) porte elle
+    // aussi un indice quand le tirage la propose à côté de Force Brute
+    delete player.inventory.Vampirisme;
     return r;
   });
   // Blaster équipé d'office : Force Brute mène au Blaster solaire
