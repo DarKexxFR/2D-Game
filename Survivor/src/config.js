@@ -320,6 +320,13 @@ export const NET = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
 };
 
+// Amis (services/friends.js, ui/friendsMenu.js) : liste et présence par Supabase, défis en direct par Realtime
+export const FRIENDS = {
+  syncMs: 30000, // présence et liste d'amis rafraîchies (un ami est « en ligne » 75 s après son dernier signe)
+  inviteMs: 30000, // un défi sans réponse est annulé
+  resendMs: 3000, // le défi est renvoyé tant que l'ami n'a pas répondu (il a pu ouvrir le jeu entre-temps)
+};
+
 export const MUSIC = {
   dir: "assets/audio/",
   tracks: ["intro.mp3", "cyber.mp3"],

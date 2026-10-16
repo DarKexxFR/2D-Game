@@ -1,4 +1,5 @@
-// Écran « Duel » : jouer à deux sur cet écran, ou en ligne (créer une partie / rejoindre avec un code).
+// Écran « Duel » : jouer à deux sur cet écran, ou en ligne (créer une partie / rejoindre avec un code,
+// ou défier un ami : écran « Amis », ui/friendsMenu.js).
 
 import { hostRoom, joinRoom, leaveRoom, normalizeCode } from "../services/netplay.js";
 import { $, setText } from "./dom.js";
@@ -13,7 +14,11 @@ const NETWORK_ERROR = "Impossible de joindre le serveur. Vérifie ta connexion."
 
 let busy = false;
 
-export function initDuelMenu({ onLocal, onBack }) {
+export function initDuelMenu({ onLocal, onBack, onFriends }) {
+  $("btnDuelFriends").addEventListener("click", () => {
+    leaveRoom();
+    onFriends();
+  });
   $("btnDuelLocal").addEventListener("click", () => {
     leaveRoom();
     onLocal();
@@ -23,10 +28,10 @@ export function initDuelMenu({ onLocal, onBack }) {
     onBack();
   });
   $("btnDuelHost").addEventListener("click", host);
-  $("btnDuelJoin").addEventListener("click", join);
   const input = $("duelCode");
   input.addEventListener("input", () => (input.value = normalizeCode(input.value)));
   input.addEventListener("keydown", (e) => e.key === "Enter" && join());
+  $("btnDuelJoin").addEventListener("click", () => join());
 }
 
 export function openDuel() {
@@ -55,12 +60,19 @@ async function host() {
   busy = false;
 }
 
-async function join() {
+/** Rejoint la partie d'un ami qui nous a défié. */
+export function joinFriendDuel(code, name) {
+  openDuel();
+  $("duelCode").value = code;
+  join(`Connexion au duel de ${name}…`);
+}
+
+async function join(waiting = "Recherche de la partie…") {
   const code = normalizeCode($("duelCode").value);
   if (busy || !code) return;
   busy = true;
   setText("duelRoomCode", "");
-  setDuelStatus("Recherche de la partie…");
+  setDuelStatus(waiting);
   try {
     await joinRoom(code, getPseudo());
     setDuelStatus("Partie trouvée ! Connexion à l'adversaire…");

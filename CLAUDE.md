@@ -147,6 +147,13 @@ Principes :
     points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
+  - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par « MES AMIS » de l'écran Duel) : joueurs
+    connectés seulement. Ajout par pseudo (s'il est unique) ou code ami, demande à accepter (tables
+    `player_profiles` / `friendships`, RPC `friends_sync` / `friend_request` / `friend_respond` / `friend_remove`).
+    Présence : `friends_sync` toutes les `FRIENDS.syncMs` (en ligne = vu depuis moins de 75 s, statut menu / jeu /
+    duel). Chaque joueur écoute son canal Realtime `amis-<id>` : « DÉFIER » crée une partie de duel et y envoie
+    le code, l'ami accepte (fenêtre `#friendInvite`) et rejoint ; duel en ligne habituel, donc classé ELO avec
+    les mêmes règles anti-abus. En partie, un défi reçu est refusé « occupé ». Tests : faux RPC dans `fixtures.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
@@ -241,7 +248,7 @@ Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins pe
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
 Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre mythique seulement), effets ★3, panoplies, modules, Archange et Phénix,
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
-biomes Jungle toxique et Station orbitale, série de connexion quotidienne.
+biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

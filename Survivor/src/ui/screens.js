@@ -24,6 +24,7 @@ const SCREENS = [
   "gameOver",
   "versusOver",
   "duelMenu",
+  "friendsMenu",
 ];
 
 let current = null;
