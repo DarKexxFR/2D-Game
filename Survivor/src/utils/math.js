@@ -4,6 +4,9 @@ export const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
 
 export const angleTo = (fromX, fromY, toX, toY) => Math.atan2(toY - fromY, toX - fromX);
 
+/** Écart entre deux angles, ramené dans [-π, π]. */
+export const angleDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+
 export const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Tire un élément selon son poids. `weightOf(item)` renvoie un nombre >= 0. */

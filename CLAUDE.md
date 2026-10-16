@@ -189,8 +189,11 @@ Principes :
   `goldMult`) ; choix dans `account.difficulty`. Cauchemar débloqué au record de vague 10, classement mondial
   à part (table `nightmare_scores`, onglet « CAUCHEMAR »), succès dédiés ; Facile hors classements.
 - **Biomes** (`data/biomes.js`) : 5 biomes de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique,
-  Station orbitale), chacun ajoute ses ennemis (`enemies`). Jungle : spore (se divise en sporelets), poseur de
-  mines ; station : téléporteur, drone laser (réglages `BIOME_FOES` dans `data/enemies.js`).
+  Station orbitale), chacun ajoute ses ennemis (`enemies`). Cité néon : porte-bouclier (bloque les tirs de
+  face, pivote lentement), essaim (nuée de 6, `group`) ; jungle : spore (se divise en sporelets), poseur de
+  mines ; station : téléporteur, drone laser. Partout : soigneur dès la vague 10, aimant (attire le joueur, le
+  dash libère) dès la vague 12 (`SPAWN_TABLES`). Réglages `BIOME_FOES` dans `data/enemies.js`. Nouveau type
+  d'ennemi = toujours en fin de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang).
 - **Série de connexion** (`services/loginStreak.js`, `ui/streakMenu.js`, `LOGIN_STREAK` dans `config.js`) :
   or chaque jour d'affilée (jour local), cycle de 7 jours, un jour manqué = retour au jour 1. Fenêtre proposée
   au chargement de l'accueil, sauf à un joueur sans partie terminée. État dans `account.loginStreak`.
@@ -248,7 +251,8 @@ Titan de l'orage (étourdit) et Sentinelle prismatique, mode Boss Rush, skins pe
 évolutions d'armes (une par arme), quêtes hebdomadaires, tutoriel de première partie,
 Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre mythique seulement), effets ★3, panoplies, modules, Archange et Phénix,
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
-biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé.
+biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
+nouveaux mobs (porte-bouclier, essaim, soigneur, aimant).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

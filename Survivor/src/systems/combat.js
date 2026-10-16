@@ -5,10 +5,10 @@ import { gfx, view } from "../core/canvas.js";
 import { mouse } from "../core/input.js";
 import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
-import { GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
-import { angleTo, dist } from "../utils/math.js";
+import { angleDiff, angleTo, dist } from "../utils/math.js";
 import {
   addComboKill,
   addFloatingText,
@@ -306,6 +306,10 @@ export function updateProjectiles() {
     for (const enemy of candidates) {
       if (enemy.dead || proj.hits?.has(enemy)) continue;
       if (dist(enemy.x, enemy.y, proj.x, proj.y) >= enemy.size + proj.size) continue;
+      if (shieldBlocks(enemy, proj)) {
+        blockShot(proj, enemy);
+        break;
+      }
       hitEnemy(proj, enemy);
       // Comme dans la version d'origine, une balle qui tue continue sa course.
       if (enemy.dead) break;
@@ -322,6 +326,24 @@ export function updateProjectiles() {
   let w = 0;
   for (const p of world.projectiles) if (!p.dead) world.projectiles[w++] = p;
   world.projectiles.length = w;
+}
+
+/** Porte-bouclier : un tir qui arrive par sa face avant s'écrase sur le bouclier. */
+function shieldBlocks(enemy, proj) {
+  if (enemy.type !== "shield" || enemy.facing == null) return false;
+  return Math.abs(angleDiff(angleTo(enemy.x, enemy.y, proj.x, proj.y), enemy.facing)) < BIOME_FOES.shield.arc;
+}
+
+/** Tir bloqué : quelques étincelles, dégâts réduits, et le tir s'arrête (même perforant). */
+function blockShot(proj, enemy) {
+  proj.dead = true;
+  createParticles(proj.x, proj.y, "#bfe3ff", 3);
+  if (game.time - (enemy.blockedAt ?? -1e9) > 600) {
+    enemy.blockedAt = game.time;
+    addFloatingText(enemy.x, enemy.y - enemy.size - 10, "BLOQUÉ", "#bfe3ff", 12, 25);
+  }
+  const source = proj.source || (proj.type === "kunai" ? "kunai" : "weapon");
+  damageEnemy(enemy, proj.damage * BIOME_FOES.shield.block, source);
 }
 
 function hitEnemy(proj, enemy) {
