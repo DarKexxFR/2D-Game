@@ -264,6 +264,10 @@ Principes :
 - **Styles** : couleurs néon (cyan `#00ffff`, rose `#ff2a6d`, violet `#aa66ff`, vert
   `#00ff88`, or `#ffd700`), polices Orbitron et « Press Start 2P ». `base.css` contient
   `* { overflow: hidden }` : penser à `overflow: visible` pour les lueurs et badges qui débordent.
+- **Performances** : pas de `shadowBlur` pour ce qui se dessine par dizaines à chaque image (explosions,
+  textes de dégâts, éclairs, étincelles) : il gelait le jeu sur téléphone à forte cadence de tir. Lueur =
+  forme plus large et transparente dessous ; le flou reste réservé aux sprites en cache. Effets plafonnés
+  (`LIMITS` dans `config.js`), au plus `LIMITS.ticksPerFrame` ticks rattrapés par image (`tests/performance.spec.js`).
 - **Effets de survol** : uniquement sous `@media (hover: hover)`. Sur écran tactile le
   survol reste « collé » ; un bouton qui bouge au survol tremble en boucle (cassait la CI). Les boutons ne se
   déplacent plus au survol (un pointeur posé sur leur bord les faisait trembler).

@@ -764,13 +764,15 @@ function drawTether(fire, now) {
 /** Élite : couronne de points dorés qui tourne autour de l'ennemi. */
 function drawElite(e, now) {
   const r = e.size + 6;
-  ctx.shadowBlur = 8;
-  ctx.shadowColor = "#ffd700";
   for (let i = 0; i < 6; i++) {
     const a = now / 400 + (TAU * i) / 6;
-    fillCircle(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 2.2, "#ffd700");
+    const x = e.x + Math.cos(a) * r;
+    const y = e.y + Math.sin(a) * r;
+    ctx.globalAlpha = 0.35; // lueur sans shadowBlur (6 points par élite, trop coûteux en nombre)
+    fillCircle(x, y, 4.5, "#ffd700");
+    ctx.globalAlpha = 1;
+    fillCircle(x, y, 2.2, "#ffd700");
   }
-  ctx.shadowBlur = 0;
 }
 
 /** Boss en furie : double halo rouge qui pulse. */
