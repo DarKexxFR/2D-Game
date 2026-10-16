@@ -153,7 +153,7 @@ function pullPlayer(ev, cfg) {
   if (d < cfg.core + player.size * 0.5) {
     if (game.time - ev.hit < 30 * TICK_MS) return;
     ev.hit = game.time;
-    takeDamage(cfg.damage * waveMultipliers(game.wave).damage);
+    takeDamage(cfg.damage * waveMultipliers(game.wave).damage, "vortex");
     return;
   }
   // Plus fort près du centre, toujours plus faible que la vitesse du vaisseau

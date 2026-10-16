@@ -125,12 +125,12 @@ function rangedAttack(e, distToPlayer) {
   if (distToPlayer >= e.attackRange || game.time - e.lastShot <= e.shootCooldown) return;
   e.lastShot = game.time;
   const a = angleTo(e.x, e.y, player.worldX, player.worldY);
-  fireEnemyProjectile(e.x, e.y, a, 6, { size: 6, damage: e.damage, color: "#ff0000" });
+  fireEnemyProjectile(e.x, e.y, a, 6, { size: 6, damage: e.damage, color: "#ff0000", from: e.type });
 }
 
 function handleContact(e) {
   if (e.type === "kamikaze") {
-    takeDamage(e.damage);
+    takeDamage(e.damage, e);
     createAoEEffect(e.x, e.y, 40);
     playSfx("explosion");
     killEnemy(e);
@@ -141,7 +141,7 @@ function handleContact(e) {
   // Défense : réduction en pourcentage à rendements décroissants (elle ne peut plus tout annuler)
   const reduction = player.defense / (player.defense + SURVIVAL.armorCurve);
   const dmg = Math.max(1, e.damage * (1 - reduction));
-  takeDamage(dmg);
+  takeDamage(dmg, e);
   if (e.type === "golem") freezePlayer();
   e.lastDamage = game.time;
   knockEnemy(e, angleTo(player.worldX, player.worldY, e.x, e.y), 20);
@@ -1235,7 +1235,7 @@ function updateEnemyProjectiles() {
     const d = dist(p.x, p.y, player.worldX, player.worldY);
     if (d < player.size + p.size * 0.5) {
       if (!isProtected()) {
-        takeDamage(p.damage);
+        takeDamage(p.damage, p.from);
         if (p.slow) freezePlayer(p.slow);
         if (p.stun) stunPlayer(p.stun);
       }

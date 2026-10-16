@@ -188,6 +188,19 @@ export const TUTORIAL = {
   endTicks: 240, // durée du message de fin
 };
 
+// Ralenti de la mort (« REVOIR MA MORT » sur l'écran de fin : systems/killCam.js, render/killCam.js)
+export const KILL_CAM = {
+  seconds: 4, // durée enregistrée avant la mort
+  every: 2, // une image toutes les 2 ticks (30 par seconde)
+  range: 800, // ennemis et tirs gardés autour du vaisseau
+  maxEnemies: 70,
+  maxShots: 90,
+  slowSeconds: 1.4, // les dernières secondes passent au ralenti...
+  slowRate: 0.3, // ... à 30 % de la vitesse
+  holdMs: 2600, // image figée finale (explosion, « TUÉ PAR »)
+  lowHealth: 0.2, // sous 20 % de vie, le tueur « ne tenait plus qu'à un fil »
+};
+
 export const MYSTERY_BOX = {
   x: 0,
   y: -600,

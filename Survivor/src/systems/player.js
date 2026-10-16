@@ -19,6 +19,7 @@ import {
 import { damageEnemy } from "./combat.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 import { onDash, onHurt, onLevelUp } from "./perks.js";
+import { noteKiller } from "./killCam.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -136,7 +137,8 @@ export function heal(amount) {
   player.health = Math.min(player.maxHealth, player.health + amount * healFactor() * player.healMult);
 }
 
-export function takeDamage(amount) {
+/** `source` (facultatif) : ce qui a porté le coup, pour le ralenti de la mort (systems/killCam.js). */
+export function takeDamage(amount, source) {
   if (game.over) return;
   amount *= player.damageTaken;
   player.health -= amount;
@@ -156,6 +158,7 @@ export function takeDamage(amount) {
     return;
   }
   if (player.health <= 0) {
+    noteKiller(source);
     game.over = true;
     playSfx("death");
     vibrate(300);
