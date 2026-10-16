@@ -1,5 +1,6 @@
 // Familiers : suivent le joueur et agissent seuls selon leur type.
 
+import { TICK_MS } from "../config.js";
 import { game, pet, player, world } from "../core/state.js";
 import { angleTo, dist } from "../utils/math.js";
 import { damageEnemy, enemyGrid, getNearestEnemy, spawnProjectile } from "./combat.js";
@@ -114,6 +115,7 @@ function updateFrost() {
   for (const e of targets) {
     // Les boss résistent : gel bien plus court
     e.stun = Math.max(e.stun || 0, Math.round(e.template.isBoss ? pet.power.freeze / 4 : pet.power.freeze));
+    e.frozenUntil = game.time + e.stun * TICK_MS; // gelé (synergie Cristal de givre + Railgun)
     createParticles(e.x, e.y, pet.color, 6);
     world.bolts.push({
       points: [

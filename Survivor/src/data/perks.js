@@ -246,3 +246,34 @@ export const SETS = [
 export function setOf(id) {
   return SETS.find((s) => s.weapon === id || s.armor === id) || null;
 }
+
+// --- SYNERGIES : familier + arme équipés ensemble (comportements dans systems/perks.js et combat.js) ---
+export const SYNERGIES = [
+  {
+    id: "iceShatter",
+    name: "Givre brisé",
+    pet: "frost",
+    weapon: "railgun",
+    desc: "Les ennemis gelés touchés par le Railgun éclatent en éclats de glace.",
+    color: "#9fe8ff",
+    shards: 6,
+    damage: 0.5, // dégâts de chaque éclat, en part du tir qui a brisé la glace
+    speed: 9,
+    life: 32,
+  },
+  {
+    id: "dragonFire",
+    name: "Souffle ardent",
+    pet: "dragon",
+    weapon: "flamer",
+    desc: "Rayon de l'Aura de feu et portée des flammes +20 %.",
+    color: "#ff5a1f",
+    aura: 0.2,
+    range: 0.2,
+  },
+];
+
+/** Synergie entre un familier et une arme (identifiants), ou null. */
+export function synergyOf(petId, weaponId) {
+  return SYNERGIES.find((s) => s.pet === petId && s.weapon === weaponId) || null;
+}

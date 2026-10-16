@@ -3,7 +3,7 @@
 
 import { TICK_MS } from "../config.js";
 import { game, player, world } from "../core/state.js";
-import { PERKS, PERK_PRESTIGE, SETS } from "../data/perks.js";
+import { PERKS, PERK_PRESTIGE, SETS, synergyOf } from "../data/perks.js";
 import { angleTo, dist } from "../utils/math.js";
 import { chainLightning, damageEnemy, enemyGrid, spawnProjectile } from "./combat.js";
 import { addFloatingText, createAoEEffect, createParticles, createShockwave } from "./effects.js";
@@ -11,7 +11,7 @@ import { chargeUltimate, heal } from "./player.js";
 
 const BURN_STEP = 15; // ticks entre deux dégâts de brûlure
 
-/** Effets actifs pour l'équipement de la partie : objets ★3+ et panoplie arme + armure. */
+/** Effets actifs pour l'équipement de la partie : objets ★3+, panoplie arme + armure, synergie familier + arme. */
 export function applyPerks(loadout) {
   const perks = {};
   for (const it of Object.values(loadout)) {
@@ -21,8 +21,11 @@ export function applyPerks(loadout) {
   player.set = SETS.find((s) => loadout.weapon?.id === s.weapon && loadout.armor?.id === s.armor) || null;
   player.perkTimers = {};
   player.perkZones = [];
+  player.synergy = synergyOf(loadout.pet?.id, loadout.weapon?.id);
   applyStaticPerks(perks);
   applyStaticSet(player.set);
+  if (player.synergy?.aura) player.auraMult *= 1 + player.synergy.aura;
+  if (player.synergy?.range) player.rangeMult *= 1 + player.synergy.range;
 }
 
 /** Paramètres de l'effet ★3 d'un objet s'il est actif, sinon null. */

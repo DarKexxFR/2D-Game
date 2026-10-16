@@ -193,6 +193,79 @@ export const UPGRADES = [
   },
 ];
 
+// --- CORROMPUES : gros bonus contre un malus (risque / récompense) ---
+// Une seule fois par partie chacune ; jamais dans un coffre de boss ni un sanctuaire maudit.
+// `malus` est affiché en rouge sous la description.
+const once =
+  (name, extra = () => true) =>
+  (p) =>
+    !p.inventory[name] && extra(p);
+const BLOOD_PACT = { ms: 5000, heal: 0.012 }; // soin par gemme : 1,2 % des PV max
+
+export const CORRUPTED_UPGRADES = [
+  {
+    name: "Surcharge moteur",
+    rarity: "corrupted",
+    icon: "bolt",
+    desc: "+35% Vitesse de déplacement",
+    malus: "Dash désactivé",
+    canApply: once("Surcharge moteur", (p) => p.baseSpeed < STAT_CAPS.speed),
+    apply: (p) => {
+      p.baseSpeed *= 1.35;
+      p.noDash = true;
+      p.isDashing = false;
+    },
+  },
+  {
+    name: "Singularité",
+    rarity: "corrupted",
+    icon: "blackhole",
+    desc: "+50% Taille des tirs et des explosions",
+    malus: "-25% Cadence de tir",
+    canApply: once("Singularité"),
+    apply: (p) => {
+      p.projScale *= 1.5;
+      p.attackSpeed /= 0.75;
+    },
+  },
+  {
+    name: "Pacte de sang",
+    rarity: "corrupted",
+    icon: "drop",
+    desc: "Après un coup reçu, les gemmes d'XP soignent pendant 5 s",
+    malus: "-15% XP gagnée",
+    canApply: once("Pacte de sang"),
+    apply: (p) => {
+      p.bloodPact = BLOOD_PACT;
+      p.xpBonus -= 0.15;
+    },
+  },
+  {
+    name: "Cœur de verre",
+    rarity: "corrupted",
+    icon: "impact",
+    desc: "+50% Dégâts",
+    malus: "Soins réduits de moitié",
+    canApply: once("Cœur de verre"),
+    apply: (p) => {
+      p.attack *= 1.5;
+      p.healMult *= 0.5;
+    },
+  },
+  {
+    name: "Fièvre de l'or",
+    rarity: "corrupted",
+    icon: "coin",
+    desc: "+60% Or gagné",
+    malus: "+20% Dégâts reçus",
+    canApply: once("Fièvre de l'or"),
+    apply: (p) => {
+      p.goldBonus += 0.6;
+      p.damageTaken *= 1.2;
+    },
+  },
+];
+
 // --- ÉVOLUTIONS : amélioration au maximum + amélioration partenaire → super-arme ---
 // Elles sont proposées en priorité à la montée de niveau dès que la recette est complète.
 const count = (p, name) => p.inventory[name] || 0;
@@ -387,7 +460,7 @@ export const WEAPON_EVOLUTIONS = [
 ];
 
 export function availableUpgrades(p) {
-  return UPGRADES.filter((u) => !u.canApply || u.canApply(p));
+  return [...UPGRADES, ...CORRUPTED_UPGRADES].filter((u) => !u.canApply || u.canApply(p));
 }
 
 export function availableEvolutions(p) {

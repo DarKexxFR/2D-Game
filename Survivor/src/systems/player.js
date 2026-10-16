@@ -52,7 +52,13 @@ function updateRegen() {
 
 function updateDash() {
   if (player.dashCooldownTimer > 0) player.dashCooldownTimer--;
-  if (isDown("dash") && player.dashCooldownTimer <= 0 && !player.isDashing && !isStunned()) {
+  if (
+    isDown("dash") &&
+    !player.noDash &&
+    player.dashCooldownTimer <= 0 &&
+    !player.isDashing &&
+    !isStunned()
+  ) {
     player.isDashing = true;
     player.dashTimer = player.dashDuration;
     player.dashCooldownTimer = player.dashCooldown;
@@ -152,6 +158,7 @@ export function takeDamage(amount) {
     emit("playerDied");
     return;
   }
+  if (player.bloodPact) player.pactUntil = game.time + player.bloodPact.ms; // Pacte de sang
   onHurt();
 }
 
