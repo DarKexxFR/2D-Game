@@ -4,9 +4,15 @@ import { game, player, world } from "../core/state.js";
 import { BIOME_FOES, GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
 import { SURVIVAL, TICK_MS } from "../config.js";
-import { angleTo, clamp, dist, removeWhere } from "../utils/math.js";
+import { angleDiff, angleTo, clamp, dist, removeWhere } from "../utils/math.js";
 import { damageEnemy, enemyGrid, killEnemy } from "./combat.js";
-import { addFloatingText, addScreenShake, createAoEEffect, createParticles } from "./effects.js";
+import {
+  addFloatingText,
+  addScreenShake,
+  createAoEEffect,
+  createParticles,
+  createShockwave,
+} from "./effects.js";
 import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
@@ -50,6 +56,9 @@ export function updateEnemies() {
     else if (e.type === "bomber") updateBomber(e, d);
     else if (e.type === "blinker") updateBlinker(e, d);
     else if (e.type === "laser_drone") updateLaserDrone(e, d);
+    else if (e.type === "shield") updateShield(e);
+    else if (e.type === "healer") updateHealer(e);
+    else if (e.type === "magnet") updateMagnet(e, d);
     if (e.rooted > 0)
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
@@ -76,7 +85,7 @@ function moveEnemy(e, distToPlayer) {
     // Anticipe légèrement la position du joueur
     tx += (player.worldX - e.x) * 0.2;
     ty += (player.worldY - e.y) * 0.2;
-  } else if (e.type === "ranged" || e.type === "laser_drone") {
+  } else if (e.type === "ranged" || e.type === "laser_drone" || e.type === "healer") {
     if (distToPlayer < 250) {
       // Trop près : recule
       tx = e.x - (player.worldX - e.x);
@@ -209,6 +218,55 @@ function updateLaserDrone(e, distToPlayer) {
     active: l.active,
     color: e.color,
   });
+}
+
+/** Porte-bouclier : son bouclier (face avant) pivote lentement vers le joueur. */
+function updateShield(e) {
+  const target = aim(e);
+  e.facing ??= target;
+  const turn = BIOME_FOES.shield.turn;
+  e.facing += clamp(angleDiff(target, e.facing), -turn, turn);
+}
+
+/** Soigneur : reste en retrait et soigne régulièrement les ennemis proches (jamais les boss). */
+function updateHealer(e) {
+  const h = BIOME_FOES.heal;
+  e.healTimer = (e.healTimer ?? h.every * (0.5 + Math.random() * 0.5)) - 1;
+  if (e.healTimer > 0) return;
+  e.healTimer = h.every;
+  createShockwave(e.x, e.y, h.radius, e.color);
+  for (const o of enemyGrid.query(e.x, e.y, h.radius)) {
+    if (o.dead || o.template.isBoss || o.health >= o.maxHealth) continue;
+    if (dist(o.x, o.y, e.x, e.y) > h.radius + o.size) continue;
+    o.health = Math.min(o.maxHealth, o.health + o.maxHealth * h.amount);
+    createParticles(o.x, o.y, e.color, 4);
+  }
+}
+
+/** Aimant : annonce son attraction (anneau qui se resserre), puis tire le joueur vers lui. */
+function updateMagnet(e, distToPlayer) {
+  const m = BIOME_FOES.magnet;
+  if (e.pulling > 0) {
+    e.pulling--;
+    e.rooted = 1;
+    if (isProtected()) return; // le dash ou le bouclier libèrent
+    const a = angleTo(player.worldX, player.worldY, e.x, e.y);
+    const pull = Math.min(m.pull, Math.max(0, distToPlayer - e.size - player.size));
+    player.worldX = clamp(player.worldX + Math.cos(a) * pull, game.bounds.minX, game.bounds.maxX);
+    player.worldY = clamp(player.worldY + Math.sin(a) * pull, game.bounds.minY, game.bounds.maxY);
+    return;
+  }
+  if (e.magnetWarn > 0) {
+    e.rooted = 1;
+    if (--e.magnetWarn === 0) e.pulling = m.duration;
+    return;
+  }
+  e.magnetTimer = (e.magnetTimer ?? m.every * (0.4 + Math.random() * 0.6)) - 1;
+  if (e.magnetTimer > 0 || distToPlayer > m.range) return;
+  e.magnetTimer = m.every;
+  e.magnetWarn = m.warn;
+  e.rooted = 1;
+  addFloatingText(e.x, e.y - e.size - 15, "AIMANT !", e.color, 16, 45);
 }
 
 /** Voleur doré : file pendant quelques secondes puis disparaît avec son butin. */

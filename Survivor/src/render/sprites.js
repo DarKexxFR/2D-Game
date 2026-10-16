@@ -864,6 +864,97 @@ const SHAPES = {
     dot(c, r * 0.4, r * 0.3, r * 0.15, "#ffffff", 6);
   },
 
+  /** Porte-bouclier : petit corps blindé derrière un large bouclier courbe (face avant). */
+  shield(c, r, color) {
+    neonBody(c, () => regular(c, 6, r * 0.7, 0), color, 2, 8);
+    eye(c, r * 0.15, 0, r * 0.18, "#ffffff");
+    const path = () => {
+      c.beginPath();
+      c.arc(0, 0, r * 1.15, -1.1, 1.1);
+      c.arc(0, 0, r * 0.85, 1.1, -1.1, true);
+      c.closePath();
+    };
+    neonBody(c, path, "#bfe3ff", 2.5, 16);
+    c.strokeStyle = color;
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(0, 0, r, -0.9, 0.9);
+    c.stroke();
+  },
+
+  /** Essaim : minuscule drone triangulaire aux ailes vibrantes. */
+  swarm(c, r, color) {
+    c.strokeStyle = shade(color, 0.7);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(-r * 0.2, -r * 0.4);
+    c.lineTo(-r * 0.7, -r * 1.2);
+    c.moveTo(-r * 0.2, r * 0.4);
+    c.lineTo(-r * 0.7, r * 1.2);
+    c.stroke();
+    neonBody(
+      c,
+      () =>
+        polygon(c, [
+          [r * 1.1, 0],
+          [-r * 0.8, -r * 0.7],
+          [-r * 0.4, 0],
+          [-r * 0.8, r * 0.7],
+        ]),
+      color,
+      1.5,
+      8,
+    );
+    dot(c, r * 0.25, 0, r * 0.22, "#ffffff", 6);
+  },
+
+  /** Soigneur : orbe flottant marqué d'une croix lumineuse. */
+  healer(c, r, color) {
+    neonBody(
+      c,
+      () => {
+        c.beginPath();
+        c.arc(0, 0, r, 0, TAU);
+      },
+      color,
+      2.5,
+      14,
+    );
+    c.strokeStyle = shade(color, 0.6);
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(0, 0, r * 0.7, 0, TAU);
+    c.stroke();
+    glow(c, "#ffffff", 10);
+    c.fillStyle = "#eafff4";
+    c.fillRect(-r * 0.14, -r * 0.5, r * 0.28, r);
+    c.fillRect(-r * 0.5, -r * 0.14, r, r * 0.28);
+    noGlow(c);
+  },
+
+  /** Aimant : aimant en fer à cheval, pôles tournés vers le joueur. */
+  magnet(c, r, color) {
+    const path = () => {
+      c.beginPath();
+      c.moveTo(r, -r * 0.85);
+      c.lineTo(0, -r * 0.85);
+      c.arc(0, 0, r * 0.85, -Math.PI / 2, Math.PI / 2, true);
+      c.lineTo(r, r * 0.85);
+      c.lineTo(r, r * 0.4);
+      c.lineTo(0, r * 0.4);
+      c.arc(0, 0, r * 0.4, Math.PI / 2, -Math.PI / 2);
+      c.lineTo(r, -r * 0.4);
+      c.closePath();
+    };
+    neonBody(c, path, color, 2.5, 12);
+    c.fillStyle = "#ffffff";
+    glow(c, "#9fd8ff", 10);
+    c.fillRect(r * 0.65, -r * 0.85, r * 0.35, r * 0.45);
+    c.fillRect(r * 0.65, r * 0.4, r * 0.35, r * 0.45);
+    noGlow(c);
+    eye(c, -r * 0.55, 0, r * 0.16, "#ffffff");
+  },
+
   /** Voleur doré : petit sac d'or sur pattes, scintillant. */
   goblin(c, r, color) {
     neonBody(

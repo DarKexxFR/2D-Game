@@ -10,7 +10,10 @@ export const BIOMES = [
     tint: "rgba(10, 0, 25, 0.35)",
     grid: "rgba(157, 0, 255, 0.12)",
     gridMajor: "rgba(0, 220, 255, 0.16)",
-    enemies: [],
+    enemies: [
+      { type: "shield", weight: 0.12 }, // bloque les tirs de face
+      { type: "swarm", weight: 0.1 }, // arrive en nuée de petits drones
+    ],
   },
   {
     id: "desert",

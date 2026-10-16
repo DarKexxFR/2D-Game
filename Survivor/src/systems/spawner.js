@@ -208,13 +208,20 @@ export function spawnEnemy(type = pickEnemyType(), x = null, y = null, forceElit
     !t.isBoss &&
     type !== "goblin" &&
     (forceElite || Math.random() < eliteChance(game.wave + (game.modifier.eliteShift || 0)));
-  if (x === null || y === null) {
+  const fromEdge = x === null || y === null;
+  if (fromEdge) {
     const angle = Math.random() * Math.PI * 2;
     x = player.worldX + Math.cos(angle) * W.spawnDistance;
     y = player.worldY + Math.sin(angle) * W.spawnDistance;
   }
   ({ x, y } = clampToZone(x, y, 50));
   if (t.isBoss) createSpawnEffect(x, y, t.color);
+  // Essaim : le reste de la nuée arrive groupé autour du premier (avant lui : il reste le dernier ajouté)
+  if (t.group && fromEdge) {
+    for (let i = 1; i < t.group; i++) {
+      spawnEnemy(type, x + (Math.random() - 0.5) * 70, y + (Math.random() - 0.5) * 70);
+    }
+  }
 
   const wave = game.wave;
   const mod = game.modifier;
