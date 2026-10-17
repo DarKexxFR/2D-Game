@@ -3,7 +3,7 @@
 // `game.arena` pendant un boss, puis reviennent aux bords de la carte.
 
 import { BOSS_ZONE, MAP_BOUNDS } from "../config.js";
-import { game, player } from "../core/state.js";
+import { game, player, world } from "../core/state.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText } from "./effects.js";
 import { bossFight } from "./spawner.js";
@@ -17,7 +17,7 @@ export function updateArena() {
     game.arena = null;
     addFloatingText(player.worldX, player.worldY - 70, "ARÈNE OUVERTE", "#00ff88", 18, 80);
   }
-  const target = game.arena || MAP_BOUNDS;
+  const target = arenaTarget();
   const b = game.bounds;
   for (const side of SIDES) {
     const d = target[side] - b[side];
@@ -35,13 +35,36 @@ function sealArena() {
 }
 
 /**
+ * Zone visée par les murs : l'arène du boss, resserrée autour de son centre quand un boss le
+ * demande (`e.arenaScale`, Cœur du Pulse), ou la carte entière hors combat.
+ */
+function arenaTarget() {
+  const a = game.arena;
+  if (!a) return MAP_BOUNDS;
+  let scale = 1;
+  for (const e of world.enemies) if (!e.dead && e.arenaScale < scale) scale = e.arenaScale;
+  if (scale === 1) return a;
+  const cx = (a.minX + a.maxX) / 2;
+  const cy = (a.minY + a.maxY) / 2;
+  const hw = ((a.maxX - a.minX) / 2) * scale;
+  const hh = ((a.maxY - a.minY) / 2) * scale;
+  return { minX: cx - hw, maxX: cx + hw, minY: cy - hh, maxY: cy + hh };
+}
+
+/** Centre de l'arène du boss (ou de la zone actuelle hors combat). */
+export function arenaCenter() {
+  const a = game.arena || game.bounds;
+  return { x: (a.minX + a.maxX) / 2, y: (a.minY + a.maxY) / 2 };
+}
+
+/**
  * Zone où la partie va se jouer : la zone actuelle, réduite à l'arène si ses murs sont encore en
  * train de se refermer. À utiliser pour placer quelque chose (tentacule, saut, téléportation) :
  * `game.bounds` seul laisserait apparaître un objet là où le mur va passer.
  */
 export function combatZone() {
   const b = game.bounds;
-  const t = game.arena || MAP_BOUNDS;
+  const t = arenaTarget();
   return {
     minX: Math.max(b.minX, t.minX),
     maxX: Math.min(b.maxX, t.maxX),

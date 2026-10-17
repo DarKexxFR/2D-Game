@@ -8,6 +8,7 @@ import { BIOME_FOES } from "../data/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
 import { drawTrail } from "./trail.js";
+import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 
 const TAU = Math.PI * 2;
@@ -49,6 +50,14 @@ const ENEMY_LOOKS = {
   swarm: { sprite: "swarm", mode: "face" },
   healer: { sprite: "healer", mode: "face" },
   magnet: { sprite: "magnet", mode: "face" },
+  sandworm: { sprite: "sandworm", mode: "heading" },
+  sandworm_segment: { sprite: "sandwormSegment", mode: "spin", spin: 0.0008 },
+  hive_queen: { sprite: "hiveQueen", mode: "face" },
+  hive_flower: { sprite: "hiveFlower", mode: "spin", spin: 0.0007 },
+  chronophage: { sprite: "chronophage", mode: "face" },
+  hacker: { sprite: "hacker", mode: "face" },
+  hacker_clone: { sprite: "hacker", mode: "face" },
+  pulse_core: { sprite: "pulseCore", mode: "pulse" },
 };
 
 export function drawPlayer(now) {
@@ -119,6 +128,9 @@ export function drawPlayer(now) {
     strokeCircle(x, y, size + 18 + Math.sin(now / 100) * 4, "rgba(255, 170, 0, 0.6)", 3);
   }
   if (player.buffs.stun > 0) drawPlayerStun(x, y, size, now);
+  if (player.buffs.glitch > 0 || player.buffs.glitchWarn > 0 || player.buffs.jammed > 0) {
+    drawPlayerGlitch(x, y, size, now);
+  }
 }
 
 /** Joueur étourdi : arcs électriques autour du vaisseau et étoiles au-dessus. */
@@ -636,6 +648,7 @@ export function drawEnemies() {
   for (const e of world.enemies) {
     if (e.type === "twin_fire" && e.pair && !e.dead && !e.partner.dead) drawTether(e, now);
   }
+  drawBossUnderlays(now); // corps du ver, poison des fleurs (sous les ennemis)
   for (const e of world.enemies) {
     if (!isOnScreen(e.x, e.y, e.size)) continue;
     if (e.submerged) {
@@ -659,6 +672,12 @@ export function drawEnemies() {
       // Tentacule : vers le joueur, en ondulant
       const angle = Math.atan2(player.worldY - e.y, player.worldX - e.x) + Math.sin(t / 220) * 0.35;
       drawSprite(ctx, sprite, e.x, e.y, angle, scale);
+    } else if (look.mode === "heading") {
+      // Ver des sables : la tête regarde où elle file (elle serpente)
+      drawSprite(ctx, sprite, e.x, e.y, e.heading ?? 0, scale);
+    } else if (look.mode === "pulse") {
+      // Cœur du Pulse : il se gonfle à chaque battement
+      drawSprite(ctx, sprite, e.x, e.y, -Math.PI / 2, scale * beatScale(e));
     } else if (look.mode === "spin") {
       const pulse = e.type === "kamikaze" ? 1 + Math.sin(t / 60) * 0.08 : 1;
       drawSprite(ctx, sprite, e.x, e.y, t * look.spin, scale * pulse);
@@ -672,7 +691,7 @@ export function drawEnemies() {
     if (e.enraged) drawFury(e, now);
     if (e.elite) drawElite(e, now);
 
-    if (e.health < e.maxHealth) drawHealthBar(e);
+    if (e.health < e.maxHealth || e.mimic?.health < e.mimic?.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
 }
@@ -699,10 +718,13 @@ function drawMagnetPull(e, now) {
   ctx.globalAlpha = 1;
 }
 
-/** Kraken sous l'eau : silhouette sombre, remous et, pendant un tourbillon, spirale qui aspire. */
+/**
+ * Boss sous l'eau ou sous terre (Kraken, Ver des sables) : silhouette sombre, remous et, pendant un
+ * tourbillon du Kraken, spirale qui aspire.
+ */
 function drawSubmerged(e, now) {
   ctx.globalAlpha = 0.28;
-  const sprite = getSprite("kraken", e.template.size, e.color);
+  const sprite = getSprite((ENEMY_LOOKS[e.type] || ENEMY_LOOKS.kraken).sprite, e.template.size, e.color);
   drawSprite(
     ctx,
     sprite,
@@ -832,12 +854,16 @@ export function drawSkillEffects() {
   }
 }
 
-/** Barre de vie, seulement une fois blessé ; plus large et lumineuse pour les boss. */
+/**
+ * Barre de vie, seulement une fois blessé ; plus large et lumineuse pour les boss. Un clone du
+ * Hacker (`mimic`) affiche celle du vrai pour ne pas se trahir.
+ */
 function drawHealthBar(e) {
-  const boss = e.template.isBoss;
+  const real = e.mimic ?? e;
+  const boss = real.template.isBoss;
   const w = boss ? Math.max(80, e.size * 2) : 30;
   const h = boss ? 6 : 4;
-  const pct = Math.max(0, Math.min(1, e.health / e.maxHealth));
+  const pct = Math.max(0, Math.min(1, real.health / real.maxHealth));
   const left = e.x - w / 2;
   const top = e.y - e.size - (boss ? 22 : 12);
   ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
@@ -880,6 +906,11 @@ export function drawProjectiles() {
     if (!isOnScreen(p.x, p.y, p.size)) continue;
     if (p.scythe) {
       drawSprite(ctx, getSprite("scythe", roundSize(p.size), p.color), p.x, p.y, performance.now() / 50);
+      continue;
+    }
+    if (p.bit) {
+      // Paquet de données du Hacker : petit carré
+      drawSprite(ctx, getSprite("bit", roundSize(p.size), p.color), p.x, p.y);
       continue;
     }
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);

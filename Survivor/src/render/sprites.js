@@ -3,6 +3,10 @@
 // drawImage suffit, ce qui reste rapide même avec des centaines d'ennemis.
 
 import { gfx } from "../core/canvas.js";
+import { BOSS_SHAPES } from "./bossShapes.js";
+import { dot, eye, glow, neonBody, noGlow, polygon, regular, shade } from "./neon.js";
+
+export { shade };
 
 const TAU = Math.PI * 2;
 const RES = 2; // résolution des sprites (net sur écrans haute densité)
@@ -53,70 +57,6 @@ export function drawSprite(ctx, sprite, x, y, angle = 0, sx = 1, sy = sx) {
   ctx.scale(sx, sy);
   ctx.drawImage(sprite.canvas, -h, -h, h * 2, h * 2);
   ctx.restore();
-}
-
-// --- OUTILS DE TRACÉ ---
-
-function glow(c, color, blur) {
-  if (!gfx.shadows) return;
-  c.shadowColor = color;
-  c.shadowBlur = blur;
-}
-
-function noGlow(c) {
-  c.shadowBlur = 0;
-}
-
-/** Corps néon : intérieur sombre teinté + contour lumineux. */
-function neonBody(c, path, color, line = 2.5, blur = 12) {
-  c.fillStyle = shade(color, 0.22);
-  path();
-  c.fill();
-  glow(c, color, blur);
-  c.strokeStyle = color;
-  c.lineWidth = line;
-  path();
-  c.stroke();
-  noGlow(c);
-}
-
-function polygon(c, points) {
-  c.beginPath();
-  points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-  c.closePath();
-}
-
-function regular(c, sides, r, rot = 0) {
-  const pts = [];
-  for (let i = 0; i < sides; i++) {
-    const a = rot + (TAU * i) / sides;
-    pts.push([Math.cos(a) * r, Math.sin(a) * r]);
-  }
-  polygon(c, pts);
-}
-
-function dot(c, x, y, r, color, blur = 8) {
-  glow(c, color, blur);
-  c.fillStyle = color;
-  c.beginPath();
-  c.arc(x, y, r, 0, TAU);
-  c.fill();
-  noGlow(c);
-}
-
-/** Œil lumineux : pupille blanche entourée de la couleur. */
-function eye(c, x, y, r, color) {
-  dot(c, x, y, r, color, 10);
-  dot(c, x + r * 0.25, y, r * 0.5, "#ffffff", 0);
-}
-
-/** Assombrit une couleur hexadécimale (#rrggbb) : k = 0 → noir, 1 → identique. */
-export function shade(hex, k) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.round(((n >> 16) & 255) * k);
-  const g = Math.round(((n >> 8) & 255) * k);
-  const b = Math.round((n & 255) * k);
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 // --- FORMES (orientées vers la droite : angle 0 = vers la cible) ---
@@ -1119,4 +1059,5 @@ const SHAPES = {
     c.lineTo(0, r);
     c.stroke();
   },
+  ...BOSS_SHAPES, // boss rangés dans systems/bosses/
 };

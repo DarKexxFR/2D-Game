@@ -16,14 +16,14 @@ async function spawnAlone(page, type, dx = 300) {
   );
 }
 
-test("calendrier des boss : Titan à la 7, Sentinelle à la 9, Colosse à la 10, Kraken à la 11, Jumeaux à la 13", async ({
+test("calendrier des boss : Titan à la 7 ... Ver à la 17, Ruche à la 19, Chronophage à la 23, Hacker à la 29, Cœur à la 30", async ({
   page,
 }) => {
   await page.goto("/");
   await startGame(page);
   const bosses = await game(page, ({ state, spawner }) => {
     const out = {};
-    for (const wave of [5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18]) {
+    for (const wave of [5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 23, 29, 30]) {
       state.game.pendingBosses.length = 0;
       state.game.wave = wave - 1;
       spawner.startNextWave();
@@ -42,7 +42,12 @@ test("calendrier des boss : Titan à la 7, Sentinelle à la 9, Colosse à la 10,
     13: "twin_fire",
     14: "storm_titan",
     15: "void_reaper",
+    17: "sandworm",
     18: "prism",
+    19: "hive_queen",
+    23: "chronophage",
+    29: "hacker",
+    30: "pulse_core",
   });
   await killPlayer(page);
 });
@@ -57,6 +62,11 @@ for (const type of [
   "prism",
   "kraken",
   "twin_fire",
+  "sandworm",
+  "hive_queen",
+  "chronophage",
+  "hacker",
+  "pulse_core",
 ]) {
   test(`le boss ${type} enchaîne ses attaques et passe en furie`, async ({ page }) => {
     await page.goto("/");
@@ -82,7 +92,8 @@ for (const type of [
       const e = state.world.enemies.find((x) => x.template.isBoss);
       e.health = e.maxHealth * 0.4;
     });
-    if (["boss", "colossus", "void_reaper", "storm_titan", "prism", "slime_boss"].includes(type)) {
+    const enrages = ["boss", "colossus", "void_reaper", "storm_titan", "prism", "slime_boss"];
+    if ([...enrages, "sandworm", "hive_queen", "chronophage", "hacker"].includes(type)) {
       await expect.poll(() => game(page, ({ state }) => state.world.enemies[0].enraged)).toBe(true);
       await expect(page.locator("#bossBarName")).toContainText("FURIE");
     }

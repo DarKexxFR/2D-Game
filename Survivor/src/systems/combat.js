@@ -26,6 +26,7 @@ import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
 import { onHit, onKill, onShot } from "./perks.js";
 import { knockEnemy } from "./knockback.js";
+import { timeFactorAt } from "./hazards.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -65,6 +66,7 @@ export function getNearestEnemy(x, y, maxDist = Infinity) {
 /** Inflige des dégâts ; `source` sert aux statistiques de fin de partie. */
 export function damageEnemy(enemy, amount, source = "other") {
   if (enemy.dead || enemy.submerged) return;
+  if (enemy.armor) amount *= 1 - enemy.armor; // carapace (Mère-Ruche protégée par ses fleurs)
   const dealt = Math.min(amount, Math.max(0, enemy.health));
   game.stats.damage[source] = (game.stats.damage[source] || 0) + dealt;
   enemy.health -= amount;
@@ -179,6 +181,7 @@ export function killAllEnemies() {
 
 export function shoot() {
   if (game.hex?.type === "jam") return; // duel : sort « tir coupé » de l'adversaire
+  if (player.buffs.jammed > 0) return; // zone de brouillage du Hacker
   let fireRate = player.buffs.overcharge > 0 ? MYSTERY_BOX.overchargeAttackSpeed : player.attackSpeed;
   if (player.buffs.frenzy > 0) fireRate /= 3;
   if (game.time - player.lastAttack < fireRate) return;
@@ -288,11 +291,13 @@ export function spawnProjectile(props) {
 }
 
 export function updateProjectiles() {
+  const bubbles = world.hazards.filter((h) => h.kind === "bubble"); // bulles temporelles du Chronophage
   for (const proj of world.projectiles) {
     if (proj.returns && ++proj.age >= proj.returns) steerBack(proj);
     if (proj.dead) continue;
-    proj.x += proj.vx;
-    proj.y += proj.vy;
+    const k = bubbles.length ? timeFactorAt(proj.x, proj.y, bubbles) : 1;
+    proj.x += proj.vx * k;
+    proj.y += proj.vy * k;
     if (
       --proj.life <= 0 ||
       proj.x < game.bounds.minX ||

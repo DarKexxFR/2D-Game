@@ -18,6 +18,8 @@ import { isProtected, stunPlayer, takeDamage } from "./player.js";
 import { spawnEnemy } from "./spawner.js";
 import { clampToZone } from "./arena.js";
 import { knockEnemy } from "./knockback.js";
+import { aim, enrage, fireEnemyProjectile, nextAttack, orphaned } from "./bosses/kit.js";
+import { BOSS_MODULES } from "./bosses/index.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
 
@@ -35,6 +37,7 @@ const BOSS_BEHAVIORS = {
   twin_fire: updateTwin,
   twin_ice: updateTwin,
   goblin: updateGoblin,
+  ...BOSS_MODULES, // boss rangés chacun dans leur fichier (systems/bosses/)
 };
 
 const HYDRA_HEAD_SPREAD = [-0.8, 0, 0.8]; // angle des 3 têtes autour de la direction du joueur
@@ -287,26 +290,6 @@ function freezePlayer(ticks = 90) {
 // --- BOSS ---
 // Les boss enchaînent des attaques annoncées (zones, lasers, ondes : voir hazards.js) et
 // passent en « furie » sous 50 % de vie. `e.rooted` immobilise le boss pendant une attaque.
-
-const aim = (e) => angleTo(e.x, e.y, player.worldX, player.worldY);
-
-/** Attaque suivante dans le cycle du boss. */
-function nextAttack(e, cycle) {
-  e.turn = ((e.turn ?? -1) + 1) % cycle.length;
-  return cycle[e.turn];
-}
-
-/** Passage en furie (une seule fois) : couleur, vitesse et annonce. */
-function enrage(e, color, speedMult, text) {
-  if (e.enraged || e.health >= e.maxHealth * 0.5) return false;
-  e.enraged = true;
-  e.color = color;
-  e.speed = e.baseSpeed = e.baseSpeed * speedMult;
-  addFloatingText(e.x, e.y - e.size - 20, text, color, 26, 80);
-  addScreenShake(12);
-  playSfx("boss");
-  return true;
-}
 
 const CRAB = { windup: 45, charge: 26, chargeSpeed: 13 };
 
@@ -750,11 +733,7 @@ function krakenWhirl(e) {
  */
 function updateTentacle(e) {
   e.rooted = 1;
-  if (!e.owner || e.owner.dead) {
-    e.dead = true; // le Kraken est mort : ses tentacules retombent (sans récompense)
-    createParticles(e.x, e.y, e.color, 10);
-    return;
-  }
+  if (orphaned(e)) return; // le Kraken est mort : ses tentacules retombent (sans récompense)
   if (e.smashIn > 0 && --e.smashIn === 0) {
     addRing(e.x, e.y, 380, e.damage * 0.6, { color: e.color, speed: 6 });
     addScreenShake(6);
@@ -1029,6 +1008,16 @@ function twinRevenge(e) {
   playSfx("boss");
 }
 
+/** Tir à tête chercheuse (pollen de la Mère-Ruche) : tourne d'au plus `homing` radian par tick vers le joueur. */
+function steerToPlayer(p) {
+  const speed = Math.hypot(p.vx, p.vy);
+  const heading = Math.atan2(p.vy, p.vx);
+  const a =
+    heading + clamp(angleDiff(angleTo(p.x, p.y, player.worldX, player.worldY), heading), -p.homing, p.homing);
+  p.vx = Math.cos(a) * speed;
+  p.vy = Math.sin(a) * speed;
+}
+
 /** Distance d'un point au segment [A, B]. */
 function segmentDist(px, py, ax, ay, bx, by) {
   const dx = bx - ax;
@@ -1188,17 +1177,6 @@ function updateHydra(e) {
 
 // --- PROJECTILES ENNEMIS ---
 
-function fireEnemyProjectile(x, y, angle, speed, props) {
-  world.enemyProjectiles.push({
-    x,
-    y,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    dead: false,
-    ...props,
-  });
-}
-
 function updateEnemyProjectiles() {
   const list = world.enemyProjectiles;
   const count = list.length;
@@ -1210,6 +1188,7 @@ function updateEnemyProjectiles() {
       const s = Math.sin(p.turn);
       [p.vx, p.vy] = [p.vx * c - p.vy * s, p.vx * s + p.vy * c];
     }
+    if (p.homing) steerToPlayer(p);
     p.x += p.vx;
     p.y += p.vy;
     if (p.life !== undefined && --p.life <= 0) {
