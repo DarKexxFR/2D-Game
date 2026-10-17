@@ -247,6 +247,15 @@ Principes :
   Clé publique VAPID dans `PUSH.vapidPublicKey` (vide = notifications masquées) ; la clé privée ne va que
   dans les secrets Supabase. Mise en place : `supabase/NOTIFICATIONS.md`. Proposition « Être prévenu ? »
   (`maybeAskPush`) après la série du jour ou au retour d'une partie, jamais redemandée avant 14 jours.
+- **Écran de chargement** (`src/boot.js` script classique dans `<head>`, `ui/loadingScreen.js`,
+  `services/preload.js`, réglages `LOADING`) : `<body class="booting">` cache tout sauf `#loadingScreen`
+  tant que le jeu n'est pas prêt (avant, l'accueil s'affichait vide et un clic sur JOUER était perdu
+  pendant le téléchargement des modules). Barre : fichiers reçus (sans liste à tenir), puis étapes de
+  `boot()` dans `main.js` (polices, images, compte connecté, chacune plafonnée), puis `enterHome()`
+  (accueil, adresse, série du jour) et `finishLoading()`. Erreur de module ou démarrage trop long =
+  RÉESSAYER. Une étape à attendre de plus = une entrée dans `runLoadingSteps`. Compte : une progression à
+  récupérer qui arrive en pleine partie n'est ni appliquée ni rechargée (`canRestore`, résultat `busy`) ;
+  `resumeAccountCheck` relance la vérification au retour à l'accueil.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -318,7 +327,7 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
 synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
-application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour).
+application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

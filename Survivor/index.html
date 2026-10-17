@@ -41,6 +41,9 @@
     <meta name="google-adsense-account" content="ca-pub-8968329181870538" />
     <!-- Déménagement vers last-pulse.com : doit passer avant le jeu (voir src/transfer.js) -->
     <script src="src/transfer.js"></script>
+    <!-- Écran de chargement : l'accueil reste caché tant que le jeu n'est pas prêt (voir src/boot.js) -->
+    <script src="src/boot.js"></script>
+    <link rel="stylesheet" href="css/loading.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/menus.css" />
@@ -60,8 +63,29 @@
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/touch.css" />
   </head>
-  <body>
+  <body class="booting">
     <div id="gameContainer">
+      <!-- ===== ÉCRAN DE CHARGEMENT ===== -->
+      <div
+        id="loadingScreen"
+        role="progressbar"
+        aria-label="Chargement du jeu"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="loading-box">
+          <img class="loading-logo" src="assets/logo-mark.svg" alt="" width="96" height="96" />
+          <div class="loading-title">LAST PULSE</div>
+          <div class="loading-track"><div id="loadingFill" class="loading-fill"></div></div>
+          <div class="loading-info">
+            <span id="loadingLabel">Chargement du jeu...</span>
+            <span id="loadingPercent">0 %</span>
+          </div>
+          <button id="btnLoadingRetry" class="loading-retry">RÉESSAYER</button>
+        </div>
+      </div>
+
       <canvas id="gameCanvas"></canvas>
 
       <!-- ===== HUD EN JEU ===== -->

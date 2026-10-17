@@ -88,9 +88,12 @@ export function initAccountSync() {
 
 /**
  * Compare la progression de l'appareil et celle du compte. Renvoie :
- * "uploaded" | "synced" | "restored" (recharger la page) | "conflict" | "error" | "off".
+ * "uploaded" | "synced" | "restored" (recharger la page) | "conflict" | "error" | "off"
+ * | "busy" (il faudrait récupérer la progression du compte mais `canRestore` refuse : partie en
+ * cours ; rien n'est écrit ni envoyé, à refaire plus tard).
+ * @param {{ canRestore?: () => boolean }} [options]
  */
-export async function syncAccount() {
+export async function syncAccount({ canRestore = () => true } = {}) {
   ready = false;
   const user = currentUser();
   if (!user) return "off";
@@ -107,6 +110,8 @@ export async function syncAccount() {
     const localChanged = !known || mark.sig !== signature(account);
     if (!remoteChanged) return localChanged ? await uploadAndMark() : finish("synced");
     if (!localChanged || isFresh(account) || signature(account) === signature(remote.account)) {
+      // En pleine partie, la fin de partie réécrirait l'ancienne progression par-dessus : on attend.
+      if (!canRestore()) return "busy";
       return adopt(remote);
     }
     pendingRemote = remote;

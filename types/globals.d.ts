@@ -4,6 +4,12 @@
 interface Window {
   /** Posé par transfer.js quand le joueur part vers last-pulse.com (le jeu ne démarre pas). */
   __lastPulseLeaving?: boolean;
+  /** Écran de chargement, posé par boot.js (voir ui/loadingScreen.js). */
+  __boot?: {
+    progress(value: number, label?: string): void;
+    fail(message: string): void;
+    done(): void;
+  };
   /** AudioContext préfixé des anciens Safari. */
   webkitAudioContext?: typeof AudioContext;
   /** File d'attente du script AdSense (H5 Games Ads). */

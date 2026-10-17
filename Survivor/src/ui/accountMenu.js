@@ -21,6 +21,7 @@ import {
 } from "../services/accountSync.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { $, el, setText, setVisible } from "./dom.js";
+import { setLoading } from "./loadingScreen.js";
 import { showScreen } from "./screens.js";
 
 const STATUS = {
@@ -35,6 +36,8 @@ const PROVIDERS = { google: "Google", discord: "Discord", email: "e-mail" };
 
 let pendingEmail = "";
 let onConflict = () => {};
+let isPlaying = () => false;
+let checkAfterRun = false; // vérification remise au retour à l'accueil (partie en cours)
 let returnTo = "mainMenu";
 
 /** Ouvre la fenêtre de connexion ; RETOUR ramène à l'écran `from`. */
@@ -51,9 +54,13 @@ export function closeLogin() {
 /**
  * Au démarrage : session (retour de Google / Discord compris), puis comparaison avec le compte.
  * `onConflictFound` ouvre la fenêtre de connexion quand le joueur doit choisir entre deux progressions.
+ * `playing` dit si une partie est en cours : ni rechargement ni fenêtre pendant une partie (la
+ * vérification reprend au retour à l'accueil, voir resumeAccountCheck). L'écran de chargement attend
+ * la promesse renvoyée, pour que le joueur n'entre pas dans le jeu avec une progression périmée.
  */
-export async function initAccount({ onConflictFound }) {
+export async function initAccount({ onConflictFound, playing }) {
   onConflict = onConflictFound;
+  isPlaying = playing;
   $("btnLoginBack").addEventListener("click", closeLogin);
   if (!isOnlineEnabled()) {
     // Sans serveur, pas de compte : les boutons d'accès disparaissent
@@ -73,13 +80,27 @@ export async function initAccount({ onConflictFound }) {
 }
 
 async function runSync() {
-  const result = await syncAccount();
+  const result = await syncAccount({ canRestore: () => !isPlaying() });
   if (result === "restored") {
     setText("accountMessage", "Progression du compte récupérée ! Rechargement...");
+    setLoading(1, "Progression du compte récupérée, rechargement...");
     location.reload();
+    return new Promise(() => {}); // la page se recharge : l'accueil ne doit pas s'ouvrir entre-temps
+  } else if (result === "busy" || (result === "conflict" && isPlaying())) {
+    checkAfterRun = true;
   } else if (result === "conflict") {
     onConflict();
   }
+}
+
+/**
+ * Retour à l'accueil après une partie : reprend la vérification du compte si elle avait été remise
+ * (réponse du serveur arrivée en pleine partie, après la fin de l'écran de chargement).
+ */
+export function resumeAccountCheck() {
+  if (!checkAfterRun) return;
+  checkAfterRun = false;
+  runSync();
 }
 
 function bindButtons() {

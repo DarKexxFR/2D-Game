@@ -1,7 +1,7 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
-import { DIFFICULTIES, LIMITS, NET, TICK_MS, VERSUS } from "./config.js";
+import { DIFFICULTIES, LIMITS, LOADING, NET, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -62,7 +62,9 @@ import { initTouchControls, showTouchControls } from "./ui/touchControls.js";
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
 import { closeOptions, initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
-import { closeLogin, initAccount, openLogin } from "./ui/accountMenu.js";
+import { closeLogin, initAccount, openLogin, resumeAccountCheck } from "./ui/accountMenu.js";
+import { failLoading, finishLoading, runLoadingSteps, setLoading } from "./ui/loadingScreen.js";
+import { loadFonts, loadImages, settleWithin } from "./services/preload.js";
 import {
   initUpgradeMenu,
   resetUpgradeMenu,
@@ -341,6 +343,7 @@ function returnToMenu() {
   showHud(false);
   showMainMenu();
   maybeAskPush(); // retour d'une partie : proposé aux joueurs habitués seulement (voir PUSH.askMinRuns)
+  resumeAccountCheck(); // réponse du compte arrivée pendant la partie : traitée maintenant
 }
 
 function endGame() {
@@ -515,6 +518,10 @@ function frame(now) {
 
 // --- INITIALISATION ---
 
+/**
+ * Branche les menus et les commandes. Renvoie la vérification du compte connecté (en cours),
+ * que l'écran de chargement attend avant d'ouvrir l'accueil.
+ */
 function init() {
   hydrateIcons();
   loadAccount();
@@ -551,8 +558,11 @@ function init() {
   initTutorial();
   initAppMenu();
   initNotifications();
-  // Connexion facultative : vérifie la progression du compte sans bloquer le démarrage
-  initAccount({ onConflictFound: () => !game.started && openLogin("mainMenu") });
+  // Connexion facultative : vérifie la progression du compte (attendue par l'écran de chargement)
+  const accountCheck = initAccount({
+    onConflictFound: () => openLogin("mainMenu"),
+    playing: () => game.started,
+  });
 
   // L'audio ne peut démarrer qu'après une interaction ; petit « clic » sur chaque bouton.
   document.addEventListener("pointerdown", unlockAudio);
@@ -658,7 +668,11 @@ function init() {
     playSfx("boss");
     vibrate([100, 50, 100]);
   });
+  return accountCheck;
+}
 
+/** Fin du chargement : l'accueil (ou le menu demandé par l'adresse) apparaît, la boucle démarre. */
+function enterHome() {
   showMainMenu();
   // Première ouverture depuis l'icône de l'écran d'accueil : cadeau de bienvenue (une fois par compte)
   const installGold = claimInstallReward();
@@ -671,7 +685,31 @@ function init() {
   // Série de connexion : proposée à l'arrivée (pas à un tout nouveau joueur, qui commence par le tutoriel)
   if (currentScreen() === "mainMenu" && account.achievementStats.runs > 0) offerLoginStreak();
   requestAnimationFrame(frame);
+  finishLoading();
+}
+
+/**
+ * Démarrage derrière l'écran de chargement (voir src/boot.js) : l'accueil n'apparaît, et JOUER ne
+ * répond, qu'une fois tout prêt. Avant, un clic pendant le téléchargement des modules était perdu
+ * et l'accueil montrait un compte vide ; une progression récupérée du compte rechargeait la page
+ * en pleine partie.
+ */
+async function boot() {
+  try {
+    setLoading(0.7, "Préparation du jeu...");
+    const accountCheck = init();
+    await runLoadingSteps([
+      { label: "Polices...", run: loadFonts },
+      { label: "Images...", run: () => loadImages() },
+      // Au-delà du délai, le jeu s'ouvre : une réponse tardive est traitée sans gêner une partie
+      { label: "Compte en ligne...", run: () => settleWithin(accountCheck, LOADING.accountTimeoutMs) },
+    ]);
+    enterHome();
+  } catch (err) {
+    console.error(err);
+    failLoading("Le jeu n'a pas pu démarrer.");
+  }
 }
 
 // Sur l'ancienne adresse, transfer.js emmène le joueur vers last-pulse.com : inutile de démarrer.
-if (!window.__lastPulseLeaving) init();
+if (!window.__lastPulseLeaving) boot();
