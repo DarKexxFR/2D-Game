@@ -1,10 +1,6 @@
 /* Duel : adversaire en ligne, choix d'amélioration de l'écran scindé, commandes tactiles à deux,
    écran du vainqueur */
 
-body.versus #controls {
-  display: none !important;
-}
-
 /* --- En ligne : partie de l'adversaire, sous le minuteur de vague --- */
 .duel-rival {
   display: none;

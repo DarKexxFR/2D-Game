@@ -12,7 +12,7 @@ test("tir auto par défaut et commandes tactiles visibles", async ({ page }) => 
   await expect(page.locator("#touchControls")).toBeHidden();
   await page.locator("#btnPlay").tap();
   await expect(page.locator("#touchControls")).toBeVisible();
-  await expect(page.locator("#controls")).toBeHidden();
+  await expect(page.locator("#autoShootOff")).toBeHidden(); // tir auto actif : pas de rappel
   expect(await game(page, ({ state }) => state.player.autoShoot)).toBe(true);
 });
 

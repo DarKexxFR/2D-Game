@@ -84,8 +84,15 @@
 
       <div id="ui">
         <div class="ui-header">
-          <div><span id="waveLabel">VAGUE</span> <span id="wave" class="c-cyan">1</span></div>
-          <div>KILLS <span id="kills" class="c-pink">0</span></div>
+          <div class="ui-wave"><span id="waveLabel">VAGUE</span> <span id="wave" class="c-cyan">1</span></div>
+          <div class="ui-counters">
+            <span class="ui-count" title="Ennemis éliminés">
+              <i data-icon="skull" data-color="#ff2a6d"></i> <span id="kills">0</span>
+            </span>
+            <span class="ui-count ui-gold" title="Or de la partie">
+              <i data-icon="coin" data-color="#ffd700"></i> <span id="uiRunGold">0</span>
+            </span>
+          </div>
         </div>
         <div id="timerContainer"><div id="timerBar"></div></div>
         <div class="health-row">
@@ -97,32 +104,30 @@
             <i data-icon="heartCrack" data-color="#aa66ff"></i>
           </div>
         </div>
-        <div class="ui-divider"></div>
-        <div class="stat-grid">
-          <div class="stat-item">ATK: <span id="statAtk">10</span></div>
-          <div class="stat-item">DEF: <span id="statDef">0</span></div>
-          <div class="stat-item">SPD: <span id="statSpd">3.0</span></div>
-          <div class="stat-item">AIMANT: <span id="statMagnet">100</span></div>
-          <div class="stat-item">CRIT: <span id="statCrit" class="stat-crit">5%</span></div>
-          <div class="stat-item">DMG: <span id="statCdmg" class="stat-crit">150%</span></div>
-          <div class="stat-item">TIR AUTO: <span id="autoShootState">ON</span></div>
-        </div>
-        <div class="skill-box">
-          <div class="skill-label">DASH (ESPACE)</div>
-          <div class="skill-bar"><div class="skill-fill dash-fill" id="dashBar"></div></div>
-        </div>
-        <div class="skill-box">
-          <div class="skill-label ult-label">
-            <span><span id="ultName">ULTIME</span> (R)</span><span id="ultReadyText">PRÊT !</span>
+        <div class="skill-row">
+          <div class="skill-box">
+            <div class="skill-label">DASH</div>
+            <div class="skill-bar"><div class="skill-fill dash-fill" id="dashBar"></div></div>
           </div>
-          <div class="skill-bar"><div class="skill-fill ult-fill" id="ultBar"></div></div>
+          <div class="skill-box">
+            <div class="skill-label ult-label">
+              <span id="ultName">ULTIME</span><span id="ultReadyText">PRÊT</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill ult-fill" id="ultBar"></div></div>
+          </div>
         </div>
-        <div id="runGoldContainer">
-          <i data-icon="coin" data-color="#ffd700"></i> <span id="uiRunGold">0</span>
+        <div class="stat-grid">
+          <div class="stat-item"><small>ATK</small> <span id="statAtk">10</span></div>
+          <div class="stat-item"><small>DEF</small> <span id="statDef">0</span></div>
+          <div class="stat-item"><small>VIT</small> <span id="statSpd">3.0</span></div>
+          <div class="stat-item"><small>CRIT</small> <span id="statCrit" class="stat-crit">5%</span></div>
+          <div class="stat-item">
+            <small>DGT CRIT</small> <span id="statCdmg" class="stat-crit">150%</span>
+          </div>
+          <div class="stat-item"><small>AIMANT</small> <span id="statMagnet">100</span></div>
         </div>
+        <div id="autoShootOff" class="ui-badge">TIR AUTO COUPÉ</div>
       </div>
-
-      <div id="controls"></div>
 
       <!-- ===== DUEL : ADVERSAIRE EN LIGNE, ÉCRAN SCINDÉ ===== -->
       <div id="duelRival" class="duel-rival">

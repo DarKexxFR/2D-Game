@@ -443,11 +443,6 @@ button.dock-btn {
   color: #00ffff;
 }
 
-/* Pendant l'accueil, l'aide des touches ne doit pas gêner la barre du bas */
-body[data-screen="mainMenu"] #controls {
-  display: none;
-}
-
 /* --- Téléphone en portrait : une colonne --- */
 @media (max-width: 760px) {
   .home {

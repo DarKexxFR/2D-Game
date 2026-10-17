@@ -1,4 +1,4 @@
-// Réglage des touches (menu Options) et aide des commandes affichée en jeu.
+// Réglage des touches (menu Options).
 
 import { ACTIONS, bindingsOf, captureNextKey, keyLabel, rebind, resetBindings } from "../core/input.js";
 import { onSettingsChange } from "../services/settings.js";
@@ -10,10 +10,7 @@ let waitingFor = null;
 export function initKeyBindings() {
   $("optKeysSection").style.display = isTouchDevice ? "none" : "";
   $("btnResetKeys").addEventListener("click", resetBindings);
-  onSettingsChange(() => {
-    renderKeyList();
-    renderControlsHelp();
-  });
+  onSettingsChange(renderKeyList);
 }
 
 const labelOf = (action) => bindingsOf(action).map(keyLabel).join(" / ");
@@ -40,14 +37,4 @@ function startCapture(action) {
       rebind(action, key); // rebind sauvegarde → renderKeyList via onSettingsChange
     else renderKeyList();
   });
-}
-
-/** Encadré d'aide en bas à droite pendant la partie. */
-function renderControlsHelp() {
-  const lines = [
-    "SOURIS : Viser",
-    `${["up", "left", "down", "right"].map((a) => keyLabel(bindingsOf(a)[0])).join("")} : Bouger`,
-    ...["dash", "skill", "box", "autoShoot", "pause"].map((a) => `${labelOf(a)} : ${ACTIONS[a].label}`),
-  ];
-  $("controls").replaceChildren(...lines.flatMap((line, i) => (i ? [el("br"), line] : [line])));
 }
