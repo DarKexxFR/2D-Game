@@ -117,7 +117,20 @@ export function resetPlayer(accountLevel) {
     hasRayGun: false,
     ultCharge: 0,
     isUltReady: false,
-    buffs: { frenzy: 0, shield: 0, magnet: 0, overcharge: 0, slow: 0, stun: 0, stunImmune: 0, haste: 0 },
+    // glitch = commandes inversées (glitchWarn = alerte avant), jammed = tir coupé (Hacker)
+    buffs: {
+      frenzy: 0,
+      shield: 0,
+      magnet: 0,
+      overcharge: 0,
+      slow: 0,
+      stun: 0,
+      stunImmune: 0,
+      haste: 0,
+      glitch: 0,
+      glitchWarn: 0,
+      jammed: 0,
+    },
     hasteBonus: 0, // vitesse en plus pendant buffs.haste (Combinaison légère ★3)
     // Effets d'équipement (systems/perks.js) : effets ★3 actifs, panoplie, minuteurs, zones
     perks: {},

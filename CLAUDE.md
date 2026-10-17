@@ -96,6 +96,15 @@ Principes :
   **Roi Slime** : saut annoncé (enchaîné en furie), pluie de slime collante, absorbe ses petits pour se soigner,
   « mitose » en furie, se divise à sa mort (`SLIME_KING`).
   Vitesse de déplacement du joueur plafonnée à `STAT_CAPS.speed` (tous bonus compris).
+  **Boss tardifs** (`systems/bosses/`, un fichier par boss, réglages dans `data/bosses.js`, sprites dans
+  `render/bossShapes.js`, rendu propre dans `render/bosses.js`) : **Ver des sables** (17, anneaux
+  `sandworm_segment` qui suivent la tête, chacun détruit retire 7 % à la tête, plongée = `submerged`),
+  **Mère-Ruche** (19, fleurs `hive_flower` à poison qui grandit, carapace `e.armor` lue par `damageEnemy`),
+  **Chronophage** (23, bulles `addBubble` qui ralentissent les tirs du joueur, retour arrière, rembobinage, écho
+  en furie), **Hacker** (29, `buffs.glitch` = commandes inversées, flaques `jam` = tir coupé, clones
+  `hacker_clone` avec `mimic` pour la barre de vie), **Cœur du Pulse** (30, boss final : battements, 3 phases,
+  `e.arenaScale` resserre l'arène). Leurs parties meurent avec eux (`spawnPart` / `orphaned` de `kit.js`) ;
+  `e.barTag` ajoute un état à la barre du boss. Outils communs (visée, cycle, furie, tirs) dans `bosses/kit.js`.
   **Les boss ne se poussent pas** : tout recul ou attraction d'ennemi passe par `systems/knockback.js`
   (`knockEnemy`, `pullEnemy`, `pushEnemy`), qui ignore les boss (choix du propriétaire) ; seuls leurs
   propres mouvements (sauts, charges, téléportations) les déplacent.
@@ -326,7 +335,7 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 équipements enregistrés, offre du jour, événements de carte et arène de boss réduite, niveaux de difficulté (Facile / Normal / Cauchemar),
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
-synergies familier + arme, ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
+synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophage, Hacker, Cœur du Pulse), ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
 application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).

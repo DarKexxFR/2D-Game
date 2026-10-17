@@ -56,9 +56,11 @@ test("appareil débordé : pas plus de LIMITS.ticksPerFrame ticks par image", as
   await page.goto("/");
   await startGame(page);
   const ticks = await game(page, async ({ state, config }) => {
+    // Mesure prise après une image : les ticks de cette image-là (qui peut elle-même arriver en retard
+    // sur une machine chargée) ne doivent pas être comptés avec ceux de l'image qui rattrape le blocage
+    await new Promise((r) => requestAnimationFrame(r));
     const start = state.game.time;
     // Bloque le fil principal 1 s : sans plafond, l'image suivante rattraperait 15 ticks d'un coup
-    await new Promise((r) => requestAnimationFrame(r));
     const end = performance.now() + 1000;
     while (performance.now() < end);
     await new Promise((r) => requestAnimationFrame(r));

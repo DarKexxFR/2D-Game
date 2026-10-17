@@ -3,7 +3,10 @@
 //  - circle : zone ronde qui se remplit puis explose (et peut laisser une flaque) ;
 //  - beam   : laser en ligne droite, d'abord un trait fin d'alerte puis le rayon ;
 //  - ring   : onde de choc qui s'élargit, à franchir au dash.
-// Option `stun` (ticks) : un coup étourdit le joueur (Titan de l'orage).
+//  - bubble : bulle temporelle (Chronophage), sans dégâts : les tirs du joueur y ralentissent.
+// Option `stun` (ticks) : un coup étourdit le joueur (Titan de l'orage). Option `jam` d'une flaque :
+// tant que le joueur s'y tient, son tir est coupé (brouillage du Hacker). Option `swing` d'un laser :
+// il oscille comme un pendule (Chronophage).
 // Zones rondes des événements de carte (systems/mapEvents.js) : `fall` = ce qui tombe du ciel pendant
 // l'alerte (dessin), `onImpact(h)` = effet en plus à l'impact (ennemis touchés, butin...).
 
@@ -23,7 +26,7 @@ export function addCircle(
   y,
   radius,
   damage,
-  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0, fall = null, onImpact = null } = {},
+  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0, jam = 0, fall = null, onImpact = null } = {},
 ) {
   world.hazards.push({
     kind: "circle",
@@ -37,19 +40,32 @@ export function addCircle(
     pool,
     slow,
     stun,
+    jam,
     fall,
     onImpact,
     hit: 0,
   });
 }
 
-/** Laser depuis (x, y) dans la direction `angle` ; `spin` = rotation par tick une fois actif. */
+/**
+ * Laser depuis (x, y) dans la direction `angle` ; `spin` = rotation par tick une fois actif ;
+ * `swing` = { amp, speed } : oscillation de part et d'autre de `angle` (pendule).
+ */
 export function addBeam(
   x,
   y,
   angle,
   damage,
-  { length = 1400, width = 34, delay = 55, active = 28, color = "#ff0040", spin = 0, stun = 0 } = {},
+  {
+    length = 1400,
+    width = 34,
+    delay = 55,
+    active = 28,
+    color = "#ff0040",
+    spin = 0,
+    stun = 0,
+    swing = null,
+  } = {},
 ) {
   world.hazards.push({
     kind: "beam",
@@ -65,6 +81,9 @@ export function addBeam(
     color,
     spin,
     stun,
+    swing,
+    base: angle,
+    age: 0,
     hit: 0,
   });
 }
@@ -91,6 +110,23 @@ export function addRing(
     stun,
     done: false,
   });
+}
+
+/**
+ * Bulle temporelle : pendant `duration` ticks, les tirs du joueur qui la traversent avancent à
+ * `factor` de leur vitesse (voir timeFactorAt).
+ */
+export function addBubble(x, y, radius, { duration = 300, factor = 0.3, color = "#8c7bff" } = {}) {
+  world.hazards.push({ kind: "bubble", x, y, radius, duration, total: duration, factor, color, done: false });
+}
+
+/** Facteur de vitesse du temps en (x, y) : 1 hors des bulles temporelles, le plus lent sinon. */
+export function timeFactorAt(x, y, bubbles = world.hazards) {
+  let k = 1;
+  for (const h of bubbles) {
+    if (h.kind === "bubble" && h.factor < k && dist(x, y, h.x, h.y) < h.radius) k = h.factor;
+  }
+  return k;
 }
 
 export function updateHazards() {
@@ -123,6 +159,9 @@ const UPDATERS = {
     }
     // Flaque : petits dégâts réguliers tant qu'on reste dedans
     if (--h.pool <= 0) h.done = true;
+    if (h.jam && dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
+      player.buffs.jammed = Math.max(player.buffs.jammed, h.jam); // brouillage : le dash n'y change rien
+    }
     if (game.time - h.hit < POOL_TICK * TICK_MS) return;
     if (dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
       h.hit = game.time;
@@ -143,12 +182,17 @@ const UPDATERS = {
       playSfx("explosion");
     }
     h.angle += h.spin; // laser tournant (Sentinelle prismatique)
+    if (h.swing) h.angle = h.base + Math.sin(++h.age * h.swing.speed) * h.swing.amp; // pendule
     if (--h.active <= 0) h.done = true;
     if (game.time - h.hit < BEAM_TICK * TICK_MS) return;
     if (distToBeam(h, player.worldX, player.worldY) < h.width / 2 + player.size * 0.5) {
       h.hit = game.time;
       hurt(h);
     }
+  },
+
+  bubble(h) {
+    if (--h.duration <= 0) h.done = true;
   },
 
   ring(h) {

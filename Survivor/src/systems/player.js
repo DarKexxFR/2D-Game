@@ -40,6 +40,9 @@ function updateBuffs() {
   if (b.magnet > 0) b.magnet--;
   if (b.slow > 0) b.slow--;
   if (b.haste > 0) b.haste--;
+  if (b.glitch > 0) b.glitch--;
+  if (b.glitchWarn > 0) b.glitchWarn--;
+  if (b.jammed > 0) b.jammed--;
   if (b.stunImmune > 0) b.stunImmune--;
   if (b.stun > 0 && --b.stun === 0) b.stunImmune = STUN.immunity;
   if (b.overcharge > 0 && --b.overcharge === 0) {
@@ -102,6 +105,11 @@ function move() {
   if (dx === 0 && dy === 0) {
     // Joystick tactile (analogique)
     ({ x: dx, y: dy } = stickDirection());
+  }
+  if (player.buffs.glitch > 0) {
+    // Piraté par le Hacker : commandes inversées
+    dx = -dx;
+    dy = -dy;
   }
   const r = player.size;
   player.worldX = clamp(player.worldX + dx * player.speed, game.bounds.minX + r, game.bounds.maxX - r);

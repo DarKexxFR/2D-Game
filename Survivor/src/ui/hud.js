@@ -111,12 +111,16 @@ function updateBossBar() {
   }
   setVisible("bossBar", !!boss);
   if (!boss) return;
-  setText(
-    "bossBarName",
-    (ENEMY_NAMES[boss.type] || "Boss") + (boss.submerged ? " · SOUS L'EAU" : boss.enraged ? " · FURIE" : ""),
-  );
+  setText("bossBarName", (ENEMY_NAMES[boss.type] || "Boss") + bossTag(boss));
   setWidth("bossBarFill", boss.health / boss.maxHealth);
   setClass("bossBar", "enraged", !!boss.enraged);
+}
+
+/** Précision après le nom du boss : sous l'eau / sous terre, état propre au boss (`barTag`), furie. */
+function bossTag(boss) {
+  if (boss.submerged) return boss.type === "kraken" ? " · SOUS L'EAU" : " · SOUS TERRE";
+  const tags = [boss.barTag, boss.enraged ? "FURIE" : ""].filter(Boolean);
+  return tags.length ? " · " + tags.join(" · ") : "";
 }
 
 /** Annonce du Voleur doré (même bandeau que les boss, en or). */

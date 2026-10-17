@@ -16,17 +16,17 @@ npm start   # sert Survivor/ sur http://localhost:8000
 
 ## Contrôles
 
-| Touche          | Action                         |
-| --------------- | ------------------------------ |
-| Souris          | Viser                          |
-| ZQSD / WASD     | Se déplacer                    |
-| Espace          | Dash                           |
-| R               | Compétence du héros            |
-| E               | Ouvrir la boîte mystère        |
-| T               | Tir automatique (actif par défaut) |
-| F               | Lancer un sort (duel)          |
-| P / Échap       | Pause                          |
-| 1 / 2 / 3       | Choisir une amélioration       |
+| Touche      | Action                             |
+| ----------- | ---------------------------------- |
+| Souris      | Viser                              |
+| ZQSD / WASD | Se déplacer                        |
+| Espace      | Dash                               |
+| R           | Compétence du héros                |
+| E           | Ouvrir la boîte mystère            |
+| T           | Tir automatique (actif par défaut) |
+| F           | Lancer un sort (duel)              |
+| P / Échap   | Pause                              |
+| 1 / 2 / 3   | Choisir une amélioration           |
 
 Toutes les touches se changent dans les **Options**. **Sur mobile** : joystick sur la moitié gauche de l'écran,
 boutons DASH et compétence à droite, tir automatique ; portrait et paysage sont jouables.
@@ -42,6 +42,13 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   Sentinelle prismatique, Kraken, Jumeaux de feu et de glace, Colosse de givre, Faucheur du vide... Pendant un
   boss l'arène se resserre et les petits ennemis disparaissent ; les boss ne peuvent pas être repoussés.
   Un boss vaincu lâche un coffre d'augmentation.
+- **Boss des vagues tardives** : **Ver des sables** (vague 17 : anneaux à briser un par un, plongée sous terre,
+  éruption sous le joueur, sables mouvants), **Mère-Ruche** (vague 19 : fleurs toxiques dont le poison s'étend
+  et qui lui donnent une carapace, pollen à tête chercheuse), **Chronophage** (vague 23 : bulles où les tirs
+  ralentissent, cadran, pendule, retour 3 s en arrière, il rembobine sa vie si on ne frappe pas assez fort),
+  **Hacker** (vague 29 : commandes inversées, pare-feu à traverser au dash, zones qui coupent le tir, clones
+  holographiques en furie) et le boss final **Cœur du Pulse** (vague 30 : attaques en rythme sur ses
+  battements, trois phases, l'arène se resserre à chaque phase).
 - **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
@@ -131,6 +138,7 @@ Survivor/
     ├── core/             # État global, canvas, entrées, bus d'événements
     ├── data/             # Données pures : ennemis, objets, améliorations, biomes, succès, quêtes, icônes
     ├── systems/          # Logique par tick : joueur, ennemis, combat, boss, duel, événements...
+    │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
     ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
     ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, sons, pubs
@@ -143,6 +151,10 @@ supabase/                 # Schéma, guides (connexion, notifications), fonction
 
 - **Un ennemi** : une entrée **en fin** de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang),
   puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`).
+- **Un boss** : son fichier dans `src/systems/bosses/` (outils dans `kit.js`), une entrée dans `index.js`,
+  dans `ENEMY_TYPES` (en fin), `ENEMY_NAMES`, `BOSS_WAVES` et `BOSS_RUSH` (`src/data/enemies.js`), ses
+  réglages dans `src/data/bosses.js`, son sprite dans `src/render/bossShapes.js`, son succès
+  (`kill_<type>`) et ses tests.
 - **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
 - **Équilibrage** : `src/config.js` et `src/data/`, jamais en dur dans la logique.

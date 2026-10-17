@@ -1,4 +1,4 @@
-// Rendu des attaques de zone des boss (alerte puis impact), des coffres de boss,
+// Rendu des attaques de zone des boss (alerte puis impact, bulles temporelles), des coffres de boss,
 // des tourelles de l'Ingénieur et des éclairs (Arc Tesla, Cristal de givre).
 
 import { ctx } from "../core/canvas.js";
@@ -100,6 +100,25 @@ const DRAWERS = {
     fillCircle(h.x, h.y, h.radius, h.color);
     ctx.globalAlpha = Math.min(0.7, h.pool / 40);
     strokeCircle(h.x, h.y, h.radius * (0.92 + Math.sin(now / 200) * 0.05), h.color, 1.5);
+    if (h.jam) drawJamMark(h, now);
+  },
+
+  /** Bulle temporelle : dôme translucide, cadran qui tourne au ralenti. */
+  bubble(h, now) {
+    const fade = Math.min(1, h.duration / 40, (h.total - h.duration) / 15);
+    ctx.globalAlpha = 0.1 * fade;
+    fillCircle(h.x, h.y, h.radius, h.color);
+    ctx.globalAlpha = 0.6 * fade;
+    strokeCircle(h.x, h.y, h.radius, h.color, 2);
+    ctx.strokeStyle = h.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 12; i++) {
+      const a = now / 2400 + (TAU * i) / 12;
+      ctx.moveTo(h.x + Math.cos(a) * h.radius * 0.86, h.y + Math.sin(a) * h.radius * 0.86);
+      ctx.lineTo(h.x + Math.cos(a) * h.radius * 0.96, h.y + Math.sin(a) * h.radius * 0.96);
+    }
+    ctx.stroke();
   },
 
   /** Laser : trait pointillé d'alerte qui s'épaissit, puis rayon éclatant. */
@@ -109,6 +128,7 @@ const DRAWERS = {
     ctx.rotate(h.angle);
     if (h.delay > 0) {
       const t = 1 - h.delay / h.total;
+      if (h.swing) drawSwingArc(h, t);
       ctx.globalAlpha = 0.1 + t * 0.15;
       ctx.fillStyle = h.color;
       ctx.fillRect(0, -h.width / 2, h.length, h.width);
@@ -148,6 +168,34 @@ const DRAWERS = {
     ctx.shadowBlur = 0;
   },
 };
+
+/** Pendule annoncé : éventail pâle sur toute l'amplitude du balancier (repère déjà tourné sur l'axe). */
+function drawSwingArc(h, t) {
+  ctx.globalAlpha = 0.05 + t * 0.07;
+  ctx.fillStyle = h.color;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, h.length, -h.swing.amp, h.swing.amp);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/** Zone de brouillage : antenne barrée au centre (le tir y est coupé). */
+function drawJamMark(h, now) {
+  ctx.globalAlpha = 0.6 + Math.sin(now / 120) * 0.25;
+  ctx.strokeStyle = h.color;
+  ctx.lineWidth = 3;
+  for (const r of [10, 20, 30]) {
+    ctx.beginPath();
+    ctx.arc(h.x, h.y + 10, r, -Math.PI * 0.75, -Math.PI * 0.25);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#ff2a6d";
+  ctx.beginPath();
+  ctx.moveTo(h.x - 26, h.y + 14);
+  ctx.lineTo(h.x + 26, h.y - 26);
+  ctx.stroke();
+}
 
 /** Coffre de boss : caisse dorée qui flotte dans un faisceau de lumière. */
 export function drawBossChests(now) {
