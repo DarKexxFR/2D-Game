@@ -70,6 +70,8 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 
 **Application**
 
+- **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
+  ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
   connexion, 500 or offerts à la première ouverture depuis l'icône (bouton « Installer » de l'accueil, marche à
   suivre sur iPhone).
@@ -123,6 +125,7 @@ Survivor/
 ├── assets/               # Logo, icônes, musiques
 ├── css/                  # Un fichier par écran (base, hud, menus, home, inventory, versus...)
 └── src/
+    ├── boot.js           # Écran de chargement (avant les modules), puis main.js prend le relais
     ├── main.js           # Point d'entrée : cycle de vie d'une partie et boucle à 60 ticks/s
     ├── config.js         # Constantes et équilibrage
     ├── core/             # État global, canvas, entrées, bus d'événements

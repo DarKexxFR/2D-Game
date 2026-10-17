@@ -381,6 +381,15 @@ export const PWA = {
   offerMinRuns: 1, // parties terminées avant d'afficher le bouton « Installer » (pas pendant le tutoriel)
 };
 
+// Écran de chargement (src/boot.js, ui/loadingScreen.js, services/preload.js) : l'accueil n'apparaît
+// qu'une fois le jeu prêt. Chaque attente a un plafond : hors connexion, le jeu démarre quand même.
+export const LOADING = {
+  fonts: ['900 16px "Orbitron"', '700 16px "Orbitron"', '400 16px "Orbitron"', '16px "Press Start 2P"'],
+  fontTimeoutMs: 4000, // polices (Google Fonts) ; au-delà, police de secours
+  imageTimeoutMs: 4000, // images de l'accueil
+  accountTimeoutMs: 8000, // vérification du compte connecté (deux requêtes de ONLINE.timeoutMs au plus)
+};
+
 // Notifications (services/notifications.js, envoi par supabase/functions/send-push, voir
 // supabase/NOTIFICATIONS.md). Le jeu calcule lui-même quand prévenir (heure locale du joueur) et
 // envoie ces rappels au serveur ; le serveur ne fait que les expédier à l'heure dite.
