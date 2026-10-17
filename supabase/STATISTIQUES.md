@@ -39,7 +39,8 @@ stats.html (connecté, compte admin) ────────────► adm
    select id from auth.users where email = 'ton-adresse@exemple.fr';
    ```
 
-   (La page `stats.html` affiche aussi la ligne exacte à copier quand le compte n'est pas encore admin.)
+   Toi seul dois être dans cette table : tout autre compte (ou un visiteur non connecté) ne voit que « Page
+   privée » et le serveur refuse de lui envoyer le moindre chiffre.
 
 3. **Nettoyage automatique** (facultatif, conseillé) : les données de plus de 13 mois sont supprimées par
    `analytics_purge()`. Avec pg_cron (déjà utilisé pour les notifications) :

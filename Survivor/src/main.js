@@ -44,8 +44,7 @@ import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
 import { resetTrail, updateTrail } from "./systems/trail.js";
-import { spawnWave, startNextWave, updateSpawning } from "./systems/spawner.js";
-import { enterEndless, updateEndless } from "./systems/endless.js";
+import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { updateArena } from "./systems/arena.js";
 import { updateMapEvents } from "./systems/mapEvents.js";
 import { updateCursedShrines } from "./systems/cursedShrines.js";
@@ -88,7 +87,6 @@ import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
 import { canOfferRevive, initReviveMenu, showReviveOffer } from "./ui/reviveMenu.js";
-import { initVictoryMenu, showVictory } from "./ui/victoryMenu.js";
 import { castSpell, chargeAttack, updateHex } from "./systems/duelAttacks.js";
 import {
   VERSUS_KEYS,
@@ -150,7 +148,7 @@ function reportRun(mode, killer) {
     hero: player.hero?.id || "",
     weapon: player.weapon?.id || "",
     killer,
-    victory: game.victory,
+    victory: !!game.endless, // boss final vaincu
   });
 }
 
@@ -419,7 +417,6 @@ function endGame() {
   if (game.endless) labels.push(`Pulse ${game.endless.depth}`);
   showGameOver({
     pseudo,
-    title: game.victory && !game.over ? "VICTOIRE" : "MORT",
     level: player.level,
     wave: game.wave,
     waveLabel: labels.join(" · "),
@@ -521,7 +518,6 @@ function update() {
 /** Un tick de la partie chargée. */
 function simulate() {
   updateHex();
-  updateEndless();
   updateSpawning();
   updateArena();
   updateMapEvents();
@@ -667,16 +663,10 @@ function init() {
     playSfx("combo");
   });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
-  initVictoryMenu({
-    onContinue: () => {
-      enterEndless();
-      hideScreens();
-      showTouchControls(true);
-      startNextWave();
-    },
-    onFinish: endGame,
+  on("endlessStart", () => {
+    showBossWarning("CŒUR DU PULSE VAINCU · ENDLESS PULSE", false, "#ff00aa");
+    playSfx("boss");
   });
-  on("pulseVictory", showVictory);
   on("pulseWave", ({ depth, mutators }) => {
     const names = mutators.map((m) => m.name).join(" · ");
     showBossWarning(`PULSE ${depth}${names ? " · " + names : ""}`, false, "#ff00aa");

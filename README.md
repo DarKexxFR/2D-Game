@@ -49,8 +49,8 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   **Hacker** (vague 29 : commandes inversées, pare-feu à traverser au dash, zones qui coupent le tir, clones
   holographiques en furie) et le boss final **Cœur du Pulse** (vague 30 : attaques en rythme sur ses
   battements, trois phases, l'arène se resserre à chaque phase).
-- **Victoire et Endless Pulse** : vaincre le Cœur du Pulse gagne la partie (+2 000 or). Au choix, on termine sur
-  une victoire ou on continue en **Endless Pulse** : chaque nouvelle vague (« pulsation ») ajoute une mutation aux
+- **Endless Pulse** : vaincre le Cœur du Pulse lance l'**Endless Pulse** sans arrêter la partie (une simple
+  annonce) : chaque nouvelle vague (« pulsation ») ajoute une mutation aux
   ennemis (blindage, rage, hâte, nuée, élites, qui se cumulent) et augmente l'XP et l'or gagnés. Classement
   Endless à part et succès dédiés.
 - **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus

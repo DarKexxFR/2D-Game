@@ -297,12 +297,10 @@ export const DIFFICULTIES = {
 };
 
 // Mode « Endless Pulse » (systems/endless.js, mutations dans data/endless.js) : vaincre le boss final
-// (`finalBoss`, vague 30) en partie normale offre la victoire, puis le choix de continuer sans fin.
+// (`finalBoss`, vague 30) en partie normale lance l'Endless Pulse, sans arrêter la partie (une annonce).
 // Chaque vague suivante (« pulsation ») ajoute une mutation des ennemis et augmente l'XP et l'or gagnés.
 export const ENDLESS = {
   finalBoss: "pulse_core",
-  victoryDelay: 150, // ticks entre la mort du boss final et l'écran de victoire
-  victoryGold: 2000, // or de la victoire, gagné qu'on termine ou qu'on continue
   rewardPerDepth: 0.08, // XP et or des ennemis +8 % par pulsation (cumulé)
   mutatorsPerWave: 1,
 };

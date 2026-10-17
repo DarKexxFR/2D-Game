@@ -122,14 +122,14 @@ test("page des statistiques : connexion demandée, compte non admin, tableau de 
   supabase,
 }) => {
   await page.goto("/stats.html");
-  await expect(page.locator("#stMessage")).toContainText("Connecte-toi d'abord dans le jeu");
+  await expect(page.locator("#stMessage")).toHaveText("Page privée. Se connecter");
+  await expect(page.locator("#stContent")).toBeHidden();
 
+  // Compte connecté mais pas administrateur : refus, sans aucun détail ni chiffre
   await logIn(page, "reda@test.fr");
   await page.reload();
-  await expect(page.locator("#stMessage")).toContainText("n'est pas administrateur");
-  await expect(page.locator("#stMessage code")).toContainText(
-    "insert into public.analytics_admins (user_id) values ('id-reda@test.fr')",
-  );
+  await expect(page.locator("#stMessage")).toHaveText("Page privée : accès refusé pour ce compte.");
+  await expect(page.locator("#stContent")).toBeHidden();
 
   supabase.adminStats = STATS;
   await page.reload();

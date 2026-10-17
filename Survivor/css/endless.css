@@ -1,66 +1,4 @@
-/* Victoire sur le boss final et mode Endless Pulse (ui/victoryMenu.js) */
-#victoryMenu {
-  border-color: #ff00aa;
-  box-shadow:
-    0 0 50px black,
-    0 0 40px rgba(255, 0, 170, 0.35);
-  max-width: 560px;
-}
-.victory-kicker {
-  color: #ffd700;
-  font-size: 12px;
-  letter-spacing: 2px;
-  margin: 0 0 6px;
-}
-#victoryMenu h1.victory-title {
-  color: #ff00aa;
-  text-shadow: 0 0 18px rgba(255, 0, 170, 0.8);
-  margin-bottom: 14px;
-  animation: victory-pulse 1.2s ease-in-out infinite;
-}
-@keyframes victory-pulse {
-  50% {
-    transform: scale(1.06);
-    text-shadow: 0 0 30px rgba(255, 0, 170, 1);
-  }
-}
-.victory-text {
-  color: #ddd;
-  font-size: 14px;
-  margin: 0 0 20px;
-}
-.victory-text,
-.victory-gold {
-  overflow: visible;
-}
-.victory-gold {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  color: #ffd700;
-}
-button.endless-btn {
-  background: linear-gradient(180deg, #ff00aa, #8a0060);
-  color: #fff;
-  font-size: 18px;
-  padding: 16px;
-  box-shadow: 0 0 18px rgba(255, 0, 170, 0.55);
-}
-.endless-desc {
-  color: #bbb;
-  font-size: 12px;
-  line-height: 1.5;
-  margin: 10px auto 4px;
-  max-width: 440px;
-}
-.endless-best {
-  color: #ff66cc;
-  font-size: 12px;
-  min-height: 1em;
-  margin: 0 0 16px;
-}
-/* Mutations listées dans la pause */
+/* Endless Pulse (systems/endless.js) : mutations listées dans la pause */
 .pulse-row {
   display: flex;
   align-items: center;
@@ -69,18 +7,4 @@ button.endless-btn {
   color: #ff66cc;
   font-size: 13px;
   margin: 4px 0;
-}
-@media (max-width: 760px), (max-height: 560px) {
-  #victoryMenu h1.victory-title {
-    font-size: 26px;
-  }
-  button.endless-btn {
-    font-size: 15px;
-    padding: 12px;
-  }
-}
-/* Écran de fin d'une partie gagnée */
-#gameOver.victory #finalTitle {
-  color: #ff00aa;
-  text-shadow: 0 0 18px rgba(255, 0, 170, 0.8);
 }

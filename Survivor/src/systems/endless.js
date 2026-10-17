@@ -1,7 +1,7 @@
-// Mode « Endless Pulse » : en survie normale, vaincre le boss final (Cœur du Pulse, vague 30) donne la
-// victoire. Le joueur choisit alors de terminer la partie ou de continuer sans fin : chaque nouvelle vague
-// (« pulsation ») ajoute une mutation des ennemis (data/endless.js) et augmente l'XP et l'or gagnés.
-// Tout l'état vit dans `game` (game.endless, game.victoryTimer), comme le reste de la partie.
+// Mode « Endless Pulse » : en survie normale, vaincre le boss final (Cœur du Pulse, vague 30) lance l'Endless
+// Pulse sans arrêter la partie (simple annonce, choix du propriétaire : pas d'écran de victoire). Chaque
+// nouvelle vague (« pulsation ») ajoute une mutation des ennemis (data/endless.js) et augmente l'XP et l'or
+// gagnés. Tout l'état vit dans `game.endless`, comme le reste de la partie.
 
 import { ENDLESS } from "../config.js";
 import { emit, on } from "../core/events.js";
@@ -12,49 +12,27 @@ import { weightedPick } from "../utils/math.js";
 
 /**
  * @typedef {object} EndlessState
- * @property {number} depth pulsations franchies (vagues après la victoire)
+ * @property {number} depth pulsations franchies (vagues après le boss final)
  * @property {Record<string, number>} stacks cumul de chaque mutation
  */
 
-/**
- * Boss final vaincu (même s'il a survécu au minuteur de sa vague) : la célébration commence, puis l'écran
- * de victoire. Une seule fois par partie, et jamais une fois en Endless Pulse (il y revient tous les 30 vagues).
- */
-function onFinalBossKilled() {
-  if (!game.endlessAllowed || game.endless || game.victory) return;
-  game.victory = true;
-  game.victoryTimer = ENDLESS.victoryDelay;
-  game.runGold += ENDLESS.victoryGold;
-  addStat("pulseVictories");
-}
-
 on("kill", (enemy) => {
-  if (enemy.type === ENDLESS.finalBoss) onFinalBossKilled();
+  if (enemy.type === ENDLESS.finalBoss) enterEndless();
 });
 
-/** Écran de victoire en attente : plus d'ennemis ni de minuteur de vague pendant la célébration. */
-export function victoryPending() {
-  return game.victoryTimer > 0;
-}
-
-/** Un tick : à la fin de la célébration, la partie s'arrête et l'écran de victoire s'ouvre. */
-export function updateEndless() {
-  if (game.victoryTimer > 0 && --game.victoryTimer === 0) {
-    game.running = false;
-    game.paused = true;
-    emit("pulseVictory");
-  }
-}
-
-/** « CONTINUER » : la partie reprend en Endless Pulse, à la vague suivante. */
+/**
+ * Boss final vaincu (même s'il a survécu au minuteur de sa vague) : la partie continue en Endless Pulse.
+ * Une seule fois par partie (il revient toutes les 30 vagues), en survie normale seulement.
+ */
 export function enterEndless() {
+  if (!game.endlessAllowed || game.endless) return;
   /** @type {EndlessState} */
   const state = { depth: 0, stacks: {} };
   game.endless = state;
   game.modifier = { ...game.modifier }; // le modificateur peut être partagé (difficulté) : copie avant de le muter
+  addStat("pulseVictories");
   addStat("endlessRuns");
-  game.running = true;
-  game.paused = false;
+  emit("endlessStart");
 }
 
 /** Nouvelle vague en Endless Pulse : une pulsation de plus, une mutation de plus, des récompenses en hausse. */

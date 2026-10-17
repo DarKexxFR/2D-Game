@@ -23,7 +23,6 @@ const SCREENS = [
   "loginMenu",
   "installMenu",
   "reviveMenu",
-  "victoryMenu",
   "gameOver",
   "shareMenu",
   "versusOver",

@@ -4,7 +4,7 @@
 
 import { DIFFICULTIES } from "../config.js";
 import { HEROES, WEAPONS } from "../data/items.js";
-import { currentUser, getAccessToken, initAuth } from "../services/auth.js";
+import { getAccessToken, initAuth } from "../services/auth.js";
 import { isOnlineEnabled, rpc } from "../services/supabase.js";
 import { drawBars, drawLines } from "./charts.js";
 
@@ -34,21 +34,16 @@ async function load() {
   const token = await getAccessToken();
   if (!token) {
     $("stSub").textContent = "Non connecté";
-    return message(
-      'Connecte-toi d\'abord dans le jeu avec ton compte administrateur (<a href="./#modal=connexion">ouvrir la connexion</a>), puis reviens sur cette page.',
-    );
+    return message('Page privée. <a href="./#modal=connexion">Se connecter</a>');
   }
   $("stSub").textContent = "Chargement...";
   try {
     last = await rpc("admin_stats", { p_days: days }, token);
     render(last);
   } catch (err) {
-    const user = currentUser();
-    if (String(err.message).includes("42501")) {
-      message(
-        `Ce compte (${user?.email || "?"}) n'est pas administrateur. Ajoute son identifiant dans Supabase :<br><code>insert into public.analytics_admins (user_id) values ('${user?.id}');</code>`,
-      );
-    } else
+    // Compte non administrateur : rien n'est lu côté serveur (admin_stats), et la page n'en dit pas plus
+    if (String(err.message).includes("42501")) message("Page privée : accès refusé pour ce compte.");
+    else
       message("Statistiques indisponibles : le schéma est-il à jour dans Supabase ? (supabase/schema.sql)");
     $("stSub").textContent = "Erreur";
     console.warn(err);
@@ -91,7 +86,11 @@ function render(d) {
     ),
     kpi("Temps par joueur et par jour", fmt(d.avg_daily_minutes_per_player, " min")),
     kpi("Heures de jeu", fmt(d.play_hours_period, " h"), `sur ${d.days} jours`),
-    kpi("Parties", fmt(d.runs_period), `${fmt(d.abandons)} abandons · ${fmt(d.victories_period)} victoires`),
+    kpi(
+      "Parties",
+      fmt(d.runs_period),
+      `${fmt(d.abandons)} abandons · ${fmt(d.victories_period)} Cœurs du Pulse vaincus`,
+    ),
     kpi(
       "Rétention J1 / J7 / J30",
       `${fmt(r.d1, "%")} · ${fmt(r.d7, "%")} · ${fmt(r.d30, "%")}`,
