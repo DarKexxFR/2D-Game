@@ -829,3 +829,340 @@ language sql security definer set search_path = public as $$
   delete from player_profiles where user_id = auth.uid();
   update push_subscriptions set user_id = null where user_id = auth.uid();
 $$;
+
+-- =====================================================================
+-- Endless Pulse et saison mensuelle (classements)
+-- « pulse » = pulsations franchies après la victoire sur le Cœur du Pulse (0 sinon).
+-- Saison = mois UTC en cours : son classement repart à zéro le 1er à 0 h UTC.
+-- =====================================================================
+
+alter table public.scores add column if not exists pulse int not null default 0;
+alter table public.nightmare_scores add column if not exists pulse int not null default 0;
+
+-- Une pulsation suit forcément la vague 30 : pulsation N => vague 30 + N au moins
+do $$ begin
+  alter table public.scores add constraint scores_pulse_check check (pulse between 0 and 1000 and (pulse = 0 or wave >= 30 + pulse));
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.nightmare_scores add constraint nightmare_scores_pulse_check check (pulse between 0 and 1000 and (pulse = 0 or wave >= 30 + pulse));
+exception when duplicate_object then null; end $$;
+
+create index if not exists scores_created_idx on public.scores (created_at);
+create index if not exists scores_pulse_idx on public.scores (pulse desc) where pulse > 0;
+create index if not exists nightmare_scores_pulse_idx on public.nightmare_scores (pulse desc) where pulse > 0;
+
+-- Saison : meilleur score de chaque joueur depuis le 1er du mois (UTC)
+create or replace view public.season_leaderboard with (security_invoker = true) as
+  select distinct on (lower(name)) name, wave, xp, lvl, created_at
+  from public.scores
+  where created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'
+  order by lower(name), xp desc;
+
+grant select on public.season_leaderboard to anon;
+
+-- Endless Pulse : meilleure partie de chaque joueur (Normal et Cauchemar), par pulsations puis XP
+create or replace view public.endless_leaderboard with (security_invoker = true) as
+  select distinct on (lower(name)) name, pulse, wave, xp, lvl, nightmare, created_at
+  from (
+    select name, pulse, wave, xp, lvl, false as nightmare, created_at from public.scores where pulse > 0
+    union all
+    select name, pulse, wave, xp, lvl, true as nightmare, created_at from public.nightmare_scores where pulse > 0
+  ) s
+  order by lower(name), pulse desc, xp desc;
+
+grant select on public.endless_leaderboard to anon;
+
+-- =====================================================================
+-- Statistiques de fréquentation anonymes (voir supabase/STATISTIQUES.md)
+-- Un identifiant tiré au hasard par appareil (`device`), une ligne par ouverture du jeu (session) et une
+-- par partie. Aucun pseudo, aucun compte, aucune adresse IP. Le jeu écrit seulement par track_session /
+-- track_run ; personne ne lit les tables, sauf admin_stats() réservée aux comptes de analytics_admins.
+-- =====================================================================
+
+create table if not exists public.analytics_devices (
+  device uuid primary key,
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now()
+);
+
+create table if not exists public.analytics_sessions (
+  id uuid primary key,
+  device uuid not null references public.analytics_devices (device) on delete cascade,
+  started_at timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  active_seconds int not null default 0, -- onglet visible et joueur présent
+  play_seconds int not null default 0, -- en partie, hors pause
+  runs int not null default 0,
+  mobile boolean not null default false,
+  installed boolean not null default false, -- lancé depuis l'icône (application installée)
+  logged_in boolean not null default false, -- compte connecté (oui / non seulement)
+  lang text not null default '',
+  host text not null default '' -- last-pulse.com, ancienne adresse, localhost (exclu des statistiques)
+);
+
+create index if not exists analytics_sessions_started_idx on public.analytics_sessions (started_at);
+create index if not exists analytics_sessions_device_idx on public.analytics_sessions (device, started_at);
+create index if not exists analytics_sessions_seen_idx on public.analytics_sessions (last_seen);
+
+create table if not exists public.analytics_runs (
+  id bigint generated always as identity primary key,
+  session uuid not null references public.analytics_sessions (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  mode text not null, -- normal, daily, rush, duel, duel-local
+  difficulty text not null default 'normal',
+  wave int not null default 0,
+  pulse int not null default 0,
+  level int not null default 0,
+  kills int not null default 0,
+  seconds int not null default 0,
+  hero text not null default '',
+  weapon text not null default '',
+  killer text not null default '', -- « abandon », nom de l'ennemi, vide pour une victoire
+  victory boolean not null default false
+);
+
+create index if not exists analytics_runs_created_idx on public.analytics_runs (created_at);
+create index if not exists analytics_runs_session_idx on public.analytics_runs (session);
+
+-- Comptes autorisés à lire les statistiques (à remplir à la main, voir STATISTIQUES.md)
+create table if not exists public.analytics_admins (
+  user_id uuid primary key references auth.users (id) on delete cascade
+);
+
+alter table public.analytics_devices enable row level security;
+alter table public.analytics_sessions enable row level security;
+alter table public.analytics_runs enable row level security;
+alter table public.analytics_admins enable row level security;
+revoke all on public.analytics_devices, public.analytics_sessions, public.analytics_runs,
+  public.analytics_admins from anon, authenticated;
+
+-- Ouverture du jeu, puis compteurs cumulés envoyés chaque minute. Les compteurs ne font que monter, jamais
+-- plus vite que le temps réel ; 30 sessions par appareil et par heure au plus.
+create or replace function public.track_session(
+  p_session uuid, p_device uuid, p_active int, p_play int, p_runs int,
+  p_mobile boolean, p_installed boolean, p_logged boolean, p_lang text, p_host text
+) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  s analytics_sessions;
+  elapsed int;
+begin
+  if p_session is null or p_device is null then return; end if;
+  select * into s from analytics_sessions where id = p_session;
+  if not found then
+    if (select count(*) from analytics_sessions
+        where device = p_device and started_at > now() - interval '1 hour') >= 30 then
+      return;
+    end if;
+    insert into analytics_devices (device) values (p_device)
+      on conflict (device) do update set last_seen = now();
+    insert into analytics_sessions (id, device, active_seconds, play_seconds, runs, mobile, installed, logged_in, lang, host)
+    values (
+      p_session, p_device,
+      least(greatest(coalesce(p_active, 0), 0), 120),
+      least(greatest(coalesce(p_play, 0), 0), 120),
+      0,
+      coalesce(p_mobile, false), coalesce(p_installed, false), coalesce(p_logged, false),
+      left(coalesce(p_lang, ''), 10), left(coalesce(p_host, ''), 60)
+    )
+    on conflict (id) do nothing;
+    return;
+  end if;
+  -- Une autre session ne peut pas être modifiée ; au plus un envoi toutes les 3 secondes
+  if s.device <> p_device or s.last_seen > now() - interval '3 seconds' then return; end if;
+  elapsed := extract(epoch from now() - s.started_at)::int + 60;
+  update analytics_sessions set
+    last_seen = now(),
+    active_seconds = greatest(active_seconds, least(coalesce(p_active, 0), elapsed)),
+    play_seconds = greatest(play_seconds, least(coalesce(p_play, 0), elapsed)),
+    installed = installed or coalesce(p_installed, false),
+    logged_in = logged_in or coalesce(p_logged, false)
+  where id = p_session;
+  update analytics_devices set last_seen = now() where device = p_device;
+end $$;
+
+-- Fin d'une partie (ou abandon) : une ligne par partie, valeurs bornées, au plus une toutes les 5 secondes.
+create or replace function public.track_run(
+  p_session uuid, p_device uuid, p_mode text, p_difficulty text, p_wave int, p_pulse int, p_level int,
+  p_kills int, p_seconds int, p_hero text, p_weapon text, p_killer text, p_victory boolean
+) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  s analytics_sessions;
+begin
+  select * into s from analytics_sessions where id = p_session and device = p_device;
+  if not found or p_mode not in ('normal', 'daily', 'rush', 'duel', 'duel-local') then return; end if;
+  if exists (select 1 from analytics_runs where session = p_session and created_at > now() - interval '5 seconds') then
+    return;
+  end if;
+  insert into analytics_runs (session, mode, difficulty, wave, pulse, level, kills, seconds, hero, weapon, killer, victory)
+  values (
+    p_session, p_mode,
+    case when p_difficulty in ('easy', 'normal', 'nightmare') then p_difficulty else 'normal' end,
+    least(greatest(coalesce(p_wave, 0), 0), 1000),
+    least(greatest(coalesce(p_pulse, 0), 0), 1000),
+    least(greatest(coalesce(p_level, 0), 0), 1000),
+    least(greatest(coalesce(p_kills, 0), 0), 10000000),
+    least(greatest(coalesce(p_seconds, 0), 0), extract(epoch from now() - s.started_at)::int + 60),
+    left(coalesce(p_hero, ''), 30), left(coalesce(p_weapon, ''), 30), left(coalesce(p_killer, ''), 40),
+    coalesce(p_victory, false)
+  );
+  update analytics_sessions set runs = runs + 1, last_seen = now() where id = p_session;
+end $$;
+
+-- Tableau de bord (page stats.html) : réservé aux comptes de analytics_admins. Jours comptés dans le fuseau
+-- `p_tz` ; les sessions de localhost (développement) sont exclues.
+create or replace function public.admin_stats(p_days int default 30, p_tz text default 'Europe/Paris')
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_days int := least(greatest(coalesce(p_days, 30), 1), 365);
+  v_today date := (now() at time zone p_tz)::date;
+  v_from date := v_today - (v_days - 1);
+  v_start timestamptz := v_from::timestamp at time zone p_tz;
+  result jsonb;
+begin
+  if not exists (select 1 from analytics_admins where user_id = auth.uid()) then
+    raise exception 'Statistiques réservées aux administrateurs' using errcode = '42501';
+  end if;
+
+  create temporary table if not exists _s on commit drop as
+    select s.*, (s.started_at at time zone p_tz)::date as day
+    from analytics_sessions s
+    where s.host not in ('localhost', '127.0.0.1', '[::1]') and s.started_at >= v_start - interval '31 days';
+  create temporary table if not exists _r on commit drop as
+    select r.*, (r.created_at at time zone p_tz)::date as day
+    from analytics_runs r join _s on _s.id = r.session
+    where r.created_at >= v_start;
+  create temporary table if not exists _d on commit drop as
+    select d.device, (d.first_seen at time zone p_tz)::date as first_day
+    from analytics_devices d where exists (select 1 from _s where _s.device = d.device);
+
+  select jsonb_build_object(
+    'generated_at', now(),
+    'days', v_days,
+    'timezone', p_tz,
+    'online_now', (select count(distinct device) from _s where last_seen > now() - interval '2 minutes'),
+    'players_today', (select count(distinct device) from _s where day = v_today),
+    'players_7d', (select count(distinct device) from _s where day > v_today - 7),
+    'players_30d', (select count(distinct device) from _s where day > v_today - 30),
+    'players_period', (select count(distinct device) from _s where day >= v_from),
+    'players_total', (select count(*) from analytics_devices d where exists (
+                        select 1 from analytics_sessions s
+                        where s.device = d.device and s.host not in ('localhost', '127.0.0.1', '[::1]'))),
+    'new_today', (select count(*) from _d where first_day = v_today),
+    'new_period', (select count(*) from _d where first_day >= v_from),
+    'sessions_period', (select count(*) from _s where day >= v_from),
+    'avg_session_minutes', (select round(avg(active_seconds) / 60.0, 1) from _s where day >= v_from),
+    'median_session_minutes', (select round((percentile_cont(0.5) within group (order by active_seconds) / 60.0)::numeric, 1)
+                               from _s where day >= v_from),
+    'play_hours_period', (select round(sum(play_seconds) / 3600.0, 1) from _s where day >= v_from),
+    'avg_daily_minutes_per_player', (
+      select round(avg(m), 1) from (
+        select sum(active_seconds) / 60.0 as m from _s where day >= v_from group by device, day
+      ) x),
+    'share_mobile', (select round(avg(case when mobile then 1 else 0 end) * 100) from _s where day >= v_from),
+    'share_installed', (select round(avg(case when installed then 1 else 0 end) * 100) from _s where day >= v_from),
+    'share_logged', (select round(avg(case when logged_in then 1 else 0 end) * 100) from _s where day >= v_from),
+    'runs_period', (select count(*) from _r),
+    'victories_period', (select count(*) from _r where victory),
+    'best_pulse_period', (select coalesce(max(pulse), 0) from _r),
+    'daily', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'day', g.day,
+        'players', (select count(distinct device) from _s where _s.day = g.day),
+        'new_players', (select count(*) from _d where first_day = g.day),
+        'sessions', (select count(*) from _s where _s.day = g.day),
+        'active_minutes', (select coalesce(round(sum(active_seconds) / 60.0), 0) from _s where _s.day = g.day),
+        'play_minutes', (select coalesce(round(sum(play_seconds) / 60.0), 0) from _s where _s.day = g.day),
+        'runs', (select count(*) from _r where _r.day = g.day)
+      ) order by g.day), '[]'::jsonb)
+      from (select generate_series(v_from, v_today, interval '1 day')::date as day) g
+    ),
+    -- Rétention : part des nouveaux joueurs revenus N jours après leur premier jour (cohortes assez anciennes)
+    'retention', (
+      select jsonb_object_agg(k, pct) from (
+        select 'd' || n as k, (
+          select round(100.0 * count(*) filter (where exists (
+                   select 1 from _s where _s.device = _d.device and _s.day = _d.first_day + n))
+                 / nullif(count(*), 0), 1)
+          from _d where first_day >= v_from - 30 and first_day <= v_today - n
+        ) as pct
+        from unnest(array[1, 7, 30]) as n
+      ) x
+    ),
+    'hours', (
+      select coalesce(jsonb_agg(jsonb_build_object('hour', h, 'sessions', c) order by h), '[]'::jsonb) from (
+        select extract(hour from started_at at time zone p_tz)::int as h, count(*) as c
+        from _s where day >= v_from group by 1
+      ) x
+    ),
+    'session_lengths', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', label, 'sessions', c) order by ord), '[]'::jsonb) from (
+        select case
+                 when active_seconds < 60 then 1 when active_seconds < 300 then 2 when active_seconds < 900 then 3
+                 when active_seconds < 1800 then 4 when active_seconds < 3600 then 5 else 6 end as ord,
+               case
+                 when active_seconds < 60 then '< 1 min' when active_seconds < 300 then '1-5 min'
+                 when active_seconds < 900 then '5-15 min' when active_seconds < 1800 then '15-30 min'
+                 when active_seconds < 3600 then '30-60 min' else '> 1 h' end as label,
+               count(*) as c
+        from _s where day >= v_from group by 1, 2
+      ) x
+    ),
+    'modes', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'mode', mode, 'runs', c, 'avg_wave', w, 'avg_minutes', m) order by c desc), '[]'::jsonb) from (
+        select mode, count(*) as c, round(avg(wave), 1) as w, round(avg(seconds) / 60.0, 1) as m
+        from _r group by mode
+      ) x
+    ),
+    'difficulties', (
+      select coalesce(jsonb_agg(jsonb_build_object('difficulty', difficulty, 'runs', c) order by c desc), '[]'::jsonb)
+      from (select difficulty, count(*) as c from _r where mode = 'normal' group by difficulty) x
+    ),
+    'waves', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', label, 'runs', c) order by lo), '[]'::jsonb) from (
+        select (least(wave, 31) - 1) / 5 * 5 + 1 as lo,
+               case when wave > 30 then 'Endless' else ((wave - 1) / 5 * 5 + 1) || '-' || ((wave - 1) / 5 * 5 + 5) end as label,
+               count(*) as c
+        from _r where mode = 'normal' and wave > 0 group by 1, 2
+      ) x
+    ),
+    'killers', (
+      select coalesce(jsonb_agg(jsonb_build_object('name', killer, 'runs', c) order by c desc), '[]'::jsonb) from (
+        select killer, count(*) as c from _r where killer <> '' and killer <> 'abandon' group by killer
+        order by c desc limit 10
+      ) x
+    ),
+    'abandons', (select count(*) from _r where killer = 'abandon'),
+    'heroes', (
+      select coalesce(jsonb_agg(jsonb_build_object('name', hero, 'runs', c) order by c desc), '[]'::jsonb) from (
+        select hero, count(*) as c from _r where hero <> '' group by hero order by c desc limit 10
+      ) x
+    ),
+    'weapons', (
+      select coalesce(jsonb_agg(jsonb_build_object('name', weapon, 'runs', c) order by c desc), '[]'::jsonb) from (
+        select weapon, count(*) as c from _r where weapon <> '' group by weapon order by c desc limit 10
+      ) x
+    )
+  ) into result;
+  drop table if exists _s, _r, _d;
+  return result;
+end $$;
+
+-- Nettoyage : données de plus de 13 mois (à planifier avec pg_cron, voir STATISTIQUES.md)
+create or replace function public.analytics_purge() returns void
+language sql security definer set search_path = public as $$
+  delete from analytics_sessions where started_at < now() - interval '400 days';
+  delete from analytics_devices d where last_seen < now() - interval '400 days'
+    and not exists (select 1 from analytics_sessions s where s.device = d.device);
+$$;
+
+revoke all on function public.track_session(uuid, uuid, int, int, int, boolean, boolean, boolean, text, text) from public;
+revoke all on function public.track_run(uuid, uuid, text, text, int, int, int, int, int, text, text, text, boolean) from public;
+revoke all on function public.admin_stats(int, text) from public;
+revoke all on function public.analytics_purge() from public;
+grant execute on function public.track_session(uuid, uuid, int, int, int, boolean, boolean, boolean, text, text) to anon, authenticated;
+grant execute on function public.track_run(uuid, uuid, text, text, int, int, int, int, int, text, text, text, boolean) to anon, authenticated;
+grant execute on function public.admin_stats(int, text) to authenticated;

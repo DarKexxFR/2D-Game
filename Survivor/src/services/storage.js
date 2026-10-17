@@ -43,6 +43,8 @@ export const account = {
   difficulty: "normal", // niveau de difficulté choisi à l'accueil (voir DIFFICULTIES dans config.js)
   loginStreak: { day: "", count: 0 }, // série de connexion : dernier jour récupéré (local) et jours d'affilée
   weekly: null, // quêtes de la semaine : { week, quests: [{ id, progress, claimed }], bonusClaimed }
+  /** @type {import("./season.js").SeasonState | null} passe de saison du mois (voir services/season.js) */
+  season: null,
   loadouts: [null, null, null], // équipements enregistrés : { weapon, armor, hero, pet, module } ou null
   dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
   appInstalled: false, // récompense de la première ouverture depuis l'icône déjà versée (voir services/pwa.js)
@@ -73,6 +75,7 @@ export function loadAccount() {
   account.skin = { ...DEFAULT_SKIN, ...saved.skin };
   account.skinsOwned = Array.isArray(saved.skinsOwned) ? saved.skinsOwned : [];
   account.weekly = saved.weekly || null;
+  account.season = saved.season || null; // passe de saison (voir services/season.js)
   account.loadouts = Array.isArray(saved.loadouts) ? saved.loadouts : [null, null, null];
   account.dailyOffer = { day: "", bought: false, ...saved.dailyOffer };
   account.difficulty = saved.difficulty || "normal";

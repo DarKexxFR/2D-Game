@@ -49,6 +49,10 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   **Hacker** (vague 29 : commandes inversées, pare-feu à traverser au dash, zones qui coupent le tir, clones
   holographiques en furie) et le boss final **Cœur du Pulse** (vague 30 : attaques en rythme sur ses
   battements, trois phases, l'arène se resserre à chaque phase).
+- **Endless Pulse** : vaincre le Cœur du Pulse lance l'**Endless Pulse** sans arrêter la partie (une simple
+  annonce) : chaque nouvelle vague (« pulsation ») ajoute une mutation aux
+  ennemis (blindage, rage, hâte, nuée, élites, qui se cumulent) et augmente l'XP et l'or gagnés. Classement
+  Endless à part et succès dédiés.
 - **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
@@ -73,6 +77,10 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   3 équipements enregistrés, offre du jour en boutique.
 - Talents, succès avec récompenses, **quêtes hebdomadaires**, **série de connexion** sur 7 jours, **skins** du
   vaisseau (forme, couleurs, traînée), tutoriel de première partie.
+- **Saison mensuelle** et son **passe gratuit** : 30 paliers (or, coffres jusqu'au mythique, une traînée et une
+  coque exclusives par saison) gagnés avec l'XP de saison (parties terminées, première partie du jour, quêtes).
+  Une saison = un mois, avec un thème et son classement remis à zéro le 1er ; les récompenses oubliées sont
+  données d'office au changement de mois.
 - **Compte facultatif** (Google, Discord ou code par e-mail) pour retrouver sa progression sur tous ses appareils.
 
 **Application**
@@ -82,6 +90,9 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
   connexion, 500 or offerts à la première ouverture depuis l'icône (bouton « Installer » de l'accueil, marche à
   suivre sur iPhone).
+- **Statistiques anonymes** (désactivables dans les Options) : nombre de joueurs, temps passé, parties, sur
+  la page [`stats.html`](Survivor/stats.html) réservée aux administrateurs. Mise en place :
+  [`supabase/STATISTIQUES.md`](supabase/STATISTIQUES.md).
 - **Notifications** facultatives : série de connexion en danger, nouvelles quêtes du lundi, demandes d'ami,
   rappels après une absence. Thèmes réglables dans les Options. Mise en place :
   [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
@@ -108,14 +119,16 @@ Les règles du projet et les pièges connus sont dans [`CLAUDE.md`](CLAUDE.md).
 
 ## Services en ligne (Supabase)
 
-Classements mondiaux (Normal, Cauchemar, défi du jour, duel ELO), comptes, sauvegarde, amis et salons de duel
-passent par [Supabase](https://supabase.com). Sans Supabase, le jeu fonctionne avec le classement local.
+Classements mondiaux (Normal, saison, Cauchemar, Endless, défi du jour, duel ELO), comptes, sauvegarde, amis,
+salons de duel et statistiques passent par [Supabase](https://supabase.com). Sans Supabase, le jeu fonctionne avec le classement local.
 
 - Schéma complet (tables, vues, RPC, règles anti-spam) : [`supabase/schema.sql`](supabase/schema.sql), à
   exécuter dans **SQL Editor** après chaque changement.
 - Connexion Google / Discord / e-mail : [`supabase/CONNEXION.md`](supabase/CONNEXION.md).
 - Notifications (clés VAPID, fonction Edge `send-push`, envoi planifié) :
   [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
+- Statistiques des joueurs (compte administrateur, page `stats.html`) :
+  [`supabase/STATISTIQUES.md`](supabase/STATISTIQUES.md).
 - Seule la clé publique `sb_publishable_…` va dans `Survivor/src/config.js`, jamais une clé secrète.
 
 Publicités récompensées (revivre, coffre bonus) : démo interne pour l'instant, AdSense en préparation
@@ -129,6 +142,7 @@ Survivor/
 ├── manifest.webmanifest  # Application installable : nom, icônes, raccourcis
 ├── sw.js                 # Service worker : jeu hors connexion et notifications
 ├── legal.html            # CGU et confidentialité
+├── stats.html            # Statistiques des joueurs (administrateurs, voir supabase/STATISTIQUES.md)
 ├── assets/               # Logo, icônes, musiques
 ├── css/                  # Un fichier par écran (base, hud, menus, home, inventory, versus...)
 └── src/
@@ -141,10 +155,11 @@ Survivor/
     │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
     ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
-    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, sons, pubs
+    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, sons, pubs
+    ├── stats/            # Page des statistiques (tableau de bord, graphiques)
     └── utils/            # Maths, grille spatiale
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)
-supabase/                 # Schéma, guides (connexion, notifications), fonction d'envoi des notifications
+supabase/                 # Schéma, guides (connexion, notifications, statistiques), fonction d'envoi des notifications
 ```
 
 ### Ajouter du contenu
@@ -157,4 +172,7 @@ supabase/                 # Schéma, guides (connexion, notifications), fonction
   (`kill_<type>`) et ses tests.
 - **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
+- **Une mutation Endless Pulse** : une entrée dans `PULSE_MUTATORS` (`src/data/endless.js`).
+- **Une saison** : les thèmes tournent tout seuls (`SEASON_THEMES` dans `src/data/season.js`, avec leur coque
+  et leur traînée exclusives `season: true` dans `src/data/skins.js`) ; paliers dans `tierReward`.
 - **Équilibrage** : `src/config.js` et `src/data/`, jamais en dur dans la logique.

@@ -13,6 +13,7 @@ import { initChestMenu, renderChests } from "./chestMenu.js";
 import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
 import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
 import { showScreen } from "./screens.js";
+import { refreshSeasonTile } from "./seasonMenu.js";
 
 let pseudo = loadPseudo();
 
@@ -95,6 +96,7 @@ function refreshHomeTiles() {
   const done = quests.filter((q) => q.done).length;
   setText("questTileSub", ready ? "Or à récupérer !" : `${done} / ${quests.length} accomplies`);
   setClass("btnQuests", "has-new", ready > 0);
+  refreshSeasonTile();
 }
 
 // --- DIFFICULTÉ ---

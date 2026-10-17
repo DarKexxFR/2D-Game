@@ -1,6 +1,7 @@
 // Menu pause avec l'inventaire des améliorations de la partie.
 
 import { game, player } from "../core/state.js";
+import { activeMutators } from "../systems/endless.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
 import { $, el, isVisible } from "./dom.js";
 import { corruptionPercent } from "./hud.js";
@@ -37,6 +38,19 @@ function renderCorruption() {
   };
   if (versus.split) for (const i of [0, 1]) withRun(i, () => add(fighterName(i) + " · "));
   else add();
+  if (game.endless) renderPulse(box);
+}
+
+/** Endless Pulse : pulsation atteinte et mutations cumulées des ennemis. */
+function renderPulse(box) {
+  const head = el("div", "pulse-row");
+  head.append(icon("infinity", "#ff00aa"), el("b", "", `ENDLESS PULSE · PULSATION ${game.endless.depth}`));
+  box.append(head);
+  for (const m of activeMutators()) {
+    const row = el("div", "pulse-row");
+    row.append(icon(m.icon, m.color), el("span", "", `${m.name} ×${m.count} · ${m.desc}`));
+    box.append(row);
+  }
 }
 
 function renderInventory() {

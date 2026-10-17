@@ -11,11 +11,19 @@ export { isOnlineEnabled };
  *  "sent", "defaultName" (pseudo par défaut, partagé par tout le monde),
  *  "empty" (partie sans XP), "rateLimited" (anti-spam côté base) ou "error".
  */
-export async function submitScore({ name, wave, xp, lvl, day, nightmare = false }) {
+export async function submitScore({ name, wave, xp, lvl, day, nightmare = false, pulse = 0 }) {
   if (name.trim().toLowerCase() === DEFAULT_PSEUDO.toLowerCase()) return "defaultName";
   if (Math.floor(xp) <= 0) return "empty";
   // Avec `day`, le score va au classement du défi quotidien ; `nightmare` : classement Cauchemar
-  const row = { name, wave, xp: Math.floor(xp), lvl, ...(day ? { day } : {}) };
+  // `pulse` : pulsations franchies en Endless Pulse (classement Endless), envoyé seulement s'il y en a
+  const row = {
+    name,
+    wave,
+    xp: Math.floor(xp),
+    lvl,
+    ...(day ? { day } : {}),
+    ...(pulse > 0 ? { pulse } : {}),
+  };
   const table = day ? ONLINE.dailyTable : nightmare ? ONLINE.nightmareTable : ONLINE.table;
   try {
     await request(table, {
@@ -51,6 +59,23 @@ export async function fetchTopScores() {
 export async function fetchNightmareScores() {
   const query = `select=name,wave,xp,lvl&order=xp.desc&limit=${ONLINE.topCount}`;
   const res = await request(`${ONLINE.nightmareView}?${query}`);
+  return res.json();
+}
+
+/** Classement de la saison (mois UTC en cours) : meilleur score de chaque joueur depuis le 1er du mois. */
+export async function fetchSeasonScores() {
+  const query = `select=name,wave,xp,lvl&order=xp.desc&limit=${ONLINE.topCount}`;
+  const res = await request(`${ONLINE.seasonView}?${query}`);
+  return res.json();
+}
+
+/**
+ * Classement Endless Pulse : parties qui ont continué après la victoire (Normal et Cauchemar), triées par
+ * pulsations franchies puis par XP. `nightmare` = partie en Cauchemar.
+ */
+export async function fetchEndlessScores() {
+  const query = `select=name,pulse,wave,xp,lvl,nightmare&order=pulse.desc,xp.desc&limit=${ONLINE.topCount}`;
+  const res = await request(`${ONLINE.endlessView}?${query}`);
   return res.json();
 }
 

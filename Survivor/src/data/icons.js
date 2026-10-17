@@ -128,4 +128,9 @@ export const ICONS = {
   bell: "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z M10 21h4 M12 3v2",
   iosShare: "M12 3v12 M8 7l4-4 4 4 M8 10H5v11h14V10h-3",
   homeAdd: "M4 4h16v16H4z M12 8v8 M8 12h8",
+  // --- Endless Pulse, saison ---
+  pulse: "M2 12h4l2-5 3 11 3-14 3 10 2-2h3",
+  infinity:
+    "M12 12c-2-3-4-4.5-6-4.5a4.5 4.5 0 0 0 0 9c2 0 4-1.5 6-4.5s4-4.5 6-4.5a4.5 4.5 0 0 1 0 9c-2 0-4-1.5-6-4.5z",
+  season: "M5 22V3 M5 4h13l-3 4.5 3 4.5H5",
 };

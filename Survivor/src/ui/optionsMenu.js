@@ -8,6 +8,7 @@ import {
   onCloudChange,
   restoreFromCode,
 } from "../services/cloudSave.js";
+import { analyticsEnabled, setAnalyticsEnabled } from "../services/analytics.js";
 import { settings, updateSettings } from "../services/settings.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { canVibrate, playSfx, vibrate } from "../services/sfx.js";
@@ -39,6 +40,11 @@ export function initOptionsMenu() {
   $("btnTutorialReplay").addEventListener("click", () => {
     replayTutorial();
     setText("tutorialReplayHint", "Le tutoriel s'affichera à ta prochaine partie.");
+  });
+
+  $("optAnalytics").addEventListener("click", () => {
+    setAnalyticsEnabled(!analyticsEnabled());
+    render();
   });
 
   $("btnOptionsBack").addEventListener("click", closeOptions);
@@ -132,6 +138,9 @@ function render() {
   const vib = $("optVibration");
   vib.textContent = settings.vibration ? "ACTIVÉES" : "DÉSACTIVÉES";
   vib.classList.toggle("on", settings.vibration);
+  const stats = $("optAnalytics");
+  stats.textContent = analyticsEnabled() ? "ACTIVÉES" : "DÉSACTIVÉES";
+  stats.classList.toggle("on", analyticsEnabled());
   for (const btn of document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-quality]"))) {
     btn.classList.toggle("active", btn.dataset.quality === settings.quality);
   }

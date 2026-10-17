@@ -265,6 +265,26 @@ Principes :
   RÉESSAYER. Une étape à attendre de plus = une entrée dans `runLoadingSteps`. Compte : une progression à
   récupérer qui arrive en pleine partie n'est ni appliquée ni rechargée (`canRestore`, résultat `busy`) ;
   `resumeAccountCheck` relance la vérification au retour à l'accueil.
+- **Endless Pulse** (`systems/endless.js`, mutations `PULSE_MUTATORS` dans `data/endless.js`, réglages
+  `ENDLESS`) : en survie normale seulement (`game.endlessAllowed`), la mort du Cœur du Pulse (`ENDLESS.finalBoss`,
+  même après le minuteur de sa vague) lance l'Endless Pulse sans arrêter la partie : simple annonce (événement
+  `endlessStart`), **pas d'écran de victoire** (choix du propriétaire). Chaque vague
+  suivante = une pulsation (`game.endless.depth`), une mutation cumulée dans `game.modifier` (copié avant) et
+  XP / or ×`rewardPerDepth`. Score envoyé avec `pulse` (colonne de `scores` / `nightmare_scores`, vue
+  `endless_leaderboard`, onglet ENDLESS). Succès du groupe « Endless Pulse » (`pulseVictories`, `bestPulse`).
+- **Saison mensuelle** (`services/season.js`, paliers et thèmes `data/season.js`, écran `ui/seasonMenu.js`,
+  `#modal=saison`, bouton sous le titre de l'accueil, réglages `SEASON`) : une saison = un mois **UTC** (même pour
+  tous, comme la vue `season_leaderboard` et l'onglet SAISON). État `account.season` (synchronisé). XP de saison :
+  `addRunSeasonXp` à chaque fin de partie (pas en duel), bonus 1re partie du jour, quêtes (événement
+  `questClaimed`). 30 paliers récupérés à la main ; au changement de mois, ceux atteints et oubliés sont donnés
+  d'office (`takeRolledOver`). Skins exclusifs `season: true` (`data/skins.js`) : jamais en vente, `grantSkin`.
+- **Statistiques anonymes** (`services/analytics.js`, réglages `ANALYTICS`, RPC `track_session` / `track_run`,
+  tableau de bord `stats.html` + `src/stats/`, **réservé au propriétaire** : RPC `admin_stats` refusée à tout compte
+  absent de `analytics_admins` (lui seul), page qui n'affiche alors que « Page privée », guide
+  `supabase/STATISTIQUES.md`) : identifiant aléatoire par appareil (`survivor_app`, jamais lié au compte), désactivable
+  dans les Options. Une fin de partie ou un abandon = un `trackRun` (`reportRun` dans `main.js`).
+  Toute nouvelle donnée collectée = mise à jour de `legal.html`. Tests : `supabase.analytics` / `supabase.adminStats`
+  dans `fixtures.js`.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -336,7 +356,8 @@ Kraken et Jumeaux, arène vidée pendant les boss, rareté Mythique (coffre myth
 biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis et défis en duel classé,
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
 synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophage, Hacker, Cœur du Pulse), ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
-application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement.
+application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement,
+mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

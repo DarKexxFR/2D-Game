@@ -70,6 +70,12 @@ export function openChest(chestId) {
   return rollChest(chest);
 }
 
+/** Coffre offert (passe de saison) : même tirage qu'un coffre acheté, sans le payer. */
+export function grantChest(chestId) {
+  const chest = CHESTS.find((c) => c.id === chestId);
+  return chest ? rollChest(chest) : null;
+}
+
 // --- COFFRE GRATUIT ---
 
 const FREE_INTERVAL_MS = FREE_CHEST.intervalHours * 3600 * 1000;

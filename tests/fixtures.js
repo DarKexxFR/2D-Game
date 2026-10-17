@@ -19,6 +19,8 @@ export const test = base.extend({
       duel: { ratings: {}, reports: {}, settled: {} },
       friends: { profiles: {}, links: [] },
       push: [],
+      analytics: [], // appels track_session / track_run { rpc, args } (voir services/analytics.js)
+      adminStats: null, // réponse de admin_stats (null = compte non administrateur)
     });
   },
   page: async ({ page, supabase }, use) => {
@@ -45,6 +47,18 @@ export function routeSupabase(page, supabase) {
     if (friends) return friends;
     // Fonctions RPC de la sauvegarde en ligne (stockées dans supabase.cloud)
     const rpc = req.url().match(/\/rpc\/(\w+)/)?.[1];
+    if (rpc === "track_session" || rpc === "track_run") {
+      supabase.analytics.push({ rpc, args: req.postDataJSON() });
+      return route.fulfill({ status: 204, body: "" });
+    }
+    if (rpc === "admin_stats") {
+      if (!supabase.adminStats || !userFromToken(req)) {
+        return route.fulfill(
+          json({ code: "42501", message: "Statistiques réservées aux administrateurs" }, 403),
+        );
+      }
+      return route.fulfill(json(supabase.adminStats));
+    }
     if (rpc === "push_subscribe" || rpc === "push_unsubscribe") {
       supabase.push.push({ rpc, args: req.postDataJSON(), token: userFromToken(req) });
       return route.fulfill({ status: 204, body: "" });

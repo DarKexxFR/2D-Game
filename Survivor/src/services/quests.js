@@ -125,5 +125,6 @@ export function claimQuest(id) {
   }
   account.gold += gold;
   saveAccount();
+  emit("questClaimed", { allDone: gold > quest.reward }); // XP de saison (services/season.js)
   return gold;
 }

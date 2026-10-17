@@ -1,6 +1,7 @@
 // Personnalisation du vaisseau (écran « Skins ») : forme de la coque, couleurs du vaisseau, des tirs
 // et de la traînée. Purement cosmétique, sans effet en duel (chaque joueur y garde sa couleur).
 // Chaque option a un identifiant d'achat (`hull:manta`, `trail:sparks`...) ; prix 0 = offerte.
+// `season: true` = exclusive du passe de saison : jamais en vente, gagnée à un palier (data/season.js).
 
 /** Formes de coque (tracés dans render/entities.js, HULLS). "hero" = celle du héros équipé. */
 export const SKIN_HULLS = [
@@ -17,6 +18,11 @@ export const SKIN_HULLS = [
   { id: "trident", name: "Trident", price: 1200 },
   { id: "phoenix", name: "Phénix", price: 1500 },
   { id: "star", name: "Étoile", price: 2000 },
+  // Exclusives du passe de saison (data/season.js) : ne s'achètent pas, se gagnent
+  { id: "nova", name: "Nova", price: 0, season: true },
+  { id: "blaze", name: "Brasier", price: 0, season: true },
+  { id: "rift", name: "Faille", price: 0, season: true },
+  { id: "thunder", name: "Foudre", price: 0, season: true },
 ];
 
 /** Traînées laissées par le vaisseau quand il bouge (dessinées dans render/entities.js). */
@@ -28,6 +34,11 @@ export const SKIN_TRAILS = [
   { id: "rings", name: "Anneaux", price: 800 },
   { id: "flames", name: "Flammes", price: 1000 },
   { id: "pixels", name: "Pixels", price: 1200 },
+  // Exclusives du passe de saison
+  { id: "comet", name: "Comète", price: 0, season: true },
+  { id: "embers", name: "Braises", price: 0, season: true },
+  { id: "hex", name: "Hexagones", price: 0, season: true },
+  { id: "bolt", name: "Éclairs", price: 0, season: true },
 ];
 
 /** Couleurs offertes. `null` = couleur par défaut (héros, arme), "rainbow" = arc-en-ciel animé. */

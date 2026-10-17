@@ -1,0 +1,10 @@
+/* Endless Pulse (systems/endless.js) : mutations listées dans la pause */
+.pulse-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff66cc;
+  font-size: 13px;
+  margin: 4px 0;
+}

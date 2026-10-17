@@ -40,6 +40,7 @@ test("porte-bouclier, essaim, soigneur et aimant", async ({ page, isMobile }) =>
     spawner.spawnEnemy("shield", state.player.worldX + 150, state.player.worldY);
     const e = state.world.enemies[0];
     e.facing = Math.PI; // bouclier tourné vers le joueur (à gauche)
+    state.player.critChance = 0; // un coup critique (aléatoire) fausserait les dégâts comparés
     const hit = (dx) => {
       const before = e.health;
       combat.spawnProjectile({ x: e.x + dx, y: e.y, vx: 0, vy: 0, size: 5, damage: 10, pierce: 5 });

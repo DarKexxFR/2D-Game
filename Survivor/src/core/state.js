@@ -52,6 +52,8 @@ export function resetGame() {
     adReviveUsed: false, // a déjà revécu grâce à une pub dans cette partie
     difficulty: "normal", // niveau de difficulté de la partie (voir services/difficulty.js)
     daily: null, // défi du jour en cours (voir services/daily.js), sinon null
+    endlessAllowed: false, // survie normale : vaincre le boss final lance l'Endless Pulse
+    endless: null, // Endless Pulse en cours : { depth, stacks }, sinon null
     rush: null, // Boss Rush en cours : { stage, defeated } (voir systems/spawner.js), sinon null
     modifier: {}, // modificateur du défi : enemySpeed, enemyHealth, goldMult...
     stats: { damage: {}, kills: {}, bosses: 0, bestCombo: 0, bossChests: 0 }, // pour l'écran de fin

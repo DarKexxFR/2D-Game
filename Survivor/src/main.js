@@ -76,6 +76,10 @@ import {
 import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initQuestMenu, openQuests } from "./ui/questMenu.js";
+import { announceRolledOver, initSeasonMenu, openSeason } from "./ui/seasonMenu.js";
+import { addRunSeasonXp } from "./services/season.js";
+import { initAnalytics, trackRun } from "./services/analytics.js";
+import { currentUser } from "./services/auth.js";
 import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
@@ -128,6 +132,25 @@ import { closeInstall, initAppMenu, maybeAskPush, openInstall, renderApp } from 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
 let lastMode = "normal"; // « REJOUER » relance le même mode
+let runReported = false; // partie déjà comptée dans les statistiques (fin, victoire ou abandon)
+
+/** Statistiques anonymes (services/analytics.js) : résumé de la partie chargée. */
+function reportRun(mode, killer) {
+  runReported = true;
+  trackRun({
+    mode,
+    difficulty: game.difficulty,
+    wave: game.rush ? game.rush.defeated : game.wave,
+    pulse: game.endless?.depth || 0,
+    level: player.level,
+    kills: game.kills,
+    seconds: game.time / 1000,
+    hero: player.hero?.id || "",
+    weapon: player.weapon?.id || "",
+    killer,
+    victory: !!game.endless, // boss final vaincu
+  });
+}
 
 /**
  * Lance une partie ; mode "daily" = défi du jour (équipement, modificateur et graine imposés),
@@ -135,6 +158,7 @@ let lastMode = "normal"; // « REJOUER » relance le même mode
  */
 function startGame(mode = "normal") {
   lastMode = mode;
+  runReported = false;
   stopKillCam();
   stopVersus();
   showVersusHud(false);
@@ -144,6 +168,7 @@ function startGame(mode = "normal") {
   resetUpgradeMenu();
   setAutoPick(false);
   setupRun(mode, mode === "normal" ? selectedDifficulty() : "normal");
+  game.endlessAllowed = mode === "normal"; // victoire puis Endless Pulse : survie normale seulement
   if (mode === "normal") startTutorial();
   else stopTutorial();
   hideScreens();
@@ -210,6 +235,7 @@ function startDuel(online = null, names = []) {
   eloRequest++;
   showDuelElo("");
   prizeGiven = false;
+  runReported = false;
   if (online) {
     startOnlineVersus(online, names);
     setAutoPick(true); // l'adversaire continue pendant qu'on choisit
@@ -304,6 +330,7 @@ function onVersusOver(result) {
   const prize = { xp: a.x + b.x, gold: a.g + b.g };
   // Écran scindé : les deux joueurs partagent le compte de cet appareil ; en ligne, seul le gagnant gagne
   if (versus.online) reportRanked(result.winner === 0);
+  if (!runReported) reportRun(versus.online ? "duel" : "duel-local", result.winner === 0 ? "" : "duel perdu");
   if ((!versus.online || result.winner === 0) && !prizeGiven) {
     prizeGiven = true;
     addAccountRewards(prize.xp, prize.gold);
@@ -323,6 +350,7 @@ function applyModifierToPlayer(mod) {
 }
 
 function returnToMenu() {
+  if (game.started && !runReported) reportRun(versus.active ? "duel" : lastMode, "abandon");
   stopKillCam();
   restoreRandom();
   saveAccount(); // garde la progression des succès (kills...) même en quittant une partie
@@ -354,9 +382,17 @@ function endGame() {
   recordBest("bestCombo", game.stats.bestCombo);
   if (game.daily) addStat("dailyRuns");
   recordCompletedRun();
+  reportRun(lastMode, game.over ? game.killCam.killer?.name || "" : "");
+  const rush = game.rush;
+  const season = addRunSeasonXp({
+    wave: rush ? 0 : game.wave,
+    bosses: game.stats.bosses,
+    kills: game.kills,
+    difficulty: game.difficulty,
+    pulse: game.endless?.depth || 0,
+  });
   refreshAccountUI();
   const pseudo = getPseudo();
-  const rush = game.rush;
   if (rush) {
     // Boss Rush : record de boss vaincus, hors classements (les vagues n'y sont pas comparables)
     showGameOver({
@@ -368,6 +404,7 @@ function endGame() {
       gold: game.runGold,
       isNewRecord: rush.defeated > rush.bestBefore,
     });
+    showSeasonGain(season);
     setOnlineStatus("");
     return;
   }
@@ -375,15 +412,19 @@ function endGame() {
   const easy = game.difficulty === "easy";
   const nightmare = game.difficulty === "nightmare";
   const isNewRecord = !easy && saveToLeaderboard(pseudo, game.wave, game.totalRunXp, player.level);
+  const labels = ["Vague"];
+  if (game.difficulty !== "normal") labels.push(DIFFICULTIES[game.difficulty].name);
+  if (game.endless) labels.push(`Pulse ${game.endless.depth}`);
   showGameOver({
     pseudo,
     level: player.level,
     wave: game.wave,
-    waveLabel: game.difficulty === "normal" ? "Vague" : `Vague · ${DIFFICULTIES[game.difficulty].name}`,
+    waveLabel: labels.join(" · "),
     xp: game.totalRunXp,
     gold: game.runGold,
     isNewRecord,
   });
+  showSeasonGain(season);
 
   const day = game.daily?.day;
   if (day) saveDailyBest(day, game.wave, game.totalRunXp);
@@ -393,12 +434,27 @@ function endGame() {
   }
   setOnlineStatus(isOnlineEnabled() ? "Envoi du score au classement mondial..." : "");
   if (isOnlineEnabled()) {
-    const score = { name: pseudo, wave: game.wave, xp: game.totalRunXp, lvl: player.level, day, nightmare };
+    const pulse = game.endless?.depth || 0;
+    const score = {
+      name: pseudo,
+      wave: game.wave,
+      xp: game.totalRunXp,
+      lvl: player.level,
+      day,
+      nightmare,
+      pulse,
+    };
     const prefix = day ? "Défi du jour : " : nightmare ? "Cauchemar : " : "";
     submitScore(score).then((status) =>
       setOnlineStatus((status === "sent" ? prefix : "") + SUBMIT_MESSAGES[status]),
     );
   }
+}
+
+/** Écran de fin : XP de saison gagnée par la partie (voir services/season.js). */
+function showSeasonGain({ xp, firstOfDay }) {
+  const bonus = firstOfDay ? " · bonus 1re partie du jour" : "";
+  $("runSeasonGain").textContent = xp > 0 ? `+${xp} XP de saison${bonus}` : "";
 }
 
 // --- ADRESSE DE LA PAGE (#modal=option...) ---
@@ -412,6 +468,7 @@ const MENUS = {
   achievementMenu: openAchievements,
   dailyMenu: openDaily,
   questMenu: openQuests,
+  seasonMenu: openSeason,
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
   friendsMenu: () => openFriends(),
@@ -526,6 +583,10 @@ function init() {
   hydrateIcons();
   loadAccount();
   initPwa();
+  initAnalytics({
+    playing: () => game.started && game.running && !game.paused,
+    loggedIn: () => !!currentUser(),
+  });
   initCloudSave();
   initAds();
   ensureStarterItems();
@@ -538,6 +599,7 @@ function init() {
   initDuelPicks();
   initAchievementMenu({ onBack: showMainMenu });
   initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initSeasonMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initStreakMenu({
     onClose: () => {
       showMainMenu();
@@ -601,6 +663,15 @@ function init() {
     playSfx("combo");
   });
   initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
+  on("endlessStart", () => {
+    showBossWarning("CŒUR DU PULSE VAINCU · ENDLESS PULSE", false, "#ff00aa");
+    playSfx("boss");
+  });
+  on("pulseWave", ({ depth, mutators }) => {
+    const names = mutators.map((m) => m.name).join(" · ");
+    showBossWarning(`PULSE ${depth}${names ? " · " + names : ""}`, false, "#ff00aa");
+    playSfx("boss");
+  });
 
   $("btnVersus").addEventListener("click", openDuel);
   $("btnFriends").addEventListener("click", () => openFriends());
@@ -682,6 +753,7 @@ function enterHome() {
     renderApp();
   }
   initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
+  announceRolledOver(); // nouveau mois : récompenses de la saison passée données d'office
   // Série de connexion : proposée à l'arrivée (pas à un tout nouveau joueur, qui commence par le tutoriel)
   if (currentScreen() === "mainMenu" && account.achievementStats.runs > 0) offerLoginStreak();
   requestAnimationFrame(frame);

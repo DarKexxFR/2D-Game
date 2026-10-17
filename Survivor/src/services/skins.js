@@ -7,12 +7,26 @@ const HULL_IDS = new Set(SKIN_HULLS.map((h) => h.id));
 const TRAIL_IDS = new Set(SKIN_TRAILS.map((t) => t.id));
 const COLOR = /^#[0-9a-f]{6}$/i;
 
-/** Option achetable correspondant à une valeur d'une pièce (null si elle est gratuite). */
+/** @typedef {{ id: string, name: string, price: number, unlock: string, season?: boolean }} SkinOffer */
+
+/**
+ * Option achetable (ou exclusive du passe de saison) correspondant à une valeur d'une pièce (null si elle
+ * est gratuite).
+ * @returns {SkinOffer | null}
+ */
 export function skinOffer(key, value) {
   if (value === RAINBOW) return { ...RAINBOW_UNLOCK, unlock: RAINBOW_UNLOCK.id };
   const list = key === "hull" ? SKIN_HULLS : key === "trail" ? SKIN_TRAILS : null;
   const option = list?.find((o) => o.id === value);
-  return option?.price ? { ...option, unlock: `${key}:${value}` } : null;
+  return option?.price || option?.season ? { ...option, unlock: `${key}:${value}` } : null;
+}
+
+/** Débloque une option exclusive (passe de saison). Renvoie false si elle était déjà possédée. */
+export function grantSkin(unlock) {
+  if (account.skinsOwned.includes(unlock)) return false;
+  account.skinsOwned.push(unlock);
+  saveAccount();
+  return true;
 }
 
 export function ownsSkin(key, value) {
@@ -38,7 +52,7 @@ export function setSkinPart(key, value) {
 /** Achète l'option d'une pièce puis l'équipe. Renvoie true si l'achat a réussi. */
 export function buySkin(key, value) {
   const offer = skinOffer(key, value);
-  if (!offer || ownsSkin(key, value) || account.gold < offer.price) return false;
+  if (!offer || offer.season || ownsSkin(key, value) || account.gold < offer.price) return false;
   account.gold -= offer.price;
   account.skinsOwned.push(offer.unlock);
   account.skin[key] = value;

@@ -647,3 +647,10 @@ button.share-run-btn {
   padding: 10px;
   font-size: 13px;
 }
+
+/* Classement : six onglets sur deux lignes */
+#leaderboardMenu .lb-tabs {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
