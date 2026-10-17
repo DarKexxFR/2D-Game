@@ -56,6 +56,8 @@
     <link rel="stylesheet" href="css/streak.css" />
     <link rel="stylesheet" href="css/daily.css" />
     <link rel="stylesheet" href="css/bossrush.css" />
+    <link rel="stylesheet" href="css/endless.css" />
+    <link rel="stylesheet" href="css/season.css" />
     <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/versus.css" />
     <link rel="stylesheet" href="css/friends.css" />
@@ -245,6 +247,13 @@
           <div class="home-title">
             <h1>LAST PULSE</h1>
             <p class="home-tagline">Survivre à la nuée.</p>
+            <button id="btnSeason" class="home-season" aria-label="Passe de saison">
+              <i data-icon="season"></i>
+              <span class="home-season-text"
+                ><b id="homeSeasonName">SAISON 1</b><small id="homeSeasonTier">Palier 0 / 30</small></span
+              >
+              <span class="home-season-bar"><span id="homeSeasonFill"></span></span>
+            </button>
           </div>
 
           <div class="home-side home-left">
@@ -375,9 +384,11 @@
         <h2>CLASSEMENT</h2>
         <div class="lb-tabs">
           <button id="lbTabGlobal" class="lb-tab active"><i data-icon="globe"></i> MONDIAL</button>
+          <button id="lbTabSeason" class="lb-tab"><i data-icon="season"></i> SAISON</button>
           <button id="lbTabNightmare" class="lb-tab"><i data-icon="skull"></i> CAUCHEMAR</button>
-          <button id="lbTabLocal" class="lb-tab"><i data-icon="save"></i> MES SCORES</button>
+          <button id="lbTabEndless" class="lb-tab"><i data-icon="infinity"></i> ENDLESS</button>
           <button id="lbTabDuel" class="lb-tab"><i data-icon="sword"></i> DUEL ELO</button>
+          <button id="lbTabLocal" class="lb-tab"><i data-icon="save"></i> MES SCORES</button>
         </div>
         <div class="lb-scroll">
           <table class="lb-table">
@@ -486,6 +497,34 @@
         <button id="btnQuestsBack" class="secondary mt-15">RETOUR</button>
       </div>
 
+      <!-- ===== SAISON MENSUELLE ET PASSE GRATUIT (ui/seasonMenu.js) ===== -->
+      <div id="seasonMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
+          <h2 id="seasonTitle">SAISON</h2>
+          <p id="seasonSub" class="menu-sub"></p>
+          <div class="gold-pill">
+            <i data-icon="coin" data-color="#ffd700"></i> <span id="seasonGoldDisplay">0</span>
+          </div>
+        </div>
+        <div class="season-progress">
+          <div class="season-badge"><small>PALIER</small><b id="seasonTier">0</b></div>
+          <div class="season-progress-main">
+            <div class="season-bar"><div id="seasonBar" class="season-bar-fill"></div></div>
+            <small id="seasonXpText"></small>
+          </div>
+        </div>
+        <p class="season-how">
+          XP de saison : chaque partie terminée (vague, boss, éliminations), bonus de la première partie du
+          jour, quêtes de la semaine. Skins exclusifs aux paliers 10 et 30.
+        </p>
+        <div id="seasonTrack" class="season-track"></div>
+        <p id="seasonClaimMsg" class="season-claim-msg" aria-live="polite"></p>
+        <div class="btn-grid">
+          <button id="btnSeasonClaimAll">TOUT RÉCUPÉRER</button>
+          <button id="btnSeasonBack" class="secondary">RETOUR</button>
+        </div>
+      </div>
+
       <!-- ===== SÉRIE DE CONNEXION ===== -->
       <div id="streakMenu" class="menu-overlay">
         <div class="menu-head">
@@ -580,6 +619,13 @@
           <div id="pushTopics" class="push-topics"></div>
           <p id="pushHint" class="option-hint"></p>
         </div>
+        <div class="option-row option-account-row">
+          <span><i data-icon="chartUp"></i> Statistiques anonymes</span>
+          <button id="optAnalytics" class="toggle-btn"></button>
+        </div>
+        <p class="option-hint">
+          Temps de jeu et parties, sans pseudo ni compte : ça aide à améliorer le jeu.
+        </p>
         <div id="optAccountRow" class="option-row option-account-row">
           <span><i data-icon="user"></i> Compte <small class="optional-tag">facultatif</small></span>
           <button id="btnOptionsAccount" class="secondary">SE CONNECTER</button>
@@ -746,6 +792,25 @@
         <p id="reviveMessage" class="revive-message"></p>
       </div>
 
+      <!-- ===== VICTOIRE (boss final vaincu) : terminer ou continuer en Endless Pulse ===== -->
+      <div id="victoryMenu" class="menu-overlay victory-menu">
+        <p class="victory-kicker">VAGUE 30 · BOSS FINAL VAINCU</p>
+        <h1 class="victory-title">VICTOIRE</h1>
+        <p class="victory-text">
+          Le Cœur du Pulse est détruit.
+          <span class="victory-gold"
+            ><i data-icon="coin" data-color="#ffd700"></i> <b id="victoryGold">+0</b></span
+          >
+        </p>
+        <button id="btnEndless" class="endless-btn"><i data-icon="infinity"></i> ENDLESS PULSE</button>
+        <p class="endless-desc">
+          La partie continue sans fin : chaque vague ajoute une mutation aux ennemis, l'XP et l'or grimpent.
+          Classement à part.
+        </p>
+        <p id="endlessBest" class="endless-best"></p>
+        <button id="btnVictoryEnd" class="secondary">TERMINER SUR UNE VICTOIRE</button>
+      </div>
+
       <!-- ===== DUEL : SUR CET ÉCRAN OU EN LIGNE ===== -->
       <div id="duelMenu" class="menu-overlay">
         <h2>DUEL 1 CONTRE 1</h2>
@@ -827,7 +892,7 @@
       </div>
 
       <div id="gameOver" class="menu-overlay">
-        <h1>MORT</h1>
+        <h1 id="finalTitle">MORT</h1>
         <p class="final-pseudo"><span id="finalPseudo"></span></p>
         <div class="final-stats">
           <div>Niveau: <span id="finalLvl">1</span></div>
@@ -836,6 +901,7 @@
         <div class="rewards-box">
           <p class="reward-xp">+<span id="runXpGain">0</span> XP</p>
           <p class="reward-gold">+<span id="runGoldGain">0</span> OR</p>
+          <p id="runSeasonGain" class="reward-season"></p>
         </div>
         <div id="runStats" class="run-stats"></div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>

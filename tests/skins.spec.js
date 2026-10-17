@@ -91,7 +91,7 @@ test("une option non achetée ou invalide reprend sa valeur par défaut", async 
 test("un lien ouvre l'écran des skins", async ({ page }) => {
   await page.goto("/#modal=skins");
   await expect(page.locator("#skinMenu")).toBeVisible();
-  await expect(page.locator('[data-part="hull"] .skin-chip')).toHaveCount(13);
+  await expect(page.locator('[data-part="hull"] .skin-chip')).toHaveCount(17);
   await page.goBack();
   await expect(page.locator("#mainMenu")).toBeVisible();
 });

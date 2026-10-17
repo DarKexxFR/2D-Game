@@ -1,0 +1,246 @@
+/* Saison mensuelle et passe gratuit (ui/seasonMenu.js) */
+
+/* --- Bouton de l'accueil, sous le titre --- */
+button.home-season {
+  --season: #00ffff;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "icon text"
+    "bar bar";
+  align-items: center;
+  gap: 4px 10px;
+  width: auto;
+  min-width: 230px;
+  margin: 12px auto 0;
+  padding: 8px 16px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--season) 55%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--season) 18%, transparent),
+    rgba(10, 5, 20, 0.85)
+  );
+  color: #fff;
+  overflow: visible;
+}
+.home-season > .ico {
+  grid-area: icon;
+  font-size: 20px;
+  color: var(--season);
+}
+.home-season-text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+.home-season-text b {
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.home-season-text small {
+  font-size: 10px;
+  color: #bbb;
+  font-family: "Orbitron";
+}
+.home-season.has-new .home-season-text small {
+  color: #00ff88;
+}
+.home-season.has-new::after {
+  content: "!";
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  border-radius: 50%;
+  background: #ff2a6d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+.home-season-bar {
+  grid-area: bar;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.home-season-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--season);
+}
+
+/* --- Écran du passe --- */
+#seasonMenu {
+  --season: #00ffff;
+  border-color: var(--season);
+}
+#seasonMenu .menu-head h2 {
+  color: var(--season);
+}
+.season-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 8px;
+}
+.season-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  border: 2px solid var(--season);
+  background: color-mix(in srgb, var(--season) 15%, transparent);
+}
+.season-badge small {
+  font-size: 9px;
+  color: #bbb;
+}
+.season-badge b {
+  font-family: "Press Start 2P";
+  font-size: 20px;
+  color: var(--season);
+}
+.season-progress-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+.season-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: #222;
+}
+.season-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--season), #fff);
+}
+.season-progress-main small {
+  color: #ccc;
+  font-size: 12px;
+}
+.season-how {
+  color: #999;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  text-align: left;
+}
+.season-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+.season-tier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid #333;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #888;
+  min-height: 118px;
+}
+.season-tier.special {
+  border-color: color-mix(in srgb, var(--season) 60%, transparent);
+  background: color-mix(in srgb, var(--season) 10%, transparent);
+}
+.season-tier.ready {
+  border-color: #00ff88;
+  background: linear-gradient(160deg, rgba(0, 255, 136, 0.15), rgba(0, 0, 0, 0.3));
+  color: #fff;
+}
+.season-tier.claimed {
+  opacity: 0.55;
+  color: #ccc;
+}
+.season-tier-num {
+  font-family: "Press Start 2P";
+  font-size: 10px;
+}
+.season-reward-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  font-size: 28px;
+  overflow: visible;
+}
+.season-reward-icon canvas {
+  width: 40px;
+  height: 40px;
+}
+.season-reward-name {
+  font-size: 10px;
+  line-height: 1.3;
+  min-height: 2.6em;
+}
+.season-tier .ico {
+  font-size: 14px;
+}
+.season-tier-state {
+  color: #00ff88;
+  font-weight: 900;
+}
+button.season-claim {
+  width: auto;
+  padding: 5px 10px;
+  font-size: 10px;
+  background: #00ff88;
+  color: #002211;
+}
+.season-claim-msg {
+  min-height: 1.2em;
+  margin: 12px 0 0;
+  color: #00ff88;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: visible;
+}
+.reward-season {
+  color: var(--season, #ff00aa);
+  font-size: 13px;
+}
+.reward-season:empty {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  button.home-season {
+    min-width: 0;
+    margin-top: 8px;
+    padding: 6px 14px 7px;
+  }
+  .season-track {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .season-tier {
+    min-height: 104px;
+  }
+}
+@media (max-height: 520px) and (min-width: 761px) {
+  button.home-season {
+    margin-top: 4px;
+    padding: 4px 12px 5px;
+  }
+}

@@ -2,14 +2,25 @@
 
 import { startKillCam, stopKillCam } from "../render/killCam.js";
 import { hasKillCam } from "../systems/killCam.js";
-import { $, setText, setVisible } from "./dom.js";
+import { $, setClass, setText, setVisible } from "./dom.js";
 import { renderRunStats } from "./runStats.js";
 import { showScreen } from "./screens.js";
 import { runSummary, setShareSummary } from "./shareMenu.js";
 
 const SKIP_AFTER_MS = 400; // le clic qui lance le ralenti ne doit pas l'arrêter aussitôt
 
-export function showGameOver({ pseudo, level, wave, waveLabel = "Vague", xp, gold, isNewRecord }) {
+export function showGameOver({
+  pseudo,
+  title = "MORT",
+  level,
+  wave,
+  waveLabel = "Vague",
+  xp,
+  gold,
+  isNewRecord,
+}) {
+  setText("finalTitle", title);
+  setClass("gameOver", "victory", title !== "MORT");
   setText("finalPseudo", pseudo);
   setText("finalWaveLabel", waveLabel);
   setText("finalLvl", level);
@@ -17,7 +28,7 @@ export function showGameOver({ pseudo, level, wave, waveLabel = "Vague", xp, gol
   setText("runXpGain", Math.floor(xp));
   setText("runGoldGain", gold);
   setVisible("newRecordMsg", isNewRecord);
-  setVisible("btnKillCam", hasKillCam());
+  setVisible("btnKillCam", hasKillCam() && title === "MORT");
   renderRunStats();
   setShareSummary(runSummary({ pseudo, wave, valueLabel: waveLabel.split(" · ")[0], isNewRecord }));
   showScreen("gameOver");

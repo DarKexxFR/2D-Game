@@ -6,6 +6,7 @@ export const ACHIEVEMENT_GROUPS = [
   { id: "boss", name: "Boss", color: "#aa66ff" },
   { id: "survival", name: "Survie", color: "#00ffff" },
   { id: "nightmare", name: "Cauchemar", color: "#ff4466" },
+  { id: "endless", name: "Endless Pulse", color: "#ff00aa" },
   { id: "collection", name: "Collection", color: "#ffd700" },
 ];
 
@@ -202,6 +203,48 @@ export const ACHIEVEMENTS = [
     "nightmareWave",
     25,
     4000,
+  ),
+
+  // --- ENDLESS PULSE (après la victoire sur le Cœur du Pulse, voir systems/endless.js) ---
+  a(
+    "endless",
+    "pulse_victory",
+    "pulse",
+    "Victoire",
+    "Gagner une partie en vainquant le Cœur du Pulse.",
+    "pulseVictories",
+    1,
+    1000,
+  ),
+  a(
+    "endless",
+    "pulse_5",
+    "infinity",
+    "Sans fin",
+    "Atteindre la pulsation 5 en Endless Pulse.",
+    "bestPulse",
+    5,
+    1000,
+  ),
+  a(
+    "endless",
+    "pulse_10",
+    "infinity",
+    "Arythmie",
+    "Atteindre la pulsation 10 en Endless Pulse.",
+    "bestPulse",
+    10,
+    2500,
+  ),
+  a(
+    "endless",
+    "pulse_20",
+    "pulse",
+    "Cœur éternel",
+    "Atteindre la pulsation 20 en Endless Pulse.",
+    "bestPulse",
+    20,
+    6000,
   ),
 
   // --- COLLECTION ---

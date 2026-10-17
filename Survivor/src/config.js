@@ -296,6 +296,41 @@ export const DIFFICULTIES = {
   },
 };
 
+// Mode « Endless Pulse » (systems/endless.js, mutations dans data/endless.js) : vaincre le boss final
+// (`finalBoss`, vague 30) en partie normale offre la victoire, puis le choix de continuer sans fin.
+// Chaque vague suivante (« pulsation ») ajoute une mutation des ennemis et augmente l'XP et l'or gagnés.
+export const ENDLESS = {
+  finalBoss: "pulse_core",
+  victoryDelay: 150, // ticks entre la mort du boss final et l'écran de victoire
+  victoryGold: 2000, // or de la victoire, gagné qu'on termine ou qu'on continue
+  rewardPerDepth: 0.08, // XP et or des ennemis +8 % par pulsation (cumulé)
+  mutatorsPerWave: 1,
+};
+
+// Statistiques de fréquentation anonymes (services/analytics.js, tables analytics_* de supabase/schema.sql,
+// page de suivi stats.html, voir supabase/STATISTIQUES.md) : joueurs, temps passé, parties. Un identifiant
+// tiré au hasard par appareil, aucune donnée personnelle ; désactivables dans les Options.
+export const ANALYTICS = {
+  enabled: true,
+  heartbeatMs: 60_000, // envoi des compteurs de la session (temps actif, temps en partie)
+  idleMs: 120_000, // sans clic ni touche depuis ce délai (hors partie), le temps ne compte plus
+};
+
+// Saison mensuelle et son passe gratuit (services/season.js, paliers dans data/season.js). Une saison = un
+// mois UTC, le même pour tout le monde (son classement repart à zéro le 1er à 0 h UTC). L'XP de saison vient
+// des parties terminées et des quêtes hebdomadaires.
+export const SEASON = {
+  firstMonth: "2026-10", // mois de la Saison 1 (AAAA-MM, UTC)
+  tiers: 30,
+  tierXp: 400, // XP de saison par palier
+  // Partie terminée : vague atteinte, boss vaincus, éliminations, pulsations (Endless) ; × gains de la difficulté
+  run: { perWave: 10, perBoss: 30, perKill: 0.05, perPulse: 40, max: 900 },
+  firstRunOfDay: 150, // bonus de la première partie du jour (jour UTC)
+  perQuest: 200, // quête hebdomadaire récupérée
+  questBonus: 300, // les quêtes de la semaine toutes récupérées
+  duplicateGold: 1500, // skin de saison déjà possédé : or à la place
+};
+
 // Série de connexion : une récompense par jour de connexion d'affilée (heure locale), de plus en
 // plus grosse jusqu'au 7e jour ; un jour manqué remet la série à 1, après le 7e jour elle recommence.
 export const LOGIN_STREAK = {
@@ -431,6 +466,8 @@ export const ONLINE = {
   dailyView: "daily_leaderboard",
   nightmareTable: "nightmare_scores",
   nightmareView: "nightmare_leaderboard",
+  seasonView: "season_leaderboard", // scores du mois UTC en cours (saison)
+  endlessView: "endless_leaderboard", // parties au-delà du boss final (Endless Pulse)
   topCount: 50,
   timeoutMs: 6000,
 };

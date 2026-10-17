@@ -5,8 +5,8 @@ test("menu des succès : liste, progression et retour", async ({ page }) => {
   await page.goto("/");
   await page.locator("#btnAchievements").click();
   await expect(page.locator("#achievementMenu")).toBeVisible();
-  await expect(page.locator("#achievementCount")).toHaveText("1 / 44 débloqués"); // « Premier sang » : déjà mérité par la sauvegarde;
-  await expect(page.locator(".achievement-item")).toHaveCount(44);
+  await expect(page.locator("#achievementCount")).toHaveText("1 / 48 débloqués"); // « Premier sang » : déjà mérité par la sauvegarde;
+  await expect(page.locator(".achievement-item")).toHaveCount(48);
   await expect(page.locator(".achievement-item").nth(1)).toContainText("40 / 100");
   await page.locator("#btnAchievementsBack").click();
   await expect(page.locator("#mainMenu")).toBeVisible();

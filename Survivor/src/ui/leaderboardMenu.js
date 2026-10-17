@@ -1,21 +1,36 @@
-// Classement : onglet mondial (Supabase), onglet Cauchemar (mondial), onglet local (ce navigateur) et classement ELO du duel en ligne.
+// Classement : mondial (Supabase), saison (mois en cours), Cauchemar, Endless Pulse, classement ELO du duel en
+// ligne et scores locaux (ce navigateur).
 
 import { fetchDuelRanking } from "../services/duelRanking.js";
-import { fetchNightmareScores, fetchTopScores, isOnlineEnabled } from "../services/onlineLeaderboard.js";
+import {
+  fetchEndlessScores,
+  fetchNightmareScores,
+  fetchSeasonScores,
+  fetchTopScores,
+  isOnlineEnabled,
+} from "../services/onlineLeaderboard.js";
+import { getSeason } from "../services/season.js";
 import { currentUser } from "../services/auth.js";
 import { getLeaderboard } from "../services/storage.js";
 import { $, el, setText } from "./dom.js";
+import { formatDelay } from "./questMenu.js";
 import { showScreen } from "./screens.js";
+
+const TABS = {
+  global: "lbTabGlobal",
+  season: "lbTabSeason",
+  nightmare: "lbTabNightmare",
+  endless: "lbTabEndless",
+  duel: "lbTabDuel",
+  local: "lbTabLocal",
+};
 
 let activeTab = "global";
 let requestId = 0;
 
 export function initLeaderboardMenu({ onBack }) {
   $("btnLeaderboardBack").addEventListener("click", onBack);
-  $("lbTabGlobal").addEventListener("click", () => selectTab("global"));
-  $("lbTabNightmare").addEventListener("click", () => selectTab("nightmare"));
-  $("lbTabLocal").addEventListener("click", () => selectTab("local"));
-  $("lbTabDuel").addEventListener("click", () => selectTab("duel"));
+  for (const [tab, id] of Object.entries(TABS)) $(id).addEventListener("click", () => selectTab(tab));
 }
 
 export function openLeaderboard() {
@@ -25,18 +40,28 @@ export function openLeaderboard() {
 
 function selectTab(tab) {
   activeTab = tab;
-  $("lbTabGlobal").classList.toggle("active", tab === "global");
-  $("lbTabNightmare").classList.toggle("active", tab === "nightmare");
-  $("lbTabLocal").classList.toggle("active", tab === "local");
-  $("lbTabDuel").classList.toggle("active", tab === "duel");
-  setText("lbCol3", tab === "duel" ? "ELO" : "VAGUE");
+  for (const [t, id] of Object.entries(TABS)) $(id).classList.toggle("active", t === tab);
+  setText("lbCol3", tab === "duel" ? "ELO" : tab === "endless" ? "PULSE" : "VAGUE");
   setText("lbCol4", tab === "duel" ? "V / D" : "XP");
   setText("lbMe", "");
   if (tab === "local") renderRows(getLeaderboard(), "Aucun score enregistré");
   else if (tab === "duel") loadDuel();
   else if (tab === "nightmare")
     loadGlobal(tab, fetchNightmareScores, "Aucun score en Cauchemar pour l'instant");
-  else loadGlobal(tab, fetchTopScores, "Aucun score mondial pour l'instant");
+  else if (tab === "season") {
+    const s = getSeason();
+    setText("lbMe", `Saison ${s.number} · remise à zéro dans ${formatDelay(s.timeLeft)}`);
+    loadGlobal(tab, fetchSeasonScores, "Aucun score ce mois-ci : à toi de jouer !");
+  } else if (tab === "endless") {
+    setText("lbMe", "Parties qui ont continué après la victoire sur le Cœur du Pulse (☠ = Cauchemar).");
+    loadGlobal(tab, fetchEndlessRows, "Personne n'a encore dépassé le Cœur du Pulse");
+  } else loadGlobal(tab, fetchTopScores, "Aucun score mondial pour l'instant");
+}
+
+/** Endless : la colonne « PULSE » montre les pulsations franchies (vagues après le boss final). */
+async function fetchEndlessRows() {
+  const rows = await fetchEndlessScores();
+  return rows.map((r) => ({ ...r, name: r.nightmare ? `${r.name} ☠` : r.name, wave: r.pulse }));
 }
 
 async function loadGlobal(tab, fetchRows, emptyText) {

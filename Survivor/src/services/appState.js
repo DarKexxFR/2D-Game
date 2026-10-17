@@ -1,5 +1,5 @@
-// État propre à cet appareil (pas à la progression du compte) : abonnement aux notifications et
-// thèmes choisis. Un abonnement aux notifications appartient au
+// État propre à cet appareil (pas à la progression du compte) : abonnement aux notifications, thèmes
+// choisis et identifiant anonyme des statistiques. Un abonnement aux notifications appartient au
 // navigateur qui l'a créé : il ne doit pas voyager avec la sauvegarde du compte.
 
 import { PUSH, STORAGE_KEYS } from "../config.js";
@@ -16,9 +16,17 @@ import { PUSH, STORAGE_KEYS } from "../config.js";
 
 const defaultTopics = () => Object.fromEntries(Object.keys(PUSH.topics).map((t) => [t, true]));
 
+/**
+ * @typedef {object} AnalyticsState
+ * @property {string} id identifiant anonyme de l'appareil (tiré au hasard, "" = pas encore tiré)
+ * @property {boolean} enabled statistiques anonymes acceptées (Options)
+ */
+
 export const appState = {
   /** @type {PushState} */
   push: { enabled: false, topics: defaultTopics(), endpoint: "", syncedHash: "", syncedAt: 0, askedAt: 0 },
+  /** @type {AnalyticsState} statistiques de fréquentation (voir services/analytics.js) */
+  analytics: { id: "", enabled: true },
 };
 
 export function loadAppState() {
@@ -30,6 +38,7 @@ export function loadAppState() {
       ...push,
       topics: { ...defaultTopics(), ...push.topics },
     };
+    appState.analytics = { ...appState.analytics, ...saved.analytics };
   } catch {
     // État illisible : valeurs par défaut.
   }

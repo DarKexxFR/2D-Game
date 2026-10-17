@@ -88,7 +88,8 @@ function chip(key, value, className, label) {
   if (offer && !ownsSkin(key, value)) {
     btn.classList.add("locked");
     const price = el("span", "skin-price");
-    setLabel(price, `${offer.price} `, "coin", { color: "#ffd700" });
+    if (offer.season) setLabel(price, "SAISON", "season", { color: "#ff00aa" });
+    else setLabel(price, `${offer.price} `, "coin", { color: "#ffd700" });
     btn.append(price);
   }
   btn.addEventListener("click", () => pick(key, value));
@@ -172,8 +173,15 @@ function renderBuyBar() {
   if (!offer) return;
   const part = SKIN_PARTS.find((p) => p.key === trial.key);
   const scope = offer.unlock === "rainbow" ? "toutes les couleurs" : part.title.toLowerCase();
-  setText("skinBuyText", `${offer.name} (${scope}) — à l'essai`);
   const btn = $("btnSkinBuy");
+  if (offer.season) {
+    // Exclusive du passe de saison : à l'essai, mais elle se gagne (écran Saison), elle ne s'achète pas
+    setText("skinBuyText", `${offer.name} (${scope}) — exclusive du passe de saison`);
+    btn.disabled = true;
+    setLabel(btn, "PASSE DE SAISON ", "season", { color: "#888" });
+    return;
+  }
+  setText("skinBuyText", `${offer.name} (${scope}) — à l'essai`);
   btn.disabled = account.gold < offer.price;
   setLabel(
     btn,

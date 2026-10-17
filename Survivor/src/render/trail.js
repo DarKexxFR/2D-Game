@@ -1,4 +1,6 @@
-// Dessin de la traînée du vaisseau (skin) : ruban, particules, étincelles, anneaux, flammes, pixels.
+// Dessin de la traînée du vaisseau (skin) : ruban, particules, étincelles, anneaux, flammes, pixels, et
+// les traînées exclusives du passe de saison (comète, braises, hexagones, éclairs). Celles-ci se passent
+// de shadowBlur (lueur = forme plus large et transparente dessous, voir CLAUDE.md « Performances »).
 
 import { TRAIL } from "../data/skins.js";
 
@@ -97,5 +99,65 @@ const DRAWERS = {
     c.shadowBlur = 6;
     c.shadowColor = p.color;
     c.fillRect(Math.round(p.x - s / 2), Math.round(p.y - s / 2), s, s);
+  },
+  // --- Traînées de saison ---
+  comet(c, p, k) {
+    c.shadowBlur = 0;
+    const r = p.size * 0.35 * k;
+    c.globalCompositeOperation = "lighter";
+    c.fillStyle = p.color;
+    c.globalAlpha = k * 0.25;
+    c.beginPath();
+    c.arc(p.x, p.y, r * 2.2, 0, TAU);
+    c.fill();
+    c.globalAlpha = k * 0.9;
+    c.fillStyle = k > 0.7 ? "#ffffff" : p.color;
+    c.beginPath();
+    c.arc(p.x, p.y, Math.max(0.5, r * 0.7), 0, TAU);
+    c.fill();
+    c.globalCompositeOperation = "source-over";
+  },
+  embers(c, p, k) {
+    c.shadowBlur = 0;
+    const r = Math.max(0.6, p.size * 0.16 * (0.5 + k));
+    const flicker = 0.6 + 0.4 * Math.sin(p.life * 0.9 + p.seed * 10);
+    c.globalCompositeOperation = "lighter";
+    c.globalAlpha = k * flicker;
+    c.fillStyle = k > 0.5 ? "#ffd27a" : p.color;
+    c.beginPath();
+    c.arc(p.x, p.y - (1 - k) * 10, r, 0, TAU);
+    c.fill();
+    c.globalCompositeOperation = "source-over";
+  },
+  hex(c, p, k) {
+    c.shadowBlur = 0;
+    const r = p.size * (0.2 + (1 - k) * 0.45);
+    c.globalAlpha = k * 0.8;
+    c.strokeStyle = p.color;
+    c.lineWidth = 1.5;
+    c.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = p.seed * TAU + (1 - k) * 1.5 + (i * TAU) / 6;
+      if (i === 0) c.moveTo(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+      else c.lineTo(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+    }
+    c.closePath();
+    c.stroke();
+  },
+  bolt(c, p, k) {
+    c.shadowBlur = 0;
+    const r = p.size * 0.5;
+    c.globalAlpha = k;
+    c.strokeStyle = k > 0.6 ? "#ffffff" : p.color;
+    c.lineWidth = 1.5 + k;
+    c.beginPath();
+    let x = p.x - r;
+    c.moveTo(x, p.y);
+    for (let i = 1; i <= 4; i++) {
+      x += r / 2;
+      const jag = (((p.seed * 997 + i * 31 + p.life) % 7) / 7 - 0.5) * r;
+      c.lineTo(x, p.y + jag);
+    }
+    c.stroke();
   },
 };

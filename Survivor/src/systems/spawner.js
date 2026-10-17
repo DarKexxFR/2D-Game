@@ -22,6 +22,7 @@ import { clampToZone } from "./arena.js";
 import { addFloatingText, createParticles, createSpawnEffect } from "./effects.js";
 import { arenaPointNear } from "./pickups.js";
 import { recordBest, recordWave } from "../services/achievements.js";
+import { onEndlessWave, victoryPending } from "./endless.js";
 
 const SHRINES = [
   { type: "frenzy", name: "FRÉNÉSIE", color: "#ff2244", icon: "rage" },
@@ -37,6 +38,7 @@ export function updateSpawning() {
     spawnPendingBosses();
     return;
   }
+  if (victoryPending()) return; // boss final vaincu : célébration avant l'écran de victoire
   updateWaveTimer();
   if (!bossFight()) spawnMobs(); // pendant un vrai boss : aucun petit ennemi
   spawnPendingBosses();
@@ -53,7 +55,7 @@ function updateWaveTimer() {
 }
 
 function spawnMobs() {
-  const minMobs = W.baseMobs + game.wave * W.mobsPerWave;
+  const minMobs = (W.baseMobs + game.wave * W.mobsPerWave) * (game.modifier.mobCount || 1);
   if (world.enemies.length < minMobs) {
     spawnEnemy();
   } else if (--game.spawnTimer <= 0) {
@@ -130,6 +132,7 @@ export function startNextWave() {
   game.nextWaveTimer = 0;
   const before = biomeForWave(game.wave);
   game.wave++;
+  onEndlessWave(); // Endless Pulse : nouvelle mutation avant l'arrivée des ennemis de la vague
   spawnWave();
   const label = game.rush ? "BOSS " + game.rush.stage : "VAGUE " + game.wave;
   addFloatingText(player.worldX, player.worldY - 50, label, "#00ffff", 30, 120);
@@ -142,6 +145,7 @@ export function startNextWave() {
 export function scheduleNextWave() {
   if (game.nextWaveTimer > 0) return;
   if (game.rush) return scheduleNextRushBoss();
+  if (victoryPending()) return; // victoire : la suite dépend du choix du joueur (systems/endless.js)
   addFloatingText(player.worldX, player.worldY - 100, "BOSS VAINCU - VAGUE SUIVANTE!", "#00ff00", 24, 100);
   game.nextWaveTimer = NEXT_WAVE_DELAY;
 }

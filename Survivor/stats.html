@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Statistiques — Last Pulse</title>
+    <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+    <link rel="stylesheet" href="css/stats.css" />
+  </head>
+  <!-- Tableau de bord des statistiques de fréquentation (src/stats/statsPage.js, RPC admin_stats),
+       réservé aux comptes listés dans la table analytics_admins : voir supabase/STATISTIQUES.md. -->
+  <body>
+    <header class="st-head">
+      <div>
+        <h1>LAST PULSE · STATISTIQUES</h1>
+        <p id="stSub" class="st-sub">Chargement...</p>
+      </div>
+      <div class="st-actions">
+        <div class="st-period" role="radiogroup" aria-label="Période">
+          <button data-days="7" role="radio">7 J</button>
+          <button data-days="30" role="radio">30 J</button>
+          <button data-days="90" role="radio">90 J</button>
+        </div>
+        <button id="stRefresh" class="st-refresh">ACTUALISER</button>
+      </div>
+    </header>
+
+    <main>
+      <p id="stMessage" class="st-message" hidden></p>
+
+      <div id="stContent" hidden>
+        <section class="st-kpis" id="stKpis"></section>
+
+        <section class="st-grid">
+          <article class="st-card st-wide">
+            <h2>Joueurs par jour</h2>
+            <p class="st-legend">
+              <span class="dot c1"></span> joueurs <span class="dot c2"></span> nouveaux
+            </p>
+            <canvas id="chPlayers" height="220"></canvas>
+          </article>
+          <article class="st-card st-wide">
+            <h2>Temps de jeu par jour (minutes)</h2>
+            <p class="st-legend">
+              <span class="dot c3"></span> présent dans le jeu <span class="dot c4"></span> en partie
+            </p>
+            <canvas id="chTime" height="220"></canvas>
+          </article>
+          <article class="st-card">
+            <h2>Heure d'arrivée</h2>
+            <canvas id="chHours" height="200"></canvas>
+          </article>
+          <article class="st-card">
+            <h2>Durée des sessions</h2>
+            <canvas id="chLengths" height="200"></canvas>
+          </article>
+          <article class="st-card">
+            <h2>Vague atteinte (survie)</h2>
+            <canvas id="chWaves" height="200"></canvas>
+          </article>
+          <article class="st-card">
+            <h2>Modes joués</h2>
+            <table id="tbModes" class="st-table"></table>
+          </article>
+          <article class="st-card">
+            <h2>Tué par</h2>
+            <table id="tbKillers" class="st-table"></table>
+          </article>
+          <article class="st-card">
+            <h2>Héros et armes</h2>
+            <table id="tbHeroes" class="st-table"></table>
+            <table id="tbWeapons" class="st-table"></table>
+          </article>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="src/stats/statsPage.js"></script>
+  </body>
+</html>

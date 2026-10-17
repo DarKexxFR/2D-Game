@@ -38,7 +38,7 @@ function updateCorruption() {
 
 export function updateHud() {
   // Boss Rush : numéro du boss au lieu de la vague, et pas de minuteur
-  setText("waveLabel", game.rush ? "BOSS" : "VAGUE");
+  setText("waveLabel", game.rush ? "BOSS" : game.endless ? `PULSE ${game.endless.depth} · VAGUE` : "VAGUE");
   // Facile / Cauchemar : numéro de vague à la couleur du niveau (la place manque pour son nom)
   const diff = game.difficulty !== "normal" && !game.rush ? game.difficulty : "";
   if ($("wave").dataset.diff !== diff) {
