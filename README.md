@@ -85,6 +85,9 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 
 **Application**
 
+- **Référencement** (moteurs de recherche et IA) : phrase de présentation dans le HTML de l'accueil (lisible
+  sans JavaScript, affichée pendant le chargement), données structurées schema.org `VideoGame`, résumé
+  [`llms.txt`](Survivor/llms.txt), `robots.txt` et `sitemap.xml`.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
   ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
@@ -142,6 +145,8 @@ Survivor/
 ├── manifest.webmanifest  # Application installable : nom, icônes, raccourcis
 ├── sw.js                 # Service worker : jeu hors connexion et notifications
 ├── legal.html            # CGU et confidentialité
+├── llms.txt              # Résumé du jeu pour les IA (référencement)
+├── robots.txt, sitemap.xml # Référencement : pages à explorer (stats.html exclue)
 ├── stats.html            # Statistiques des joueurs (administrateurs, voir supabase/STATISTIQUES.md)
 ├── assets/               # Logo, icônes, musiques
 ├── css/                  # Un fichier par écran (base, hud, menus, home, inventory, versus...)

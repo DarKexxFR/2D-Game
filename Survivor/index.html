@@ -9,23 +9,60 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1a0b2e" />
-    <title>Last Pulse</title>
-    <!-- Référencement : texte et image affichés par Google et lors d'un partage de lien -->
+    <title>Last Pulse : jeu de survie roguelike spatial gratuit dans le navigateur</title>
+    <!-- Référencement (moteurs de recherche et IA) : texte et image affichés par Google et lors d'un partage
+         de lien, données structurées schema.org ci-dessous, résumé pour les IA dans llms.txt -->
     <meta
       name="description"
-      content="Last Pulse : jeu de survie néon gratuit dans le navigateur. Survivez aux vagues d'ennemis, affrontez les boss, améliorez votre vaisseau et défiez vos amis en duel."
+      content="Last Pulse est un jeu de survie roguelike spatial (bullet heaven) gratuit, jouable dans le navigateur et installable (PWA) : vagues d'ennemis, boss, Boss Rush et duels 1v1 en ligne."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://last-pulse.com/" />
+    <link
+      rel="alternate"
+      type="text/markdown"
+      href="https://last-pulse.com/llms.txt"
+      title="Résumé pour les IA"
+    />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Last Pulse" />
-    <meta property="og:title" content="Last Pulse" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Last Pulse : jeu de survie roguelike spatial gratuit" />
     <meta
       property="og:description"
-      content="Jeu de survie néon gratuit dans le navigateur : vagues d'ennemis, boss, duels."
+      content="Jeu de survie néon gratuit dans le navigateur : vagues d'ennemis, boss, Boss Rush, duels 1v1 en ligne classés."
     />
     <meta property="og:url" content="https://last-pulse.com/" />
     <meta property="og:image" content="https://last-pulse.com/assets/og-image.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Logo de Last Pulse" />
     <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Last Pulse",
+        "url": "https://last-pulse.com/",
+        "description": "Last Pulse est un jeu vidéo de survie et de stratégie de type roguelike spatial (bullet heaven) jouable gratuitement dans le navigateur web, et installable comme application (PWA). Le joueur survit à des vagues d'ennemis, affronte des boss, améliore son vaisseau et son équipement, et défie d'autres joueurs en duel 1v1 en ligne.",
+        "inLanguage": "fr",
+        "genre": ["Roguelike", "Bullet heaven", "Shoot 'em up", "Survie", "Action"],
+        "gamePlatform": ["Navigateur web", "Mobile (navigateur)", "Progressive Web App"],
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Tout navigateur récent (ordinateur, Android, iPhone)",
+        "playMode": ["SinglePlayer", "MultiPlayer"],
+        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "image": "https://last-pulse.com/assets/og-image.png",
+        "screenshot": [
+          "https://last-pulse.com/assets/screenshots/partie-large.jpg",
+          "https://last-pulse.com/assets/screenshots/partie-mobile.jpg"
+        ],
+        "author": { "@type": "Person", "name": "DarKexxFR" },
+        "publisher": { "@type": "Person", "name": "DarKexxFR" }
+      }
+    </script>
     <!-- Favicons : Google exige un carré multiple de 48 px (favicon-48, icon-192) -->
     <link rel="icon" href="favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg" />
@@ -79,12 +116,24 @@
         <div class="loading-box">
           <img class="loading-logo" src="assets/logo-mark.svg" alt="" width="96" height="96" />
           <div class="loading-title">LAST PULSE</div>
+          <!-- Texte présent dès le HTML (lisible sans JavaScript par les moteurs de recherche et les IA) -->
+          <p class="loading-desc">
+            Last Pulse est un jeu vidéo de survie et de stratégie de type roguelike spatial (bullet heaven),
+            jouable gratuitement dans le navigateur web et installable comme application (PWA).
+          </p>
           <div class="loading-track"><div id="loadingFill" class="loading-fill"></div></div>
           <div class="loading-info">
             <span id="loadingLabel">Chargement du jeu...</span>
             <span id="loadingPercent">0 %</span>
           </div>
           <button id="btnLoadingRetry" class="loading-retry">RÉESSAYER</button>
+          <noscript>
+            <p class="loading-noscript">
+              Last Pulse a besoin de JavaScript : activez-le pour jouer. Au programme : survie en vagues
+              d'ennemis sur 5 biomes, boss, Boss Rush, défi du jour, mode Endless Pulse, saison mensuelle et
+              duel 1v1 en ligne classé ELO. Résumé complet : <a href="llms.txt">llms.txt</a>.
+            </p>
+          </noscript>
         </div>
       </div>
 

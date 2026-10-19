@@ -72,6 +72,11 @@ Principes :
   last-pulse.com, `Survivor/ads.txt`).
   Utilisées pour revivre (1 fois par partie, jamais en défi du jour) et le coffre bonus (limité par jour).
   Dans les tests, `killPlayer` / `declineRevive` refusent l'offre « revivre ».
+- **Référencement** (moteurs de recherche et IA) : `index.html` porte la meta description, Open Graph, un JSON-LD
+  schema.org `VideoGame` et la phrase de présentation `.loading-desc` dans l'écran de chargement (vrai texte dans le
+  HTML initial, lisible sans JavaScript). `Survivor/llms.txt` résume le jeu pour les IA, `robots.txt` exclut
+  `stats.html`, `sitemap.xml` liste les pages. Nouveau mode ou grosse fonctionnalité = mettre à jour `llms.txt`
+  et le JSON-LD (faits exacts seulement). Tests : `tests/seo.spec.js`.
 - **Pages légales** : `Survivor/legal.html` (CGU + confidentialité). À mettre à jour à chaque nouvelle
   donnée collectée ou nouvelle régie pub. Éditeur : pseudo DarKexxFR (site non commercial) ;
   contact choisi par le propriétaire. À repasser en version professionnelle (identité, statut)
