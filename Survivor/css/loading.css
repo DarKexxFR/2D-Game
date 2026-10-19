@@ -137,3 +137,18 @@ body.booting #gameContainer > :not(#loadingScreen) {
     animation: none;
   }
 }
+
+/* Phrase de présentation (aussi lue par les moteurs de recherche et les IA) et message sans JavaScript. */
+.loading-desc,
+.loading-noscript {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.loading-noscript a {
+  color: #00ffff;
+}

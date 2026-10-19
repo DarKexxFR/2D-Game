@@ -1,0 +1,7 @@
+# Last Pulse : tout le site peut être exploré (moteurs de recherche et IA), sauf le tableau de bord privé.
+# Résumé destiné aux IA : https://last-pulse.com/llms.txt
+User-agent: *
+Allow: /
+Disallow: /stats.html
+
+Sitemap: https://last-pulse.com/sitemap.xml

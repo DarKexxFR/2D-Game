@@ -1,0 +1,48 @@
+# Last Pulse
+
+> Last Pulse est un jeu vidéo de survie et de stratégie de type roguelike spatial (bullet heaven, style
+> Vampire Survivors), au style néon / cyber. Il est gratuit, se joue directement dans le navigateur web
+> (ordinateur, Android, iPhone) et s'installe comme application (PWA), sans boutique d'applications.
+
+Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour jouer ; un compte facultatif
+(Google, Discord ou code par e-mail) permet de retrouver sa progression sur plusieurs appareils.
+
+## Informations clés
+
+- Site officiel : https://last-pulse.com/
+- Type : jeu web, Progressive Web App (installable, jouable hors connexion une fois installée)
+- Genre : roguelike, bullet heaven, survie en vagues, action
+- Prix : gratuit (publicités récompensées facultatives, pour revivre ou ouvrir un coffre bonus)
+- Joueurs : solo, ou duel 1 contre 1 (sur un même écran ou en ligne)
+- Commandes : clavier et souris (ZQSD / WASD, Espace pour le dash), écran tactile sur mobile ; tir automatique
+- Éditeur : DarKexxFR (projet indépendant, non commercial)
+
+## Gameplay
+
+- Le joueur pilote un vaisseau qui tire tout seul et doit survivre à des vagues d'ennemis de plus en plus
+  fortes. Chaque niveau gagné propose un choix d'améliorations ; certaines armes évoluent.
+- 5 biomes de 6 vagues : Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale.
+- Boss à attaques annoncées (Roi Slime, Titan de l'orage, Sentinelle prismatique, Kraken, Jumeaux de feu et
+  de glace, Ver des sables, Mère-Ruche, Chronophage, Hacker...) jusqu'au boss final, le Cœur du Pulse (vague 30).
+- Cartes corrompues (gros bonus contre un malus), sanctuaires maudits, événements de carte, boîte mystère.
+
+## Modes de jeu
+
+- Survie en vagues, en Facile, Normal ou Cauchemar.
+- Défi du jour : la même partie pour tous les joueurs.
+- Boss Rush : les boss à la suite.
+- Endless Pulse : après la victoire contre le Cœur du Pulse, la partie continue avec des mutations cumulées.
+- Duel 1v1 : chaque joueur joue sa partie de survie, les éliminations envoient des ennemis et des sorts à
+  l'adversaire, le premier mort perd. En ligne, classement ELO pour les joueurs connectés ; défis entre amis.
+
+## Progression
+
+- Équipement en 5 emplacements (héros, familier, arme, armure, module), raretés de commun à mythique.
+- Talents, succès, quêtes hebdomadaires, série de connexion sur 7 jours, skins du vaisseau.
+- Saison mensuelle avec un passe gratuit de 30 paliers et un classement de saison.
+- Classements mondiaux : Normal, saison, Cauchemar, Endless, défi du jour, duel ELO.
+
+## Liens
+
+- [Jouer à Last Pulse](https://last-pulse.com/)
+- [Conditions d'utilisation et confidentialité](https://last-pulse.com/legal.html)

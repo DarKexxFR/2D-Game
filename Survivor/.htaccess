@@ -9,3 +9,5 @@ AddType text/javascript .js .mjs
 # Manifeste de l'application installable (PWA). sw.js suit la règle ci-dessus : toujours revérifié,
 # donc une nouvelle version du service worker est vue dès la visite suivante.
 AddType application/manifest+json .webmanifest
+# Référencement : llms.txt (accents), robots.txt et sitemap.xml servis en UTF-8.
+AddCharset UTF-8 .txt .xml
