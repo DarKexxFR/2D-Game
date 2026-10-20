@@ -155,6 +155,15 @@ function send(name, args, keepalive = false) {
     });
 }
 
+/**
+ * Identifiants anonymes de l'appareil et de la session, pour les rapports d'erreurs (services/errorReports.js) ;
+ * null si les statistiques sont refusées ou Supabase absent : rien ne doit alors partir.
+ */
+export function analyticsIdentity() {
+  if (!enabled() || !session.id) return null;
+  return { device: deviceId(), session: session.id };
+}
+
 /** Options : statistiques anonymes acceptées ou non sur cet appareil. */
 export function analyticsEnabled() {
   return appState.analytics.enabled;

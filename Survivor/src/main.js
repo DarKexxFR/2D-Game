@@ -1,11 +1,23 @@
 // Point d'entrée : initialise l'UI, gère le cycle de vie d'une partie
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
+// En premier : le journal de diagnostic écoute les erreurs dès le chargement des autres modules
+import { logEvent, logThrottled, markFrame, setDiagnosticContext, watch } from "./services/diagnostics.js";
 import { DIFFICULTIES, LIMITS, LOADING, NET, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
-import { camera, game, mysteryBox, player, resetGame, resetMysteryBox, resetPlayer } from "./core/state.js";
+import {
+  camera,
+  game,
+  mysteryBox,
+  player,
+  resetGame,
+  resetMysteryBox,
+  resetPlayer,
+  world,
+} from "./core/state.js";
+import { settings } from "./services/settings.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
 import { playRandomMusic, stopMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
@@ -81,6 +93,7 @@ import { initQuestMenu, openQuests } from "./ui/questMenu.js";
 import { announceRolledOver, initSeasonMenu, openSeason } from "./ui/seasonMenu.js";
 import { addRunSeasonXp } from "./services/season.js";
 import { initAnalytics, trackRun } from "./services/analytics.js";
+import { initErrorReports } from "./services/errorReports.js";
 import { currentUser } from "./services/auth.js";
 import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
@@ -173,6 +186,7 @@ function startGame(mode = "normal") {
   resetUpgradeMenu();
   setAutoPick(false);
   setupRun(mode, mode === "normal" ? selectedDifficulty() : "normal");
+  logEvent("partie", `début ${mode} · ${game.difficulty}`);
   game.endlessAllowed = mode === "normal"; // victoire puis Endless Pulse : survie normale seulement
   if (mode === "normal") startTutorial();
   else stopTutorial();
@@ -230,6 +244,7 @@ function setupRun(mode, difficulty = "normal") {
  * sinon écran scindé sur cet appareil.
  */
 function startDuel(online = null, names = []) {
+  logEvent("partie", `début duel ${online ? `en ligne (${online.role})` : "sur un écran"}`);
   commitPseudo();
   playRandomMusic();
   restoreRandom();
@@ -355,6 +370,7 @@ function applyModifierToPlayer(mod) {
 }
 
 function returnToMenu() {
+  if (game.started) logEvent("partie", "quittée");
   if (game.started && !runReported) reportRun(versus.active ? "duel" : lastMode, "abandon");
   stopKillCam();
   restoreRandom();
@@ -401,6 +417,7 @@ function reportLater(err) {
 
 /** Bilan de la partie terminée (récompenses, records, classement) puis écran de fin. */
 function settleRun() {
+  logEvent("partie", `fin · vague ${game.wave} · ${game.over ? "mort" : "victoire"}`);
   restoreRandom();
   stopTutorial();
   showTouchControls(false);
@@ -588,6 +605,15 @@ function frame(now) {
   // Image suivante demandée d'abord : une erreur dans cette image ne doit jamais arrêter la boucle
   // (avant, la moindre exception figeait le jeu pour de bon, écran compris).
   requestAnimationFrame(frame);
+  const start = performance.now();
+  try {
+    runFrame(now);
+  } finally {
+    markFrame(start); // journal de diagnostic : images lentes, boucle arrêtée
+  }
+}
+
+function runFrame(now) {
   const elapsed = Math.min(now - lastFrame, 250); // borne : évite la « spirale » après un onglet en arrière-plan
   lastFrame = now;
   if (game.started) {
@@ -598,6 +624,7 @@ function frame(now) {
     // ralentir la partie au lieu d'enchaîner des images de plus en plus lourdes (gel).
     for (let n = 0; accumulator >= TICK_MS; n++) {
       if (n >= LIMITS.ticksPerFrame) {
+        logThrottled("lag", "lenteur", "l'appareil ne suit plus : partie ralentie");
         accumulator = 0;
         break;
       }
@@ -617,6 +644,43 @@ function frame(now) {
 
 // --- INITIALISATION ---
 
+/** Journal de diagnostic (services/diagnostics.js) : état du jeu joint aux rapports, valeurs suivies. */
+function initDiagnostics() {
+  const mode = () =>
+    !game.started ? "accueil" : versus.active ? (versus.online ? "duel en ligne" : "duel") : lastMode;
+  const bosses = () =>
+    world.enemies
+      .filter((e) => e.isBoss)
+      .map((e) => e.name || e.type)
+      .join(", ");
+  setDiagnosticContext(() => ({
+    screen: currentScreen() || "jeu",
+    mode: mode(),
+    difficulty: game.started ? game.difficulty : undefined,
+    running: game.running,
+    paused: game.paused,
+    over: game.over,
+    wave: game.started ? game.wave : undefined,
+    pulse: game.endless?.depth,
+    rush: game.rush?.stage,
+    seconds: game.started ? Math.round(game.time / 1000) : undefined,
+    level: game.started ? player.level : undefined,
+    health: game.started ? `${Math.ceil(player.health)}/${Math.round(player.maxHealth)}` : undefined,
+    hero: game.started ? player.hero?.id : undefined,
+    weapon: game.started ? player.weapon?.id : undefined,
+    bosses: game.started ? bosses() : undefined,
+    enemies: game.started ? world.enemies.length : undefined,
+    shots: game.started ? world.projectiles.length + world.enemyProjectiles.length : undefined,
+    event: game.mapEvent?.type,
+    quality: settings.quality,
+  }));
+  watch("écran", () => currentScreen() || "jeu");
+  watch("mode", mode);
+  watch("vague", () => (game.started ? game.wave : "—"));
+  watch("boss", () => (game.started && bosses()) || "aucun");
+  watch("pause", () => (game.started && game.paused ? "oui" : "non"));
+}
+
 /**
  * Branche les menus et les commandes. Renvoie la vérification du compte connecté (en cours),
  * que l'écran de chargement attend avant d'ouvrir l'accueil.
@@ -629,6 +693,8 @@ function init() {
     playing: () => game.started && game.running && !game.paused,
     loggedIn: () => !!currentUser(),
   });
+  initErrorReports();
+  initDiagnostics();
   initCloudSave();
   initAds();
   ensureStarterItems();

@@ -96,6 +96,9 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Statistiques anonymes** (désactivables dans les Options) : nombre de joueurs, temps passé, parties, sur
   la page [`stats.html`](Survivor/stats.html) réservée aux administrateurs. Mise en place :
   [`supabase/STATISTIQUES.md`](supabase/STATISTIQUES.md).
+- **Journal de diagnostic** : le jeu note ce qui se passe (écrans, vague, boss, erreurs, images lentes) ; une
+  erreur ou un gel part en rapport anonyme vers la partie « Erreurs du jeu » de `stats.html` (pile d'appels, état
+  de la partie, dernières actions, appareil, version). Le joueur peut aussi copier son journal dans les Options.
 - **Notifications** facultatives : série de connexion en danger, nouvelles quêtes du lundi, demandes d'ami,
   rappels après une absence. Thèmes réglables dans les Options. Mise en place :
   [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
@@ -160,7 +163,7 @@ Survivor/
     │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
     ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
-    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, sons, pubs
+    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, diagnostic, sons, pubs
     ├── stats/            # Page des statistiques (tableau de bord, graphiques)
     └── utils/            # Maths, grille spatiale
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)

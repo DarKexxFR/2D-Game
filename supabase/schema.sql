@@ -1151,18 +1151,199 @@ begin
   return result;
 end $$;
 
--- Nettoyage : données de plus de 13 mois (à planifier avec pg_cron, voir STATISTIQUES.md)
+-- =====================================================================
+-- Rapports d'erreurs (journal de diagnostic du jeu, voir supabase/STATISTIQUES.md)
+-- Envoyés par services/errorReports.js si le joueur accepte les statistiques anonymes : même identifiant
+-- d'appareil tiré au hasard, ni pseudo, ni compte, ni adresse IP. Une erreur = une empreinte (même message au
+-- même endroit du code) regroupant ses rapports ; seuls les 20 derniers rapports détaillés de chaque erreur
+-- sont gardés. Lecture par admin_errors / admin_error_reports, réservées aux comptes de analytics_admins.
+-- =====================================================================
+
+create table if not exists public.error_groups (
+  fingerprint text primary key,
+  kind text not null, -- error, rejection, load (fichier non chargé), freeze (boucle du jeu arrêtée)
+  message text not null,
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  occurrences int not null default 0, -- fois où l'erreur s'est produite (plusieurs par session possibles)
+  reports int not null default 0, -- rapports reçus (au plus un par session de jeu)
+  devices int not null default 0, -- appareils touchés
+  first_build text not null default '',
+  last_build text not null default '',
+  resolved_at timestamptz, -- marquée corrigée dans stats.html
+  regressed_at timestamptz -- revenue après avoir été marquée corrigée
+);
+
+create table if not exists public.error_devices (
+  fingerprint text not null references public.error_groups (fingerprint) on delete cascade,
+  device uuid not null,
+  primary key (fingerprint, device)
+);
+
+create table if not exists public.error_reports (
+  id uuid primary key, -- tiré par le jeu : un rapport renvoyé deux fois n'est compté qu'une fois
+  fingerprint text not null references public.error_groups (fingerprint) on delete cascade,
+  device uuid not null,
+  session uuid,
+  created_at timestamptz not null default now(),
+  occurred_at timestamptz not null default now(),
+  kind text not null,
+  message text not null,
+  stack text not null default '',
+  build text not null default '',
+  count int not null default 1,
+  context jsonb not null default '{}'::jsonb, -- état du jeu (écran, mode, vague, boss, vie...)
+  journal jsonb not null default '[]'::jsonb, -- dernières lignes du journal [horodatage ms, catégorie, texte]
+  device_info jsonb not null default '{}'::jsonb -- navigateur, système, taille d'écran (sans identifiant)
+);
+
+create index if not exists error_reports_group_idx on public.error_reports (fingerprint, created_at desc);
+create index if not exists error_reports_device_idx on public.error_reports (device, created_at);
+create index if not exists error_reports_created_idx on public.error_reports (created_at);
+create index if not exists error_groups_seen_idx on public.error_groups (last_seen);
+
+alter table public.error_groups enable row level security;
+alter table public.error_devices enable row level security;
+alter table public.error_reports enable row level security;
+revoke all on public.error_groups, public.error_devices, public.error_reports from anon, authenticated;
+
+-- Un rapport d'erreur. Valeurs bornées ; au plus 20 rapports par appareil et par heure, 1000 en tout par heure.
+create or replace function public.report_error(
+  p_id uuid, p_device uuid, p_session uuid, p_kind text, p_fingerprint text, p_message text, p_stack text,
+  p_build text, p_occurred_at timestamptz, p_count int, p_context jsonb, p_journal jsonb, p_device_info jsonb
+) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_at timestamptz := least(now(), greatest(coalesce(p_occurred_at, now()), now() - interval '30 days'));
+  v_count int := least(greatest(coalesce(p_count, 1), 1), 100000);
+  v_message text := left(coalesce(nullif(p_message, ''), '?'), 300);
+  v_build text := left(coalesce(p_build, ''), 40);
+begin
+  if p_id is null or p_device is null or coalesce(p_fingerprint, '') !~ '^[0-9a-f]{8}$'
+     or p_kind not in ('error', 'rejection', 'load', 'freeze') then
+    return;
+  end if;
+  if exists (select 1 from error_reports where id = p_id) then return; end if;
+  if (select count(*) from error_reports where device = p_device and created_at > now() - interval '1 hour') >= 20
+     or (select count(*) from error_reports where created_at > now() - interval '1 hour') >= 1000 then
+    return;
+  end if;
+  -- Morceaux trop gros ou mal formés : remplacés par une valeur vide plutôt que refusés
+  if p_context is null or jsonb_typeof(p_context) <> 'object' or octet_length(p_context::text) > 4000 then
+    p_context := '{}'::jsonb;
+  end if;
+  if p_journal is null or jsonb_typeof(p_journal) <> 'array' or octet_length(p_journal::text) > 20000 then
+    p_journal := '[]'::jsonb;
+  end if;
+  if p_device_info is null or jsonb_typeof(p_device_info) <> 'object' or octet_length(p_device_info::text) > 1000 then
+    p_device_info := '{}'::jsonb;
+  end if;
+
+  insert into error_groups as g (fingerprint, kind, message, first_seen, last_seen, occurrences, reports, first_build, last_build)
+  values (p_fingerprint, p_kind, v_message, v_at, v_at, v_count, 1, v_build, v_build)
+  on conflict (fingerprint) do update set
+    last_seen = greatest(g.last_seen, v_at),
+    message = excluded.message,
+    last_build = case when v_at >= g.last_seen then excluded.last_build else g.last_build end,
+    occurrences = g.occurrences + v_count,
+    reports = g.reports + 1,
+    -- Marquée corrigée, mais revue depuis : elle revient dans la liste
+    regressed_at = case when g.resolved_at is not null and v_at > g.resolved_at then now() else g.regressed_at end,
+    resolved_at = case when g.resolved_at is not null and v_at > g.resolved_at then null else g.resolved_at end;
+
+  insert into error_devices (fingerprint, device) values (p_fingerprint, p_device) on conflict do nothing;
+  if found then
+    update error_groups set devices = devices + 1 where fingerprint = p_fingerprint;
+  end if;
+
+  insert into error_reports (id, fingerprint, device, session, occurred_at, kind, message, stack, build, count, context, journal, device_info)
+  values (p_id, p_fingerprint, p_device, p_session, v_at, p_kind, v_message, left(coalesce(p_stack, ''), 4000),
+          v_build, v_count, p_context, p_journal, p_device_info);
+
+  -- Les 20 derniers rapports détaillés par erreur suffisent
+  delete from error_reports where fingerprint = p_fingerprint and id in (
+    select id from error_reports where fingerprint = p_fingerprint order by created_at desc offset 20);
+end $$;
+
+-- Liste des erreurs vues sur la période (page stats.html), les plus récentes d'abord
+create or replace function public.admin_errors(p_days int default 30)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_days int := least(greatest(coalesce(p_days, 30), 1), 365);
+begin
+  if not exists (select 1 from analytics_admins where user_id = auth.uid()) then
+    raise exception 'Statistiques réservées aux administrateurs' using errcode = '42501';
+  end if;
+  return jsonb_build_object(
+    'generated_at', now(),
+    'days', v_days,
+    'groups', (
+      select coalesce(jsonb_agg(to_jsonb(g) order by g.resolved_at is not null, g.last_seen desc), '[]'::jsonb)
+      from (
+        select fingerprint, kind, message, first_seen, last_seen, occurrences, reports, devices,
+               first_build, last_build, resolved_at, regressed_at
+        from error_groups where last_seen >= now() - make_interval(days => v_days)
+        order by last_seen desc limit 200
+      ) g
+    )
+  );
+end $$;
+
+-- Derniers rapports détaillés d'une erreur (pile d'appels, état du jeu, journal, appareil)
+create or replace function public.admin_error_reports(p_fingerprint text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from analytics_admins where user_id = auth.uid()) then
+    raise exception 'Statistiques réservées aux administrateurs' using errcode = '42501';
+  end if;
+  return (
+    select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc), '[]'::jsonb)
+    from (
+      select id, created_at, occurred_at, kind, message, stack, build, count, context, journal, device_info
+      from error_reports where fingerprint = p_fingerprint order by created_at desc limit 10
+    ) r
+  );
+end $$;
+
+-- Erreur marquée corrigée (ou rouverte) depuis stats.html
+create or replace function public.admin_error_resolve(p_fingerprint text, p_resolved boolean)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from analytics_admins where user_id = auth.uid()) then
+    raise exception 'Statistiques réservées aux administrateurs' using errcode = '42501';
+  end if;
+  update error_groups set
+    resolved_at = case when p_resolved then now() else null end,
+    regressed_at = case when p_resolved then null else regressed_at end
+  where fingerprint = p_fingerprint;
+end $$;
+
+-- Nettoyage : statistiques de plus de 13 mois, rapports d'erreurs détaillés de plus de 90 jours, erreurs plus
+-- vues depuis 13 mois (à planifier avec pg_cron, voir STATISTIQUES.md)
 create or replace function public.analytics_purge() returns void
 language sql security definer set search_path = public as $$
   delete from analytics_sessions where started_at < now() - interval '400 days';
   delete from analytics_devices d where last_seen < now() - interval '400 days'
     and not exists (select 1 from analytics_sessions s where s.device = d.device);
+  delete from error_reports where created_at < now() - interval '90 days';
+  delete from error_groups where last_seen < now() - interval '400 days';
 $$;
 
 revoke all on function public.track_session(uuid, uuid, int, int, int, boolean, boolean, boolean, text, text) from public;
 revoke all on function public.track_run(uuid, uuid, text, text, int, int, int, int, int, text, text, text, boolean) from public;
 revoke all on function public.admin_stats(int, text) from public;
 revoke all on function public.analytics_purge() from public;
+revoke all on function public.report_error(uuid, uuid, uuid, text, text, text, text, text, timestamptz, int, jsonb, jsonb, jsonb) from public;
+revoke all on function public.admin_errors(int) from public;
+revoke all on function public.admin_error_reports(text) from public;
+revoke all on function public.admin_error_resolve(text, boolean) from public;
 grant execute on function public.track_session(uuid, uuid, int, int, int, boolean, boolean, boolean, text, text) to anon, authenticated;
 grant execute on function public.track_run(uuid, uuid, text, text, int, int, int, int, int, text, text, text, boolean) to anon, authenticated;
 grant execute on function public.admin_stats(int, text) to authenticated;
+grant execute on function public.report_error(uuid, uuid, uuid, text, text, text, text, text, timestamptz, int, jsonb, jsonb, jsonb) to anon, authenticated;
+grant execute on function public.admin_errors(int) to authenticated;
+grant execute on function public.admin_error_resolve(text, boolean) to authenticated;
+grant execute on function public.admin_error_reports(text) to authenticated;

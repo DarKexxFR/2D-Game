@@ -6,6 +6,7 @@ import { emit } from "../core/events.js";
 import { isDown, stickDirection } from "../core/input.js";
 import { camera, game, player, world } from "../core/state.js";
 import { playSfx, vibrate } from "../services/sfx.js";
+import { logEvent } from "../services/diagnostics.js";
 import { angleTo, clamp, dist } from "../utils/math.js";
 import {
   addFloatingText,
@@ -196,6 +197,7 @@ export function reviveFromAd() {
  * sont repoussés et les tirs ennemis effacés.
  */
 function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) {
+  logEvent("joueur", `renaissance (${kind})`);
   const { worldX: x, worldY: y } = player;
   for (const e of world.enemies) {
     if (e.dead || e.submerged) continue;

@@ -142,3 +142,81 @@ test("page des statistiques : connexion demandée, compte non admin, tableau de 
   await expect(page.locator("#tbHeroes")).toContainText("Pilote");
   await expect(page.locator("#tbWeapons")).toContainText("Blaster");
 });
+
+test("page des statistiques : erreurs du jeu, détail d'un rapport, marquée corrigée", async ({
+  page,
+  supabase,
+}) => {
+  supabase.adminStats = STATS;
+  const at = Date.parse("2026-10-20T20:00:00Z");
+  supabase.adminErrors = [
+    {
+      fingerprint: "a1b2c3d4",
+      kind: "error",
+      message: "TypeError: Cannot read properties of undefined (reading 'x')",
+      first_seen: "2026-10-19T10:00:00Z",
+      last_seen: "2026-10-20T20:00:00Z",
+      occurrences: 12,
+      reports: 4,
+      devices: 3,
+      first_build: "abc1234",
+      last_build: "def5678",
+      resolved_at: null,
+      regressed_at: "2026-10-20T20:00:00Z",
+    },
+    {
+      fingerprint: "ffff0000",
+      kind: "freeze",
+      message: "Boucle du jeu arrêtée depuis 5 s",
+      first_seen: "2026-10-18T10:00:00Z",
+      last_seen: "2026-10-18T10:00:00Z",
+      occurrences: 1,
+      reports: 1,
+      devices: 1,
+      first_build: "abc1234",
+      last_build: "abc1234",
+      resolved_at: "2026-10-19T08:00:00Z",
+      regressed_at: null,
+    },
+  ];
+  supabase.errorReports.a1b2c3d4 = [
+    {
+      id: "r1",
+      created_at: "2026-10-20T20:00:01Z",
+      occurred_at: new Date(at).toISOString(),
+      kind: "error",
+      message: "TypeError: Cannot read properties of undefined (reading 'x')",
+      stack: "TypeError: ...\n    at updateEnemyProjectiles (/src/systems/enemies.js:120:9)",
+      build: "def5678",
+      count: 2,
+      context: { mode: "normal", wave: 17, bosses: "Ver des sables" },
+      journal: [
+        [at - 3200, "boss", "Ver des sables"],
+        [at, "erreur", "error : TypeError"],
+      ],
+      device_info: { browser: "Chrome 141", os: "Android 14" },
+    },
+  ];
+  await logIn(page, "reda@test.fr");
+  await page.goto("/stats.html");
+  await expect(page.locator("#stErrorsInfo")).toHaveText("1 à corriger · 1 corrigée(s) · 30 derniers jours");
+  const rows = page.locator(".st-error-row");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText("revenue");
+  await expect(rows.nth(1)).toHaveClass(/resolved/);
+
+  await rows.first().click();
+  const detail = page.locator("#stErrorDetail");
+  await expect(detail).toContainText("vue 12 fois sur 3 appareil(s)");
+  await expect(detail.locator("pre")).toContainText(
+    "at updateEnemyProjectiles (/src/systems/enemies.js:120:9)",
+  );
+  await expect(detail.locator("pre")).toContainText("wave=17");
+  await expect(detail.locator("pre")).toContainText("-3.2 s  [boss] Ver des sables");
+  await expect(detail.locator("pre")).toContainText("os=Android 14");
+
+  await detail.getByRole("button", { name: "MARQUER CORRIGÉE" }).click();
+  await expect(rows.first()).toHaveClass(/resolved/);
+  await expect(page.locator("#stErrorsInfo")).toHaveText("0 à corriger · 2 corrigée(s) · 30 derniers jours");
+  await expect(detail.getByRole("button", { name: "ROUVRIR" })).toBeVisible();
+});

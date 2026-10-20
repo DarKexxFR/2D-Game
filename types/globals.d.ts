@@ -10,6 +10,10 @@ interface Window {
     fail(message: string): void;
     done(): void;
   };
+  /** Erreurs levées avant le chargement des modules, posées par boot.js (voir services/diagnostics.js). */
+  __bootErrors?: unknown[];
+  /** Journal de diagnostic en texte, à appeler depuis la console du navigateur (voir services/diagnostics.js). */
+  lastPulseJournal?: () => string;
   /** AudioContext préfixé des anciens Safari. */
   webkitAudioContext?: typeof AudioContext;
   /** File d'attente du script AdSense (H5 Games Ads). */

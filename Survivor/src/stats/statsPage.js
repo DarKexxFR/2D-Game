@@ -7,6 +7,7 @@ import { HEROES, WEAPONS } from "../data/items.js";
 import { getAccessToken, initAuth } from "../services/auth.js";
 import { isOnlineEnabled, rpc } from "../services/supabase.js";
 import { drawBars, drawLines } from "./charts.js";
+import { loadErrors } from "./errorsPanel.js";
 
 const REFRESH_MS = 60_000;
 const MODE_NAMES = {
@@ -40,6 +41,7 @@ async function load() {
   try {
     last = await rpc("admin_stats", { p_days: days }, token);
     render(last);
+    await loadErrors(days, token);
   } catch (err) {
     // Compte non administrateur : rien n'est lu côté serveur (admin_stats), et la page n'en dit pas plus
     if (String(err.message).includes("42501")) message("Page privée : accès refusé pour ce compte.");
