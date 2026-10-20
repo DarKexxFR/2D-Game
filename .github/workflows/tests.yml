@@ -29,7 +29,9 @@ jobs:
 
   e2e:
     name: Jeu (PC + mobile)
-    runs-on: ubuntu-latest
+    # Version d'Ubuntu figée : « ubuntu-latest » est passé à la 26.04, que Playwright 1.56 ne prend pas en charge
+    # (échec dès « playwright install --with-deps »).
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
