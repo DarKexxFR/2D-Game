@@ -3,18 +3,12 @@
 // le joueur voie autant de terrain que sur PC, et le rendu reste net (devicePixelRatio).
 
 import { onSettingsChange } from "../services/settings.js";
+import { QUALITY, gfx } from "./gfx.js";
 
 export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 export const ctx = canvas.getContext("2d");
 
-// Niveaux de qualité graphique (menu Options). Les ombres lumineuses (shadowBlur)
-// sont de loin le plus coûteux : elles sont coupées en qualité basse.
-const QUALITY = {
-  low: { shadows: false, particles: 0.3, maxPixelRatio: 1, damageNumbers: false },
-  medium: { shadows: true, particles: 0.6, maxPixelRatio: 1, damageNumbers: true },
-  high: { shadows: true, particles: 1, maxPixelRatio: 1.5, damageNumbers: true },
-};
-export const gfx = { ...QUALITY.high };
+export { gfx };
 
 // Toutes les écritures de ctx.shadowBlur passent par ici : en qualité basse,
 // les ombres sont ignorées sans avoir à modifier chaque fonction de dessin.

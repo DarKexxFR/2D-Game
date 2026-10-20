@@ -4,6 +4,7 @@
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
 import { WEAPONS } from "./items.js";
+import { SIDE_WEAPONS, SIDE_WEAPON_IDS, SIDE_WEAPON_RULES, sideWeaponOf } from "./sideWeapons.js";
 
 export const UPGRADES = [
   // --- COMMUNES ---
@@ -459,12 +460,67 @@ export const WEAPON_EVOLUTIONS = [
   }),
 ];
 
+// --- ARMES D'APPOINT (data/sideWeapons.js) : une carte par arme, reprise à chaque niveau ---
+// Nouvelle arme seulement s'il reste un emplacement libre ; la carte affiche ce que le niveau suivant apporte.
+export const SIDE_WEAPON_CARDS = SIDE_WEAPON_IDS.map((id) => {
+  const def = SIDE_WEAPONS[id];
+  return {
+    name: def.name,
+    rarity: "weapon",
+    icon: def.icon,
+    desc: def.desc,
+    sideWeapon: id,
+    /** @param {any} p */
+    describe: (p) => {
+      const w = sideWeaponOf(p, id);
+      return w
+        ? def.levels[w.level].desc
+        : `Nouvelle arme : ${def.desc[0].toLowerCase()}${def.desc.slice(1)}`;
+    },
+    canApply: (p) => {
+      const w = sideWeaponOf(p, id);
+      return w ? w.level < SIDE_WEAPON_RULES.maxLevel : p.sideWeapons.length < SIDE_WEAPON_RULES.slots;
+    },
+    apply: (p) => {
+      const w = sideWeaponOf(p, id);
+      if (w) w.level++;
+      else p.sideWeapons.push({ id, level: 1, timer: 0, angle: 0 });
+    },
+  };
+});
+
+// Évolution d'une arme d'appoint : niveau maximum + carte partenaire.
+export const SIDE_EVOLUTIONS = SIDE_WEAPON_IDS.map((id) => {
+  const def = SIDE_WEAPONS[id];
+  return evolution({
+    id: def.evolution.id,
+    name: def.evolution.name,
+    icon: def.icon,
+    desc: def.evolution.desc,
+    base: def.name,
+    baseMax: SIDE_WEAPON_RULES.maxLevel,
+    partner: def.evolution.partner,
+  });
+});
+
+const ALL_EVOLUTIONS = [...WEAPON_EVOLUTIONS, ...SIDE_EVOLUTIONS, ...EVOLUTIONS];
+const ALL_CARDS = [...UPGRADES, ...SIDE_WEAPON_CARDS, ...CORRUPTED_UPGRADES];
+
+/** Texte d'une carte pour `p` (une arme d'appoint décrit son prochain niveau). */
+export const cardDesc = (u, p) => (u.describe ? u.describe(p) : u.desc);
+
+/** Carte (amélioration, arme d'appoint ou corrompue) d'après son nom, ou undefined. */
+export const cardByName = (name) => ALL_CARDS.find((u) => u.name === name);
+
+/** Toutes les évolutions obtenues par `p` (armes équipées, armes d'appoint, améliorations). */
+export const ownedEvolutions = (p) => ALL_EVOLUTIONS.filter((e) => p.evolutions[e.id]);
+
 export function availableUpgrades(p) {
-  return [...UPGRADES, ...CORRUPTED_UPGRADES].filter((u) => !u.canApply || u.canApply(p));
+  return ALL_CARDS.filter((u) => !u.canApply || u.canApply(p));
 }
 
 export function availableEvolutions(p) {
-  return [...WEAPON_EVOLUTIONS, ...EVOLUTIONS].filter((e) => e.canApply(p));
+  return ALL_EVOLUTIONS.filter((e) => e.canApply(p));
 }
 
 /**
@@ -474,7 +530,7 @@ export function availableEvolutions(p) {
 export function evolutionsFor(upgrade, p) {
   if (upgrade.rarity === "evolution") return [];
   const has = (name) => count(p, name) >= 1;
-  return [...WEAPON_EVOLUTIONS, ...EVOLUTIONS].filter((e) => {
+  return ALL_EVOLUTIONS.filter((e) => {
     if (p.evolutions[e.id]) return false;
     if (e.weapon) return e.partner === upgrade.name && p.weapon?.id === e.weapon;
     return (e.partner === upgrade.name && has(e.base)) || (e.base === upgrade.name && has(e.partner));

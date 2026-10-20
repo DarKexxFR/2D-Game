@@ -2,6 +2,9 @@
 
 import { on } from "../core/events.js";
 import { ACHIEVEMENT_GROUPS } from "../data/achievements.js";
+import { BESTIARY_TYPES } from "../data/bestiary.js";
+import { ENEMY_NAMES } from "../data/enemies.js";
+import { bestiaryProgress } from "../services/bestiary.js";
 import { getAchievementProgress } from "../services/achievements.js";
 import { $, el, setWidth } from "./dom.js";
 import { icon, setLabel } from "./icons.js";
@@ -19,6 +22,9 @@ export function initAchievementMenu({ onBack }) {
   $("btnAchievements").addEventListener("click", openAchievements);
   $("btnAchievementsBack").addEventListener("click", onBack);
   on("achievementUnlocked", showAchievementToast);
+  on("bestiaryUnlocked", ({ type, found }) =>
+    showToast(`Bestiaire : ${ENEMY_NAMES[type]} · fiche ${found}/${BESTIARY_TYPES.length}`, "book"),
+  );
 }
 
 function renderAchievements() {
@@ -26,6 +32,8 @@ function renderAchievements() {
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   $("achievementCount").textContent = `${unlockedCount} / ${achievements.length} débloqués`;
   setWidth("achievementTotalBar", unlockedCount / achievements.length);
+  const { found, total } = bestiaryProgress();
+  $("bestiaryCount").textContent = `${found}/${total} fiches`;
 
   const sections = [];
   for (const group of ACHIEVEMENT_GROUPS) {

@@ -45,6 +45,7 @@ import {
   updateOrbitals,
   updateProjectiles,
 } from "./systems/combat.js";
+import { updateSideWeapons } from "./systems/sideWeapons.js";
 import { addFloatingText, updateEffects } from "./systems/effects.js";
 import { activateSkill, updateSkills } from "./systems/skills.js";
 import { updateEnemies } from "./systems/enemies.js";
@@ -586,6 +587,7 @@ function simulate() {
   updateMysteryBox();
   shoot();
   throwKunai();
+  updateSideWeapons();
   updatePet();
   updatePickups();
   updateProjectiles();

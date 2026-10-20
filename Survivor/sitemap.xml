@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Pages à indexer (le jeu est une seule page ; stats.html est privée et exclue). -->
+<!-- Pages à indexer (le jeu, le bestiaire et les CGU ; stats.html est privée et exclue). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://last-pulse.com/</loc>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://last-pulse.com/bestiaire.html</loc>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://last-pulse.com/legal.html</loc>

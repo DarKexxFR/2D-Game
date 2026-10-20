@@ -75,6 +75,28 @@ export function damageEnemy(enemy, amount, source = "other") {
   if (enemy.health <= 0) killEnemy(enemy);
 }
 
+/**
+ * Coup direct d'une arme d'appoint (foudre, onde, faisceau, fouet, mine) : bonus contre les boss,
+ * coup critique et chiffre de dégâts, comme un tir. Renvoie les dégâts infligés.
+ */
+export function strikeEnemy(enemy, base, source) {
+  if (enemy.dead || enemy.submerged) return 0;
+  let damage = base;
+  if (enemy.template.isBoss) damage *= player.bossDamage;
+  const isCrit = Math.random() < player.critChance;
+  if (isCrit) damage *= player.critMultiplier;
+  if (gfx.damageNumbers)
+    addFloatingText(
+      enemy.x,
+      enemy.y,
+      Math.round(damage) + (isCrit ? "!" : ""),
+      isCrit ? "#d000ff" : "#fff",
+      isCrit ? 18 : 13,
+    );
+  damageEnemy(enemy, damage, source);
+  return damage;
+}
+
 export function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true; // retiré du tableau en fin de tick (voir enemies.js)
@@ -294,6 +316,7 @@ export function updateProjectiles() {
   const bubbles = world.hazards.filter((h) => h.kind === "bubble"); // bulles temporelles du Chronophage
   for (const proj of world.projectiles) {
     if (proj.returns && ++proj.age >= proj.returns) steerBack(proj);
+    if (proj.homing) steerHoming(proj);
     if (proj.dead) continue;
     const k = bubbles.length ? timeFactorAt(proj.x, proj.y, bubbles) : 1;
     proj.x += proj.vx * k;
@@ -428,6 +451,23 @@ function steerBack(proj) {
   proj.vy += (Math.sin(a) * speed - proj.vy) * 0.15;
 }
 
+const HOMING_RANGE = 600;
+
+/** Missile chercheur : vire vers sa cible (une nouvelle si la sienne est morte ou plongée). */
+function steerHoming(proj) {
+  let t = proj.target;
+  if (!t || t.dead || t.submerged) t = proj.target = getNearestEnemy(proj.x, proj.y, HOMING_RANGE);
+  if (!t) return;
+  const speed = Math.hypot(proj.vx, proj.vy);
+  const a = angleTo(proj.x, proj.y, t.x, t.y);
+  proj.vx += (Math.cos(a) * speed - proj.vx) * proj.homing;
+  proj.vy += (Math.sin(a) * speed - proj.vy) * proj.homing;
+  // garde la vitesse constante (le virage ne doit ni freiner ni accélérer le missile)
+  const k = speed / (Math.hypot(proj.vx, proj.vy) || 1);
+  proj.vx *= k;
+  proj.vy *= k;
+}
+
 const CHAIN_RANGE = 170;
 
 /** Arc Tesla : l'éclair saute vers les ennemis proches pas encore touchés. */
@@ -456,7 +496,7 @@ export function chainLightning(from, damage, jumps, color, source) {
 }
 
 /** Explosion de zone (roquettes, plasma) : touche tous les ennemis proches sauf la cible directe. */
-function explode(x, y, radius, damage, exclude, source) {
+export function explode(x, y, radius, damage, exclude, source) {
   createShockwave(x, y, radius, "#ffaa33");
   playSfx("explosion");
   addScreenShake(3);

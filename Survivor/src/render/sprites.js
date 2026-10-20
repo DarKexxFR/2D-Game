@@ -2,7 +2,7 @@
 // chaque forme (lueur comprise) n'est tracée qu'une fois, ensuite un simple
 // drawImage suffit, ce qui reste rapide même avec des centaines d'ennemis.
 
-import { gfx } from "../core/canvas.js";
+import { gfx } from "../core/gfx.js";
 import { BOSS_SHAPES } from "./bossShapes.js";
 import { dot, eye, glow, neonBody, noGlow, polygon, regular, shade } from "./neon.js";
 

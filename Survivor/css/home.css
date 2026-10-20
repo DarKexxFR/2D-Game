@@ -432,15 +432,25 @@ button.dock-btn {
   color: #ccc;
 }
 
-.home-legal {
+.home-links {
   grid-column: 1 / -1;
   justify-self: center;
-  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.3);
   font-size: 11px;
+}
+.home-links a {
+  color: rgba(255, 255, 255, 0.45);
   text-decoration: none;
 }
-.home-legal:hover {
-  color: #00ffff;
+.home-links a.home-bestiary {
+  color: rgba(0, 255, 136, 0.7);
+}
+@media (hover: hover) {
+  .home-links a:hover {
+    color: #00ffff;
+  }
 }
 
 /* --- Téléphone en portrait : une colonne --- */

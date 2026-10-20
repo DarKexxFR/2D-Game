@@ -3,6 +3,7 @@
 
 import { emit } from "../core/events.js";
 import { ACHIEVEMENTS } from "../data/achievements.js";
+import { recordBestiaryKill } from "./bestiary.js";
 import { trackQuest, trackQuestBest } from "./quests.js";
 import { account, saveAccount } from "./storage.js";
 
@@ -65,6 +66,8 @@ export function recordKill(type, isBoss = false) {
   trackQuest("kills");
   if (isBoss) trackQuest("bosses");
   if (type === "goblin") trackQuest("kill_goblin");
+  const found = recordBestiaryKill(type);
+  if (found !== null) s.bestiary = found;
   checkAchievements();
 }
 

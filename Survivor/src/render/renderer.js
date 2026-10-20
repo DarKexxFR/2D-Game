@@ -15,6 +15,7 @@ import {
   drawPickups,
   drawShrines,
 } from "./world.js";
+import { drawBeams, drawMines, drawSlashes } from "./sideWeapons.js";
 import { renderSplit } from "./versus.js";
 import { drawRivalView } from "./rivalView.js";
 import { rival } from "../systems/versusOnline.js";
@@ -49,9 +50,12 @@ function drawScene(now) {
   drawHazards(now); // au sol, sous les entités
   drawBossChests(now);
   drawTurrets(now);
+  drawMines(now);
+  drawBeams(now);
   drawPlayer(now);
   drawEnemies();
   drawProjectiles();
+  drawSlashes();
   drawBolts();
   drawFallers(now); // astéroïdes, gouttes et étoiles qui tombent
   drawSkillEffects();

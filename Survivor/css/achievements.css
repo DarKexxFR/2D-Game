@@ -148,3 +148,28 @@
     text-align: center;
   }
 }
+
+/* Lien vers le bestiaire (page à part, comme les conditions générales) */
+.bestiary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 14px;
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  border-radius: 8px;
+  color: #00ff88;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  text-decoration: none;
+  background: rgba(0, 255, 136, 0.08);
+}
+.bestiary-link small {
+  font-family: Orbitron, sans-serif;
+  color: #9fffcf;
+}
+@media (hover: hover) {
+  .bestiary-link:hover {
+    background: rgba(0, 255, 136, 0.18);
+  }
+}

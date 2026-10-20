@@ -53,6 +53,13 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   annonce) : chaque nouvelle vague (« pulsation ») ajoute une mutation aux
   ennemis (blindage, rage, hâte, nuée, élites, qui se cumulent) et augmente l'XP et l'or gagnés. Classement
   Endless à part et succès dédiés.
+- **Armes d'appoint** : jusqu'à 3 armes en plus de l'arme équipée, trouvées dans les cartes « Arme » (missiles
+  chercheurs, mines à plasma, foudre céleste, onde pulsée, faisceau rotatif, fouet laser). Chacune a 5 niveaux et
+  une évolution (niveau 5 + carte partenaire : Essaim de missiles, Champ nucléaire, Jugement, Écho sismique,
+  Prisme, Fouet vampire). Le panneau en jeu les montre avec leur niveau.
+- **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
+  (41 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
+  éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
 - **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
@@ -148,6 +155,7 @@ Survivor/
 ├── manifest.webmanifest  # Application installable : nom, icônes, raccourcis
 ├── sw.js                 # Service worker : jeu hors connexion et notifications
 ├── legal.html            # CGU et confidentialité
+├── bestiaire.html        # Bestiaire (wiki des ennemis, script src/bestiary/page.js)
 ├── llms.txt              # Résumé du jeu pour les IA (référencement)
 ├── robots.txt, sitemap.xml # Référencement : pages à explorer (stats.html exclue)
 ├── stats.html            # Statistiques des joueurs (administrateurs, voir supabase/STATISTIQUES.md)
@@ -173,11 +181,16 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
 ### Ajouter du contenu
 
 - **Un ennemi** : une entrée **en fin** de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang),
-  puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`).
+  puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`), son apparence dans
+  `src/render/enemyLooks.js` et sa fiche dans `src/data/bestiary.js`.
 - **Un boss** : son fichier dans `src/systems/bosses/` (outils dans `kit.js`), une entrée dans `index.js`,
   dans `ENEMY_TYPES` (en fin), `ENEMY_NAMES`, `BOSS_WAVES` et `BOSS_RUSH` (`src/data/enemies.js`), ses
   réglages dans `src/data/bosses.js`, son sprite dans `src/render/bossShapes.js`, son succès
   (`kill_<type>`) et ses tests.
+- **Une arme d'appoint** : une entrée dans `SIDE_WEAPONS` (`src/data/sideWeapons.js` : 5 niveaux, évolution)
+  et son comportement dans `BEHAVIORS` (`src/systems/sideWeapons.js`) ; la carte et l'évolution se créent seules.
+- **Une fiche du bestiaire** : obligatoire pour chaque nouvel ennemi (`src/data/bestiary.js`, vérifié par
+  `tests/bestiary.spec.js`).
 - **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
 - **Une mutation Endless Pulse** : une entrée dans `PULSE_MUTATORS` (`src/data/endless.js`).

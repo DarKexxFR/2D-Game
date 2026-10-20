@@ -1,0 +1,328 @@
+/* Bestiaire (bestiaire.html) : wiki des ennemis, dans le style néon du jeu. */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap");
+
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: linear-gradient(#05010c, #1d0630) fixed;
+  color: #ddd;
+  font:
+    15px/1.6 system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+}
+a {
+  color: #00ffff;
+}
+.back {
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* --- En-tête et progression --- */
+.bs-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.bs-head h1 {
+  margin: 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: 26px;
+  color: #00ff88;
+  text-shadow: 0 0 14px rgba(0, 255, 136, 0.55);
+}
+.bs-sub {
+  margin: 6px 0 0;
+  font-family: Orbitron, sans-serif;
+  color: #9a8fb5;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.bs-progress {
+  margin: 22px 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  background: rgba(0, 255, 136, 0.05);
+}
+.bs-progress-text {
+  font-family: Orbitron, sans-serif;
+  font-size: 14px;
+}
+.bs-progress-text b {
+  color: #00ff88;
+  font-size: 18px;
+}
+.bs-bar {
+  height: 8px;
+  margin: 8px 0;
+  border-radius: 4px;
+  background: #120a1e;
+  overflow: hidden;
+}
+#bsBar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #00ff88, #00ffff);
+  box-shadow: 0 0 10px #00ff88;
+}
+.bs-hint {
+  margin: 0;
+  color: #9a8fb5;
+  font-size: 13px;
+}
+
+/* --- Recherche et filtres --- */
+.bs-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+#bsSearch {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(10, 4, 20, 0.8);
+  color: #fff;
+  font: inherit;
+}
+.bs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bs-chip {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  background: none;
+  color: #bbb;
+  font:
+    12px Orbitron,
+    sans-serif;
+  cursor: pointer;
+}
+.bs-chip[aria-checked="true"] {
+  border-color: #00ff88;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+/* --- Cartes --- */
+.bs-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 26px 0 10px;
+  font-family: Orbitron, sans-serif;
+  font-size: 17px;
+  color: var(--group);
+  text-shadow: 0 0 10px var(--group);
+}
+.bs-group small {
+  color: #9a8fb5;
+  font-size: 12px;
+  text-shadow: none;
+}
+.bs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.bs-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--group) 45%, transparent);
+  border-radius: 12px;
+  background: radial-gradient(
+    circle at 50% 35%,
+    color-mix(in srgb, var(--group) 14%, transparent),
+    rgba(8, 3, 16, 0.85) 70%
+  );
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.bs-card canvas {
+  width: 96px;
+  height: 96px;
+}
+.bs-card h3 {
+  margin: 6px 0 2px;
+  font-family: Orbitron, sans-serif;
+  font-size: 13px;
+  color: #fff;
+  text-align: center;
+}
+.bs-card p {
+  margin: 0;
+  font-size: 12px;
+  color: #9a8fb5;
+}
+.bs-card.locked {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(8, 3, 16, 0.6);
+}
+.bs-card.locked h3 {
+  color: #666;
+}
+@media (hover: hover) {
+  .bs-card:hover {
+    border-color: var(--group);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--group) 45%, transparent);
+  }
+}
+.bs-empty {
+  color: #9a8fb5;
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* --- Fiche détaillée --- */
+.bs-entry {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 20px;
+  border: 1px solid var(--group);
+  border-radius: 14px;
+  background: #0d0518;
+  color: #ddd;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--group) 35%, transparent);
+}
+.bs-entry::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+.bs-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  border: none;
+  background: none;
+  color: #aaa;
+  font-size: 26px;
+  cursor: pointer;
+}
+.bs-entry-top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.bs-entry-top canvas {
+  flex: none;
+  width: 130px;
+  height: 130px;
+}
+.bs-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--group);
+  color: var(--group);
+  font:
+    11px Orbitron,
+    sans-serif;
+}
+.bs-entry h2 {
+  margin: 6px 0 4px;
+  font-family: Orbitron, sans-serif;
+  font-size: 20px;
+  color: #fff;
+}
+.bs-where,
+.bs-kills {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #b9b0cf;
+}
+.bs-kills {
+  color: var(--group);
+}
+.bs-entry h3 {
+  margin: 16px 0 6px;
+  font-family: Orbitron, sans-serif;
+  font-size: 13px;
+  color: var(--group);
+  letter-spacing: 1px;
+}
+.bs-desc {
+  margin: 14px 0 0;
+}
+.bs-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 0;
+}
+.bs-stats dt {
+  grid-row: 1;
+  font-size: 11px;
+  color: #9a8fb5;
+  text-align: center;
+}
+.bs-stats dd {
+  grid-row: 2;
+  margin: 0;
+  font-family: Orbitron, sans-serif;
+  font-size: 15px;
+  color: #fff;
+  text-align: center;
+}
+.bs-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #7d7396;
+}
+.bs-skills {
+  margin: 0;
+  padding-left: 20px;
+}
+.bs-tip {
+  margin: 16px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid #ffd700;
+  background: rgba(255, 215, 0, 0.07);
+}
+.bs-tip b {
+  color: #ffd700;
+}
+
+@media (max-width: 520px) {
+  .bs-head h1 {
+    font-size: 20px;
+  }
+  .bs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  .bs-card canvas {
+    width: 72px;
+    height: 72px;
+  }
+  .bs-entry-top canvas {
+    width: 96px;
+    height: 96px;
+  }
+  .bs-stats dd {
+    font-size: 13px;
+  }
+}

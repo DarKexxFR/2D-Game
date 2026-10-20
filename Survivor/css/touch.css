@@ -148,6 +148,7 @@ body.touch #levelIndicator {
     font-size: 11px;
   }
   .stat-grid,
+  .ui-weapons,
   .skill-row {
     display: none;
   }

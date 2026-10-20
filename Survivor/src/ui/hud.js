@@ -3,10 +3,12 @@
 import { DIFFICULTIES, STAT_CAPS, WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
+import { SIDE_WEAPONS, SIDE_WEAPON_RULES, sideName } from "../data/sideWeapons.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { healFactor } from "../systems/player.js";
 import { heroSkill } from "../systems/skills.js";
-import { $, setClass, setText, setVisible, setWidth } from "./dom.js";
+import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
+import { icon } from "./icons.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 
 const HUD_ELEMENTS = ["ui", "xpContainer", "levelIndicator"];
@@ -57,6 +59,7 @@ export function updateHud() {
   setText("lvlVal", player.level);
   updateCombo();
   updateBossBar();
+  updateWeapons();
 
   setText("statAtk", Math.round(player.attack));
   setText("statDef", Math.round(player.defense));
@@ -77,6 +80,45 @@ export function updateHud() {
     setClass("btnTouchUlt", "ready", player.isUltReady);
     setClass("btnTouchDash", "cooldown", player.noDash || player.dashCooldownTimer > 0);
   }
+}
+
+/**
+ * Rangée des armes : l'arme équipée, puis les armes d'appoint avec leur niveau (★ une fois évoluées) et
+ * les emplacements libres. Reconstruite seulement quand elle change.
+ */
+function updateWeapons() {
+  const row = $("uiWeapons");
+  const side = player.sideWeapons || [];
+  const key = side
+    .map((w) => `${w.id}${w.level}${player.evolutions[SIDE_WEAPONS[w.id].evolution.id] ? "*" : ""}`)
+    .join();
+  if (row.dataset.key === key && row.childElementCount > 0) return;
+  row.dataset.key = key;
+  const slot = (ico, color, title, badge = "", cls = "") => {
+    const s = el("span", `ui-weapon ${cls}`);
+    s.title = title;
+    if (ico) s.append(icon(ico, color));
+    if (badge) s.append(el("b", "", badge));
+    return s;
+  };
+  const main = player.weapon;
+  const items = [slot(main?.icon || "blaster", main?.color || "#00ffff", main?.name || "Arme", "", "main")];
+  for (const w of side) {
+    const def = SIDE_WEAPONS[w.id];
+    const evolved = player.evolutions[def.evolution.id];
+    items.push(
+      slot(
+        def.icon,
+        def.color,
+        sideName(w.id, player),
+        evolved ? "★" : String(w.level),
+        evolved ? "evolved" : "",
+      ),
+    );
+  }
+  for (let i = side.length; i < SIDE_WEAPON_RULES.slots; i++)
+    items.push(slot("", "", "Emplacement d'arme libre", "", "empty"));
+  row.replaceChildren(...items);
 }
 
 let bossWarningTimeout = null;

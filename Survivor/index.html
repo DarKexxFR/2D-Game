@@ -191,6 +191,7 @@
             <div class="skill-bar"><div class="skill-fill ult-fill" id="ultBar"></div></div>
           </div>
         </div>
+        <div id="uiWeapons" class="ui-weapons"></div>
         <div class="stat-grid">
           <div class="stat-item"><small>ATK</small> <span id="statAtk">10</span></div>
           <div class="stat-item"><small>DEF</small> <span id="statDef">0</span></div>
@@ -368,9 +369,13 @@
             <button id="btnVersus" class="dock-btn"><i data-icon="sword"></i> DUEL 1V1</button>
             <button id="btnBossRush" class="dock-btn dock-rush"><i data-icon="crown"></i> BOSS RUSH</button>
           </nav>
-          <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
-            >Conditions générales · Confidentialité</a
-          >
+          <div class="home-links">
+            <a class="home-bestiary" href="bestiaire.html" target="_blank" rel="noopener">Bestiaire</a>
+            <span aria-hidden="true">·</span>
+            <a class="home-legal" href="legal.html" target="_blank" rel="noopener"
+              >Conditions générales · Confidentialité</a
+            >
+          </div>
         </div>
       </div>
 
@@ -591,6 +596,9 @@
           <h2>SUCCÈS</h2>
           <p id="achievementCount" class="menu-sub"></p>
           <div class="ach-total"><div id="achievementTotalBar"></div></div>
+          <a id="btnBestiary" class="bestiary-link" href="bestiaire.html" target="_blank" rel="noopener">
+            <i data-icon="book" data-color="#00ff88"></i> BESTIAIRE <small id="bestiaryCount"></small>
+          </a>
         </div>
         <div id="achievementList" class="achievement-list"></div>
         <button id="btnAchievementsBack" class="secondary mt-15">RETOUR</button>

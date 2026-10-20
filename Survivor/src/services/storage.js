@@ -47,6 +47,7 @@ export const account = {
   season: null,
   loadouts: [null, null, null], // équipements enregistrés : { weapon, armor, hero, pet, module } ou null
   dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
+  bestiary: {}, // éliminations par type d'ennemi : fiches du bestiaire débloquées (voir services/bestiary.js)
   appInstalled: false, // récompense de la première ouverture depuis l'icône déjà versée (voir services/pwa.js)
 };
 
@@ -81,8 +82,22 @@ export function loadAccount() {
   account.difficulty = saved.difficulty || "normal";
   account.loginStreak = { day: "", count: 0, ...saved.loginStreak };
   account.appInstalled = saved.appInstalled === true;
+  account.bestiary = { ...bestiaryFromStats(account.achievementStats), ...saved.bestiary };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;
+}
+
+/**
+ * Sauvegarde d'avant le bestiaire : les boss et le Voleur doré déjà vaincus (statistiques « kill_<type> »
+ * des succès) débloquent leur fiche ; un joueur qui a déjà éliminé des ennemis retrouve les plus courants.
+ */
+function bestiaryFromStats(stats) {
+  const found = {};
+  for (const [key, value] of Object.entries(stats)) {
+    if (key.startsWith("kill_") && value > 0) found[key.slice(5)] = value;
+  }
+  if (stats.kills > 0) found.normal = 1;
+  return found;
 }
 
 const saveListeners = [];

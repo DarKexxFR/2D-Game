@@ -1,7 +1,7 @@
 // Outils de tracé des sprites néon (render/sprites.js, render/bossShapes.js) : corps sombre teinté
 // au contour lumineux, polygones, points et yeux lumineux. La lueur (shadowBlur) suit la qualité.
 
-import { gfx } from "../core/canvas.js";
+import { gfx } from "../core/gfx.js";
 
 const TAU = Math.PI * 2;
 
