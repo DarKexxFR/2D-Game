@@ -179,6 +179,7 @@ export function captureError(error, kind = "error") {
     const known = session.reports.find((r) => r.fingerprint === print);
     if (known) known.count = times;
     if (times > 1) return;
+    pollWatchers(); // valeurs suivies à jour (relevées toutes les 500 ms) : le journal montre l'état exact
     logEvent("erreur", `${kind} : ${message}`);
     if (session.reports.length >= DIAGNOSTICS.maxReportsPerSession) return;
     /** @type {ErrorReport} */
@@ -409,6 +410,7 @@ function sessionText(s, title) {
 
 /** Journal complet en texte (à coller dans un message pour signaler un bug). */
 export function journalText() {
+  pollWatchers(); // dernier relevé des valeurs suivies (sinon un écran ouvert il y a moins de 500 ms manque)
   const parts = [
     "LAST PULSE · JOURNAL DE DIAGNOSTIC",
     `Appareil : ${flat(deviceInfo())}`,
