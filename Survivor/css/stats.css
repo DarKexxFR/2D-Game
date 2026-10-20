@@ -200,6 +200,128 @@ main {
 .st-table th:not(:first-child) {
   text-align: right;
 }
+/* Erreurs du jeu (src/stats/errorsPanel.js) */
+.st-errors {
+  margin-top: 12px;
+}
+.st-error-row {
+  cursor: pointer;
+}
+.st-error-row.selected td {
+  background: rgba(0, 255, 255, 0.08);
+}
+.st-error-row.resolved {
+  opacity: 0.55;
+}
+.st-errors-table {
+  table-layout: fixed;
+}
+.st-errors-table th:nth-child(2) {
+  width: 56px;
+}
+.st-errors-table th:nth-child(3) {
+  width: 90px;
+}
+.st-errors-table th:nth-child(4) {
+  width: 110px;
+}
+.st-errors-table th:nth-child(5) {
+  width: 80px;
+}
+.st-errors-table td:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .st-errors-table th:nth-child(3),
+  .st-errors-table td:nth-child(3),
+  .st-errors-table th:nth-child(5),
+  .st-errors-table td:nth-child(5) {
+    display: none;
+  }
+  .st-errors-table th:nth-child(4) {
+    width: 84px;
+  }
+}
+.st-error-msg {
+  color: #eee;
+}
+.st-badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #333;
+  color: #ddd;
+}
+.st-badge.error,
+.st-badge.rejection {
+  background: rgba(255, 42, 109, 0.25);
+  color: #ff2a6d;
+}
+.st-badge.freeze {
+  background: rgba(0, 204, 255, 0.2);
+  color: #00ccff;
+}
+.st-badge.load {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+}
+.st-badge.back {
+  background: #ff2a6d;
+  color: #fff;
+}
+.st-badge.done {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+.st-error-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #333;
+}
+.st-error-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.st-error-head .st-legend {
+  margin: 0;
+}
+.st-error-actions,
+.st-error-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.st-error-tabs {
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.st-pre {
+  margin: 0;
+  padding: 10px;
+  max-height: 480px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #000;
+  color: #cfe;
+  font:
+    12px/1.45 ui-monospace,
+    "SFMono-Regular",
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 @media (max-width: 420px) {
   .st-grid {
     grid-template-columns: 1fr;

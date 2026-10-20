@@ -68,3 +68,43 @@ jour toute seule chaque minute ; période 7, 30 ou 90 jours ; jours comptés à 
 
 Pour une question précise, les tables se lisent aussi directement dans SQL Editor
 (`analytics_sessions`, `analytics_runs`, `analytics_devices`).
+
+## Erreurs du jeu (journal de diagnostic)
+
+Quand un joueur tombe sur un bug, le jeu envoie un **rapport d'erreur** (même consentement et même identifiant
+anonyme que les statistiques), affiché dans la partie **« Erreurs du jeu »** en bas de `stats.html`.
+
+```
+Jeu (navigateur)                                   Supabase
+────────────────                                   ────────
+exception, promesse rejetée, fichier non chargé ─► report_error : regroupée par empreinte (error_groups),
+boucle du jeu arrêtée 4 s (« gel »)                rapport détaillé (error_reports, 20 derniers par erreur)
+
+stats.html ──────────────────────────────────────► admin_errors(jours) : liste des erreurs
+  clic sur une erreur ───────────────────────────► admin_error_reports(empreinte) : 10 derniers rapports
+  MARQUER CORRIGÉE / ROUVRIR ────────────────────► admin_error_resolve(empreinte, oui / non)
+```
+
+- **Un rapport contient** : le message et la pile d'appels (fichier, fonction, ligne), la version du jeu (commit
+  déployé, écrit dans `Survivor/src/build.js` par `deploy.yml`), l'état du jeu à cet instant (écran, mode,
+  difficulté, vague, boss en vie, vie, héros, arme, nombre d'ennemis et de tirs, images par seconde, qualité),
+  les ~60 dernières lignes du **journal** (écrans ouverts, vague, boss, montées de niveau, morts, renaissances,
+  images lentes, erreurs et avertissements de la console...) et l'appareil (navigateur et système en clair,
+  taille d'écran, mémoire). Ni pseudo, ni compte, ni adresse IP, ni chaîne complète du navigateur.
+- **Empreinte** : même sorte d'erreur + même message (nombres effacés) + même fonction et même fichier = même
+  erreur. La liste montre combien de fois elle s'est produite, sur combien d'appareils, et dans quelle version.
+- **Corrigée** : après un correctif, « MARQUER CORRIGÉE ». Si elle se reproduit ensuite, elle remonte avec la
+  mention **« revenue »**.
+- **COPIER LE RAPPORT** : le rapport en texte (pile, état, journal avec les secondes avant l'erreur), à coller
+  tel quel dans une demande de correction.
+- **Limites** : côté jeu, une même erreur une seule fois par ouverture du jeu et 5 rapports au plus ; côté
+  serveur, 20 rapports par appareil et par heure, 1000 en tout par heure, tailles bornées. Rapports détaillés
+  gardés 90 jours, erreurs 13 mois (`analytics_purge`). Un rapport qui n'a pas pu partir (hors ligne) repart à
+  l'ouverture suivante.
+- **Sans Supabase, ou statistiques refusées** : rien ne part, mais le joueur peut toujours **copier son
+  journal** dans les Options (« Journal de diagnostic » → COPIER) et l'envoyer à la main (Discord, e-mail). Il
+  contient aussi la session précédente (utile si le jeu a gelé et a été relancé). Depuis la console du
+  navigateur : `copy(lastPulseJournal())`.
+
+Mise en place : relancer `supabase/schema.sql` (tables `error_*` et fonctions ci-dessus) ; rien d'autre, les
+administrateurs sont ceux de `analytics_admins`.

@@ -9,6 +9,7 @@ import {
   restoreFromCode,
 } from "../services/cloudSave.js";
 import { analyticsEnabled, setAnalyticsEnabled } from "../services/analytics.js";
+import { journalText } from "../services/diagnostics.js";
 import { settings, updateSettings } from "../services/settings.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { canVibrate, playSfx, vibrate } from "../services/sfx.js";
@@ -47,8 +48,28 @@ export function initOptionsMenu() {
     render();
   });
 
+  $("btnCopyJournal").addEventListener("click", copyJournal);
+
   $("btnOptionsBack").addEventListener("click", closeOptions);
   initCloudSection();
+}
+
+const JOURNAL_HINT = "Un bug ? Copie le journal et envoie-le au développeur : il montre ce qui s'est passé.";
+
+/** Journal de diagnostic dans le presse-papiers ; sinon téléchargé en fichier texte. */
+async function copyJournal() {
+  const text = journalText();
+  try {
+    await navigator.clipboard.writeText(text);
+    setText("journalHint", "Journal copié : colle-le dans ton message (Discord, e-mail...).");
+  } catch {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    link.download = `last-pulse-journal-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    setText("journalHint", "Copie impossible : journal téléchargé en fichier texte.");
+  }
 }
 
 // --- SAUVEGARDE EN LIGNE ---
@@ -131,6 +152,7 @@ function bindVolume(id, key, preview) {
 function render() {
   renderCloud();
   setText("tutorialReplayHint", "");
+  setText("journalHint", JOURNAL_HINT);
   $("optMusic").value = Math.round(settings.musicVolume * 100);
   $("optSfx").value = Math.round(settings.sfxVolume * 100);
   setText("optMusicValue", `${Math.round(settings.musicVolume * 100)}%`);

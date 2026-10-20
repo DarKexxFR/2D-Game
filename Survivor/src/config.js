@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   auth: "survivor_auth", // session de connexion (Google ou e-mail), facultative
   accountSync: "survivor_account_sync", // dernière version échangée avec le compte (anti-écrasement)
   app: "survivor_app", // état propre à l'appareil : abonnement aux notifications (voir services/appState.js)
+  diagnostics: "survivor_diag", // journal de diagnostic de cet appareil (voir services/diagnostics.js)
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.
@@ -312,6 +313,24 @@ export const ANALYTICS = {
   enabled: true,
   heartbeatMs: 60_000, // envoi des compteurs de la session (temps actif, temps en partie)
   idleMs: 120_000, // sans clic ni touche depuis ce délai (hors partie), le temps ne compte plus
+};
+
+// Journal de diagnostic (services/diagnostics.js) et rapports d'erreurs (services/errorReports.js, table
+// error_reports de supabase/schema.sql, lus dans stats.html). Envoyés seulement si les statistiques anonymes
+// sont acceptées (Options) ; le journal local, lui, est toujours tenu (copiable depuis les Options).
+export const DIAGNOSTICS = {
+  journalSize: 150, // lignes gardées en mémoire (les plus anciennes disparaissent)
+  savedLines: 100, // lignes gardées sur l'appareil (relues après un rechargement : « session précédente »)
+  sentLines: 60, // lignes jointes à un rapport d'erreur
+  saveMs: 5000, // enregistrement du journal sur l'appareil, au plus toutes les 5 s (et à la fermeture)
+  watchMs: 500, // relevé des valeurs suivies (écran, vague, boss...)
+  freezeMs: 4000, // onglet visible sans aucune image depuis ce délai : boucle du jeu arrêtée (rapport « gel »)
+  slowFrameMs: 250, // image plus longue : notée dans le journal (au plus une fois toutes les 5 s)
+  maxReportsPerSession: 5, // rapports envoyés au plus par ouverture du jeu (une même erreur : une seule fois)
+  pendingMax: 5, // rapports non envoyés (hors ligne) gardés pour la prochaine ouverture
+  sendDelayMs: 4000, // délai avant d'envoyer les rapports en attente (la session de statistiques d'abord)
+  stackMax: 3000, // caractères gardés de la pile d'appels
+  quietEvents: ["kill"], // événements du jeu trop fréquents pour le journal
 };
 
 // Saison mensuelle et son passe gratuit (services/season.js, paliers dans data/season.js). Une saison = un

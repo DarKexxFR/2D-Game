@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="css/stats.css" />
   </head>
   <!-- Tableau de bord des statistiques de fréquentation (src/stats/statsPage.js, RPC admin_stats),
-       réservé aux comptes listés dans la table analytics_admins : voir supabase/STATISTIQUES.md. -->
+       réservé aux comptes listés dans la table analytics_admins : voir supabase/STATISTIQUES.md.
+       Partie « Erreurs » : rapports du journal de diagnostic (src/stats/errorsPanel.js). -->
   <body>
     <header class="st-head">
       <div>
@@ -73,6 +74,13 @@
             <table id="tbHeroes" class="st-table"></table>
             <table id="tbWeapons" class="st-table"></table>
           </article>
+        </section>
+
+        <section class="st-card st-errors">
+          <h2>Erreurs du jeu</h2>
+          <p id="stErrorsInfo" class="st-legend"></p>
+          <table id="tbErrors" class="st-table st-errors-table"></table>
+          <div id="stErrorDetail" class="st-error-detail" hidden></div>
         </section>
       </div>
     </main>

@@ -297,6 +297,17 @@ Principes :
   dans les Options. Une fin de partie ou un abandon = un `trackRun` (`reportRun` dans `main.js`).
   Toute nouvelle donnée collectée = mise à jour de `legal.html`. Tests : `supabase.analytics` / `supabase.adminStats`
   dans `fixtures.js`.
+- **Journal de diagnostic** (`services/diagnostics.js`, premier import de `main.js`, réglages `DIAGNOSTICS`) :
+  lignes horodatées (`logEvent`, `logThrottled`), valeurs suivies (`watch` : écran, mode, vague, boss, pause),
+  tous les événements du bus (`onAny` de `core/events.js`, sauf `DIAGNOSTICS.quietEvents`), console.error /
+  warn, images lentes et blocages (`markFrame` en fin d'image). Exception, promesse rejetée, fichier non chargé
+  ou boucle arrêtée (`freeze`, onglet visible sans image) = rapport avec l'état du jeu (`setDiagnosticContext`
+  dans `main.js`), une fois par empreinte et par session. Journal gardé sur l'appareil (`survivor_diag`,
+  session précédente comprise), copiable dans les Options (`journalText`). Envoi : `services/errorReports.js`
+  (RPC `report_error`, même consentement et identifiant que les statistiques anonymes), lecture dans la partie
+  « Erreurs du jeu » de `stats.html` (`src/stats/errorsPanel.js`). Version = `src/build.js`, réécrit par
+  `deploy.yml`. Nouveau moment clé à tracer = un `logEvent` (ou un événement du bus) ; une erreur rattrapée qu'on
+  veut voir remonter = `captureError`. Tests : `tests/diagnostics.spec.js`, faux RPC `supabase.errors`.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -369,7 +380,8 @@ biomes Jungle toxique et Station orbitale, série de connexion quotidienne, amis
 nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, sanctuaires maudits,
 synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophage, Hacker, Cœur du Pulse), ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
 application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement,
-mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html).
+mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html),
+journal de diagnostic et rapports d'erreurs (stats.html).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

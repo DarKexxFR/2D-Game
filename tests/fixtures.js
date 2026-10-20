@@ -21,6 +21,9 @@ export const test = base.extend({
       push: [],
       analytics: [], // appels track_session / track_run { rpc, args } (voir services/analytics.js)
       adminStats: null, // réponse de admin_stats (null = compte non administrateur)
+      errors: [], // rapports d'erreurs reçus par report_error (arguments, voir services/errorReports.js)
+      adminErrors: [], // erreurs regroupées renvoyées par admin_errors (page stats.html)
+      errorReports: {}, // rapports détaillés renvoyés par admin_error_reports, par empreinte
     });
   },
   // Erreurs provoquées exprès par un test (test.use({ allowedErrors: [...] })) : tolérées, une fois chacune
@@ -65,6 +68,23 @@ export function routeSupabase(page, supabase) {
         );
       }
       return route.fulfill(json(supabase.adminStats));
+    }
+    if (rpc === "report_error") {
+      supabase.errors.push(req.postDataJSON());
+      return route.fulfill({ status: 204, body: "" });
+    }
+    if (rpc === "admin_errors" || rpc === "admin_error_reports" || rpc === "admin_error_resolve") {
+      if (!supabase.adminStats || !userFromToken(req)) {
+        return route.fulfill(json({ code: "42501", message: "Réservé aux administrateurs" }, 403));
+      }
+      const args = req.postDataJSON();
+      if (rpc === "admin_errors")
+        return route.fulfill(json({ days: args.p_days, groups: supabase.adminErrors }));
+      if (rpc === "admin_error_reports")
+        return route.fulfill(json(supabase.errorReports[args.p_fingerprint] || []));
+      const group = supabase.adminErrors.find((g) => g.fingerprint === args.p_fingerprint);
+      if (group) group.resolved_at = args.p_resolved ? new Date().toISOString() : null;
+      return route.fulfill({ status: 204, body: "" });
     }
     if (rpc === "push_subscribe" || rpc === "push_unsubscribe") {
       supabase.push.push({ rpc, args: req.postDataJSON(), token: userFromToken(req) });

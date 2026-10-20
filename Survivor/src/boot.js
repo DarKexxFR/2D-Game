@@ -18,6 +18,7 @@
   var finished = false;
   var files = 0;
   var stuckTimer = 0;
+  var bootErrors = (window.__bootErrors = []);
 
   function el(id) {
     return document.getElementById(id);
@@ -74,6 +75,8 @@
       var target = /** @type {Element} */ (e.target);
       if (target && target.tagName === "SCRIPT") fail("Chargement interrompu. Vérifie ta connexion.");
       else if (e instanceof ErrorEvent) fail("Le jeu n'a pas pu démarrer.");
+      // Gardées pour le journal de diagnostic (services/diagnostics.js), qui n'est pas encore chargé
+      if (e instanceof ErrorEvent && bootErrors.length < 5) bootErrors.push(e.error || e.message);
     },
     true,
   );
