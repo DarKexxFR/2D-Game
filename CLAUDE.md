@@ -235,7 +235,14 @@ Principes :
 - **Renaissance** (`rebirth` dans `systems/player.js`, réglages `REVIVE` dans `config.js`) : chaque retour à la vie
   (Seconde chance, Phénix consommé en premier avec ses ailes de feu, Renaissance céleste, pub) joue une animation
   (effet `rebirth` dans `render/effects.js`) et une onde de choc : ennemis tués au corps à corps, boss et tentacules
-  seulement blessés (ni tués ni repoussés), les autres proches repoussés, tirs ennemis effacés.
+  seulement blessés (ni tués ni repoussés), les autres proches repoussés, tirs ennemis effacés (marqués `dead`, jamais
+  retirés du tableau : la renaissance survient en pleine boucle des tirs, vider le tableau plantait le tick).
+- **Mort du joueur** (`tests/death.spec.js`) : `takeDamage` émet `playerDied` en plein tick ; hors duel, l'écran
+  « revivre » ou la fin de partie n'arrive qu'à la fin du tick (`deathPending` dans `main.js`). Un choix d'amélioration
+  demandé pendant la mort attend dans la file (`holdUpgrades` / `resumeUpgrades` de `ui/upgradeMenu.js`, repris après
+  la pub). `endGame` affiche l'écran de fin même si le bilan échoue, et `frame` redemande l'image suivante **avant**
+  de travailler : une erreur ne fige plus jamais le jeu (elle reste signalée dans la console et fait échouer les tests ;
+  `allowedErrors` dans `fixtures.js` pour une erreur provoquée exprès).
 - **Ralenti de la mort** (`systems/killCam.js` enregistre, `render/killCam.js` rejoue, réglages `KILL_CAM`) :
   les 4 dernières secondes (vaisseau, ennemis, tirs, attaques de zone autour du vaisseau) sont gardées dans
   `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,

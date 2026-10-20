@@ -23,9 +23,16 @@ export const test = base.extend({
       adminStats: null, // réponse de admin_stats (null = compte non administrateur)
     });
   },
-  page: async ({ page, supabase }, use) => {
+  // Erreurs provoquées exprès par un test (test.use({ allowedErrors: [...] })) : tolérées, une fois chacune
+  allowedErrors: [[], { option: true }],
+  page: async ({ page, supabase, allowedErrors }, use) => {
     const errors = [];
-    page.on("pageerror", (e) => errors.push(e.message));
+    const allowed = [...allowedErrors];
+    page.on("pageerror", (e) => {
+      const i = allowed.indexOf(e.message);
+      if (i >= 0) allowed.splice(i, 1);
+      else errors.push(e.message);
+    });
     await routeSupabase(page, supabase);
     await use(page);
     expect(errors, "erreurs JavaScript dans la page").toEqual([]);

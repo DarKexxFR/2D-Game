@@ -66,8 +66,10 @@ import { closeLogin, initAccount, openLogin, resumeAccountCheck } from "./ui/acc
 import { failLoading, finishLoading, runLoadingSteps, setLoading } from "./ui/loadingScreen.js";
 import { loadFonts, loadImages, settleWithin } from "./services/preload.js";
 import {
+  holdUpgrades,
   initUpgradeMenu,
   resetUpgradeMenu,
+  resumeUpgrades,
   setAutoPick,
   showBossChest,
   showShrineReward,
@@ -133,6 +135,8 @@ import { closeInstall, initAppMenu, maybeAskPush, openInstall, renderApp } from 
 
 let lastMode = "normal"; // « REJOUER » relance le même mode
 let runReported = false; // partie déjà comptée dans les statistiques (fin, victoire ou abandon)
+let ticking = false; // un tick de la partie est en cours (voir update)
+let deathPending = false; // mort pendant un tick : traitée une fois le tick fini
 
 /** Statistiques anonymes (services/analytics.js) : résumé de la partie chargée. */
 function reportRun(mode, killer) {
@@ -159,6 +163,7 @@ function reportRun(mode, killer) {
 function startGame(mode = "normal") {
   lastMode = mode;
   runReported = false;
+  deathPending = false;
   stopKillCam();
   stopVersus();
   showVersusHud(false);
@@ -374,7 +379,28 @@ function returnToMenu() {
   resumeAccountCheck(); // réponse du compte arrivée pendant la partie : traitée maintenant
 }
 
+/**
+ * Fin de partie. L'écran de fin s'affiche quoi qu'il arrive : une erreur dans le bilan (sauvegarde,
+ * saison, classement...) laissait la partie arrêtée sans aucun écran, le jeu paraissait figé.
+ */
 function endGame() {
+  try {
+    settleRun();
+  } catch (err) {
+    reportLater(err);
+    if (currentScreen() !== "gameOver") showScreen("gameOver");
+  }
+}
+
+/** Erreur signalée (console, et test en échec) sans interrompre ce qui suit. */
+function reportLater(err) {
+  setTimeout(() => {
+    throw err;
+  });
+}
+
+/** Bilan de la partie terminée (récompenses, records, classement) puis écran de fin. */
+function settleRun() {
   restoreRandom();
   stopTutorial();
   showTouchControls(false);
@@ -510,9 +536,22 @@ function update() {
   if (versus.split) return updateSplit(simulate, tickDuelPick);
   if (!game.running || game.paused) return;
   game.time += TICK_MS;
-  simulate();
-  if (!versus.active) recordKillCam();
-  updateTutorial();
+  ticking = true;
+  try {
+    simulate();
+    if (!versus.active) recordKillCam();
+    updateTutorial();
+  } finally {
+    ticking = false;
+    if (deathPending) onDeath(); // même si le tick a échoué : jamais de partie arrêtée sans écran
+  }
+}
+
+/** Mort du joueur (hors duel) : proposition de revivre avec une pub, sinon fin de partie. */
+function onDeath() {
+  deathPending = false;
+  if (canOfferRevive()) showReviveOffer();
+  else endGame();
 }
 
 /** Un tick de la partie chargée. */
@@ -546,10 +585,15 @@ let lastFrame = performance.now();
 let accumulator = 0;
 
 function frame(now) {
+  // Image suivante demandée d'abord : une erreur dans cette image ne doit jamais arrêter la boucle
+  // (avant, la moindre exception figeait le jeu pour de bon, écran compris).
+  requestAnimationFrame(frame);
+  const elapsed = Math.min(now - lastFrame, 250); // borne : évite la « spirale » après un onglet en arrière-plan
+  lastFrame = now;
   if (game.started) {
     // Ralenti à la mort d'un boss (écran scindé : géré partie par partie)
     const timeScale = game.slowMo > 0 && !versus.split ? 0.3 : 1;
-    accumulator += Math.min(now - lastFrame, 250) * timeScale; // borne : évite la « spirale » après un onglet en arrière-plan
+    accumulator += elapsed * timeScale;
     // Au plus LIMITS.ticksPerFrame ticks par image : un appareil qui n'arrive plus à suivre fait
     // ralentir la partie au lieu d'enchaîner des images de plus en plus lourdes (gel).
     for (let n = 0; accumulator >= TICK_MS; n++) {
@@ -569,8 +613,6 @@ function frame(now) {
     accumulator = 0;
     renderMenuBackground();
   }
-  lastFrame = now;
-  requestAnimationFrame(frame);
 }
 
 // --- INITIALISATION ---
@@ -662,7 +704,13 @@ function init() {
     else showGoblinWarning();
     playSfx("combo");
   });
-  initReviveMenu({ onRevive: reviveFromAd, onGiveUp: endGame });
+  initReviveMenu({
+    onRevive: () => {
+      reviveFromAd();
+      resumeUpgrades(); // montée de niveau gagnée à la mort : proposée maintenant
+    },
+    onGiveUp: endGame,
+  });
   on("endlessStart", () => {
     showBossWarning("CŒUR DU PULSE VAINCU · ENDLESS PULSE", false, "#ff00aa");
     playSfx("boss");
@@ -721,9 +769,12 @@ function init() {
   });
   on("playerDied", () => {
     if (versus.split) return splitDeath(versus.current);
+    holdUpgrades(); // choix ouvert plus tôt dans ce tick : mis de côté, l'écran de fin passe devant
     if (versus.online) return onOwnDeath();
-    if (canOfferRevive()) showReviveOffer();
-    else endGame();
+    // Pendant un tick, écran « revivre » ou fin de partie une fois le tick terminé : le reste du tick
+    // (gemmes, coffres...) tourne encore, et le bilan ne doit pas s'exécuter au milieu de la boucle des ennemis.
+    if (ticking) deathPending = true;
+    else onDeath();
   });
   on("biomeChange", (biome) =>
     versus.split ? splitBanner(biome.name, biome.color) : showBiomeBanner(biome),

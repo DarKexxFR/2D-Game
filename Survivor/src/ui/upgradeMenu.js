@@ -149,8 +149,25 @@ export function showShrineReward() {
 }
 
 function request(req) {
-  if (current) queue.push(req);
+  // Mort dans le même tick (gemme ramassée, coffre...) : le choix attend, il ne doit pas recouvrir
+  // l'écran de fin ni relancer une partie terminée. Repris si une pub ramène à la vie.
+  if (current || game.over) queue.push(req);
   else open(req);
+}
+
+/**
+ * Mort du joueur : le choix affiché (ouvert plus tôt dans le même tick) est remis en tête de la file
+ * d'attente. Sinon il restait « en cours » derrière l'écran de fin et bloquait les suivants.
+ */
+export function holdUpgrades() {
+  clearTimeout(autoPickTimer);
+  if (current) queue.unshift(current);
+  current = null;
+}
+
+/** Retour à la vie (pub) : propose les choix mis de côté à la mort. */
+export function resumeUpgrades() {
+  if (!current && queue.length > 0) open(queue.shift());
 }
 
 function open(req) {
