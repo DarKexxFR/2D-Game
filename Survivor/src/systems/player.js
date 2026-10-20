@@ -214,7 +214,9 @@ function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) 
       pushEnemy(e, x + Math.cos(a) * pushRadius - e.x, y + Math.sin(a) * pushRadius - e.y);
     }
   }
-  world.enemyProjectiles.length = 0;
+  // Tirs marqués détruits, pas retirés : la renaissance survient souvent pendant la boucle des tirs
+  // ennemis (coup fatal d'un tir), vider le tableau sous elle faisait planter le tick et figeait le jeu.
+  for (const p of world.enemyProjectiles) p.dead = true;
   world.visualEffects.push({
     type: "rebirth",
     x,

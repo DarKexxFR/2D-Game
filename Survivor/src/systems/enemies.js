@@ -1182,6 +1182,7 @@ function updateEnemyProjectiles() {
   const count = list.length;
   for (let i = 0; i < count; i++) {
     const p = list[i];
+    if (p.dead) continue; // effacé pendant ce tick (renaissance)
     if (p.turn) {
       // Projectile courbe (faux du Faucheur) : la vitesse tourne à chaque tick
       const c = Math.cos(p.turn);

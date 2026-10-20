@@ -957,7 +957,7 @@ export function drawProjectiles() {
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
   }
   for (const p of world.enemyProjectiles) {
-    if (!isOnScreen(p.x, p.y, p.size)) continue;
+    if (p.dead || !isOnScreen(p.x, p.y, p.size)) continue; // effacés par une renaissance
     if (p.scythe) {
       drawSprite(ctx, getSprite("scythe", roundSize(p.size), p.color), p.x, p.y, performance.now() / 50);
       continue;
