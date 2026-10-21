@@ -63,8 +63,11 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
+- **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
+  icône à la couleur de sa rareté, son nombre et son effet). Les fenêtres de partie (pause, choix, revivre,
+  fin) ont un style néon commun.
 - **Renaissance** : Seconde chance, Phénix ou pub déclenchent une onde de choc autour du vaisseau.
-- **Fin de partie** : statistiques détaillées, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
+- **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
   et **carte de score à partager** (image 1080×1350 avec vague, build et coupable, à partager depuis le
   téléphone, copier pour Discord ou télécharger).
 

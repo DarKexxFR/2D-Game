@@ -2,6 +2,8 @@
 
 import { startKillCam, stopKillCam } from "../render/killCam.js";
 import { hasKillCam } from "../systems/killCam.js";
+import { player } from "../core/state.js";
+import { buildView } from "./buildView.js";
 import { $, setText, setVisible } from "./dom.js";
 import { renderRunStats } from "./runStats.js";
 import { showScreen } from "./screens.js";
@@ -19,6 +21,7 @@ export function showGameOver({ pseudo, level, wave, waveLabel = "Vague", xp, gol
   setVisible("newRecordMsg", isNewRecord);
   setVisible("btnKillCam", hasKillCam());
   renderRunStats();
+  $("runBuild").replaceChildren(buildView(player, { compact: true }));
   setShareSummary(runSummary({ pseudo, wave, valueLabel: waveLabel.split(" · ")[0], isNewRecord }));
   showScreen("gameOver");
 }

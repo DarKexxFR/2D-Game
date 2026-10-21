@@ -14,21 +14,13 @@ import {
 import { addStat, recordBest } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
+import { RARITY_NAMES } from "./buildView.js";
 import { $, el, isVisible, setClass, setText, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
 import { isTouchDevice } from "./touchControls.js";
 
 const CHOICES = 3;
-const RARITY_NAMES = {
-  common: "Commun",
-  rare: "Rare",
-  epic: "Épique",
-  legendary: "Légendaire",
-  evolution: "Évolution",
-  corrupted: "Corrompue",
-  weapon: "Arme",
-};
 
 // Cartes autorisées selon l'origine du choix : un coffre de boss ne propose ni commune ni corrompue,
 // un sanctuaire maudit seulement des rares et des épiques.

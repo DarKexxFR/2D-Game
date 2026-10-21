@@ -84,6 +84,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/menus.css" />
+    <link rel="stylesheet" href="css/panels.css" />
     <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/inventory.css" />
@@ -605,7 +606,7 @@
       </div>
 
       <!-- ===== AMÉLIORATIONS ===== -->
-      <div id="upgradeMenu" class="menu-overlay">
+      <div id="upgradeMenu" class="menu-overlay game-panel">
         <h2 id="upgradeTitle">CHOISISSEZ !</h2>
         <p id="upgradeSubtitle" class="menu-sub"></p>
         <div id="upgradeTimer" class="pick-timer"><div></div></div>
@@ -614,10 +615,13 @@
       </div>
 
       <!-- ===== PAUSE ===== -->
-      <div id="pauseMenu" class="menu-overlay">
-        <h2>PAUSE</h2>
+      <div id="pauseMenu" class="menu-overlay game-panel">
+        <div class="menu-head">
+          <h2>PAUSE</h2>
+          <p id="pauseMeta" class="menu-sub"></p>
+        </div>
         <div id="pauseCorruption" class="pause-corruption"></div>
-        <div class="inv-list" id="pauseInventory"></div>
+        <div class="pause-build" id="pauseInventory"></div>
         <button id="btnResume">REPRENDRE</button>
         <div class="btn-grid">
           <button id="btnPauseOptions" class="secondary"><i data-icon="cog"></i> OPTIONS</button>
@@ -845,7 +849,7 @@
 
       <!-- ===== GAME OVER ===== -->
       <!-- ===== REVIVRE (pub récompensée) ===== -->
-      <div id="reviveMenu" class="menu-overlay">
+      <div id="reviveMenu" class="menu-overlay game-panel">
         <h1>K.O. !</h1>
         <p class="revive-text">
           Regarde une courte publicité pour revenir avec <b>50 % de tes PV</b>. Une seule fois par partie.
@@ -936,12 +940,12 @@
         </div>
       </div>
 
-      <div id="gameOver" class="menu-overlay">
+      <div id="gameOver" class="menu-overlay game-panel">
         <h1 id="finalTitle">MORT</h1>
         <p class="final-pseudo"><span id="finalPseudo"></span></p>
         <div class="final-stats">
-          <div>Niveau: <span id="finalLvl">1</span></div>
-          <div><span id="finalWaveLabel">Vague</span>: <span id="finalWave">0</span></div>
+          <div><b id="finalWave">0</b><span id="finalWaveLabel">Vague</span></div>
+          <div><b id="finalLvl">1</b><span>Niveau</span></div>
         </div>
         <div class="rewards-box">
           <p class="reward-xp">+<span id="runXpGain">0</span> XP</p>
@@ -949,6 +953,7 @@
           <p id="runSeasonGain" class="reward-season"></p>
         </div>
         <div id="runStats" class="run-stats"></div>
+        <div id="runBuild" class="run-build"></div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>
         <div id="onlineStatus"></div>
         <div class="end-actions">

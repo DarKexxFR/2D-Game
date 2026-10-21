@@ -1,0 +1,528 @@
+/* Fenêtres de partie (pause, choix d'amélioration, revivre, fin) et build du joueur (ui/buildView.js).
+   Une couleur d'accent par fenêtre (--accent), cadre lumineux, titres néon. */
+
+.menu-overlay.game-panel {
+  --accent: #00ffff;
+  width: min(720px, calc(100vw - 30px));
+  min-width: 0;
+  padding: 28px 30px 26px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+    linear-gradient(160deg, rgba(18, 10, 36, 0.97), rgba(6, 4, 14, 0.97));
+  box-shadow:
+    0 0 60px rgba(0, 0, 0, 0.85),
+    0 0 26px color-mix(in srgb, var(--accent) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.menu-overlay.game-panel .menu-head h2 {
+  color: #fff;
+  font-size: 26px;
+  text-shadow:
+    0 0 12px var(--accent),
+    0 0 28px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.menu-overlay.game-panel .menu-sub {
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+  font-family: Orbitron, sans-serif;
+  letter-spacing: 1px;
+}
+
+/* --- Pause --- */
+#pauseMenu {
+  --accent: #00ffff;
+}
+.pause-build {
+  max-height: min(52vh, 460px);
+  overflow-y: auto;
+  margin-bottom: 18px;
+  padding: 2px 4px 2px 0;
+  text-align: left;
+  touch-action: pan-y;
+}
+.pause-build .build-view + .build-view {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Build --- */
+.bv-owner {
+  margin-bottom: 6px;
+  font-family: Orbitron, sans-serif;
+  font-weight: 900;
+  color: #fff;
+}
+.bv-section + .bv-section {
+  margin-top: 14px;
+}
+.bv-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-family: Orbitron, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8f86ad;
+}
+.bv-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent);
+}
+
+/* Armes : arme équipée + armes d'appoint */
+.bv-weapons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.bv-weapon {
+  --c: #00ffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  border-radius: 10px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 14%, transparent), rgba(0, 0, 0, 0.35));
+}
+.bv-weapon.evolved {
+  border-color: #ff2a6d;
+  box-shadow: 0 0 12px rgba(255, 42, 109, 0.35);
+}
+.bv-weapon.empty {
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: none;
+  color: #5d5672;
+  font-size: 12px;
+}
+.bv-wicon,
+.bv-cicon {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 22px;
+  overflow: visible;
+}
+.bv-weapon.empty .bv-wicon {
+  border-style: dashed;
+}
+.bv-wtext,
+.bv-ctext {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.bv-wtext b,
+.bv-ctext b {
+  color: #fff;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.bv-wtext small {
+  color: color-mix(in srgb, var(--c) 75%, #fff);
+  font-size: 11px;
+}
+.bv-weapon.evolved .bv-wtext small {
+  color: #ff7aa8;
+}
+.bv-pips {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+.bv-pips i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+}
+.bv-pips i.on {
+  background: var(--c);
+  box-shadow: 0 0 5px var(--c);
+}
+
+/* Évolutions obtenues */
+.bv-evos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bv-evo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid rgba(255, 42, 109, 0.6);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 42, 109, 0.2), rgba(255, 215, 0, 0.06));
+  color: #ffd0de;
+  font-size: 12px;
+  font-weight: 700;
+}
+.bv-evo .ico {
+  font-size: 16px;
+}
+
+/* Améliorations : icône à la couleur de la rareté, nombre de cartes, effet */
+.bv-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+.bv-card {
+  --c: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid var(--c);
+  background: rgba(255, 255, 255, 0.03);
+}
+.bv-card .bv-cicon {
+  width: 34px;
+  height: 34px;
+  font-size: 19px;
+  border-color: color-mix(in srgb, var(--c) 40%, transparent);
+}
+.bv-card.rarity-legendary .bv-cicon {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.bv-card.rarity-corrupted {
+  background: rgba(120, 0, 30, 0.22);
+}
+.bv-ctext small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: #a39cbb;
+  font-size: 11px;
+}
+.bv-count {
+  position: absolute;
+  right: -7px;
+  bottom: -6px;
+  padding: 0 4px;
+  border-radius: 7px;
+  background: var(--c);
+  color: #0a0612;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 14px;
+}
+.bv-empty {
+  color: #6b6484;
+  font-size: 13px;
+}
+
+/* Version compacte (écran de fin) : icônes seules */
+.build-view.compact .bv-weapons,
+.build-view.compact .bv-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.build-view.compact .bv-weapon {
+  padding: 4px;
+  border-radius: 10px;
+}
+.build-view.compact .bv-weapon.empty {
+  display: none;
+}
+.build-view.compact .bv-card {
+  padding: 0 7px 6px 0; /* place pour le badge ×N qui déborde de l'icône */
+  border: none;
+  background: none;
+  overflow: visible;
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .menu-overlay.game-panel {
+    padding: 20px 16px 18px;
+  }
+  .menu-overlay.game-panel .menu-head h2 {
+    font-size: 21px;
+  }
+  .pause-build {
+    max-height: 48vh;
+  }
+  .bv-weapons {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+  .bv-cards {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+/* --- Choix d'amélioration --- */
+#upgradeMenu {
+  --accent: #ffd700;
+  width: min(620px, calc(100vw - 30px));
+}
+#upgradeMenu.boss-chest {
+  --accent: #ffaa00;
+}
+#upgradeMenu.cursed-reward {
+  --accent: #ff1f4b;
+}
+.menu-overlay#upgradeMenu h2 {
+  margin-bottom: 14px;
+  color: #fff;
+  font-size: 26px;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 12px var(--accent),
+    0 0 28px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+#upgradeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px;
+  overflow: visible;
+}
+#upgradeMenu .upgrade-option {
+  --c: #aaa;
+  margin: 0;
+  padding: 14px 16px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+  border-left: 4px solid var(--c);
+  border-radius: 12px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--c) 13%, transparent), rgba(8, 4, 18, 0.7) 60%);
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
+  animation: none;
+}
+#upgradeMenu .upgrade-option.rarity-common {
+  --c: #b8b8b8;
+}
+#upgradeMenu .upgrade-option.rarity-rare {
+  --c: #2b9bff;
+}
+#upgradeMenu .upgrade-option.rarity-epic {
+  --c: #b84dff;
+}
+#upgradeMenu .upgrade-option.rarity-legendary {
+  --c: #ffaa00;
+  animation: pulseGold 2s infinite;
+}
+#upgradeMenu .upgrade-option.rarity-evolution {
+  --c: #ff2a6d;
+  animation: pulseGold 1.2s infinite;
+}
+#upgradeMenu .upgrade-option.rarity-corrupted {
+  --c: #ff1f4b;
+}
+#upgradeMenu .upgrade-option.rarity-weapon {
+  --c: #00e5ff;
+}
+/* Survol / sélection : lueur à la couleur de la rareté, sans déplacement (la carte ne sort plus du cadre) */
+#upgradeMenu .upgrade-option.selected {
+  border-color: var(--c);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--c) 24%, transparent), rgba(8, 4, 18, 0.7) 70%);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--c) 45%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--c) 18%, transparent);
+}
+@media (hover: hover) {
+  #upgradeMenu .upgrade-option:hover {
+    transform: none;
+    border-color: var(--c);
+  }
+}
+#upgradeMenu .upgrade-option .icon {
+  width: 52px;
+  height: 52px;
+  margin-right: 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  background: radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent), rgba(0, 0, 0, 0.6) 75%);
+  font-size: 28px;
+}
+#upgradeMenu .rarity-tag {
+  top: 8px;
+  right: 10px;
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+}
+#upgradeMenu .upg-info {
+  min-width: 0;
+  padding-right: 64px;
+}
+#upgradeMenu .upg-info h4 {
+  font-size: 16px;
+}
+#upgradeMenu .upg-info p {
+  color: #c8c1dd;
+}
+#upgradeMenu .upg-key {
+  top: auto;
+  bottom: 8px;
+  left: auto;
+  right: 12px;
+  color: color-mix(in srgb, var(--c) 60%, #555);
+}
+
+/* --- Revivre --- */
+#reviveMenu {
+  --accent: #ff2a6d;
+  max-width: 460px;
+}
+#reviveMenu h1 {
+  overflow: visible;
+  font-size: 34px;
+  color: #fff;
+  text-shadow:
+    0 0 14px #ff2a6d,
+    0 0 32px rgba(255, 42, 109, 0.6);
+}
+#reviveMenu button.revive-btn {
+  box-shadow: 0 0 18px rgba(255, 184, 0, 0.45);
+}
+
+/* --- Fin de partie --- */
+#gameOver {
+  --accent: #ff3355;
+}
+.menu-overlay#gameOver h1 {
+  overflow: visible;
+  margin-bottom: 6px;
+  color: #fff;
+  text-shadow:
+    0 0 14px var(--accent),
+    0 0 34px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+#gameOver .final-pseudo {
+  margin-bottom: 14px;
+  color: #c9c0e4;
+  font-size: 16px;
+}
+#gameOver .final-stats {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+#gameOver .final-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 12%, transparent),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+#gameOver .final-stats b {
+  font-family: Orbitron, sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+#gameOver .final-stats span {
+  color: #a39cbb;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+#gameOver .rewards-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+#gameOver .rewards-box p {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 900;
+}
+#gameOver .reward-xp {
+  border: 1px solid rgba(0, 255, 255, 0.45);
+  background: rgba(0, 255, 255, 0.08);
+  color: #9ff;
+}
+#gameOver .reward-gold {
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.08);
+  color: #ffd700;
+}
+#gameOver .reward-season:not(:empty) {
+  border: 1px solid rgba(255, 0, 170, 0.45);
+  background: rgba(255, 0, 170, 0.08);
+  font-size: 12px;
+}
+#gameOver .reward-season:empty {
+  display: none;
+}
+#gameOver .run-tile {
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.run-build {
+  margin: 4px 0 6px;
+  text-align: left;
+}
+.run-build .bv-section + .bv-section {
+  margin-top: 8px;
+}
+.run-build .bv-title {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .menu-overlay#upgradeMenu h2 {
+    font-size: 20px;
+  }
+  #upgradeMenu .upgrade-option {
+    padding: 10px 12px 10px 10px;
+  }
+  #upgradeMenu .upgrade-option .icon {
+    width: 42px;
+    height: 42px;
+    margin-right: 10px;
+    font-size: 22px;
+  }
+  #upgradeMenu .upg-info {
+    padding-right: 0;
+  }
+  #upgradeMenu .upg-info h4 {
+    font-size: 14px;
+    padding-right: 60px;
+  }
+  #upgradeMenu .upg-key {
+    display: none;
+  }
+  #gameOver .final-stats b {
+    font-size: 24px;
+  }
+}

@@ -178,6 +178,11 @@ Principes :
     duel). Chaque joueur écoute son canal Realtime `amis-<id>` : « DÉFIER » crée une partie de duel et y envoie
     le code, l'ami accepte (fenêtre `#friendInvite`) et rejoint ; duel en ligne habituel, donc classé ELO avec
     les mêmes règles anti-abus. En partie, un défi reçu est refusé « occupé ». Tests : faux RPC dans `fixtures.js`.
+- **Fenêtres de partie** (pause, choix d'amélioration, revivre, fin ; classe `game-panel`, styles dans `css/panels.css`,
+  une couleur d'accent `--accent` par fenêtre) : le **build** (`ui/buildView.js`, `buildView(player)`) montre les armes
+  (équipée + appoint avec niveau en pastilles, emplacements libres), les évolutions et les améliorations (icône à la
+  couleur de la rareté, ×nombre, effet), triées de la plus rare à la plus commune. Pause : build complet (un par joueur
+  en duel sur un écran) ; écran de fin : version `compact` (icônes seules) dans `#runBuild`. Tests : `tests/build-view.spec.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).

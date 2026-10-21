@@ -1,11 +1,13 @@
-// Menu pause avec l'inventaire des améliorations de la partie.
+// Menu pause : où en est la partie et le build complet (voir ui/buildView.js).
 
 import { game, player } from "../core/state.js";
 import { activeMutators } from "../systems/endless.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
+import { buildView } from "./buildView.js";
 import { $, el, isVisible } from "./dom.js";
 import { corruptionPercent } from "./hud.js";
 import { icon } from "./icons.js";
+import { formatDuration } from "./runStats.js";
 import { hideScreens, showScreen } from "./screens.js";
 
 export function canTogglePause() {
@@ -20,6 +22,7 @@ export function togglePause() {
     hideScreens();
     return;
   }
+  renderMeta();
   renderCorruption();
   renderInventory();
   showScreen("pauseMenu");
@@ -53,26 +56,21 @@ function renderPulse(box) {
   }
 }
 
+/** Build de la partie (armes, évolutions, améliorations) ; en duel sur un écran, celui des deux joueurs. */
 function renderInventory() {
   const list = $("pauseInventory");
-  list.replaceChildren();
   if (versus.split) {
-    for (const i of [0, 1]) withRun(i, () => renderItems(list, player.inventory, fighterName(i) + " · "));
-    if (list.children.length === 0) list.append(el("div", "inv-empty", "Inventaire vide"));
+    const views = [];
+    for (const i of [0, 1]) withRun(i, () => views.push(buildView(player, { title: fighterName(i) })));
+    list.replaceChildren(...views);
     return;
   }
-  renderItems(list, player.inventory);
+  list.replaceChildren(buildView(player));
 }
 
-function renderItems(list, inventory, prefix = "") {
-  const names = Object.keys(inventory).sort();
-  if (names.length === 0 && !prefix) {
-    list.append(el("div", "inv-empty", "Inventaire vide"));
-    return;
-  }
-  for (const name of names) {
-    const row = el("div", "inv-item");
-    row.append(el("span", "", prefix + name), el("span", "inv-count", "x" + inventory[name]));
-    list.append(row);
-  }
+/** Sous le titre : vague, niveau et durée de la partie. */
+function renderMeta() {
+  const label = game.rush ? `Boss ${game.rush.stage}` : `Vague ${game.wave}`;
+  const parts = versus.split ? [label] : [label, `Niveau ${player.level}`, formatDuration(game.time)];
+  $("pauseMeta").textContent = parts.join(" · ");
 }
