@@ -1,6 +1,8 @@
 // Succès : `metric` = statistique suivie (voir services/achievements.js), `target` = seuil,
 // `reward` = or gagné au déblocage, `group` = catégorie affichée dans le menu.
 
+import { BESTIARY_TYPES } from "./bestiary.js";
+
 export const ACHIEVEMENT_GROUPS = [
   { id: "combat", name: "Combat", color: "#ff2a6d" },
   { id: "boss", name: "Boss", color: "#aa66ff" },
@@ -8,6 +10,7 @@ export const ACHIEVEMENT_GROUPS = [
   { id: "nightmare", name: "Cauchemar", color: "#ff4466" },
   { id: "endless", name: "Endless Pulse", color: "#ff00aa" },
   { id: "collection", name: "Collection", color: "#ffd700" },
+  { id: "bestiary", name: "Bestiaire", color: "#00ff88" },
 ];
 
 const a = (group, id, icon, name, description, metric, target, reward) => ({
@@ -49,6 +52,16 @@ export const ACHIEVEMENTS = [
   a("combat", "combo_200", "rage", "Carnage", "Atteindre un combo de ×200.", "bestCombo", 200, 1000),
   a("combat", "evolution", "sparkle", "Évolution", "Obtenir une évolution d'arme.", "evolutions", 1, 400),
   a("combat", "goblin", "coin", "Voleur volé", "Attraper un Voleur doré.", "kill_goblin", 1, 500),
+  a(
+    "combat",
+    "arsenal",
+    "missile",
+    "Arsenal",
+    "Porter 3 armes d'appoint dans une partie.",
+    "bestSideWeapons",
+    3,
+    400,
+  ),
 
   // --- BOSS ---
   a("boss", "first_boss", "crown", "Chasseur de boss", "Vaincre un boss.", "bosses", 1, 150),
@@ -269,5 +282,37 @@ export const ACHIEVEMENTS = [
     "maxPrestige",
     5,
     2000,
+  ),
+
+  // --- BESTIAIRE (fiches débloquées en éliminant chaque type d'ennemi, voir data/bestiary.js) ---
+  a(
+    "bestiary",
+    "bestiary_10",
+    "book",
+    "Naturaliste",
+    "Débloquer 10 fiches du bestiaire.",
+    "bestiary",
+    10,
+    300,
+  ),
+  a(
+    "bestiary",
+    "bestiary_25",
+    "book",
+    "Chercheur",
+    "Débloquer 25 fiches du bestiaire.",
+    "bestiary",
+    25,
+    1000,
+  ),
+  a(
+    "bestiary",
+    "bestiary_all",
+    "book",
+    "Encyclopédie vivante",
+    "Débloquer toutes les fiches du bestiaire.",
+    "bestiary",
+    BESTIARY_TYPES.length,
+    3000,
   ),
 ];

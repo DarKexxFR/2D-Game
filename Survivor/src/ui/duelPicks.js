@@ -4,13 +4,12 @@
 
 import { RARITIES, TICK_MS, VERSUS } from "../config.js";
 import { game, player } from "../core/state.js";
-import { applyUpgrade } from "../data/upgrades.js";
-import { addStat } from "../services/achievements.js";
+import { cardDesc } from "../data/upgrades.js";
 import { heal } from "../systems/player.js";
 import { VERSUS_KEYS, fighterName, versus, withRun } from "../systems/versus.js";
 import { $, el, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
-import { chestGold, drawChoices, evolutionHint } from "./upgradeMenu.js";
+import { chestGold, drawChoices, evolutionHint, takeCard } from "./upgradeMenu.js";
 
 const CONFIRM_DELAY_MS = 350; // un dash en cours ne doit pas valider la carte
 
@@ -64,7 +63,12 @@ function open(i) {
         : kind === "shrine"
           ? "Sanctuaire maudit · choisis une carte"
           : `Niveau ${player.level} · choisis une amélioration`;
-    return list.map((u) => ({ u, level: player.inventory[u.name] || 0, hint: evolutionHint(u, player) }));
+    return list.map((u) => ({
+      u,
+      level: player.inventory[u.name] || 0,
+      desc: cardDesc(u, player),
+      hint: evolutionHint(u, player),
+    }));
   });
   if (cards.length === 0) return next(i);
 
@@ -73,13 +77,13 @@ function open(i) {
   box.querySelector(".dp-title").style.color = VERSUS.colors[i];
   const list = box.querySelector(".dp-cards");
   list.replaceChildren();
-  for (const [n, { u, level, hint }] of cards.entries()) {
+  for (const [n, { u, level, desc, hint }] of cards.entries()) {
     const card = el("div", `dp-card rarity-${u.rarity}`);
     const color = RARITIES[u.rarity]?.color || "#fff";
     const ico = el("div", "icon");
     ico.append(icon(u.icon, color));
     const info = el("div", "dp-info");
-    info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
+    info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", desc));
     if (u.malus) info.append(el("p", "upg-malus", u.malus));
     if (hint) info.append(hint);
     card.style.borderColor = color;
@@ -104,8 +108,7 @@ function choose(i, n) {
   if (!pick || versus.winner !== null) return;
   p.cards = null;
   withRun(i, () => {
-    applyUpgrade(pick.u, player);
-    if (pick.u.rarity === "evolution") addStat("evolutions");
+    takeCard(pick.u, player);
   });
   next(i);
 }

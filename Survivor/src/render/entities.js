@@ -8,57 +8,13 @@ import { BIOME_FOES } from "../data/enemies.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite, shade } from "./sprites.js";
 import { drawTrail } from "./trail.js";
+import { ENEMY_LOOKS } from "./enemyLooks.js";
+import { drawMissile } from "./sideWeapons.js";
 import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 
 const TAU = Math.PI * 2;
 const HIT_FLASH_MS = 80;
-
-// Sprite de chaque type d'ennemi et façon de l'orienter :
-// "face" = tourné vers le joueur, "spin" = tourne sur lui-même, "wobble" = gélatine.
-const ENEMY_LOOKS = {
-  normal: { sprite: "normal", mode: "face" },
-  fast: { sprite: "fast", mode: "face" },
-  tank: { sprite: "tank", mode: "face" },
-  ranged: { sprite: "ranged", mode: "face" },
-  kamikaze: { sprite: "kamikaze", mode: "spin", spin: 0.012 },
-  miniboss: { sprite: "miniboss", mode: "face" },
-  boss: { sprite: "boss", mode: "spin", spin: 0.0015 },
-  slime_boss: { sprite: "slime_king", mode: "wobble" },
-  slime_big: { sprite: "slime", mode: "wobble" },
-  slime_small: { sprite: "slime", mode: "wobble" },
-  hydra: { sprite: "hydra", mode: "hydra", spin: 0.0006 },
-  hydra_spawn: { sprite: "fast", mode: "face" },
-  scorpion: { sprite: "scorpion", mode: "face" },
-  golem: { sprite: "golem", mode: "face" },
-  spore: { sprite: "spore", mode: "spin", spin: 0.002 },
-  sporeling: { sprite: "spore", mode: "spin", spin: 0.004 },
-  bomber: { sprite: "bomber", mode: "face" },
-  blinker: { sprite: "blinker", mode: "spin", spin: 0.003 },
-  laser_drone: { sprite: "laser_drone", mode: "face" },
-  colossus: { sprite: "colossus", mode: "face" },
-  void_reaper: { sprite: "void_reaper", mode: "face" },
-  storm_titan: { sprite: "storm_titan", mode: "face" },
-  prism: { sprite: "prism", mode: "spin", spin: 0.0012 },
-  kraken: { sprite: "kraken", mode: "face" },
-  kraken_tentacle: { sprite: "tentacle", mode: "sway" },
-  twin_fire: { sprite: "twin_fire", mode: "spin", spin: 0.002 },
-  twin_ice: { sprite: "twin_ice", mode: "spin", spin: -0.0015 },
-  phantom: { sprite: "phantom", mode: "face" },
-  goblin: { sprite: "goblin", mode: "flee" },
-  shield: { sprite: "shield", mode: "shield" },
-  swarm: { sprite: "swarm", mode: "face" },
-  healer: { sprite: "healer", mode: "face" },
-  magnet: { sprite: "magnet", mode: "face" },
-  sandworm: { sprite: "sandworm", mode: "heading" },
-  sandworm_segment: { sprite: "sandwormSegment", mode: "spin", spin: 0.0008 },
-  hive_queen: { sprite: "hiveQueen", mode: "face" },
-  hive_flower: { sprite: "hiveFlower", mode: "spin", spin: 0.0007 },
-  chronophage: { sprite: "chronophage", mode: "face" },
-  hacker: { sprite: "hacker", mode: "face" },
-  hacker_clone: { sprite: "hacker", mode: "face" },
-  pulse_core: { sprite: "pulseCore", mode: "pulse" },
-};
 
 export function drawPlayer(now) {
   const { worldX: x, worldY: y, size } = player;
@@ -936,6 +892,10 @@ export function drawProjectiles() {
   for (const p of world.projectiles) {
     if (p.type === "kunai") {
       drawKunai(p);
+      continue;
+    }
+    if (p.type === "missile") {
+      drawMissile(p);
       continue;
     }
     if (p.type === "disc") {

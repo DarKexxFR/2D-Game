@@ -27,6 +27,8 @@ export const world = {
   hazards: [], // attaques de zone des boss (voir systems/hazards.js)
   bossChests: [], // coffres d'augmentation lâchés par les boss
   bolts: [], // éclairs de l'Arc Tesla (purement visuels)
+  mines: [], // mines à plasma posées (arme d'appoint, voir systems/sideWeapons.js)
+  slashes: [], // coups de fouet laser (purement visuels)
   trail: [], // traînée cosmétique du vaisseau (skin, voir systems/trail.js)
 };
 
@@ -149,6 +151,7 @@ export function resetPlayer(accountLevel) {
     bloodPact: null, // carte Pacte de sang : { ms, heal } ; pactUntil = fin de la fenêtre de soins
     pactUntil: 0,
     synergy: null, // duo familier + arme actif (data/perks.js SYNERGIES)
+    sideWeapons: [], // armes d'appoint de la partie { id, level, timer, angle } (systems/sideWeapons.js)
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

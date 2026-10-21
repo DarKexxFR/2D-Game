@@ -5,7 +5,7 @@ import { DIFFICULTIES, RARITIES } from "../config.js";
 import { game, pet, player } from "../core/state.js";
 import { biomeForWave } from "../data/biomes.js";
 import { ITEMS } from "../data/items.js";
-import { CORRUPTED_UPGRADES, EVOLUTIONS, UPGRADES, WEAPON_EVOLUTIONS } from "../data/upgrades.js";
+import { cardByName, ownedEvolutions } from "../data/upgrades.js";
 import { killerLine } from "../render/killCam.js";
 import { drawShareCard } from "../render/shareCard.js";
 import { currentSkin, shipLook } from "../services/skins.js";
@@ -19,8 +19,6 @@ const FONT_WAIT_MS = 1500; // polices Google pas encore chargées (ou hors ligne
 let summary = null;
 /** Image PNG de la carte, prête une fois les polices chargées et le dessin fait. @type {Promise<Blob | null> | null} */
 let image = null;
-
-const cardOf = (name) => [...UPGRADES, ...CORRUPTED_UPGRADES].find((u) => u.name === name);
 
 /**
  * Résumé de la partie qui vient de se terminer, figé à l'affichage de l'écran de fin.
@@ -37,7 +35,7 @@ export function runSummary({ pseudo, wave, valueLabel, isNewRecord }) {
   const biome = biomeForWave(game.wave);
   const look = shipLook(player.hero, currentSkin(), 0);
   const cards = Object.entries(player.inventory)
-    .map(([name, count]) => ({ def: cardOf(name), name, count }))
+    .map(([name, count]) => ({ def: cardByName(name), name, count }))
     .filter((c) => c.def)
     .sort((a, b) => b.count - a.count)
     .map(({ def, name, count }) => ({
@@ -46,9 +44,11 @@ export function runSummary({ pseudo, wave, valueLabel, isNewRecord }) {
       color: RARITIES[def.rarity]?.color || "#aaa",
       count,
     }));
-  const evolutions = [...WEAPON_EVOLUTIONS, ...EVOLUTIONS]
-    .filter((e) => player.evolutions[e.id])
-    .map((e) => ({ name: e.name, icon: e.icon, color: RARITIES.evolution.color }));
+  const evolutions = ownedEvolutions(player).map((e) => ({
+    name: e.name,
+    icon: e.icon,
+    color: RARITIES.evolution.color,
+  }));
   const petItem = pet.active ? ITEMS[pet.kind] : null;
   const killer = game.killCam.killer;
   return {

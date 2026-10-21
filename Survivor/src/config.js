@@ -260,11 +260,12 @@ export const RARITIES = {
   mythic: { weight: 0, color: "#ff3b30" }, // équipement seulement (coffres), aucune carte en partie
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
   corrupted: { weight: 10, color: "#ff1f4b" }, // cartes « Corrompues » : bonus fort contre un malus
+  weapon: { weight: 22, color: "#00e5ff" }, // armes d'appoint (data/sideWeapons.js) : nouvelle arme ou niveau
 };
 
 // Coffre lâché par un boss : une augmentation au choix (raretés hautes favorisées) + de l'or.
 export const BOSS_CHEST = {
-  weights: { rare: 40, epic: 40, legendary: 20 },
+  weights: { rare: 40, epic: 40, legendary: 20, weapon: 30 },
   gold: 40,
   goldPerWave: 8,
 };

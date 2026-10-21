@@ -178,6 +178,11 @@ Principes :
     duel). Chaque joueur écoute son canal Realtime `amis-<id>` : « DÉFIER » crée une partie de duel et y envoie
     le code, l'ami accepte (fenêtre `#friendInvite`) et rejoint ; duel en ligne habituel, donc classé ELO avec
     les mêmes règles anti-abus. En partie, un défi reçu est refusé « occupé ». Tests : faux RPC dans `fixtures.js`.
+- **Fenêtres de partie** (pause, choix d'amélioration, revivre, fin ; classe `game-panel`, styles dans `css/panels.css`,
+  une couleur d'accent `--accent` par fenêtre) : le **build** (`ui/buildView.js`, `buildView(player)`) montre les armes
+  (équipée + appoint avec niveau en pastilles, emplacements libres), les évolutions et les améliorations (icône à la
+  couleur de la rareté, ×nombre, effet), triées de la plus rare à la plus commune. Pause : build complet (un par joueur
+  en duel sur un écran) ; écran de fin : version `compact` (icônes seules) dans `#runBuild`. Tests : `tests/build-view.spec.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
@@ -188,6 +193,14 @@ Principes :
   vaisseau, des tirs et de la traînée (`systems/trail.js` + `render/trail.js`), couleur libre ou
   arc-en-ciel. Formes et traînées payantes en or (`account.skinsOwned`), à l'essai dans l'aperçu avant
   l'achat. Purement cosmétique, ignoré en duel (chaque joueur garde sa couleur).
+- **Armes d'appoint** (`data/sideWeapons.js` : niveaux et évolutions, `systems/sideWeapons.js` : une fonction par
+  arme dans `BEHAVIORS`, `render/sideWeapons.js`) : jusqu'à `SIDE_WEAPON_RULES.slots` (3) armes en plus de l'arme
+  équipée, gagnées par les cartes de rareté `weapon` (« Arme », `SIDE_WEAPON_CARDS` dans `data/upgrades.js` : nouvelle
+  arme si un emplacement est libre, sinon niveau suivant, 5 niveaux). Évolution = niveau 5 + carte partenaire
+  (`SIDE_EVOLUTIONS`, mêmes règles que `EVOLUTIONS`). Dégâts = multiples de `player.attack`, zones × `projScale`,
+  durées en ticks ; coups directs via `strikeEnemy` (critique, bonus boss), missiles = projectiles `homing`.
+  État dans `player.sideWeapons`, `world.mines`, `world.slashes` (donc propre à chaque partie d'un duel). Source des
+  dégâts = id de l'arme (stats de fin). Rangée `#uiWeapons` du panneau (PC seulement). Carte choisie : `takeCard`.
 - **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
   (ex. Blaster + Force Brute ×3 → Blaster solaire) ; l'arme garde sa couleur.
   Une carte qui rapproche une évolution dont l'autre ingrédient est déjà possédé affiche l'évolution visée
@@ -308,6 +321,15 @@ Principes :
   « Erreurs du jeu » de `stats.html` (`src/stats/errorsPanel.js`). Version = `src/build.js`, réécrit par
   `deploy.yml`. Nouveau moment clé à tracer = un `logEvent` (ou un événement du bus) ; une erreur rattrapée qu'on
   veut voir remonter = `captureError`. Tests : `tests/diagnostics.spec.js`, faux RPC `supabase.errors`.
+- **Bestiaire** (page wiki `bestiaire.html` + `src/bestiary/page.js` + `css/bestiary.css`, comme `legal.html` ;
+  textes dans `data/bestiary.js`, chiffres lus dans `data/enemies.js`, lieux calculés par `whereText`) : une fiche par
+  type d'ennemi, **obligatoire** pour tout nouvel ennemi (`tests/bestiary.spec.js`). Débloquée à la première
+  élimination (`recordBestiaryKill` de `services/bestiary.js`, appelé par `recordKill`) : `account.bestiary`
+  (éliminations par type, synchronisé ; une ancienne sauvegarde reprend ses `kill_<type>`), notification, statistique
+  de succès `bestiary` (groupe « Bestiaire »). Fiche verrouillée = silhouette + où le trouver, jamais ses capacités.
+  La page dessine les vrais sprites : `render/sprites.js`, `render/neon.js`, `render/bossShapes.js` et
+  `render/enemyLooks.js` ne doivent pas dépendre du canvas du jeu (qualité dans `core/gfx.js`). Liens : bas de
+  l'accueil et écran Succès. Adresse `#fiche-<type>` = lien direct.
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -381,7 +403,8 @@ nouveaux mobs (porte-bouclier, essaim, soigneur, aimant), cartes corrompues, san
 synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophage, Hacker, Cœur du Pulse), ralenti de la mort (replay « TUÉ PAR »), carte de score à partager,
 application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement,
 mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html),
-journal de diagnostic et rapports d'erreurs (stats.html).
+journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 armes, 5 niveaux, évolutions),
+bestiaire (page wiki, fiches débloquées en jeu).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

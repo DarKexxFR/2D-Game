@@ -4,24 +4,23 @@
 import { BOSS_CHEST, RARITIES, VERSUS } from "../config.js";
 import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
-import { applyUpgrade, availableEvolutions, availableUpgrades, evolutionsFor } from "../data/upgrades.js";
-import { addStat } from "../services/achievements.js";
+import {
+  applyUpgrade,
+  availableEvolutions,
+  availableUpgrades,
+  cardDesc,
+  evolutionsFor,
+} from "../data/upgrades.js";
+import { addStat, recordBest } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
+import { RARITY_NAMES } from "./buildView.js";
 import { $, el, isVisible, setClass, setText, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
 import { isTouchDevice } from "./touchControls.js";
 
 const CHOICES = 3;
-const RARITY_NAMES = {
-  common: "Commun",
-  rare: "Rare",
-  epic: "Épique",
-  legendary: "Légendaire",
-  evolution: "Évolution",
-  corrupted: "Corrompue",
-};
 
 // Cartes autorisées selon l'origine du choix : un coffre de boss ne propose ni commune ni corrompue,
 // un sanctuaire maudit seulement des rares et des épiques.
@@ -240,6 +239,13 @@ export function evolutionHint(u, p) {
   return hint;
 }
 
+/** Carte choisie : appliquée au joueur `p`, puis comptée pour les succès (évolutions, armes d'appoint). */
+export function takeCard(u, p) {
+  applyUpgrade(u, p);
+  if (u.rarity === "evolution") addStat("evolutions");
+  if (u.sideWeapon) recordBest("bestSideWeapons", p.sideWeapons.length);
+}
+
 function renderChoices(picks) {
   const p = current.target;
   $("btnReroll").textContent = p.rerolls > 0 ? `RELANCER (${p.rerolls})` : "";
@@ -253,7 +259,10 @@ function renderChoices(picks) {
     tag.style.color = RARITIES[u.rarity].color;
     const info = el("div", "upg-info");
     const level = p.inventory[u.name] || 0;
-    info.append(el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name), el("p", "", u.desc));
+    info.append(
+      el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name),
+      el("p", "", cardDesc(u, p)),
+    );
     if (u.malus) info.append(el("p", "upg-malus", u.malus));
     if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
     const hint = evolutionHint(u, p);
@@ -266,8 +275,7 @@ function renderChoices(picks) {
     card.addEventListener("click", () => {
       if (!current) return;
       clearTimeout(autoPickTimer);
-      applyUpgrade(u, p);
-      if (u.rarity === "evolution") addStat("evolutions");
+      takeCard(u, p);
       resume();
     });
     options.append(card);

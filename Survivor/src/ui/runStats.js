@@ -4,6 +4,7 @@
 import { game, pet, player } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
 import { ITEMS } from "../data/items.js";
+import { SIDE_WEAPONS, sideName } from "../data/sideWeapons.js";
 import { heroSkill } from "../systems/skills.js";
 import { $, el } from "./dom.js";
 
@@ -38,7 +39,7 @@ function sourceName(source) {
     case "synergy":
       return player.synergy?.name || "Synergie";
     default:
-      return "Autres";
+      return SIDE_WEAPONS[source] ? sideName(source, player) : "Autres";
   }
 }
 
