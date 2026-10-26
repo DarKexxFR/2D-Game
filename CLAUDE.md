@@ -33,7 +33,8 @@ npx playwright test tests/home.spec.js --project=mobile --repeat-each=5   # traq
 ```
 
 La CI GitHub (`.github/workflows/tests.yml`) lance `npm run lint`, `npm run typecheck` puis tous les tests
-Playwright sur chaque PR. Toujours lancer les trois en local avant de pousser.
+Playwright sur chaque PR (suite coupée en deux jobs parallèles, `--shard`, limite 20 min chacun). Toujours lancer les
+trois en local avant de pousser.
 
 ## Architecture (`Survivor/src/`)
 
