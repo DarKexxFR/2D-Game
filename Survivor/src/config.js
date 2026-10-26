@@ -467,9 +467,19 @@ export const PUSH = {
   },
 };
 
+// Musique : pistes du menu (fichiers), puis en partie les musiques synthétisées de data/music.js
+// (services/audio.js choisit selon le biome, les boss, l'Endless Pulse).
 export const MUSIC = {
   dir: "assets/audio/",
-  tracks: ["intro.mp3", "cyber.mp3"],
+  tracks: ["intro.mp3", "cyber.mp3"], // accueil et menus
+  synthVolume: 0.6, // musique synthétisée par rapport aux fichiers, au même réglage de volume
+  pauseDuck: 0.35, // volume gardé en pause et pendant un choix d'amélioration
+  fadeIn: 1.2, // s (début de partie)
+  crossfade: 0.6, // s (montée de la nouvelle musique, calée sur un temps)
+  fadeOut: 1.5, // s
+  checkMs: 400, // le moment de la partie (biome, boss...) est vérifié à ce rythme
+  lookahead: 0.4, // s de notes programmées à l'avance (un blocage plus court ne coupe pas la musique)
+  timerMs: 60,
 };
 
 // Classement mondial (Supabase). Laisser vide pour désactiver le mode en ligne.
