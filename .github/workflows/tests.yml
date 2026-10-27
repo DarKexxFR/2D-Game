@@ -28,11 +28,20 @@ jobs:
         run: npm run typecheck
 
   e2e:
-    name: Jeu (PC + mobile)
+    name: Jeu (PC + mobile) ${{ matrix.shard }}/2
     # Version d'Ubuntu figée : « ubuntu-latest » est passé à la 26.04, que Playwright 1.56 ne prend pas en charge
     # (échec dès « playwright install --with-deps »).
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # Suite coupée en deux moitiés lancées en parallèle : d'un seul tenant elle frôlait la limite
+    # (14,7 min sur 15 après la PR #56, job annulé alors que tous les tests passaient).
+    # Pour plus de parts : ajouter une valeur à « shard » et remplacer « /2 » partout.
+    # Les limites sont posées étape par étape : l'installation de Chromium (paquets Ubuntu) prend
+    # parfois plus de 10 min quand les serveurs de paquets sont lents, et ne doit pas manger le temps des tests.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,14 +50,16 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Installer Chromium
+        timeout-minutes: 15
         run: npx playwright install --with-deps chromium
       - name: Lancer les tests
-        run: npx playwright test
+        timeout-minutes: 15
+        run: npx playwright test --shard=${{ matrix.shard }}/2
       - name: Rapport en cas d'échec
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: rapport-playwright
+          name: rapport-playwright-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
