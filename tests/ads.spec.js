@@ -15,7 +15,8 @@ const kill = (page) => game(page, ({ player }) => player.takeDamage(1e12));
 test("revivre avec une pub, une seule fois par partie", async ({ page }) => {
   await page.goto("/");
   await startGame(page);
-  await fastAds(page);
+  // Pub assez longue pour la voir à coup sûr (300 ms passaient parfois inaperçues sur une machine chargée)
+  await fastAds(page, { demoDurationMs: 1500 });
   await kill(page);
   await expect(page.locator("#reviveMenu")).toBeVisible();
   await page.locator("#btnReviveAd").click();
