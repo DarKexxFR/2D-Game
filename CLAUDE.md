@@ -363,6 +363,16 @@ Principes :
   par note, sans écho. Contexte audio partagé avec les effets (`services/audioContext.js`, débloqué à la première
   interaction, suspendu onglet caché). Tests : `tests/music.spec.js` (partitions valides, rendu hors temps réel sans
   saturation, choix de la musique).
+- **Partie interrompue** (`services/runSave.js`, copie de graphe `utils/snapshot.js`, accueil `ui/resumeRun.js`,
+  réglages `RUN_SAVE`) : QUITTER (pause), onglet masqué ou fermé (`visibilitychange`, `pagehide`) et toutes les
+  `RUN_SAVE.everySeconds` de jeu = copie complète de `game`, `player`, `world`, `pet`, `mysteryBox`, `camera` dans
+  `survivor_run` (propre à l'appareil, jamais dans le compte), avec les choix d'amélioration en attente (mêmes cartes,
+  or du coffre compté une fois : `pendingChoices` / `restoreChoices`). REPRENDRE la recharge **en place** (mêmes
+  objets, mêmes tableaux), en pause ; un champ ajouté depuis prend sa valeur de départ. Effacée à la mort et en fin
+  de partie ; ABANDONNER (pause ou accueil) = abandon compté ; JOUER avec une partie en cours demande confirmation.
+  Jamais en duel. **Tout état de partie doit rester dans ces objets, en données simples** (pas de fonction ni
+  d'objet de classe : `SnapshotError`) ; listes purement visuelles sauvegardées vides (`VISUAL_LISTS`).
+  Tests : `tests/resume-run.spec.js` (dont chaque boss sauvegardé et repris en plein combat).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -439,7 +449,8 @@ mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes d
 journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 armes, 5 niveaux, évolutions),
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
-fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés.
+fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
+reprise d'une partie interrompue.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

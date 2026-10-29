@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   accountSync: "survivor_account_sync", // dernière version échangée avec le compte (anti-écrasement)
   app: "survivor_app", // état propre à l'appareil : abonnement aux notifications (voir services/appState.js)
   diagnostics: "survivor_diag", // journal de diagnostic de cet appareil (voir services/diagnostics.js)
+  run: "survivor_run", // partie interrompue à reprendre, propre à l'appareil (voir services/runSave.js)
 };
 
 // La logique tourne à pas fixe : le jeu va à la même vitesse en 60, 144 ou 240 Hz.
@@ -194,6 +195,12 @@ export const TUTORIAL = {
 };
 
 // Ralenti de la mort (« REVOIR MA MORT » sur l'écran de fin : systems/killCam.js, render/killCam.js)
+/**
+ * Partie interrompue (services/runSave.js) : sauvegardée en quittant, en fermant ou en masquant l'onglet,
+ * et toutes les `everySeconds` secondes de jeu (une fermeture brutale ne perd que ce qui suit).
+ */
+export const RUN_SAVE = { everySeconds: 15 };
+
 export const KILL_CAM = {
   seconds: 4, // durée enregistrée avant la mort
   every: 2, // une image toutes les 2 ticks (30 par seconde)

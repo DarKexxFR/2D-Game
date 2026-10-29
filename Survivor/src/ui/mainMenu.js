@@ -14,6 +14,7 @@ import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
 import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
 import { showScreen } from "./screens.js";
 import { refreshSeasonTile } from "./seasonMenu.js";
+import { renderResumeRun } from "./resumeRun.js";
 
 let pseudo = loadPseudo();
 
@@ -60,6 +61,7 @@ export function initMainMenu({ onPlay }) {
 
 export function showMainMenu() {
   refreshAccountUI();
+  renderResumeRun();
   showScreen("mainMenu");
 }
 

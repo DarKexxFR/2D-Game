@@ -345,7 +345,7 @@
             </button>
           </div>
 
-          <div class="home-play">
+          <div id="homePlay" class="home-play">
             <input
               type="text"
               id="playerPseudo"
@@ -354,6 +354,20 @@
               maxlength="12"
               aria-label="Pseudo"
             />
+            <div class="resume-run">
+              <button id="btnResumeRun" class="resume-btn">
+                <i data-icon="play"></i>
+                <span class="resume-text"><b>REPRENDRE</b><small id="resumeRunInfo"></small></span>
+              </button>
+              <button
+                id="btnAbandonRun"
+                class="resume-drop"
+                title="Abandonner la partie en cours"
+                aria-label="Abandonner la partie en cours"
+              >
+                <i data-icon="skull"></i>
+              </button>
+            </div>
             <button id="btnPlay" class="play-btn"><i data-icon="play"></i> JOUER</button>
             <div id="difficultyPicker" class="diff-picker" role="radiogroup" aria-label="Difficulté">
               <button class="diff-btn" data-diff="easy" role="radio">FACILE</button>
@@ -637,8 +651,11 @@
         <button id="btnResume">REPRENDRE</button>
         <div class="btn-grid">
           <button id="btnPauseOptions" class="secondary"><i data-icon="cog"></i> OPTIONS</button>
-          <button id="btnQuit" class="secondary">QUITTER</button>
+          <button id="btnQuit" class="secondary" title="La partie est sauvegardée : REPRENDRE sur l'accueil">
+            <i data-icon="save"></i> QUITTER
+          </button>
         </div>
+        <button id="btnAbandon" class="pause-abandon">ABANDONNER LA PARTIE</button>
       </div>
 
       <!-- ===== OPTIONS ===== -->

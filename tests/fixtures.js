@@ -238,6 +238,8 @@ export async function withSave(page, save) {
  * de niveau : le menu d'amélioration mettrait la partie en pause au hasard des tests.
  */
 export async function startGame(page, { invincible = true, levelUps = false } = {}) {
+  // Partie interrompue sauvegardée (rechargement en pleine partie) : JOUER demande de l'abandonner
+  if (await page.locator("#btnResumeRun").isVisible()) page.once("dialog", (d) => d.accept());
   await page.locator("#btnPlay").click();
   await expect(page.locator("#ui")).toBeVisible();
   await game(

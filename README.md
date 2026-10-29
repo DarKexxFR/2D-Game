@@ -118,6 +118,10 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   Cœur du Pulse (battements de cœur), une pour l'Architecte et une pour l'Endless Pulse. Composées en
   données et synthétisées en direct (Web Audio) : aucun fichier à télécharger, enchaînements en fondu calés sur
   le temps, volume baissé en pause. Les pistes de l'accueil restent des fichiers. Volume et coupure dans les Options.
+- **Reprendre une partie** : quitter depuis la pause, fermer l'onglet ou mettre le téléphone en veille sauvegarde
+  la partie en cours sur l'appareil (et toutes les 15 secondes de jeu) ; le bouton **REPRENDRE** de l'accueil la
+  recharge telle quelle, en pause (ennemis, boss, build, choix d'amélioration en attente compris). Une mort
+  efface la sauvegarde ; « Abandonner » (pause ou accueil) la jette. Pas en duel.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
   ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
