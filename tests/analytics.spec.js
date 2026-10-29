@@ -28,11 +28,12 @@ test("session anonyme à l'ouverture, une ligne par partie (fin et abandon)", as
     p_victory: false,
   });
 
-  // Quitter une partie en cours compte comme un abandon
+  // Abandonner une partie en cours compte comme un abandon (QUITTER la sauvegarde : rien n'est compté)
   await page.locator("#btnReplay").click();
   await expect(page.locator("#ui")).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.locator("#btnQuit").click();
+  page.once("dialog", (d) => d.accept());
+  await page.locator("#btnAbandon").click();
   await expect.poll(() => calls(supabase, "track_run").length).toBe(2);
   expect(calls(supabase, "track_run")[1].p_killer).toBe("abandon");
 

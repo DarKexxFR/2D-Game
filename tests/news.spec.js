@@ -1,12 +1,14 @@
 // Fenêtre « Nouveautés » (ui/newsMenu.js, data/changelog.js) : vue une fois après une mise à jour.
+import { CHANGELOG } from "../Survivor/src/data/changelog.js";
 import { expect, game, test, withSave } from "./fixtures.js";
 
 test("un joueur qui revient voit les nouveautés une fois, puis la série du jour", async ({ page }) => {
-  await withSave(page, { achievementStats: { runs: 3 }, newsSeen: "" });
+  // Dernière mise à jour pas encore vue : seule sa fiche s'affiche
+  await withSave(page, { achievementStats: { runs: 3 }, newsSeen: CHANGELOG[1].id });
   await page.goto("/");
   await expect(page.locator("#newsMenu")).toBeVisible();
   await expect(page.locator(".news-entry")).toHaveCount(1);
-  await expect(page.locator(".news-item").first()).toContainText("Dix vagues de plus");
+  await expect(page.locator(".news-item").first()).toContainText(CHANGELOG[0].items[0].title);
   await page.locator("#btnNewsClose").click();
   await expect(page.locator("#streakMenu")).toBeVisible(); // la série du jour suit
   const seen = await game(page, async ({ storage }) => {

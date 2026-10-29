@@ -2,8 +2,15 @@
 // et fait tourner la boucle principale (logique à pas fixe + rendu).
 
 // En premier : le journal de diagnostic écoute les erreurs dès le chargement des autres modules
-import { logEvent, logThrottled, markFrame, setDiagnosticContext, watch } from "./services/diagnostics.js";
-import { DIFFICULTIES, LIMITS, LOADING, NET, TICK_MS, VERSUS } from "./config.js";
+import {
+  captureError,
+  logEvent,
+  logThrottled,
+  markFrame,
+  setDiagnosticContext,
+  watch,
+} from "./services/diagnostics.js";
+import { DIFFICULTIES, LIMITS, LOADING, NET, RUN_SAVE, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -81,7 +88,9 @@ import { loadFonts, loadImages, settleWithin } from "./services/preload.js";
 import {
   holdUpgrades,
   initUpgradeMenu,
+  pendingChoices,
   resetUpgradeMenu,
+  restoreChoices,
   resumeUpgrades,
   setAutoPick,
   showBossChest,
@@ -93,6 +102,8 @@ import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
 import { initQuestMenu, openQuests } from "./ui/questMenu.js";
 import { announceRolledOver, initSeasonMenu, openSeason } from "./ui/seasonMenu.js";
 import { addRunSeasonXp } from "./services/season.js";
+import { canSaveRun, clearRun, restoreRunState, saveRun, savedRun } from "./services/runSave.js";
+import { confirmDropRun, initResumeRun } from "./ui/resumeRun.js";
 import { initAnalytics, trackRun } from "./services/analytics.js";
 import { initErrorReports } from "./services/errorReports.js";
 import { currentUser } from "./services/auth.js";
@@ -171,11 +182,101 @@ function reportRun(mode, killer) {
   });
 }
 
+// --- PARTIE INTERROMPUE (services/runSave.js, bouton REPRENDRE de l'accueil) ---
+
+let nextSaveAt = 0; // game.time de la prochaine sauvegarde automatique
+
+/**
+ * Sauvegarde la partie en cours (hors duel, jamais une partie perdue) avec ses choix d'amélioration
+ * en attente. Appelée en quittant, en masquant l'onglet et régulièrement en jouant.
+ */
+function persistRun() {
+  if (deathPending || currentScreen() === "reviveMenu" || !canSaveRun(versus.active)) return false;
+  nextSaveAt = game.time + RUN_SAVE.everySeconds * 1000;
+  return saveRun(lastMode, { choices: pendingChoices() });
+}
+
+/** REPRENDRE : recharge la partie sauvegardée, en pause (ou sur le choix d'amélioration en attente). */
+function resumeRun() {
+  const saved = savedRun();
+  if (!saved) return showMainMenu();
+  lastMode = saved.meta.mode;
+  runReported = false;
+  deathPending = false;
+  stopKillCam();
+  stopVersus();
+  showVersusHud(false);
+  commitPseudo();
+  restoreRandom();
+  resetUpgradeMenu();
+  setAutoPick(false);
+  stopTutorial();
+  try {
+    restoreRunState(saved);
+  } catch (err) {
+    captureError(err);
+    clearRun();
+    game.started = game.running = false;
+    showToast("Cette partie n'a pas pu être reprise.", "warning");
+    return showMainMenu();
+  }
+  // Défi du jour : nouvelle graine (la suite tirée avant l'interruption n'est pas sauvegardée)
+  if (game.daily) useSeed((game.daily.seed ^ Math.floor(game.time)) >>> 0);
+  Object.assign(game, { started: true, running: true, paused: false, over: false });
+  nextSaveAt = game.time + RUN_SAVE.everySeconds * 1000;
+  logEvent("partie", `reprise ${lastMode} · vague ${game.wave}`);
+  startRunMusic();
+  hideScreens();
+  showHud(true);
+  // Le joueur reprend la main quand il est prêt : pause, sauf si une amélioration attend son choix
+  if (!restoreChoices(saved.extra?.choices)) togglePause();
+}
+
+/** Partie sauvegardée abandonnée depuis l'accueil : comptée comme un abandon, puis oubliée. */
+function abandonSavedRun() {
+  const saved = savedRun();
+  clearRun();
+  if (!saved) return;
+  const { meta } = saved;
+  logEvent("partie", `abandon de la partie sauvegardée · vague ${meta.wave}`);
+  trackRun({
+    mode: meta.mode,
+    difficulty: meta.difficulty,
+    wave: meta.wave,
+    pulse: meta.pulse,
+    level: meta.level,
+    kills: meta.kills,
+    seconds: meta.seconds,
+    hero: meta.hero,
+    weapon: meta.weapon,
+    killer: "abandon",
+    victory: meta.pulse > 0,
+  });
+}
+
+/** QUITTER (pause) : la partie est sauvegardée et reprend plus tard depuis l'accueil. */
+function quitRun() {
+  if (!versus.active && persistRun()) {
+    logEvent("partie", `sauvegardée · vague ${game.wave}`);
+    runReported = true; // comptée dans les statistiques quand elle finira vraiment
+  }
+  returnToMenu();
+}
+
+/** ABANDONNER (pause) : la partie est perdue (comme QUITTER avant la sauvegarde des parties). */
+function abandonRun() {
+  if (!confirm("Abandonner la partie ? Elle ne pourra pas être reprise.")) return;
+  clearRun();
+  returnToMenu();
+}
+
 /**
  * Lance une partie ; mode "daily" = défi du jour (équipement, modificateur et graine imposés),
  * "rush" = Boss Rush (les boss à la suite, avec l'équipement et les talents du joueur).
  */
 function startGame(mode = "normal") {
+  if (!confirmDropRun()) return;
+  if (savedRun()) abandonSavedRun(); // une nouvelle partie remplace la partie interrompue
   lastMode = mode;
   runReported = false;
   deathPending = false;
@@ -189,6 +290,7 @@ function startGame(mode = "normal") {
   setAutoPick(false);
   setupRun(mode, mode === "normal" ? selectedDifficulty() : "normal");
   logEvent("partie", `début ${mode} · ${game.difficulty}`);
+  nextSaveAt = RUN_SAVE.everySeconds * 1000;
   game.endlessAllowed = mode === "normal"; // victoire puis Endless Pulse : survie normale seulement
   if (mode === "normal") startTutorial();
   else stopTutorial();
@@ -402,6 +504,7 @@ function returnToMenu() {
  * saison, classement...) laissait la partie arrêtée sans aucun écran, le jeu paraissait figé.
  */
 function endGame() {
+  clearRun(); // partie finie : plus rien à reprendre
   try {
     settleRun();
   } catch (err) {
@@ -562,6 +665,7 @@ function update() {
     simulate();
     if (!versus.active) recordKillCam();
     updateTutorial();
+    if (game.time >= nextSaveAt && game.running) persistRun();
   } finally {
     ticking = false;
     if (deathPending) onDeath(); // même si le tick a échoué : jamais de partie arrêtée sans écran
@@ -723,7 +827,12 @@ function init() {
   });
 
   $("btnResume").addEventListener("click", togglePause);
-  $("btnQuit").addEventListener("click", returnToMenu);
+  $("btnQuit").addEventListener("click", quitRun);
+  $("btnAbandon").addEventListener("click", abandonRun);
+  initResumeRun({ onResume: resumeRun, onAbandon: abandonSavedRun });
+  // Onglet masqué ou fermé (téléphone mis en veille, application quittée) : la partie est sauvegardée
+  document.addEventListener("visibilitychange", () => document.hidden && persistRun());
+  window.addEventListener("pagehide", persistRun);
   $("btnReplay").addEventListener("click", () => startGame(lastMode));
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
   initKillCamButton();
@@ -842,6 +951,7 @@ function init() {
   });
   on("playerDied", () => {
     if (versus.split) return splitDeath(versus.current);
+    if (!versus.active) clearRun(); // mort : fermer l'onglet ne doit pas permettre de revenir en arrière
     holdUpgrades(); // choix ouvert plus tôt dans ce tick : mis de côté, l'écran de fin passe devant
     if (versus.online) return onOwnDeath();
     // Pendant un tick, écran « revivre » ou fin de partie une fois le tick terminé : le reste du tick

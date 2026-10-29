@@ -4,7 +4,7 @@ import { game, player } from "../core/state.js";
 import { activeMutators } from "../systems/endless.js";
 import { fighterName, versus, withRun } from "../systems/versus.js";
 import { buildView } from "./buildView.js";
-import { $, el, isVisible } from "./dom.js";
+import { $, el, isVisible, setVisible } from "./dom.js";
 import { corruptionPercent } from "./hud.js";
 import { icon } from "./icons.js";
 import { formatDuration } from "./runStats.js";
@@ -22,6 +22,7 @@ export function togglePause() {
     hideScreens();
     return;
   }
+  setVisible("btnAbandon", !versus.active); // duel : QUITTER suffit (une partie de duel ne se reprend pas)
   renderMeta();
   renderCorruption();
   renderInventory();

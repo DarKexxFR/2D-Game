@@ -70,7 +70,9 @@ export function initUpgradeMenu() {
   $("btnReroll").addEventListener("click", () => {
     if (!current || current.target.rerolls <= 0) return;
     current.target.rerolls--;
-    renderChoices(drawUpgrades(CHOICES));
+    const picks = drawUpgrades(CHOICES);
+    current.picks = picks.map((u) => u.name);
+    renderChoices(picks);
   });
   document.addEventListener("keydown", onKey);
 }
@@ -171,13 +173,15 @@ export function resumeUpgrades() {
 
 function open(req) {
   current = req;
-  const picks = drawUpgrades(CHOICES, req);
+  const picks = restoredPicks(req) ?? drawUpgrades(CHOICES, req);
+  req.picks = picks.map((u) => u.name);
   const chest = req.kind === "chest";
-  let gold = 0;
-  if (chest) {
-    gold = chestGold();
-    game.runGold += gold;
+  // Or du coffre compté une seule fois (un choix repris après une partie interrompue l'a déjà donné)
+  if (chest && req.gold === undefined) {
+    req.gold = chestGold();
+    game.runGold += req.gold;
   }
+  const gold = req.gold ?? 0;
   if (picks.length === 0) {
     // soin de secours si plus rien n'est disponible
     heal(50);
@@ -199,6 +203,37 @@ function open(req) {
   renderChoices(picks);
   showScreen("upgradeMenu");
   startAutoPick();
+}
+
+// --- PARTIE INTERROMPUE (voir services/runSave.js) ---
+
+/**
+ * Choix d'amélioration en attente, à sauvegarder avec la partie : celui affiché (avec ses cartes, pour
+ * qu'interrompre la partie ne serve pas à retirer d'autres cartes) puis la file d'attente.
+ * @returns {{ kind: string, gold?: number, picks?: string[] }[]}
+ */
+export function pendingChoices() {
+  return [current, ...queue]
+    .filter((req) => req && req.target === player)
+    .map(({ kind, gold, picks }) => ({ kind, gold, picks }));
+}
+
+/** Reprise d'une partie : rouvre les choix sauvegardés. Renvoie true si un choix est affiché. */
+export function restoreChoices(list = []) {
+  resetUpgradeMenu();
+  for (const { kind, gold, picks } of list) {
+    if (ALLOWED[kind]) queue.push({ kind, gold, picks, target: player });
+  }
+  if (queue.length > 0) open(queue.shift());
+  return current !== null;
+}
+
+/** Cartes déjà tirées pour ce choix (partie reprise), si elles sont toujours disponibles. */
+function restoredPicks(req) {
+  if (!req.picks?.length) return null;
+  const cards = [...availableEvolutions(req.target), ...availableUpgrades(req.target)];
+  const picks = req.picks.map((name) => cards.find((u) => u.name === name));
+  return picks.every(Boolean) ? picks : null;
 }
 
 /** Barre qui se vide, puis choix de la carte surlignée (duel en ligne seulement). */

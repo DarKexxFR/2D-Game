@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-10-reprendre",
+    date: "Octobre 2026",
+    title: "Reprenez votre partie plus tard",
+    items: [
+      {
+        icon: "save",
+        color: "#00ff88",
+        title: "Partie sauvegardée",
+        text: "QUITTER dans la pause, fermer l'onglet ou mettre le téléphone en veille garde votre partie en cours sur cet appareil.",
+      },
+      {
+        icon: "play",
+        color: "#00ffff",
+        title: "Bouton REPRENDRE",
+        text: "Sur l'accueil, REPRENDRE recharge la partie là où vous l'avez laissée, en pause. ABANDONNER la jette pour de bon.",
+      },
+    ],
+  },
+  {
     id: "2026-10-vague-40",
     date: "Octobre 2026",
     title: "L'aventure continue jusqu'à la vague 40",
