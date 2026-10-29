@@ -14,6 +14,7 @@ const SCREENS = [
   "questMenu",
   "seasonMenu",
   "streakMenu",
+  "newsMenu",
   "bossRushMenu",
   "talentMenu",
   "skinMenu",

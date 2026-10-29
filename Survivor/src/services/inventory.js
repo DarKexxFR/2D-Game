@@ -6,6 +6,7 @@ import {
   CHESTS,
   DAILY_OFFER_PRICES,
   DEFAULT_EQUIPPED,
+  FORGE,
   FREE_CHEST,
   ITEMS,
   MAXED_DUPLICATE_GOLD,
@@ -143,6 +144,53 @@ function grantItem(item) {
   }
   saveAccount();
   return { item, result, refund };
+}
+
+// --- FORGE ---
+
+/** Objets possédés de cet emplacement et de cette rareté qui ont des doublons, les plus fournis d'abord. */
+function forgeSources(slot, rarity) {
+  return Object.values(ITEMS)
+    .filter((it) => it.slot === slot && it.rarity === rarity && account.items[it.id]?.copies > 0)
+    .sort((a, b) => account.items[b.id].copies - account.items[a.id].copies);
+}
+
+/**
+ * Recettes de forge d'un emplacement : [{ rarity, next, copies (doublons disponibles), cost, ready }].
+ * Seulement les raretés qui ont une rareté au-dessus dans cet emplacement.
+ * @param {string} slot
+ */
+export function forgeOptions(slot) {
+  return Object.entries(FORGE.next)
+    .filter(([, next]) => Object.values(ITEMS).some((it) => it.slot === slot && it.rarity === next))
+    .map(([rarity, next]) => {
+      const copies = forgeSources(slot, rarity).reduce((n, it) => n + account.items[it.id].copies, 0);
+      const cost = FORGE.cost[rarity];
+      return { rarity, next, copies, cost, ready: copies >= FORGE.copies && account.gold >= cost };
+    });
+}
+
+/**
+ * Forge : retire `FORGE.copies` doublons (pris aux objets qui en ont le plus) et l'or, puis donne un
+ * objet au hasard de la rareté au-dessus. Renvoie { item, result, refund } comme un coffre, ou null.
+ * @param {string} slot
+ * @param {string} rarity
+ */
+export function forge(slot, rarity) {
+  const option = forgeOptions(slot).find((o) => o.rarity === rarity);
+  if (!option?.ready) return null;
+  account.gold -= option.cost;
+  let left = FORGE.copies;
+  for (const it of forgeSources(slot, rarity)) {
+    const owned = account.items[it.id];
+    const take = Math.min(left, owned.copies);
+    owned.copies -= take;
+    left -= take;
+    if (left === 0) break;
+  }
+  const pool = Object.values(ITEMS).filter((it) => it.slot === slot && it.rarity === option.next);
+  addStat("forges");
+  return grantItem(pool[Math.floor(Math.random() * pool.length)]);
 }
 
 // --- NIVEAU ---

@@ -5,8 +5,8 @@
 // group : "mob" (ennemis ordinaires, même tardifs), "biome" (propres à un biome), "boss", "minion" (créatures des boss).
 // `from` (créatures de boss) : le boss qui les fait apparaître.
 
-import { BIOMES, BIOME_LENGTH } from "./biomes.js";
-import { BOSS_RUSH, BOSS_WAVES, ENEMY_NAMES, GOBLIN, SPAWN_TABLES } from "./enemies.js";
+import { BIOMES } from "./biomes.js";
+import { BOSS_RUSH, ENEMY_NAMES, GOBLIN, SPAWN_TABLES, bossForWave } from "./enemies.js";
 
 export const BESTIARY_GROUPS = [
   { id: "mob", name: "Ennemis", color: "#00ffff" },
@@ -108,6 +108,30 @@ export const BESTIARY = {
     desc: "Un drone de la Station orbitale qui charge un long laser dans votre direction.",
     skills: ["Laser annoncé par une ligne"],
     tip: "Quand la ligne apparaît, sortez de son axe : le laser part juste après.",
+  },
+  phaser: {
+    group: "biome",
+    desc: "Une créature de la Faille quantique qui glisse hors de notre réalité par moments.",
+    skills: ["Devient intouchable un instant", "Plus rapide hors phase", "Scintille avant de disparaître"],
+    tip: "Quand il scintille, gardez vos tirs pour une autre cible : il va disparaître.",
+  },
+  replicator: {
+    group: "biome",
+    desc: "Une cellule de la Faille qui se copie si on la laisse vivre trop longtemps.",
+    skills: ["Se dédouble régulièrement", "Les copies se copient à leur tour (deux fois)"],
+    tip: "Tuez-le vite, avant que son anneau ne se dédouble : sinon la nuée grossit.",
+  },
+  fuser: {
+    group: "biome",
+    desc: "Un automate de soudure du Noyau stellaire, attiré par ses semblables.",
+    skills: ["Deux qui se touchent fusionnent", "Plus gros et plus fort après chaque fusion"],
+    tip: "Séparez-les : tuez le plus proche avant qu'il n'atteigne l'autre.",
+  },
+  nova: {
+    group: "biome",
+    desc: "Une étoile instable qui fonce sur vous puis explose.",
+    skills: ["Charge en ligne droite", "Explosion annoncée par une zone"],
+    tip: "Quand elle charge, écartez-vous de sa ligne puis de la zone rouge.",
   },
   healer: {
     group: "mob",
@@ -226,9 +250,43 @@ export const BESTIARY = {
   },
   pulse_core: {
     group: "boss",
-    desc: "Le boss final : le cœur de l'onde, qui bat de plus en plus vite en trois phases.",
+    desc: "Le cœur de l'onde, qui bat de plus en plus vite en trois phases. Sa mort ouvre la Faille quantique.",
     skills: ["Battements (ondes de choc)", "Trois phases", "L'arène se resserre"],
-    tip: "Le vaincre lance l'Endless Pulse : gardez vos forces pour la suite.",
+    tip: "Le vaincre ouvre les dix dernières vagues : gardez vos forces pour la suite.",
+  },
+  forge: {
+    group: "boss",
+    desc: "La Forgeronne du Noyau, qui fait pleuvoir des enclumes et soude ses drones en colosses.",
+    skills: [
+      "Pluie d'enclumes (métal en fusion au sol)",
+      "Drones de forge",
+      "Soudure en colosse",
+      "Fournaise en furie",
+    ],
+    tip: "Détruisez ses drones avant la soudure : un colosse est bien plus solide qu'eux.",
+  },
+  mirror: {
+    group: "boss",
+    desc: "Votre reflet : il se tient à l'opposé de vous et copie votre arsenal.",
+    skills: ["Copie votre arme", "Imite vos armes d'appoint", "Dashe quand vous dashez", "Un Écho en furie"],
+    tip: "Il vous imite : dashez au mauvais moment et il fonce sur vous. Gardez le dash pour esquiver.",
+  },
+  weaver: {
+    group: "boss",
+    desc: "Une araignée du vide qui tend des fils laser entre ses ancres.",
+    skills: ["Ancres autour de vous", "Cage de lasers (toujours une sortie)", "Fils collants", "Portails"],
+    tip: "Chaque ancre détruite l'étourdit un instant : c'est le moment de frapper fort.",
+  },
+  architect: {
+    group: "boss",
+    desc: "Le boss final : le concepteur de l'onde, qui rejoue les attaques de tous les boss en quatre phases.",
+    skills: [
+      "Quadrillage de lasers",
+      "Orages, prismes et pluie collante",
+      "Commandes inversées",
+      "L'arène se resserre",
+    ],
+    tip: "Le vaincre lance l'Endless Pulse : les couloirs entre ses lasers sont votre seul abri.",
   },
 
   // --- CRÉATURES DE BOSS ---
@@ -289,6 +347,34 @@ export const BESTIARY = {
     skills: ["Poison qui s'étend", "Renforce la carapace de la reine"],
     tip: "Détruisez-les tôt, avant que leur poison ne couvre l'arène.",
   },
+  forge_drone: {
+    group: "minion",
+    from: "forge",
+    desc: "Un petit drone sorti de la Forgeronne, qui fonce sur vous.",
+    skills: ["Rapide", "Peut être soudé en colosse"],
+    tip: "Un coup d'onde ou d'explosion les balaie avant la soudure.",
+  },
+  forge_golem: {
+    group: "minion",
+    from: "forge",
+    desc: "Les drones de la Forgeronne soudés en un seul bloc de métal.",
+    skills: ["PV des drones réunis", "Contact : gros dégâts", "Lent"],
+    tip: "Tournez autour de lui : il est lent mais frappe très fort.",
+  },
+  mirror_echo: {
+    group: "minion",
+    from: "mirror",
+    desc: "Un second reflet qui rejoint le Reflet en furie, un quart de tour plus loin.",
+    skills: ["Copie vos tirs", "Disparaît avec le Reflet"],
+    tip: "Il tombe en quelques coups : éliminez-le pour retrouver un seul adversaire.",
+  },
+  weaver_anchor: {
+    group: "minion",
+    from: "weaver",
+    desc: "Un cristal planté par la Tisseuse, d'où partent ses fils laser.",
+    skills: ["Immobile", "Relie les fils de la cage", "Sa chute étourdit la Tisseuse"],
+    tip: "Moins d'ancres, moins de fils : cassez-les dès qu'elles sortent.",
+  },
   hacker_clone: {
     group: "minion",
     from: "hacker",
@@ -304,13 +390,12 @@ export const BESTIARY = {
 
 export const BESTIARY_TYPES = Object.keys(BESTIARY);
 
-const LAST_WAVE = 60; // au-delà, les boss reviennent dans le même ordre
+const LAST_WAVE = 80; // au-delà, les boss reviennent dans le même ordre
 
 /** Vagues (jusqu'à LAST_WAVE) où le boss `type` arrive (même règle que systems/spawner.js). */
 export function bossWaves(type) {
   const waves = [];
-  for (let w = 2; w <= LAST_WAVE; w++)
-    if (BOSS_WAVES.find((b) => w % b.every === 0)?.type === type) waves.push(w);
+  for (let w = 2; w <= LAST_WAVE; w++) if (bossForWave(w)?.type === type) waves.push(w);
   return waves;
 }
 
@@ -339,8 +424,8 @@ export function whereText(type) {
   const parts = [];
   if (entry.from) parts.push(`Appelé par : ${ENEMY_NAMES[entry.from]}`);
   if (biome >= 0) {
-    const first = biome * BIOME_LENGTH + 1;
-    parts.push(`${BIOMES[biome].name.toLowerCase()} (vagues ${first} à ${first + BIOME_LENGTH - 1})`);
+    const b = BIOMES[biome];
+    parts.push(`${b.name.toLowerCase()} (vagues ${b.from} à ${b.to})`);
   }
   const wave = firstMobWave(type);
   if (wave) parts.push(`partout dès la vague ${wave}`);

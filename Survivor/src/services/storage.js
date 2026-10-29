@@ -49,6 +49,7 @@ export const account = {
   dailyOffer: { day: "", bought: false }, // offre du jour de la boutique
   bestiary: {}, // éliminations par type d'ennemi : fiches du bestiaire débloquées (voir services/bestiary.js)
   appInstalled: false, // récompense de la première ouverture depuis l'icône déjà versée (voir services/pwa.js)
+  newsSeen: "", // dernière entrée des nouveautés vue (data/changelog.js, ui/newsMenu.js)
 };
 
 export function loadAccount() {
@@ -82,6 +83,7 @@ export function loadAccount() {
   account.difficulty = saved.difficulty || "normal";
   account.loginStreak = { day: "", count: 0, ...saved.loginStreak };
   account.appInstalled = saved.appInstalled === true;
+  account.newsSeen = typeof saved.newsSeen === "string" ? saved.newsSeen : ""; // ancienne sauvegarde : tout est nouveau
   account.bestiary = { ...bestiaryFromStats(account.achievementStats), ...saved.bestiary };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;

@@ -334,6 +334,10 @@
 #upgradeMenu .upgrade-option.rarity-weapon {
   --c: #00e5ff;
 }
+#upgradeMenu .upgrade-option.rarity-fusion {
+  --c: #ff8cf8;
+  animation: pulseGold 1.2s infinite;
+}
 /* Survol / sélection : lueur à la couleur de la rareté, sans déplacement (la carte ne sort plus du cadre) */
 #upgradeMenu .upgrade-option.selected {
   border-color: var(--c);

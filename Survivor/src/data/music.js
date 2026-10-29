@@ -1,5 +1,6 @@
 // Musiques du jeu, composées en données et jouées par le séquenceur (services/musicSequencer.js) :
-// une piste par biome, une pour les boss, une pour le Cœur du Pulse et une pour l'Endless Pulse.
+// une piste par biome, une pour les boss, une pour le Cœur du Pulse, une pour l'Architecte (boss final) et une
+// pour l'Endless Pulse.
 // Ajouter une musique = une entrée de `SONGS` (et, pour un nouveau moment du jeu, une règle dans
 // `musicThemeFor` de services/audio.js). Rien à télécharger : tout est synthétisé en direct.
 //
@@ -222,6 +223,72 @@ export const SONGS = {
       drums: { volume: 0.9, kick: 1, snare: 1, hat: 0.6, tom: 1 },
     },
   },
+  // Faille quantique : dorien instable, charleston syncopé et arpège qui « saute » comme un déphasage.
+  rift: {
+    name: "Faille quantique",
+    bpm: 124,
+    key: 42,
+    scale: SCALES.dorian,
+    chords: "0m7 5M 3M 10M 0m7 5M 8M 7m",
+    form: ["pad arp", "pad arp bass kick hat", "all", "all"],
+    pump: true,
+    patterns: {
+      kick: "x..x..x...x..x..",
+      snare: "....x.......x...",
+      fill: "....x.......x.xx",
+      hat: ".xx.x.xx.xx.x.xx",
+      bass: "x..o..x.x..o..5.",
+      arp: "0.4.1.5.2.6.3.7.",
+      lead: [
+        "9-.7-.9.b---....",
+        "c-.b-.9.7---....",
+        "9-.b-.c.e---c...",
+        "b-------9---....",
+        "9-.7-.9.b---....",
+        "c-.e-.f.e---c...",
+        "b-.9-.7.9---b...",
+        "a-------7-------",
+      ],
+    },
+    sound: {
+      arp: { wave: "square", volume: 0.05, cutoff: 2800, octave: 2, gate: 0.35, echo: 0.55 },
+      lead: { wave: "sawtooth", volume: 0.08, detune: 18, cutoff: 2600, echo: 0.4 },
+      drums: { volume: 0.9, kick: 1, snare: 1, hat: 0.55, tom: 1 },
+    },
+  },
+  // Noyau stellaire : lent et immense (mineur harmonique), nappes épaisses, toms comme des éruptions.
+  core: {
+    name: "Noyau stellaire",
+    bpm: 132,
+    key: 41,
+    scale: SCALES.harmonicMinor,
+    chords: "0m 8M 3M 7M 0m 5m 8M 7M",
+    form: ["pad bass kick", "all", "all", "pad bass kick tom arp"],
+    patterns: {
+      kick: "x.......x.x.....",
+      snare: "....x.......x...",
+      fill: "....x.......xxxx",
+      hat: "..x...x...x...x.",
+      tom: "......x.......xx",
+      bass: "x.xox.x.x.xox.x.",
+      arp: "0123012301230123",
+      lead: [
+        "7---9---b-------",
+        "c---b---9---7---",
+        "a---9---7---a---",
+        "b-------d-------",
+        "e---c---b---9---",
+        "c---9---8---9---",
+        "a---c---e---c---",
+        "b---------------",
+      ],
+    },
+    sound: {
+      pad: { volume: 0.055, cutoff: 1300, detune: 16, attack: 0.6, release: 0.8, octave: 1 },
+      lead: { volume: 0.09, cutoff: 2400, detune: 10, attack: 0.05 },
+      arp: { wave: "triangle", volume: 0.07, octave: 2 },
+    },
+  },
   // Boss : rapide et agressif (phrygien), basse en doubles croches.
   boss: {
     name: "Combat de boss",
@@ -254,7 +321,7 @@ export const SONGS = {
       pad: { volume: 0.04, cutoff: 900 },
     },
   },
-  // Cœur du Pulse (boss final) : grosse caisse en battements de cœur, mineur harmonique épique.
+  // Cœur du Pulse : grosse caisse en battements de cœur, mineur harmonique épique.
   final: {
     name: "Cœur du Pulse",
     bpm: 150,
@@ -286,6 +353,41 @@ export const SONGS = {
       arp: { volume: 0.045 },
       pad: { volume: 0.05, cutoff: 1400 },
       drums: { volume: 0.9, kick: 1, snare: 1, hat: 0.45, tom: 1 },
+    },
+  },
+  // L'Architecte (boss final) : très rapide, gamme orientale du désert et mélodie qui reprend des motifs des
+  // autres musiques, comme lui reprend les attaques des boss passés.
+  architect: {
+    name: "L'Architecte",
+    bpm: 160,
+    key: 37,
+    scale: SCALES.phrygianDominant,
+    chords: "0M 1M 10m 0M 8M 1M 5m 0M",
+    form: ["kick bass pad hat", "all", "all", "kick bass pad arp snare"],
+    patterns: {
+      kick: "x...x...x...x.x.",
+      snare: "....x.......x...",
+      fill: "....x...x.x.xxxx",
+      hat: "x.xxx.xxx.xxx.xx",
+      tom: "..............xx",
+      bass: "xxoxxxoxxxoxxxox",
+      arp: "0124201242012420",
+      lead: [
+        "7.8.9.8.7---4...",
+        "8---a---c---a---",
+        "b-..9-..7-..9.b.",
+        "7---------------",
+        "e.c.b.9.e-..c.b.",
+        "f---e---c---a---",
+        "c-b-9-8-7-8-9-b-",
+        "e-------7-------",
+      ],
+    },
+    sound: {
+      bass: { cutoff: 1200, cutoffEnd: 320, resonance: 5, gate: 0.5, volume: 0.16 },
+      lead: { volume: 0.085, cutoff: 3000, detune: 14 },
+      pad: { volume: 0.045, cutoff: 1100 },
+      drums: { volume: 0.9, kick: 1, snare: 1, hat: 0.5, tom: 1 },
     },
   },
   // Endless Pulse : hypnotique, quatre temps et arpège continu qui respire avec la grosse caisse.
@@ -320,3 +422,6 @@ export const SONGS = {
     },
   },
 };
+
+/** Boss qui ont leur propre musique (les autres jouent `boss`) ; le premier de la liste l'emporte. */
+export const BOSS_MUSIC = { architect: "architect", pulse_core: "final" };

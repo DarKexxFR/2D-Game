@@ -16,7 +16,7 @@ async function startRush(page) {
 test("l'écran du Boss Rush liste les boss et se ferme avec RETOUR", async ({ page }) => {
   await page.goto("/");
   await page.locator("#btnBossRush").click();
-  await expect(page.locator("#rushList li")).toHaveCount(15);
+  await expect(page.locator("#rushList li")).toHaveCount(19);
   await expect(page.locator("#rushList")).toContainText("Titan de l'orage");
   await expect(page.locator("#rushBest")).toHaveText("Pas encore tenté");
   await page.locator("#btnRushBack").click();
@@ -85,7 +85,7 @@ test("Boss Rush : après le dernier boss, le cycle recommence plus fort", async 
   await startRush(page);
   const waves = await game(page, ({ state, spawner }) => {
     const out = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 20; i++) {
       state.game.pendingBosses.length = 0;
       spawner.startNextWave();
       out.push(`${state.game.pendingBosses[0].type}@${state.game.wave}`);
@@ -107,8 +107,12 @@ test("Boss Rush : après le dernier boss, le cycle recommence plus fort", async 
     "chronophage@23",
     "hacker@29",
     "pulse_core@30",
-    "miniboss@32",
-    "boss@35",
+    "forge@32",
+    "mirror@35",
+    "weaver@37",
+    "architect@40",
+    "miniboss@42",
+    "boss@45",
   ]);
   await killPlayer(page);
 });

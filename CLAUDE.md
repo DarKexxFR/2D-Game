@@ -109,7 +109,13 @@ Principes :
   **Chronophage** (23, bulles `addBubble` qui ralentissent les tirs du joueur, retour arrière, rembobinage, écho
   en furie), **Hacker** (29, `buffs.glitch` = commandes inversées, flaques `jam` = tir coupé, clones
   `hacker_clone` avec `mimic` pour la barre de vie), **Cœur du Pulse** (30, boss final : battements, 3 phases,
-  `e.arenaScale` resserre l'arène). Leurs parties meurent avec eux (`spawnPart` / `orphaned` de `kit.js`) ;
+  `e.arenaScale` resserre l'arène ; ce n'est plus le boss final). **Boss de la fin** (vagues 31 à 40, déroulé fixe
+  `FINALE_WAVES` de `data/enemies.js`, lu par `bossForWave` ; sprites dans `render/finaleShapes.js`) : **Forgeronne
+  stellaire** (32, enclumes, drones `forge_drone` soudés en colosse `forge_golem`), **Le Reflet** (35, symétrique du
+  joueur autour du centre de l'arène, dashe quand il dashe, copie ses armes d'appoint), **Tisseuse du vide** (37,
+  ancres `weaver_anchor` reliées par des lasers, cage toujours ouverte d'un côté, ancre détruite = étourdie),
+  **L'Architecte** (40, boss final : 4 phases qui reprennent les attaques des autres boss, `ARCHITECT.phases`).
+  Leurs parties meurent avec eux (`spawnPart` / `orphaned` de `kit.js`) ;
   `e.barTag` ajoute un état à la barre du boss. Outils communs (visée, cycle, furie, tirs) dans `bosses/kit.js`.
   **Les boss ne se poussent pas** : tout recul ou attraction d'ennemi passe par `systems/knockback.js`
   (`knockEnemy`, `pullEnemy`, `pushEnemy`), qui ignore les boss (choix du propriétaire) ; seuls leurs
@@ -118,7 +124,7 @@ Principes :
   (`WAVE_SCALING.rampFrom`), élites dès la vague 8 (`ELITE`), défense en % et soins corrompus après
   la vague 12 (`SURVIVAL` dans `config.js`) ; cœur fissuré violet `#healCorruption` près de la barre de vie
   (% au survol) et rappel dans la Pause. Objectif : même le meilleur build finit par mourir
-  (vers la vague 30). Mesuré avec un banc d'essai (build fixe, morts par minute selon la vague).
+  (vers la vague 40 ; montée `WAVE_SCALING` adoucie quand la fin est passée de 30 à 40). Mesuré avec un banc d'essai (build fixe, morts par minute selon la vague).
 - **Succès** : `data/achievements.js` (catégorie, statistique suivie, seuil, or gagné) ; les statistiques
   se mettent à jour via `addStat` / `recordBest` / `recordKill` de `services/achievements.js`.
 - **Menus** : en-tête commun `.menu-head` (titre, sous-titre `.menu-sub`, `.gold-pill`) et
@@ -200,6 +206,10 @@ Principes :
   arme si un emplacement est libre, sinon niveau suivant, 5 niveaux). Évolution = niveau 5 + carte partenaire
   (`SIDE_EVOLUTIONS`, mêmes règles que `EVOLUTIONS`). Dégâts = multiples de `player.attack`, zones × `projScale`,
   durées en ticks ; coups directs via `strikeEnemy` (critique, bonus boss), missiles = projectiles `homing`.
+  **Fusion** (`SIDE_FUSIONS`, cartes de rareté `fusion` dans `SIDE_FUSION_CARDS`) : deux armes au niveau 5 deviennent
+  une arme `{ id, level, parts }` (chaque partie garde son état, tourne via `runWeapon`, stats ×`FUSION_RULES`) avec un
+  effet combiné ; libère un emplacement. Toujours chercher une arme par `sideWeaponOf` / `sideWeaponIds` (qui voient
+  les parties), affichage par `sideLook`.
   État dans `player.sideWeapons`, `world.mines`, `world.slashes` (donc propre à chaque partie d'un duel). Source des
   dégâts = id de l'arme (stats de fin). Rangée `#uiWeapons` du panneau (PC seulement). Carte choisie : `takeCard`.
 - **Évolutions d'armes** (`WEAPON_EVOLUTIONS` dans `data/upgrades.js`) : arme équipée + carte partenaire
@@ -221,15 +231,21 @@ Principes :
   (rouge `#ff3b30`) : uniquement dans le **coffre mythique** (5 %, choix du propriétaire : très rare mais très
   fort), toutes catégories. **Effet ★3** par objet et **panoplies** arme + armure (`data/perks.js`, comportements
   dans `systems/perks.js`, état sur `player` pour le duel). Fiche d'objet : comparaison avec l'objet équipé,
-  3 équipements enregistrés (`account.loadouts`). Boutique : **offre du jour** (`dailyOffer`, jamais mythique,
+  3 équipements enregistrés (`account.loadouts`). **Forge** (`FORGE` dans `data/items.js`, `forge` de
+  `services/inventory.js`, panneau `#forgePanel`) : 3 doubles d'une rareté + or = un objet de la rareté au-dessus
+  (jusqu'au légendaire, jamais mythique). Boutique : **offre du jour** (`dailyOffer`, jamais mythique,
   une fois par jour, `account.dailyOffer`).
 - **Niveaux de difficulté** (`DIFFICULTIES` dans `config.js`, `services/difficulty.js`, choix sous JOUER) :
   Facile / Normal / Cauchemar, partie normale seulement (défi du jour, Boss Rush et duel restent en Normal).
   Appliqués via `game.modifier` (`enemyHealth`, `enemyDamage`, `enemySpeed`, `eliteShift`, `enemyXp`,
   `goldMult`) ; choix dans `account.difficulty`. Cauchemar débloqué au record de vague 10, classement mondial
   à part (table `nightmare_scores`, onglet « CAUCHEMAR »), succès dédiés ; Facile hors classements.
-- **Biomes** (`data/biomes.js`) : 5 biomes de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique,
-  Station orbitale), chacun ajoute ses ennemis (`enemies`). Cité néon : porte-bouclier (bloque les tirs de
+- **Biomes** (`data/biomes.js`) : 7 biomes sur 40 vagues, chacun avec ses vagues `from` / `to` (Cité néon, Désert
+  rouge, Toundra, Jungle toxique, Station orbitale : 6 vagues ; Faille quantique 31-35, Noyau stellaire 36-40 ; au-delà
+  boucle de `BIOME_LOOP` vagues), chacun ajoute ses ennemis (`enemies`). Faille : Déphaseur (`e.submerged` par
+  moments), Réplicateur (copies plafonnées) ; Noyau : Fusionneur (deux qui se touchent = un plus fort), Nova (charge
+  puis explose, sans récompense) ; comportements dans `systems/riftFoes.js`, branchés par `MOB_BEHAVIORS` de
+  `systems/enemies.js`. Cité néon : porte-bouclier (bloque les tirs de
   face, pivote lentement), essaim (nuée de 6, `group`) ; jungle : spore (se divise en sporelets), poseur de
   mines ; station : téléporteur, drone laser. Partout : soigneur dès la vague 10, aimant (attire le joueur, le
   dash libère) dès la vague 12 (`SPAWN_TABLES`). Réglages `BIOME_FOES` dans `data/enemies.js`. Nouveau type
@@ -292,7 +308,7 @@ Principes :
   récupérer qui arrive en pleine partie n'est ni appliquée ni rechargée (`canRestore`, résultat `busy`) ;
   `resumeAccountCheck` relance la vérification au retour à l'accueil.
 - **Endless Pulse** (`systems/endless.js`, mutations `PULSE_MUTATORS` dans `data/endless.js`, réglages
-  `ENDLESS`) : en survie normale seulement (`game.endlessAllowed`), la mort du Cœur du Pulse (`ENDLESS.finalBoss`,
+  `ENDLESS`) : en survie normale seulement (`game.endlessAllowed`), la mort de l'Architecte (`ENDLESS.finalBoss`,
   même après le minuteur de sa vague) lance l'Endless Pulse sans arrêter la partie : simple annonce (événement
   `endlessStart`), **pas d'écran de victoire** (choix du propriétaire). Chaque vague
   suivante = une pulsation (`game.endless.depth`), une mutation cumulée dans `game.modifier` (copié avant) et
@@ -331,10 +347,17 @@ Principes :
   La page dessine les vrais sprites : `render/sprites.js`, `render/neon.js`, `render/bossShapes.js` et
   `render/enemyLooks.js` ne doivent pas dépendre du canvas du jeu (qualité dans `core/gfx.js`). Liens : bas de
   l'accueil et écran Succès. Adresse `#fiche-<type>` = lien direct.
+- **Nouvelles augmentations** (`data/cardEffects.js` réglages, `systems/cardEffects.js` effets branchés dans
+  `combat.js` / `player.js`) : Givre, Œil critique, Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique, Pulsar,
+  Surtension ; évolutions Zéro absolu et Tempête stellaire ; corrompues Dette de temps et Furie aveugle (`player.blind`).
+- **Nouveautés** (`data/changelog.js`, `ui/newsMenu.js`, `#modal=nouveautes`) : à chaque mise à jour, une entrée
+  **en tête** de `CHANGELOG` avec un `id` neuf ; vue une fois par compte (`account.newsSeen`) à l'arrivée sur
+  l'accueil, avant la série du jour ; un tout nouveau joueur ne la voit pas ; « VOIR » dans les Options. Dans les
+  tests, `withSave` la marque vue par défaut.
 - **Musique** (`services/audio.js` choisit, `services/musicSequencer.js` joue, instruments dans `services/synth.js`,
   partitions dans `data/music.js`, réglages `MUSIC`) : accueil = fichiers mp3 de `MUSIC.tracks` ; en partie, musiques
   synthétisées en direct (Web Audio, aucun fichier) : une par biome (clé = id du biome), `boss` (dès l'alerte, et tout
-  le Boss Rush), `final` (Cœur du Pulse), `endless`. `musicThemeFor` décide, `updateMusic` (chaque image, vérifié toutes
+  le Boss Rush), `final` (Cœur du Pulse), `architect` (boss final ; boss à musique propre : `BOSS_MUSIC`), `endless`. `musicThemeFor` décide, `updateMusic` (chaque image, vérifié toutes
   les `checkMs`) enchaîne en fondu sur le temps suivant. Notes programmées `lookahead` s à l'avance par une minuterie
   (un blocage plus court ne coupe pas la musique) ; volume 0 = rien n'est programmé ; qualité basse = un oscillateur
   par note, sans écho. Contexte audio partagé avec les effets (`services/audioContext.js`, débloqué à la première
@@ -414,7 +437,9 @@ synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophag
 application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement,
 mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html),
 journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 armes, 5 niveaux, évolutions),
-bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless).
+bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
+fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
+fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

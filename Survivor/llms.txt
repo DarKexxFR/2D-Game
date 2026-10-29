@@ -21,11 +21,14 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 
 - Le joueur pilote un vaisseau qui tire tout seul et doit survivre à des vagues d'ennemis de plus en plus
   fortes. Chaque niveau gagné propose un choix d'améliorations ; certaines armes évoluent.
-- 5 biomes de 6 vagues : Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale.
+- 7 biomes sur 40 vagues : Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale (6 vagues
+  chacun), puis Faille quantique et Noyau stellaire (vagues 31 à 40).
 - Boss à attaques annoncées (Roi Slime, Titan de l'orage, Sentinelle prismatique, Kraken, Jumeaux de feu et
-  de glace, Ver des sables, Mère-Ruche, Chronophage, Hacker...) jusqu'au boss final, le Cœur du Pulse (vague 30).
+  de glace, Ver des sables, Mère-Ruche, Chronophage, Hacker, Cœur du Pulse, Forgeronne stellaire, Reflet,
+  Tisseuse du vide...) jusqu'au boss final, l'Architecte (vague 40).
 - Armes d'appoint : jusqu'à 3 armes en plus de l'arme équipée (missiles chercheurs, mines à plasma, foudre
-  céleste, onde pulsée, faisceau rotatif, fouet laser), 5 niveaux chacune et une évolution.
+  céleste, onde pulsée, faisceau rotatif, fouet laser), 5 niveaux chacune et une évolution ; deux armes au
+  niveau maximum peuvent fusionner en une seule (6 fusions).
 - Cartes corrompues (gros bonus contre un malus), sanctuaires maudits, événements de carte, boîte mystère.
 
 ## Modes de jeu
@@ -33,14 +36,15 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 - Survie en vagues, en Facile, Normal ou Cauchemar.
 - Défi du jour : la même partie pour tous les joueurs.
 - Boss Rush : les boss à la suite.
-- Endless Pulse : après la victoire contre le Cœur du Pulse, la partie continue avec des mutations cumulées.
+- Endless Pulse : après la victoire contre l'Architecte (vague 40), la partie continue avec des mutations cumulées.
 - Duel 1v1 : chaque joueur joue sa partie de survie, les éliminations envoient des ennemis et des sorts à
   l'adversaire, le premier mort perd. En ligne, classement ELO pour les joueurs connectés ; défis entre amis.
 
 ## Progression
 
-- Équipement en 5 emplacements (héros, familier, arme, armure, module), raretés de commun à mythique.
-- Bestiaire : une fiche par ennemi et par boss (41 fiches), débloquée en l'éliminant, consultable sur
+- Équipement en 5 emplacements (héros, familier, arme, armure, module), raretés de commun à mythique ;
+  la Forge fusionne 3 objets en trop en un objet de la rareté au-dessus.
+- Bestiaire : une fiche par ennemi et par boss (53 fiches), débloquée en l'éliminant, consultable sur
   https://last-pulse.com/bestiaire.html.
 - Talents, succès, quêtes hebdomadaires, série de connexion sur 7 jours, skins du vaisseau.
 - Saison mensuelle avec un passe gratuit de 30 paliers et un classement de saison.

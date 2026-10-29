@@ -1,4 +1,4 @@
-// Mode « Endless Pulse » : en survie normale, vaincre le boss final (Cœur du Pulse, vague 30) lance l'Endless
+// Mode « Endless Pulse » : en survie normale, vaincre le boss final (l'Architecte, vague 40) lance l'Endless
 // Pulse sans arrêter la partie (simple annonce, choix du propriétaire : pas d'écran de victoire). Chaque
 // nouvelle vague (« pulsation ») ajoute une mutation des ennemis (data/endless.js) et augmente l'XP et l'or
 // gagnés. Tout l'état vit dans `game.endless`, comme le reste de la partie.
@@ -22,7 +22,7 @@ on("kill", (enemy) => {
 
 /**
  * Boss final vaincu (même s'il a survécu au minuteur de sa vague) : la partie continue en Endless Pulse.
- * Une seule fois par partie (il revient toutes les 30 vagues), en survie normale seulement.
+ * Une seule fois par partie (il revient toutes les 40 vagues), en survie normale seulement.
  */
 export function enterEndless() {
   if (!game.endlessAllowed || game.endless) return;

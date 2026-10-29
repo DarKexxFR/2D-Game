@@ -97,6 +97,7 @@ import { initAnalytics, trackRun } from "./services/analytics.js";
 import { initErrorReports } from "./services/errorReports.js";
 import { currentUser } from "./services/auth.js";
 import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
+import { closeNews, initNewsMenu, offerNews } from "./ui/newsMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
 import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
@@ -533,6 +534,7 @@ function navigate(id) {
     else if (screen === "chestReveal") showScreen("shopMenu");
     else if (screen === "installMenu")
       closeInstall(); // ouvert depuis les options : retour aux options
+    else if (screen === "newsMenu") closeNews();
     else showMainMenu();
     return;
   }
@@ -543,6 +545,7 @@ function navigate(id) {
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
   else if (screen === "installMenu") closeInstall();
+  else if (screen === "newsMenu") closeNews();
   else if (screen === "shareMenu") showScreen("gameOver");
   else if (screen === "gameOver" || screen === "versusOver") returnToMenu();
   // amélioration et revivre : le choix reste à faire, l'adresse est simplement remise
@@ -711,6 +714,7 @@ function init() {
   initAchievementMenu({ onBack: showMainMenu });
   initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initSeasonMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initNewsMenu();
   initStreakMenu({
     onClose: () => {
       showMainMenu();
@@ -863,6 +867,13 @@ function init() {
 }
 
 /** Fin du chargement : l'accueil (ou le menu demandé par l'adresse) apparaît, la boucle démarre. */
+/** Série de connexion du jour à l'arrivée (sinon retour à l'accueil, après les nouveautés). */
+function offerArrivalStreak() {
+  if (account.achievementStats.runs > 0 && offerLoginStreak()) return true;
+  if (currentScreen() !== "mainMenu") showMainMenu();
+  return false;
+}
+
 function enterHome() {
   showMainMenu();
   playMenuMusic(); // démarre à la première interaction (exigence des navigateurs)
@@ -875,8 +886,9 @@ function enterHome() {
   }
   initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
   announceRolledOver(); // nouveau mois : récompenses de la saison passée données d'office
-  // Série de connexion : proposée à l'arrivée (pas à un tout nouveau joueur, qui commence par le tutoriel)
-  if (currentScreen() === "mainMenu" && account.achievementStats.runs > 0) offerLoginStreak();
+  // Nouveautés d'une mise à jour, puis série de connexion (pas à un tout nouveau joueur, qui commence par
+  // le tutoriel) : proposées à l'arrivée sur l'accueil, l'une après l'autre
+  if (currentScreen() === "mainMenu") offerNews(offerArrivalStreak) || offerArrivalStreak();
   requestAnimationFrame(frame);
   finishLoading();
 }

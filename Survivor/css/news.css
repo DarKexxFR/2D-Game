@@ -1,0 +1,58 @@
+/* Nouveautés d'une mise à jour (ui/newsMenu.js) */
+#newsMenu {
+  --accent: #ff8cf8;
+  --accent-soft: #ffc4fb;
+  border-color: #ff8cf8;
+  width: min(640px, calc(100vw - 30px));
+}
+.news-list {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  touch-action: pan-y;
+  text-align: left;
+  padding-right: 4px;
+}
+.news-entry + .news-entry {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.news-title {
+  margin: 0;
+  font-size: 15px;
+  color: #ffd27a;
+}
+.news-date {
+  margin: 2px 0 10px;
+  font-size: 11px;
+  color: #999;
+}
+.news-items {
+  display: grid;
+  gap: 8px;
+}
+.news-item {
+  --c: #00ffff;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border-left: 3px solid var(--c);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 14%, transparent), rgba(0, 0, 0, 0.3));
+}
+.news-icon {
+  font-size: 22px;
+  flex: none;
+  overflow: visible;
+}
+.news-text b {
+  font-size: 13px;
+  color: var(--c);
+}
+.news-text p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #ddd;
+}

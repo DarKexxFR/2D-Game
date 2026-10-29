@@ -54,17 +54,29 @@ test("le skin s'applique en partie : tirs colorés et traînée", async ({ page 
   await startGame(page);
   await game(page, ({ state }) => (state.player.autoShoot = true));
   await page.keyboard.down("ArrowRight");
+  // Lu d'un seul tenant : la traînée s'efface au fil des ticks
   await expect
-    .poll(() => game(page, ({ state }) => state.world.trail.length), { timeout: 10_000 })
-    .toBeGreaterThan(3);
+    .poll(() => game(page, ({ state }) => (state.world.trail.length > 3 ? state.world.trail[0] : null)), {
+      timeout: 10_000,
+    })
+    .toMatchObject({ style: "sparks", color: "#ff00ff" });
   await page.keyboard.up("ArrowRight");
-  const trail = await game(page, ({ state }) => state.world.trail[0]);
-  expect(trail).toMatchObject({ style: "sparks", color: "#ff00ff" });
-  // Arc-en-ciel : chaque tir prend une teinte du cycle (et jamais la couleur de l'arme)
-  await expect
-    .poll(() => game(page, ({ state }) => state.world.projectiles.length), { timeout: 10_000 })
-    .toBeGreaterThan(0);
-  const colors = await game(page, ({ state }) => state.world.projectiles.map((p) => p.color));
+  // Arc-en-ciel : chaque tir prend une teinte du cycle (et jamais la couleur de l'arme). Tirs lancés à la
+  // main d'un seul tenant : en jeu, un ennemi collé au vaisseau prend chaque tir dans le tick même où il part
+  const colors = await game(page, ({ state, spawner, combat }) => {
+    const p = state.player;
+    spawner.spawnEnemy("tank", p.worldX + 300, p.worldY);
+    combat.rebuildEnemyGrid();
+    const out = [];
+    for (let i = 0; i < 3; i++) {
+      p.lastAttack = -1e9;
+      const before = state.world.projectiles.length;
+      combat.shoot();
+      out.push(...state.world.projectiles.slice(before).map((pr) => pr.color));
+    }
+    return out;
+  });
+  expect(colors.length).toBeGreaterThan(0);
   for (const c of colors) {
     expect(c).toMatch(/^#[0-9a-f]{6}$/);
     expect(c).not.toBe("#ffff00");

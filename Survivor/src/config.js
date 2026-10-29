@@ -52,7 +52,7 @@ export const STAT_CAPS = {
 export const SURVIVAL = {
   armorCurve: 40,
   healFatigueFrom: 12,
-  healFatiguePerWave: 0.04,
+  healFatiguePerWave: 0.03, // soins au plus bas (`minHealFactor`) vers la vague 34
   minHealFactor: 0.35,
   harvestCooldown: 200, // ms entre deux soins de la Moisson sanglante (max 5 % des PV / s)
 };
@@ -261,6 +261,7 @@ export const RARITIES = {
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
   corrupted: { weight: 10, color: "#ff1f4b" }, // cartes « Corrompues » : bonus fort contre un malus
   weapon: { weight: 22, color: "#00e5ff" }, // armes d'appoint (data/sideWeapons.js) : nouvelle arme ou niveau
+  fusion: { weight: 0, color: "#ff8cf8" }, // fusion de deux armes d'appoint : proposée en priorité
 };
 
 // Coffre lâché par un boss : une augmentation au choix (raretés hautes favorisées) + de l'or.
@@ -299,10 +300,10 @@ export const DIFFICULTIES = {
 };
 
 // Mode « Endless Pulse » (systems/endless.js, mutations dans data/endless.js) : vaincre le boss final
-// (`finalBoss`, vague 30) en partie normale lance l'Endless Pulse, sans arrêter la partie (une annonce).
+// (`finalBoss`, l'Architecte de la vague 40) en partie normale lance l'Endless Pulse, sans arrêter la partie (une annonce).
 // Chaque vague suivante (« pulsation ») ajoute une mutation des ennemis et augmente l'XP et l'or gagnés.
 export const ENDLESS = {
-  finalBoss: "pulse_core",
+  finalBoss: "architect",
   rewardPerDepth: 0.08, // XP et or des ennemis +8 % par pulsation (cumulé)
   mutatorsPerWave: 1,
 };

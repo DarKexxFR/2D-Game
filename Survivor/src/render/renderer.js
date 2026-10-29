@@ -20,6 +20,7 @@ import { renderSplit } from "./versus.js";
 import { drawRivalView } from "./rivalView.js";
 import { rival } from "../systems/versusOnline.js";
 import { versus } from "../systems/versus.js";
+import { CARD_EFFECTS } from "../data/cardEffects.js";
 
 export { renderMenuBackground } from "./menuScene.js";
 
@@ -73,6 +74,7 @@ function drawScene(now) {
 
   drawWeather(now);
   if (game.hex?.type === "fog") drawFog();
+  else if (player.blind) drawBlind();
   drawGoblinPointer(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1 && !versus.split && !game.rush) drawWaveTimer();
@@ -88,6 +90,18 @@ function drawFog() {
   const g = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 1.3);
   g.addColorStop(0, "rgba(5, 2, 12, 0)");
   g.addColorStop(1, `rgba(5, 2, 12, ${0.985 * fade})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, view.width, view.height);
+}
+
+/** Carte corrompue « Furie aveugle » : on ne voit nettement qu'autour du vaisseau. */
+function drawBlind() {
+  const x = player.worldX - camera.x;
+  const y = player.worldY - camera.y;
+  const r = CARD_EFFECTS.blind.radius;
+  const g = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 1.6);
+  g.addColorStop(0, "rgba(20, 0, 8, 0)");
+  g.addColorStop(1, "rgba(20, 0, 8, 0.9)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, view.width, view.height);
 }

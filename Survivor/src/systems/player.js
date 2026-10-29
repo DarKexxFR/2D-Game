@@ -22,6 +22,7 @@ import { pushEnemy } from "./knockback.js";
 import { recordPlayerLevel } from "../services/achievements.js";
 import { onDash, onHurt, onLevelUp } from "./perks.js";
 import { noteKiller } from "./killCam.js";
+import { absorbHit, onCardDash } from "./cardEffects.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -74,6 +75,7 @@ function updateDash() {
     createParticles(player.worldX, player.worldY, "#fff", 10);
     playSfx("dash");
     onDash();
+    onCardDash();
   }
   if (player.isDashing) {
     player.speed = player.dashSpeed;
@@ -150,6 +152,7 @@ export function heal(amount) {
 /** `source` (facultatif) : ce qui a porté le coup, pour le ralenti de la mort (systems/killCam.js). */
 export function takeDamage(amount, source) {
   if (game.over) return;
+  if (absorbHit()) return; // carte Bouclier d'énergie
   amount *= player.damageTaken;
   player.health -= amount;
   playSfx("hurt");
@@ -259,7 +262,7 @@ export function gainXp(amount) {
 
 export function chargeUltimate() {
   if (player.isUltReady) return;
-  player.ultCharge++;
+  player.ultCharge += player.ultGain; // carte Dette de temps : charge plus vite
   if (player.ultCharge >= player.maxUltCharge) {
     player.ultCharge = player.maxUltCharge;
     player.isUltReady = true;

@@ -38,6 +38,12 @@ function sourceName(source) {
       return "Renaissance";
     case "synergy":
       return player.synergy?.name || "Synergie";
+    case "arc":
+      return "Arc électrique";
+    case "surge":
+      return "Surtension";
+    case "dash":
+      return "Dash explosif";
     default:
       return SIDE_WEAPONS[source] ? sideName(source, player) : "Autres";
   }

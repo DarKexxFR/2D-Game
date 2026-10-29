@@ -20,6 +20,7 @@ const ROUTES = {
   questMenu: "quetes",
   seasonMenu: "saison",
   streakMenu: "serie",
+  newsMenu: "nouveautes",
   bossRushMenu: "boss-rush",
   talentMenu: "talents",
   skinMenu: "skins",

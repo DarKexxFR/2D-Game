@@ -8,13 +8,14 @@ import {
   BOSS_POWER,
   BOSS_RUSH,
   BOSS_SPAWN_DELAY,
-  BOSS_WAVES,
   ELITE,
   ENEMY_NAMES,
   ENEMY_TYPES,
   GOBLIN,
   SPAWN_TABLES,
   WAVE_SCALING as W,
+  bossForWave,
+  FINALE_WAVES,
 } from "../data/enemies.js";
 import { biomeForWave } from "../data/biomes.js";
 import { randomItem, weightedPick } from "../utils/math.js";
@@ -102,7 +103,7 @@ export function spawnWave() {
   if (game.rush) return spawnRushBoss();
   recordWave(game.wave);
   if (game.difficulty === "nightmare") recordBest("nightmareWave", game.wave);
-  const boss = game.wave > 1 ? BOSS_WAVES.find((b) => game.wave % b.every === 0) : null;
+  const boss = bossForWave(game.wave);
   if (!boss) {
     if (game.wave >= GOBLIN.fromWave && Math.random() < GOBLIN.chance) spawnGoblin();
     return;
@@ -193,10 +194,11 @@ export function waveMultipliers(wave) {
   };
 }
 
-/** Chance qu'un ennemi ordinaire apparaisse en élite à cette vague. */
+/** Chance qu'un ennemi ordinaire apparaisse en élite à cette vague (plus les vagues d'élites de la fin). */
 export function eliteChance(wave) {
   if (wave < ELITE.fromWave) return 0;
-  return Math.min(ELITE.maxChance, (wave - ELITE.fromWave + 1) * ELITE.chancePerWave);
+  const finale = FINALE_WAVES.elite[game.wave] || 0;
+  return Math.min(ELITE.maxChance, (wave - ELITE.fromWave + 1) * ELITE.chancePerWave) + finale;
 }
 
 let enemyIds = 0; // identifiant de chaque ennemi (suivi d'un ennemi dans l'aperçu du duel en ligne)

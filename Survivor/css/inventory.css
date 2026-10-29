@@ -380,6 +380,75 @@ button.equipped-slot.active {
   background: rgba(255, 42, 109, 0.12);
 }
 
+/* --- Forge : doublons de même rareté → objet de la rareté au-dessus --- */
+.forge-panel {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 210, 122, 0.4);
+  background: linear-gradient(180deg, rgba(255, 122, 26, 0.12), rgba(0, 0, 0, 0.4));
+  text-align: left;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+.forge-head {
+  grid-column: 1 / -1;
+}
+.forge-title {
+  margin: 0;
+  font-size: 14px;
+  color: #ffd27a;
+  letter-spacing: 2px;
+}
+.forge-sub {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #c9b79a;
+}
+.forge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border-left: 3px solid var(--from);
+  background: rgba(0, 0, 0, 0.35);
+}
+.forge-recipe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.forge-from {
+  color: var(--from);
+}
+.forge-to {
+  color: var(--to);
+  font-weight: bold;
+}
+button.forge-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.forge-result {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rarity);
+  color: var(--rarity);
+  font-size: 12px;
+}
+.forge-result-icon {
+  font-size: 26px;
+}
+
 /* --- Équipement : collection + fiche détaillée --- */
 .inv-body {
   display: grid;

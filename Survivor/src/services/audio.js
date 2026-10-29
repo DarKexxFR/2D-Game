@@ -2,10 +2,10 @@
 // musiques synthétisées de data/music.js choisies selon le moment (biome, boss, boss final, Endless Pulse).
 // Le changement se fait en fondu, calé sur le temps de la musique précédente.
 
-import { ENDLESS, MUSIC } from "../config.js";
+import { MUSIC } from "../config.js";
 import { game, world } from "../core/state.js";
 import { biomeForWave } from "../data/biomes.js";
-import { SONGS } from "../data/music.js";
+import { BOSS_MUSIC, SONGS } from "../data/music.js";
 import { randomItem } from "../utils/math.js";
 import { getAudio, onAudioUnlock } from "./audioContext.js";
 import { createMusicBus, MusicSequencer } from "./musicSequencer.js";
@@ -19,14 +19,12 @@ import { onSettingsChange, settings } from "./settings.js";
  */
 export function musicThemeFor(g, enemies) {
   if (!g.started || !g.running || g.over) return null;
-  let boss = g.pendingBosses?.[0]?.type || null; // boss annoncé : la musique change dès l'alerte
-  for (const e of enemies) {
-    if (e.dead || !e.template?.isBoss) continue;
-    boss = e.type;
-    if (boss === ENDLESS.finalBoss) break;
-  }
-  if (boss === ENDLESS.finalBoss) return "final";
-  if (boss || g.rush) return "boss";
+  const bosses = [g.pendingBosses?.[0]?.type]; // boss annoncé : la musique change dès l'alerte
+  for (const e of enemies) if (!e.dead && e.template?.isBoss) bosses.push(e.type);
+  // Un boss qui a sa musique l'emporte (le premier de BOSS_MUSIC : le boss final avant le Cœur du Pulse)
+  const own = Object.keys(BOSS_MUSIC).find((type) => bosses.includes(type));
+  if (own) return BOSS_MUSIC[own];
+  if (bosses.some(Boolean) || g.rush) return "boss";
   if (g.endless) return "endless";
   return biomeForWave(g.wave).id;
 }

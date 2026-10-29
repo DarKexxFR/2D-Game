@@ -35,9 +35,12 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 
 **Partie**
 
-- **5 biomes** de 6 vagues (Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale), chacun avec
-  ses ennemis ; 16 types d'ennemis (porte-bouclier, essaim, soigneur, aimant, spores, téléporteurs...), élites
-  dès la vague 8, difficulté qui devient exponentielle après la vague 10.
+- **40 vagues, 7 biomes** : Cité néon, Désert rouge, Toundra, Jungle toxique, Station orbitale (6 vagues
+  chacun), puis **Faille quantique** (31 à 35) et **Noyau stellaire** (36 à 40) ; au-delà, les biomes reviennent
+  en boucle. Chacun a ses ennemis : 20 types (porte-bouclier, essaim, soigneur, aimant, spores, téléporteurs,
+  **Déphaseur** qui devient intouchable par moments, **Réplicateur** qui se copie, **Fusionneurs** qui s'unissent
+  en un plus fort, **Nova** qui charge puis explose...). Élites dès la vague 8, difficulté qui devient
+  exponentielle après la vague 10 (réglée pour qu'un très bon build tienne jusqu'à la vague 40).
 - **Boss** à attaques annoncées (zones, lasers, ondes de choc) et phase de furie : Roi Slime, Titan de l'orage,
   Sentinelle prismatique, Kraken, Jumeaux de feu et de glace, Colosse de givre, Faucheur du vide... Pendant un
   boss l'arène se resserre et les petits ennemis disparaissent ; les boss ne peuvent pas être repoussés.
@@ -47,20 +50,28 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   et qui lui donnent une carapace, pollen à tête chercheuse), **Chronophage** (vague 23 : bulles où les tirs
   ralentissent, cadran, pendule, retour 3 s en arrière, il rembobine sa vie si on ne frappe pas assez fort),
   **Hacker** (vague 29 : commandes inversées, pare-feu à traverser au dash, zones qui coupent le tir, clones
-  holographiques en furie) et le boss final **Cœur du Pulse** (vague 30 : attaques en rythme sur ses
-  battements, trois phases, l'arène se resserre à chaque phase).
-- **Endless Pulse** : vaincre le Cœur du Pulse lance l'**Endless Pulse** sans arrêter la partie (une simple
+  holographiques en furie) et le **Cœur du Pulse** (vague 30 : attaques en rythme sur ses battements, trois
+  phases, l'arène se resserre à chaque phase).
+- **Boss de la fin** : **Forgeronne stellaire** (vague 32 : enclumes, drones soudés en colosse, étincelles),
+  **Le Reflet** (vague 35 : copie les dashs et les armes d'appoint du joueur, en miroir), **Tisseuse du vide**
+  (vague 37 : ancres reliées par des fils laser, une cage qui laisse toujours une sortie, une ancre détruite
+  l'étourdit) et le boss final **L'Architecte** (vague 40 : quatre phases qui reprennent les attaques des boss
+  précédents, l'arène se resserre à chaque phase).
+- **Endless Pulse** : vaincre l'Architecte lance l'**Endless Pulse** sans arrêter la partie (une simple
   annonce) : chaque nouvelle vague (« pulsation ») ajoute une mutation aux
   ennemis (blindage, rage, hâte, nuée, élites, qui se cumulent) et augmente l'XP et l'or gagnés. Classement
   Endless à part et succès dédiés.
 - **Armes d'appoint** : jusqu'à 3 armes en plus de l'arme équipée, trouvées dans les cartes « Arme » (missiles
   chercheurs, mines à plasma, foudre céleste, onde pulsée, faisceau rotatif, fouet laser). Chacune a 5 niveaux et
   une évolution (niveau 5 + carte partenaire : Essaim de missiles, Champ nucléaire, Jugement, Écho sismique,
-  Prisme, Fouet vampire). Le panneau en jeu les montre avec leur niveau.
+  Prisme, Fouet vampire). **Fusion** : deux armes au niveau 5 se combinent avec une carte « Fusion » en une seule
+  arme plus forte qui garde les deux effets et libère un emplacement (Frappe orbitale, Tapis sismique,
+  Lame-prisme, Bombes à fragmentation, Arc Tesla, Cyclone). Le panneau en jeu les montre avec leur niveau.
 - **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
-  (41 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
+  (53 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
   éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
-- **Améliorations** à chaque niveau, **évolutions** (armes et compétences), **cartes corrompues** (gros bonus
+- **Améliorations** à chaque niveau (dont Givre, Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique,
+  Pulsar, Surtension), **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
 - **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
@@ -84,13 +95,16 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 
 - **Équipement** en 5 emplacements (héros, familier, arme, armure, module), raretés commun → légendaire puis
   **mythique** (coffre mythique), niveaux, prestige ★1 à ★5, effets ★3, panoplies, synergies familier + arme,
-  3 équipements enregistrés, offre du jour en boutique.
+  3 équipements enregistrés, offre du jour en boutique. **Forge** : 3 objets en double d'une rareté + de l'or
+  donnent un objet de la rareté au-dessus (jusqu'au légendaire).
 - Talents, succès avec récompenses, **quêtes hebdomadaires**, **série de connexion** sur 7 jours, **skins** du
   vaisseau (forme, couleurs, traînée), tutoriel de première partie.
 - **Saison mensuelle** et son **passe gratuit** : 30 paliers (or, coffres jusqu'au mythique, une traînée et une
   coque exclusives par saison) gagnés avec l'XP de saison (parties terminées, première partie du jour, quêtes).
   Une saison = un mois, avec un thème et son classement remis à zéro le 1er ; les récompenses oubliées sont
   données d'office au changement de mois.
+- **Nouveautés** : après une mise à jour, une fenêtre présente les nouvelles fonctionnalités au retour du
+  joueur (à revoir dans les Options).
 - **Compte facultatif** (Google, Discord ou code par e-mail) pour retrouver sa progression sur tous ses appareils.
 
 **Application**
@@ -99,8 +113,9 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   sans JavaScript, affichée pendant le chargement), données structurées schema.org `VideoGame`, résumé
   [`llms.txt`](Survivor/llms.txt), `robots.txt` et `sitemap.xml`.
 - **Musique** : une piste par biome (synthwave pour la Cité néon, gamme orientale pour le Désert rouge, cloches
-  aériennes pour la Toundra, percussions tribales pour la Jungle, arpèges spatiaux pour la Station), une pour les
-  boss (dès l'alerte), une pour le Cœur du Pulse (battements de cœur) et une pour l'Endless Pulse. Composées en
+  aériennes pour la Toundra, percussions tribales pour la Jungle, arpèges spatiaux pour la Station, rythme déphasé
+  pour la Faille quantique, nappes immenses pour le Noyau stellaire), une pour les boss (dès l'alerte), une pour le
+  Cœur du Pulse (battements de cœur), une pour l'Architecte et une pour l'Endless Pulse. Composées en
   données et synthétisées en direct (Web Audio) : aucun fichier à télécharger, enchaînements en fondu calés sur
   le temps, volume baissé en pause. Les pistes de l'accueil restent des fichiers. Volume et coupure dans les Options.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
@@ -189,17 +204,25 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
 ### Ajouter du contenu
 
 - **Un ennemi** : une entrée **en fin** de `ENEMY_TYPES` (le duel en ligne repère les types par leur rang),
-  puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`), son apparence dans
+  puis dans une table d'apparition ou un biome (`src/data/enemies.js`, `src/data/biomes.js`), son comportement
+  dans `MOB_BEHAVIORS` (`src/systems/enemies.js`, par exemple `src/systems/riftFoes.js`), son apparence dans
   `src/render/enemyLooks.js` et sa fiche dans `src/data/bestiary.js`.
+- **Un biome** : une entrée dans `BIOMES` (`src/data/biomes.js`, vagues `from` / `to`).
 - **Un boss** : son fichier dans `src/systems/bosses/` (outils dans `kit.js`), une entrée dans `index.js`,
-  dans `ENEMY_TYPES` (en fin), `ENEMY_NAMES`, `BOSS_WAVES` et `BOSS_RUSH` (`src/data/enemies.js`), ses
-  réglages dans `src/data/bosses.js`, son sprite dans `src/render/bossShapes.js`, son succès
+  dans `ENEMY_TYPES` (en fin), `ENEMY_NAMES`, `BOSS_WAVES` (ou `FINALE_WAVES` pour les vagues 31 à 40) et
+  `BOSS_RUSH` (`src/data/enemies.js`), ses réglages dans `src/data/bosses.js`, son sprite dans
+  `src/render/bossShapes.js` ou `src/render/finaleShapes.js`, son succès
   (`kill_<type>`) et ses tests.
 - **Une arme d'appoint** : une entrée dans `SIDE_WEAPONS` (`src/data/sideWeapons.js` : 5 niveaux, évolution)
   et son comportement dans `BEHAVIORS` (`src/systems/sideWeapons.js`) ; la carte et l'évolution se créent seules.
+- **Une fusion d'armes** : une entrée dans `SIDE_FUSIONS` (`src/data/sideWeapons.js`, deux armes `parts`) et son
+  effet combiné dans `src/systems/sideWeapons.js` ; la carte « Fusion » se crée seule.
 - **Une fiche du bestiaire** : obligatoire pour chaque nouvel ennemi (`src/data/bestiary.js`, vérifié par
   `tests/bestiary.spec.js`).
-- **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`.
+- **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`
+  (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
+- **Une mise à jour** : une entrée en tête de `CHANGELOG` (`src/data/changelog.js`, `id` nouveau) pour la
+  fenêtre « Nouveautés ».
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
 - **Une mutation Endless Pulse** : une entrée dans `PULSE_MUTATORS` (`src/data/endless.js`).
 - **Une saison** : les thèmes tournent tout seuls (`SEASON_THEMES` dans `src/data/season.js`, avec leur coque

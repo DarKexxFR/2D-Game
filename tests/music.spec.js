@@ -12,7 +12,8 @@ test("musiques : partitions valides et rendu sans saturation", async ({ page, is
     const { MUSIC } = await import("/src/config.js");
     const problems = [];
     for (const biome of BIOMES) if (!SONGS[biome.id]) problems.push(`biome ${biome.id} sans musique`);
-    for (const theme of ["boss", "final", "endless"]) if (!SONGS[theme]) problems.push(`${theme} absent`);
+    for (const theme of ["boss", "final", "architect", "endless"])
+      if (!SONGS[theme]) problems.push(`${theme} absent`);
     const levels = {};
     for (const [id, song] of Object.entries(SONGS)) {
       const c = compileSong(song); // accord inconnu = exception
@@ -65,12 +66,27 @@ test("musiques : la musique suit la partie", async ({ page, isMobile }) => {
       musicThemeFor({ ...run, wave: 26 }, []),
       musicThemeFor({ ...run, pendingBosses: [{ type: "colossus" }] }, []),
       musicThemeFor({ ...run, wave: 30 }, [boss("pulse_core"), boss("hacker")]),
+      musicThemeFor({ ...run, wave: 40 }, [boss("pulse_core"), boss("architect")]),
+      musicThemeFor({ ...run, wave: 32 }, []),
+      musicThemeFor({ ...run, wave: 38 }, []),
       musicThemeFor({ ...run, endless: { depth: 1 } }, []),
       musicThemeFor({ ...run, rush: { stage: 1 } }, []),
       musicThemeFor({ ...run, over: true }, []),
     ];
   });
-  expect(themes).toEqual(["neon", "desert", "station", "boss", "final", "endless", "boss", null]);
+  expect(themes).toEqual([
+    "neon",
+    "desert",
+    "station",
+    "boss",
+    "final",
+    "architect",
+    "rift",
+    "core",
+    "endless",
+    "boss",
+    null,
+  ]);
 
   // En partie (après une interaction, exigée par les navigateurs) : musique du biome, puis du boss
   await startGame(page, { invincible: true });

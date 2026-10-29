@@ -306,6 +306,100 @@ export const ENEMY_TYPES = {
     chest: 1,
     noExecute: true,
   },
+  // Fin de l'aventure (vagues 31 à 40) : ennemis de la Faille quantique et du Noyau stellaire
+  phaser: { health: 60, damage: 16, speed: 2.8, size: 16, color: "#ff3bf0", xp: 9, gold: 4 },
+  replicator: { health: 70, damage: 14, speed: 2, size: 17, color: "#00ffe0", xp: 9, gold: 4 },
+  fuser: { health: 90, damage: 18, speed: 2.2, size: 18, color: "#ffb347", xp: 10, gold: 5 },
+  nova: { health: 40, damage: 30, speed: 2.4, size: 15, color: "#ff5a3d", xp: 9, gold: 4 },
+  // Boss de la fin de l'aventure (systems/bosses/, réglages dans data/bosses.js)
+  forge: {
+    health: 3600,
+    damage: 56,
+    speed: 1.5,
+    size: 62,
+    color: "#ff7a1a",
+    xp: 1700,
+    gold: 650,
+    isBoss: true,
+    chest: 1,
+    noExecute: true,
+  },
+  forge_drone: {
+    health: 100,
+    damage: 24,
+    speed: 3.4,
+    size: 16,
+    color: "#ffb35c",
+    xp: 8,
+    gold: 2,
+    noExecute: true,
+  },
+  forge_golem: {
+    health: 100,
+    damage: 40,
+    speed: 1.6,
+    size: 36,
+    color: "#ff5a1a",
+    xp: 40,
+    gold: 10,
+    noExecute: true,
+  },
+  mirror: {
+    health: 3400,
+    damage: 50,
+    speed: 3,
+    size: 36,
+    color: "#cfe8ff",
+    xp: 1800,
+    gold: 700,
+    isBoss: true,
+    chest: 1,
+    noExecute: true,
+  },
+  mirror_echo: {
+    health: 100,
+    damage: 30,
+    speed: 3,
+    size: 30,
+    color: "#8fb8ff",
+    xp: 30,
+    gold: 8,
+    noExecute: true,
+  },
+  weaver: {
+    health: 3800,
+    damage: 54,
+    speed: 1.8,
+    size: 58,
+    color: "#b26bff",
+    xp: 1900,
+    gold: 750,
+    isBoss: true,
+    chest: 1,
+    noExecute: true,
+  },
+  weaver_anchor: {
+    health: 100,
+    damage: 0,
+    speed: 0,
+    size: 20,
+    color: "#e0b3ff",
+    xp: 15,
+    gold: 3,
+    noExecute: true,
+  },
+  architect: {
+    health: 6000,
+    damage: 62,
+    speed: 1,
+    size: 76,
+    color: "#ffe9a8",
+    xp: 3000,
+    gold: 1200,
+    isBoss: true,
+    chest: 1,
+    noExecute: true,
+  },
 };
 
 /** Comportements des ennemis des nouveaux biomes (voir systems/enemies.js), en ticks. */
@@ -319,6 +413,16 @@ export const BIOME_FOES = {
   heal: { every: 150, radius: 200, amount: 0.15 },
   // Aimant : annonce (`warn`) puis attire le joueur vers lui pendant `duration` ticks
   magnet: { every: 300, range: 420, warn: 45, duration: 60, pull: 2.2 },
+  // Déphaseur : visible `solid` ticks, scintille `warn` ticks, puis intouchable `phased` ticks (plus rapide)
+  phase: { solid: 150, warn: 30, phased: 90, speed: 1.4 },
+  // Réplicateur : se copie toutes les `every` ticks (annoncé `warn` ticks avant), au plus `max` en jeu
+  // et sur `generations` générations ; une copie rapporte `copyRewards` de l'XP et de l'or
+  replicate: { every: 360, warn: 60, max: 18, generations: 2, copyRewards: 0.4 },
+  // Fusionneur : deux qui se touchent fusionnent (PV cumulés ×`health`, dégâts ×`damage`, taille ×`size`),
+  // au plus `maxLevel` fois ; il est attiré par un autre fusionneur proche (`seek` pixels, `pull` par tick)
+  fuse: { maxLevel: 2, health: 1.2, damage: 1.35, size: 1.3, seek: 220, pull: 0.7 },
+  // Nova : à `range` du joueur, fonce `charge` ticks (vitesse ×`speed`), puis explose (zone annoncée)
+  nova: { range: 230, charge: 32, speed: 2.6, radius: 105, delay: 45, damage: 1.2 },
 };
 
 /** Ennemis d'élite : plus gros, plus résistants, plus forts ; de plus en plus fréquents. */
@@ -378,6 +482,18 @@ export const ENEMY_NAMES = {
   hacker: "Hacker",
   hacker_clone: "Clone du Hacker",
   pulse_core: "Cœur du Pulse",
+  phaser: "Déphaseur",
+  replicator: "Réplicateur",
+  fuser: "Fusionneur",
+  nova: "Nova",
+  forge: "Forgeronne stellaire",
+  forge_drone: "Drone de forge",
+  forge_golem: "Colosse forgé",
+  mirror: "Le Reflet",
+  mirror_echo: "Écho du Reflet",
+  weaver: "Tisseuse du vide",
+  weaver_anchor: "Ancre de toile",
+  architect: "L'Architecte",
 };
 
 /** Taille maximale d'un ennemi (Roi Slime grossi par BOSS_POWER, en plein saut), utile pour la grille spatiale. */
@@ -396,8 +512,12 @@ export const SPAWN_TABLES = [
   { untilWave: Infinity, weights: { ...LATE_MIX, healer: 0.08, magnet: 0.07 } },
 ];
 
-// Vagues de boss, testées dans l'ordre.
+// Vagues de boss, testées dans l'ordre (premier multiple trouvé) : vagues 1 à 30, puis en Endless Pulse.
 export const BOSS_WAVES = [
+  { every: 40, type: "architect", warning: "L'ARCHITECTE" },
+  { every: 37, type: "weaver", warning: "TISSEUSE DU VIDE" },
+  { every: 35, type: "mirror", warning: "LE REFLET" },
+  { every: 32, type: "forge", warning: "FORGERONNE STELLAIRE" },
   { every: 30, type: "pulse_core", warning: "CŒUR DU PULSE" },
   { every: 29, type: "hacker", warning: "LE HACKER" },
   { every: 23, type: "chronophage", warning: "CHRONOPHAGE" },
@@ -414,6 +534,32 @@ export const BOSS_WAVES = [
   { every: 5, type: "boss", warning: "ŒIL DU NÉANT" },
   { every: 2, type: "miniboss", warning: "" },
 ];
+
+/**
+ * Fin de l'aventure (vagues 31 à 40) : déroulé fixe au lieu des multiples ci-dessus (sinon un ancien
+ * boss reviendrait presque à chaque vague). Une vague absente de `waves` = des ennemis seulement.
+ * `elite` : chance d'élite en plus pour les vagues de transition.
+ */
+export const FINALE_WAVES = {
+  from: 31,
+  to: 40,
+  waves: {
+    32: { type: "forge", warning: "FORGERONNE STELLAIRE" },
+    33: { type: "miniboss", warning: "" },
+    35: { type: "mirror", warning: "LE REFLET" },
+    36: { type: "miniboss", warning: "" },
+    37: { type: "weaver", warning: "TISSEUSE DU VIDE" },
+    40: { type: "architect", warning: "L'ARCHITECTE" },
+  },
+  elite: { 38: 0.1, 39: 0.25 },
+};
+
+/** Boss de la vague `wave` en partie normale ({ type, warning }), ou null. */
+export function bossForWave(wave) {
+  if (wave <= 1) return null;
+  if (wave >= FINALE_WAVES.from && wave <= FINALE_WAVES.to) return FINALE_WAVES.waves[wave] || null;
+  return BOSS_WAVES.find((b) => wave % b.every === 0) || null;
+}
 
 /**
  * Boss Rush : les boss s'enchaînent sans ennemis ordinaires. Chaque boss est réglé comme à sa
@@ -436,8 +582,12 @@ export const BOSS_RUSH = {
     { type: "chronophage", wave: 23, warning: "CHRONOPHAGE" },
     { type: "hacker", wave: 29, warning: "LE HACKER" },
     { type: "pulse_core", wave: 30, warning: "CŒUR DU PULSE" },
+    { type: "forge", wave: 32, warning: "FORGERONNE STELLAIRE" },
+    { type: "mirror", wave: 35, warning: "LE REFLET" },
+    { type: "weaver", wave: 37, warning: "TISSEUSE DU VIDE" },
+    { type: "architect", wave: 40, warning: "L'ARCHITECTE" },
   ],
-  cycleWaves: 30,
+  cycleWaves: 40,
   spawnDelay: 120, // ticks avant l'arrivée du boss
   breather: 180, // ticks de répit entre deux boss
   heal: 0.3, // part des PV max rendue après chaque boss
@@ -538,11 +688,12 @@ export const WAVE_SCALING = {
   damage: 0.15,
   speed: 0.03,
   maxSpeedMult: 1.8,
-  // À partir de `rampFrom`, PV et dégâts grimpent en plus de façon exponentielle (×1,07 / ×1,06
-  // par vague) : le joueur finit toujours par être débordé, même avec un très bon build.
+  // À partir de `rampFrom`, PV et dégâts grimpent en plus de façon exponentielle (×1,046 / ×1,04
+  // par vague) : le joueur finit toujours par être débordé, même avec un très bon build. Montée réglée
+  // pour une fin vers la vague 40 (à la vague 40, à peu près ce qu'était la vague 30 avec ×1,07 / ×1,06).
   rampFrom: 10,
-  healthRamp: 1.07,
-  damageRamp: 1.06,
+  healthRamp: 1.046,
+  damageRamp: 1.04,
   xp: 0.1,
   baseMobs: 30,
   mobsPerWave: 4,

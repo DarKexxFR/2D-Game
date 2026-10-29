@@ -151,7 +151,20 @@ export function resetPlayer(accountLevel) {
     bloodPact: null, // carte Pacte de sang : { ms, heal } ; pactUntil = fin de la fenêtre de soins
     pactUntil: 0,
     synergy: null, // duo familier + arme actif (data/perks.js SYNERGIES)
-    sideWeapons: [], // armes d'appoint de la partie { id, level, timer, angle } (systems/sideWeapons.js)
+    sideWeapons: [], // armes d'appoint de la partie { id, level, timer, angle, parts? } (systems/sideWeapons.js)
+    // Cartes à effet (data/cardEffects.js, systems/cardEffects.js) : nombre de cartes prises et minuteurs
+    frost: 0,
+    ricochet: 0,
+    energyShield: 0,
+    shieldReadyAt: 0,
+    dashBlast: 0,
+    arc: 0,
+    pulsar: 0,
+    shotCount: 0,
+    surge: 0,
+    surgeKills: 0,
+    ultGain: 1, // charges de compétence par élimination (carte Dette de temps)
+    blind: false, // vision réduite (carte Furie aveugle)
     autoShoot: false,
     aimAngle: 0,
     weapon: null, // statistiques de l'arme équipée (voir systems/equipment.js)

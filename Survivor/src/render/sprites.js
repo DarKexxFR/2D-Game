@@ -4,6 +4,7 @@
 
 import { gfx } from "../core/gfx.js";
 import { BOSS_SHAPES } from "./bossShapes.js";
+import { FINALE_SHAPES } from "./finaleShapes.js";
 import { dot, eye, glow, neonBody, noGlow, polygon, regular, shade } from "./neon.js";
 
 export { shade };
@@ -1060,4 +1061,5 @@ const SHAPES = {
     c.stroke();
   },
   ...BOSS_SHAPES, // boss rangés dans systems/bosses/
+  ...FINALE_SHAPES, // ennemis et boss des vagues 31 à 40
 };

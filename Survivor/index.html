@@ -92,6 +92,7 @@
     <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/quests.css" />
     <link rel="stylesheet" href="css/streak.css" />
+    <link rel="stylesheet" href="css/news.css" />
     <link rel="stylesheet" href="css/daily.css" />
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/endless.css" />
@@ -422,6 +423,7 @@
           <div id="itemList" class="item-grid"></div>
           <div id="itemDetail" class="item-detail"></div>
         </div>
+        <section id="forgePanel" class="forge-panel" aria-label="Forge"></section>
         <button id="btnInventoryBack" class="secondary mt-15">RETOUR</button>
       </div>
 
@@ -591,6 +593,16 @@
         <button id="btnStreakClaim" class="mt-15">RÉCUPÉRER</button>
       </div>
 
+      <!-- ===== NOUVEAUTÉS (après une mise à jour, voir ui/newsMenu.js) ===== -->
+      <div id="newsMenu" class="menu-overlay">
+        <div class="menu-head">
+          <h2>NOUVEAUTÉS</h2>
+          <p class="menu-sub">Ce qui a changé depuis ta dernière visite</p>
+        </div>
+        <div id="newsList" class="news-list"></div>
+        <button id="btnNewsClose" class="mt-15">C'EST PARTI !</button>
+      </div>
+
       <!-- ===== SUCCÈS ===== -->
       <div id="achievementMenu" class="menu-overlay menu-wide">
         <div class="menu-head">
@@ -668,6 +680,10 @@
           <button id="btnTutorialReplay" class="secondary">REVOIR</button>
         </div>
         <p id="tutorialReplayHint" class="option-hint"></p>
+        <div id="optNewsRow" class="option-row option-account-row">
+          <span><i data-icon="sparkle"></i> Nouveautés</span>
+          <button id="btnNewsReplay" class="secondary">VOIR</button>
+        </div>
         <div id="optAppRow" class="option-row option-account-row">
           <span><i data-icon="download"></i> Application</span>
           <button id="btnOptionsInstall" class="secondary">INSTALLER</button>
