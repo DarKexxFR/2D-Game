@@ -1,12 +1,14 @@
 // Écran Équipement : emplacements équipés, collection en grille et fiche détaillée de l'objet
 // sélectionné (équiper, niveau, prestige).
 
-import { CHESTS, CHEST_POOLS, ITEMS, LOADOUT_COUNT, MAX_PRESTIGE, maxLevel } from "../data/items.js";
+import { CHESTS, CHEST_POOLS, FORGE, ITEMS, LOADOUT_COUNT, MAX_PRESTIGE, maxLevel } from "../data/items.js";
 import { SETS, synergyOf } from "../data/perks.js";
 import {
   canLevelUp,
   canPrestige,
   equip,
+  forge,
+  forgeOptions,
   getEquipped,
   getOwned,
   isLoadoutActive,
@@ -20,8 +22,9 @@ import {
 } from "../services/inventory.js";
 import { account } from "../services/storage.js";
 import { $, el } from "./dom.js";
-import { setLabel } from "./icons.js";
+import { icon, setLabel } from "./icons.js";
 import {
+  RARITY_LABELS,
   compareWith,
   itemIcon,
   perkInfo,
@@ -51,6 +54,8 @@ const EQUIPPED_SLOTS = [
 ];
 let activeSlot = "weapon";
 let selectedId = null;
+/** Dernier objet forgé ({ item, result, refund }), affiché dans la Forge jusqu'au changement d'onglet. */
+let forged = null;
 let onChange = () => {};
 
 export function initInventoryMenu({ onBack, onAccountChange }) {
@@ -68,6 +73,7 @@ export function openInventory() {
 
 function selectSlot(slot) {
   activeSlot = slot;
+  forged = null;
   selectedId = null; // l'objet équipé de cet emplacement sera sélectionné
   renderInventory();
 }
@@ -100,6 +106,71 @@ export function renderInventory() {
   }
   $("itemList").replaceChildren(...items.map(itemCard));
   renderDetail(ITEMS[selectedId]);
+  renderForge();
+}
+
+const SLOT_PLURALS = {
+  hero: "héros",
+  pet: "familiers",
+  weapon: "armes",
+  armor: "armures",
+  module: "modules",
+};
+
+/**
+ * Forge : pour l'onglet ouvert, une ligne par rareté (doublons disponibles / nécessaires, prix) et le
+ * dernier objet forgé. Les doublons sont pris aux objets qui en ont le plus.
+ */
+function renderForge() {
+  const head = el("div", "forge-head");
+  head.append(
+    el("h3", "forge-title", "FORGE"),
+    el(
+      "p",
+      "forge-sub",
+      `${FORGE.copies} doublons de ${SLOT_PLURALS[activeSlot]} de même rareté + de l'or = un objet de la rareté au-dessus. Les doublons servent aussi au prestige.`,
+    ),
+  );
+  const rows = forgeOptions(activeSlot).map((o) => {
+    const row = el("div", "forge-row");
+    row.style.setProperty("--from", rarityColor(o.rarity));
+    row.style.setProperty("--to", rarityColor(o.next));
+    const recipe = el("div", "forge-recipe");
+    recipe.append(
+      el("span", "forge-from", `${o.copies}/${FORGE.copies} ${RARITY_LABELS[o.rarity]}`),
+      icon("wrench", "#ffd27a"),
+      el("span", "forge-to", RARITY_LABELS[o.next]),
+    );
+    const btn = setLabel(el("button", "forge-btn"), `FORGER ${o.cost} `, "coin", { color: "#ffd700" });
+    btn.dataset.rarity = o.rarity;
+    btn.disabled = !o.ready;
+    btn.addEventListener("click", () => {
+      const out = forge(activeSlot, o.rarity);
+      if (!out) return;
+      forged = out;
+      selectedId = out.item.id;
+      onChange();
+      renderInventory();
+    });
+    row.append(recipe, btn);
+    return row;
+  });
+  const parts = [head, ...rows];
+  if (forged) parts.push(forgedResult(forged));
+  $("forgePanel").replaceChildren(...parts);
+}
+
+function forgedResult({ item, result, refund }) {
+  const box = el("div", "forge-result");
+  box.style.setProperty("--rarity", rarityColor(item.rarity));
+  const text =
+    result === "new"
+      ? "NOUVEL OBJET !"
+      : result === "gold"
+        ? `★ MAX : converti en ${refund} or`
+        : "Doublon +1";
+  box.append(itemIcon(item, "forge-result-icon"), el("b", "", item.name), el("span", "", text));
+  return box;
 }
 
 function renderEquippedSlot(id, slot, label, emptyText) {

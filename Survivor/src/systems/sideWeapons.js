@@ -3,7 +3,7 @@
 // Tout leur état vit sur `player` et `world`, donc chaque partie d'un duel garde le sien.
 
 import { player, world } from "../core/state.js";
-import { SIDE_WEAPONS, sideStats } from "../data/sideWeapons.js";
+import { FUSION_RULES, SIDE_WEAPONS, fusionOf, sideStats, sideWeaponOf } from "../data/sideWeapons.js";
 import { angleDiff, angleTo, dist, removeWhere } from "../utils/math.js";
 import {
   chainLightning,
@@ -33,24 +33,48 @@ const SIDE = {
   slashLife: 12, // durée du coup de fouet à l'écran
 };
 
-/** @typedef {{ id: string, level: number, timer: number, angle: number, flip?: boolean, echo?: number }} SideWeaponState */
+/** @typedef {import("../data/sideWeapons.js").SideWeaponState} SideWeaponState */
 
 export function updateSideWeapons() {
-  for (const w of player.sideWeapons) {
-    const s = sideStats(w, player);
-    const behavior = BEHAVIORS[w.id];
-    if (s.cooldown) {
-      if (++w.timer < s.cooldown) {
-        behavior.idle?.(w, s);
-        continue;
-      }
-      w.timer = 0;
-    }
-    behavior.fire(w, s);
-  }
+  // Une fusion (data/sideWeapons.js SIDE_FUSIONS) fait agir ses deux armes, renforcées
+  for (const w of player.sideWeapons) for (const part of w.parts || [w]) runWeapon(part);
   updateMines();
   for (const s of world.slashes) s.life--;
   removeWhere(world.slashes, (s) => s.life <= 0);
+}
+
+/** @param {SideWeaponState} w */
+function runWeapon(w) {
+  const s = statsOf(w);
+  const behavior = BEHAVIORS[w.id];
+  if (s.cooldown) {
+    if (++w.timer < s.cooldown) {
+      behavior.idle?.(w, s);
+      return;
+    }
+    w.timer = 0;
+  }
+  behavior.fire(w, s);
+}
+
+/**
+ * Statistiques d'une arme d'appoint, renforcées si elle fait partie d'une fusion.
+ * @param {SideWeaponState} w
+ */
+export function statsOf(w) {
+  const s = sideStats(w, player);
+  if (!fusionOf(player, w.id)) return s;
+  return {
+    ...s,
+    damage: s.damage * FUSION_RULES.damage,
+    ...(s.cooldown ? { cooldown: Math.round(s.cooldown * FUSION_RULES.cooldown) } : {}),
+  };
+}
+
+/** Statistiques de l'arme d'appoint `id` du joueur (pour les effets de fusion), ou null. */
+function statsById(id) {
+  const w = sideWeaponOf(player, id);
+  return w ? statsOf(w) : null;
 }
 
 /** @type {Record<string, { fire: (w: SideWeaponState, s: Record<string, number>) => void, idle?: (w: SideWeaponState, s: Record<string, number>) => void }>} */
@@ -93,6 +117,8 @@ function fireMissiles(w, s) {
       source: "missiles",
     });
   }
+  // Fusion « Frappe orbitale » : la foudre tombe aussi sur la cible de la salve
+  if (player.evolutions.orbitalStrike) strike(first, statsById("lightning") || s);
 }
 
 // --- MINES À PLASMA ---
@@ -118,11 +144,36 @@ function updateMines() {
     if (m.dead || --m.arm > 0) continue;
     const near = enemyGrid.query(m.x, m.y, SIDE.mineTrigger + 40);
     if (!near.some((e) => !e.dead && dist(e.x, e.y, m.x, m.y) < e.size + SIDE.mineTrigger)) continue;
-    m.dead = true;
-    explode(m.x, m.y, m.radius, m.damage, null, "mines");
-    createParticles(m.x, m.y, m.color, 10);
+    detonate(m);
   }
   removeWhere(world.mines, (m) => m.dead);
+}
+
+/** Mine qui saute ; fusion « Bombes à fragmentation » : elle lâche deux missiles chercheurs. */
+function detonate(m) {
+  m.dead = true;
+  explode(m.x, m.y, m.radius, m.damage, null, "mines");
+  createParticles(m.x, m.y, m.color, 10);
+  if (!player.evolutions.clusterBombs) return;
+  const ms = statsById("missiles");
+  if (!ms) return;
+  for (let i = 0; i < 2; i++) {
+    const a = Math.random() * Math.PI * 2;
+    spawnProjectile({
+      x: m.x,
+      y: m.y,
+      vx: Math.cos(a) * SIDE.missileSpeed,
+      vy: Math.sin(a) * SIDE.missileSpeed,
+      size: 5,
+      damage: player.attack * ms.damage * 0.6,
+      color: color("missiles"),
+      explosion: ms.explosion * 0.7 * player.projScale,
+      life: SIDE.missileLife,
+      homing: SIDE.missileTurn,
+      type: "missile",
+      source: "missiles",
+    });
+  }
 }
 
 // --- FOUDRE CÉLESTE ---
@@ -187,6 +238,15 @@ function pulseWave(s) {
     knockEnemy(e, angleTo(x, y, e.x, e.y), s.push * player.knockbackMult); // les boss ne bougent pas
     if (s.stun && !e.dead) e.stun = Math.max(e.stun || 0, e.template.isBoss ? s.stun / 4 : s.stun);
   }
+  // Fusion « Tapis sismique » : l'onde fait sauter les mines qu'elle touche
+  if (player.evolutions.seismicCarpet) {
+    for (const m of world.mines) if (!m.dead && dist(m.x, m.y, x, y) < r) detonate(m);
+  }
+  // Fusion « Cyclone » : l'onde fouette tout autour du vaisseau
+  if (player.evolutions.cyclone) {
+    const ws = statsById("whip");
+    if (ws) lash([0], { ...ws, arc: Math.PI * 2 });
+  }
 }
 
 // --- FAISCEAU ROTATIF ---
@@ -214,6 +274,7 @@ function sweepBeams(w, s) {
   const segments = beamSegments(w, s);
   const length = segments[0].length;
   const damage = player.attack * s.damage;
+  let arced = false;
   for (const e of enemyGrid.query(player.worldX, player.worldY, length).slice()) {
     if (e.dead) continue;
     const d = dist(e.x, e.y, player.worldX, player.worldY);
@@ -224,7 +285,13 @@ function sweepBeams(w, s) {
       const off = angleDiff(a, g.angle);
       return Math.abs(off) < Math.PI / 2 && Math.abs(Math.sin(off) * d) < e.size + SIDE.beamWidth;
     });
-    if (hit) strikeEnemy(e, damage, "beam");
+    if (!hit) continue;
+    strikeEnemy(e, damage, "beam");
+    // Fusion « Arc Tesla » : un éclair part du premier ennemi brûlé à chaque passage
+    if (player.evolutions.teslaArc && !arced && !e.dead) {
+      arced = true;
+      chainLightning(e, damage * 1.5, 3, SIDE_WEAPONS.lightning.color, "lightning");
+    }
   }
 }
 
@@ -232,7 +299,14 @@ function sweepBeams(w, s) {
 
 function crackWhip(w, s) {
   w.flip = !w.flip;
-  const sides = s.both ? [0, Math.PI] : [w.flip ? Math.PI : 0];
+  let sides = s.both ? [0, Math.PI] : [w.flip ? Math.PI : 0];
+  // Fusion « Lame-prisme » : le fouet frappe en croix
+  if (player.evolutions.prismBlade) sides = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+  lash(sides, s);
+}
+
+/** Coups de fouet dans les directions `sides` (par rapport à la visée), avec soin éventuel. */
+function lash(sides, s) {
   const range = s.range * player.projScale;
   const damage = player.attack * s.damage;
   const { worldX: x, worldY: y } = player;

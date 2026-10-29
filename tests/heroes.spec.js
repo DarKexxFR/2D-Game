@@ -159,8 +159,10 @@ const SKILL_CHECKS = {
   pirate: ({ state }) => state.world.projectiles.some((p) => p.type === "cannon"),
   engineer: ({ state }) => state.world.turrets.length === 2,
   spectre: ({ state }) => state.world.enemies.some((e) => e.health < e.maxHealth),
+  // Éclairs (16 ticks) ou bouclier (90 ticks) : le bouclier laisse le temps de le voir
   seraph: ({ state }) =>
-    state.world.enemies.some((e) => e.health < e.maxHealth) && state.world.bolts.length > 0,
+    state.world.enemies.some((e) => e.health < e.maxHealth) &&
+    (state.world.bolts.length > 0 || state.player.buffs.shield > 0),
 };
 
 for (const [hero, check] of Object.entries(SKILL_CHECKS)) {
@@ -178,9 +180,11 @@ for (const [hero, check] of Object.entries(SKILL_CHECKS)) {
       state.player.ultCharge = state.player.maxUltCharge;
       state.player.isUltReady = true;
     });
-    await page.keyboard.press("r");
-    expect(await game(page, check)).toBe(true);
-    expect(await game(page, ({ state }) => state.player.isUltReady)).toBe(false);
+    // Touche tenue jusqu'au déclenchement : un appui plus court qu'un tick peut passer inaperçu
+    await page.keyboard.down("r");
+    await expect.poll(() => game(page, ({ state }) => state.player.isUltReady)).toBe(false);
+    await page.keyboard.up("r");
+    await expect.poll(() => game(page, check)).toBe(true);
     await page.waitForTimeout(1500); // l'effet se déroule sans erreur
     await killPlayer(page);
   });

@@ -190,11 +190,88 @@ export const SIDE_WEAPONS = {
 export const SIDE_WEAPON_IDS = Object.keys(SIDE_WEAPONS);
 
 /**
- * Arme d'appoint `id` du joueur, ou undefined s'il ne l'a pas.
+ * Fusion de deux armes d'appoint au niveau maximum (évoluées ou non) : la carte « Fusion » les remplace
+ * par une seule arme qui garde les deux effets, renforcés (`FUSION_RULES`), plus un effet propre
+ * (systems/sideWeapons.js, `player.evolutions[id]`). Elle libère un emplacement. Chaque arme entre
+ * dans deux recettes, mais ne peut être fusionnée qu'une fois.
+ * @typedef {{ name: string, icon: string, color: string, desc: string, parts: [string, string] }} SideFusion
+ * @type {Record<string, SideFusion>}
+ */
+export const SIDE_FUSIONS = {
+  orbitalStrike: {
+    name: "Frappe orbitale",
+    icon: "missile",
+    color: "#ffb347",
+    desc: "Chaque salve de missiles appelle la foudre sur sa cible.",
+    parts: ["missiles", "lightning"],
+  },
+  seismicCarpet: {
+    name: "Tapis sismique",
+    icon: "mine",
+    color: "#ff5cf4",
+    desc: "L'onde fait exploser à distance toutes les mines qu'elle touche.",
+    parts: ["mines", "pulse"],
+  },
+  prismBlade: {
+    name: "Lame-prisme",
+    icon: "whip",
+    color: "#c58bff",
+    desc: "Le fouet frappe en croix : devant, derrière et sur les deux côtés.",
+    parts: ["beam", "whip"],
+  },
+  clusterBombs: {
+    name: "Bombes à fragmentation",
+    icon: "bomb",
+    color: "#ff6a3d",
+    desc: "Chaque mine qui explose lâche deux missiles chercheurs.",
+    parts: ["missiles", "mines"],
+  },
+  teslaArc: {
+    name: "Arc Tesla",
+    icon: "bolt",
+    color: "#7df9ff",
+    desc: "Les ennemis brûlés par le faisceau propagent un éclair à leurs voisins.",
+    parts: ["lightning", "beam"],
+  },
+  cyclone: {
+    name: "Cyclone",
+    icon: "pulse",
+    color: "#00ffaa",
+    desc: "Chaque onde fouette tout autour du vaisseau.",
+    parts: ["pulse", "whip"],
+  },
+};
+
+/** Fusion : dégâts des deux armes multipliés, temps de recharge raccourcis. */
+export const FUSION_RULES = { damage: 1.3, cooldown: 0.85 };
+
+/**
+ * @typedef {{ id: string, level: number, timer: number, angle: number, flip?: boolean, echo?: number,
+ *   parts?: SideWeaponState[] }} SideWeaponState
+ */
+
+/**
+ * Arme d'appoint `id` du joueur, ou undefined s'il ne l'a pas (elle peut faire partie d'une fusion).
  * @param {any} p joueur
  * @param {string} id
+ * @returns {SideWeaponState | undefined}
  */
-export const sideWeaponOf = (p, id) => p.sideWeapons.find((w) => w.id === id);
+export function sideWeaponOf(p, id) {
+  for (const w of p.sideWeapons) {
+    if (w.id === id) return w;
+    const part = w.parts?.find((x) => x.id === id);
+    if (part) return part;
+  }
+  return undefined;
+}
+
+/** Fusion qui contient l'arme `id` chez le joueur, ou undefined. */
+export const fusionOf = (p, id) => p.sideWeapons.find((w) => w.parts?.some((x) => x.id === id));
+
+/** Armes d'appoint « de base » du joueur, fusions comprises (identifiants de SIDE_WEAPONS). */
+export function sideWeaponIds(p) {
+  return (p.sideWeapons || []).flatMap((w) => (w.parts ? w.parts.map((x) => x.id) : [w.id]));
+}
 
 /**
  * Statistiques actuelles d'une arme d'appoint (son niveau, ou son évolution).
@@ -206,8 +283,32 @@ export function sideStats(w, p) {
   return p.evolutions[def.evolution.id] ? def.evolution.stats : def.levels[w.level - 1].stats;
 }
 
-/** Nom affiché (celui de l'évolution une fois obtenue). */
+/** Nom affiché d'une arme d'appoint (ou d'une fusion) : celui de sa fusion ou de son évolution. */
 export function sideName(id, p) {
+  if (SIDE_FUSIONS[id]) return SIDE_FUSIONS[id].name;
+  const fused = fusionOf(p, id);
+  if (fused) return SIDE_FUSIONS[fused.id].name;
   const def = SIDE_WEAPONS[id];
   return p.evolutions[def.evolution.id] ? def.evolution.name : def.name;
+}
+
+/**
+ * Apparence d'une case d'arme d'appoint (HUD, build) : icône, couleur, nom, et `badge` = niveau,
+ * « ★ » une fois évoluée ou « ✦ » pour une fusion.
+ * @param {SideWeaponState} w
+ * @param {any} p
+ */
+export function sideLook(w, p) {
+  const fusion = SIDE_FUSIONS[w.id];
+  if (fusion)
+    return { icon: fusion.icon, color: fusion.color, name: fusion.name, badge: "✦", kind: "fusion" };
+  const def = SIDE_WEAPONS[w.id];
+  const evolved = !!p.evolutions[def.evolution.id];
+  return {
+    icon: def.icon,
+    color: def.color,
+    name: sideName(w.id, p),
+    badge: evolved ? "★" : String(w.level),
+    kind: evolved ? "evolved" : "",
+  };
 }

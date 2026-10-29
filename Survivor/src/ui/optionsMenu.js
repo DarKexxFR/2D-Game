@@ -17,6 +17,7 @@ import { $, setText, setVisible } from "./dom.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice } from "./touchControls.js";
 import { replayTutorial } from "./tutorial.js";
+import { openNews } from "./newsMenu.js";
 
 let returnTo = "mainMenu";
 
@@ -38,6 +39,7 @@ export function initOptionsMenu() {
     });
   }
 
+  $("btnNewsReplay").addEventListener("click", () => openNews(() => showScreen("optionsMenu")));
   $("btnTutorialReplay").addEventListener("click", () => {
     replayTutorial();
     setText("tutorialReplayHint", "Le tutoriel s'affichera à ta prochaine partie.");

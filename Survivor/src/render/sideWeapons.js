@@ -3,8 +3,8 @@
 
 import { ctx } from "../core/canvas.js";
 import { player, world } from "../core/state.js";
-import { SIDE_WEAPONS, sideStats } from "../data/sideWeapons.js";
-import { beamSegments } from "../systems/sideWeapons.js";
+import { SIDE_WEAPONS, sideWeaponOf } from "../data/sideWeapons.js";
+import { beamSegments, statsOf } from "../systems/sideWeapons.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 
 const TAU = Math.PI * 2;
@@ -29,9 +29,9 @@ export function drawMines(now) {
 
 /** Faisceaux du Faisceau rotatif, partant du vaisseau. */
 export function drawBeams(now) {
-  const w = player.sideWeapons?.find((x) => x.id === "beam");
+  const w = player.sideWeapons && sideWeaponOf(player, "beam"); // seul ou dans une fusion
   if (!w) return;
-  const s = sideStats(w, player);
+  const s = statsOf(w);
   const color = SIDE_WEAPONS.beam.color;
   const flicker = 0.85 + Math.sin(now / 40) * 0.15;
   ctx.lineCap = "round";

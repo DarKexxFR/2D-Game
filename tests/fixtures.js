@@ -1,6 +1,7 @@
 // Fixtures communes : Supabase simulé (aucun appel réseau réel) et échec du test
 // si la page lève une erreur JavaScript.
 import { test as base, expect } from "@playwright/test";
+import { CHANGELOG } from "../Survivor/src/data/changelog.js";
 
 export const test = base.extend({
   // Réponses du faux Supabase, modifiables par test : supabase.scores, supabase.mode...
@@ -221,6 +222,9 @@ export async function game(page, fn, arg) {
 
 /** Pré-remplit la sauvegarde avant le chargement de la page. */
 export async function withSave(page, save) {
+  // Les nouveautés déjà vues : sinon la fenêtre « Nouveautés » s'ouvrirait avant tout le reste.
+  // Un test qui veut la voir passe son propre `newsSeen`.
+  save = { newsSeen: CHANGELOG[0].id, ...save };
   await page.addInitScript((s) => {
     if (!sessionStorage.getItem("__seeded")) {
       localStorage.setItem("survivor_save_v11", JSON.stringify(s));

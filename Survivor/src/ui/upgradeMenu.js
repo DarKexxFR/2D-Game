@@ -243,6 +243,7 @@ export function evolutionHint(u, p) {
 export function takeCard(u, p) {
   applyUpgrade(u, p);
   if (u.rarity === "evolution") addStat("evolutions");
+  if (u.rarity === "fusion") addStat("fusions");
   if (u.sideWeapon) recordBest("bestSideWeapons", p.sideWeapons.length);
 }
 
@@ -264,7 +265,8 @@ function renderChoices(picks) {
       el("p", "", cardDesc(u, p)),
     );
     if (u.malus) info.append(el("p", "upg-malus", u.malus));
-    if (u.recipe) info.append(el("p", "upg-recipe", `Évolution : ${u.recipe}`));
+    if (u.recipe)
+      info.append(el("p", "upg-recipe", `${u.rarity === "fusion" ? "Fusion" : "Évolution"} : ${u.recipe}`));
     const hint = evolutionHint(u, p);
     if (hint) info.append(hint);
     const ico = el("div", "icon");

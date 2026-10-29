@@ -609,6 +609,17 @@ export const CHESTS = [
   },
 ];
 
+/**
+ * Forge (écran Équipement) : `copies` doublons d'objets du même emplacement et de la même rareté, plus
+ * de l'or, donnent un objet au hasard de la rareté au-dessus (`next`), même emplacement. Le mythique
+ * reste réservé au coffre mythique (choix du propriétaire) : aucune forge n'y mène.
+ */
+export const FORGE = {
+  copies: 3,
+  next: { common: "rare", rare: "epic", epic: "legendary" },
+  cost: { common: 300, rare: 800, epic: 2000 },
+};
+
 /** Regroupement des coffres dans la boutique. */
 export const CHEST_GROUPS = [
   { title: "Armes & armures", ids: ["basic", "premium", "legendary", "mythic"] },

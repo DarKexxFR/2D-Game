@@ -2,7 +2,7 @@
 // et améliorations, chacune avec son icône à la couleur de sa rareté, son niveau et son effet.
 
 import { RARITIES } from "../config.js";
-import { SIDE_WEAPONS, SIDE_WEAPON_RULES, sideName } from "../data/sideWeapons.js";
+import { SIDE_WEAPON_RULES, sideLook } from "../data/sideWeapons.js";
 import { cardByName, ownedEvolutions } from "../data/upgrades.js";
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
@@ -13,6 +13,7 @@ export const RARITY_NAMES = {
   epic: "Épique",
   legendary: "Légendaire",
   evolution: "Évolution",
+  fusion: "Fusion",
   corrupted: "Corrompue",
   weapon: "Arme",
 };
@@ -36,7 +37,7 @@ export function buildView(p, { compact = false, title = "" } = {}) {
     for (const e of evos) {
       const chip = el("span", "bv-evo");
       chip.title = e.desc;
-      chip.append(icon(e.icon, rarityColor("evolution")), el("span", "", e.name));
+      chip.append(icon(e.icon, rarityColor(e.rarity)), el("span", "", e.name));
       list.append(chip);
     }
     root.append(section("Évolutions", list));
@@ -69,18 +70,10 @@ function weaponTiles(p, compact) {
     );
   }
   for (const s of p.sideWeapons || []) {
-    const def = SIDE_WEAPONS[s.id];
-    const evolved = !!p.evolutions[def.evolution.id];
-    const tile = weaponTile(
-      def.icon,
-      def.color,
-      sideName(s.id, p),
-      evolved ? "Évoluée" : `Niveau ${s.level}`,
-      {
-        evolved,
-        compact,
-      },
-    );
+    const look = sideLook(s, p);
+    const evolved = look.kind !== "";
+    const sub = look.kind === "fusion" ? "Fusion" : evolved ? "Évoluée" : `Niveau ${s.level}`;
+    const tile = weaponTile(look.icon, look.color, look.name, sub, { evolved, compact });
     if (!evolved && !compact)
       tile.querySelector(".bv-wtext").append(pips(s.level, SIDE_WEAPON_RULES.maxLevel));
     list.append(tile);

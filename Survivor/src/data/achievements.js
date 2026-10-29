@@ -51,6 +51,7 @@ export const ACHIEVEMENTS = [
   a("combat", "combo_50", "bolt", "Enchaînement", "Atteindre un combo de ×50.", "bestCombo", 50, 300),
   a("combat", "combo_200", "rage", "Carnage", "Atteindre un combo de ×200.", "bestCombo", 200, 1000),
   a("combat", "evolution", "sparkle", "Évolution", "Obtenir une évolution d'arme.", "evolutions", 1, 400),
+  a("combat", "fusion", "atom", "Fusion", "Fusionner deux armes d'appoint.", "fusions", 1, 600),
   a("combat", "goblin", "coin", "Voleur volé", "Attraper un Voleur doré.", "kill_goblin", 1, 500),
   a(
     "combat",
@@ -135,6 +136,37 @@ export const ACHIEVEMENTS = [
     1,
     1500,
   ),
+  a(
+    "boss",
+    "boss_forge",
+    "wrench",
+    "Métal hurlant",
+    "Vaincre la Forgeronne stellaire.",
+    "kill_forge",
+    1,
+    1600,
+  ),
+  a("boss", "boss_mirror", "user", "Face à soi-même", "Vaincre le Reflet.", "kill_mirror", 1, 1700),
+  a(
+    "boss",
+    "boss_weaver",
+    "anchor",
+    "Toile déchirée",
+    "Vaincre la Tisseuse du vide.",
+    "kill_weaver",
+    1,
+    1800,
+  ),
+  a(
+    "boss",
+    "boss_architect",
+    "crown",
+    "Fin de l'aventure",
+    "Vaincre l'Architecte, le boss final de la vague 40.",
+    "kill_architect",
+    1,
+    3000,
+  ),
   a("boss", "boss_chests", "chest", "Pilleur de boss", "Ouvrir 10 coffres de boss.", "bossChests", 10, 600),
 
   // --- SURVIE ---
@@ -142,6 +174,8 @@ export const ACHIEVEMENTS = [
   a("survival", "wave_10", "bolt", "Force inarrêtable", "Atteindre la vague 10.", "bestWave", 10, 300),
   a("survival", "wave_15", "shield", "Inébranlable", "Atteindre la vague 15.", "bestWave", 15, 700),
   a("survival", "wave_20", "heart", "Immortel", "Atteindre la vague 20.", "bestWave", 20, 1500),
+  a("survival", "wave_30", "heartCrack", "Au-delà du Pulse", "Atteindre la vague 30.", "bestWave", 30, 2000),
+  a("survival", "wave_40", "infinity", "Bout du monde", "Atteindre la vague 40.", "bestWave", 40, 3000),
   a(
     "survival",
     "level_10",
@@ -218,13 +252,13 @@ export const ACHIEVEMENTS = [
     4000,
   ),
 
-  // --- ENDLESS PULSE (après la victoire sur le Cœur du Pulse, voir systems/endless.js) ---
+  // --- ENDLESS PULSE (après la victoire sur l'Architecte, voir systems/endless.js) ---
   a(
     "endless",
     "pulse_victory",
     "pulse",
     "Au-delà du Pulse",
-    "Vaincre le Cœur du Pulse et entrer dans l'Endless Pulse.",
+    "Vaincre l'Architecte et entrer dans l'Endless Pulse.",
     "pulseVictories",
     1,
     1000,
@@ -262,6 +296,7 @@ export const ACHIEVEMENTS = [
 
   // --- COLLECTION ---
   a("collection", "chests_10", "gift", "Collectionneur", "Ouvrir 10 coffres.", "chests", 10, 300),
+  a("collection", "forge_1", "wrench", "Apprenti forgeron", "Forger un objet à la Forge.", "forges", 1, 300),
   a("collection", "chests_50", "gem", "Chasseur de trésors", "Ouvrir 50 coffres.", "chests", 50, 1000),
   a(
     "collection",

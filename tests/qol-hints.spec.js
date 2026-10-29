@@ -18,10 +18,10 @@ test("corruption : cœur fissuré près de la barre de vie et rappel dans la pau
   await expect(page.locator("#pauseCorruption")).toBeHidden();
   await page.locator("#btnResume").click();
 
-  // Vague 17 : 5 vagues de corruption à 4 % = soins −20 %
+  // Vague 17 : 5 vagues de corruption à 3 % = soins −15 %
   await game(page, ({ state }) => (state.game.wave = 17));
   await expect(heart).toBeVisible();
-  await expect(heart).toHaveAttribute("data-tip", "Corruption : soins −20 %");
+  await expect(heart).toHaveAttribute("data-tip", "Corruption : soins −15 %");
   if (!isMobile) {
     await heart.hover();
     await expect.poll(() => heart.evaluate((n) => getComputedStyle(n, "::after").opacity)).toBe("1");
@@ -30,7 +30,7 @@ test("corruption : cœur fissuré près de la barre de vie et rappel dans la pau
   if (isMobile) await page.locator("#btnTouchPause").tap();
   else await page.keyboard.press("p");
   await expect(page.locator("#pauseCorruption")).toBeVisible();
-  await expect(page.locator("#pauseCorruption")).toContainText("soins −20 %");
+  await expect(page.locator("#pauseCorruption")).toContainText("soins −15 %");
   await page.locator("#btnResume").click();
   await killPlayer(page);
 });

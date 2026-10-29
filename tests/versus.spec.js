@@ -57,8 +57,13 @@ test("duel : deux parties de survie indépendantes, côte à côte", async ({ pa
       async () => await both(page, ({ state }) => state.game.time > 500 && state.world.enemies.length > 0),
     )
     .toEqual([true, true]);
-  await run(page, 1, ({ state }) => (state.game.runGold = 77));
-  expect(await both(page, ({ state }) => state.game.runGold)).toEqual([0, 77]);
+  // Le tir auto peut éliminer un ennemi entre deux appels : écriture et lecture d'un seul tenant
+  const golds = await run(page, null, ({ state, versus }) => {
+    versus.withRun(0, () => (state.game.runGold = 5));
+    versus.withRun(1, () => (state.game.runGold = 77));
+    return [0, 1].map((i) => versus.withRun(i, () => state.game.runGold));
+  });
+  expect(golds).toEqual([5, 77]);
 });
 
 test("duel : chaque joueur a ses touches (ZQSD pour J1, flèches pour J2)", async ({ page, isMobile }) => {
@@ -237,12 +242,15 @@ test("duel : le premier mort perd, le gagnant empoche l'XP et l'or des deux part
 }) => {
   await openDuel(page);
   const gold = await page.evaluate(async () => (await import("/src/services/storage.js")).account.gold);
-  await run(page, 0, ({ state }) => (state.game.runGold = 30));
-  await run(page, 1, ({ state }) => (state.game.runGold = 12));
-  await run(page, 0, ({ state, player }) => {
-    state.player.health = 1;
-    state.player.revives = 0;
-    player.takeDamage(1e9);
+  // D'un seul tenant : le tir auto ne peut pas ajouter l'or d'une élimination entre deux appels
+  await run(page, null, ({ state, player, versus }) => {
+    versus.withRun(1, () => (state.game.runGold = 12));
+    versus.withRun(0, () => {
+      state.game.runGold = 30;
+      state.player.health = 1;
+      state.player.revives = 0;
+      player.takeDamage(1e9);
+    });
   });
   await expect(page.locator("#versusOver")).toBeVisible();
   await expect(page.locator("#versusWinner")).toHaveText("JOUEUR 2 GAGNE !");

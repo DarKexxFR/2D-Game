@@ -3,7 +3,7 @@
 import { DIFFICULTIES, STAT_CAPS, WAVE_DURATION } from "../config.js";
 import { game, mysteryBox, player, world } from "../core/state.js";
 import { ENEMY_NAMES } from "../data/enemies.js";
-import { SIDE_WEAPONS, SIDE_WEAPON_RULES, sideName } from "../data/sideWeapons.js";
+import { SIDE_WEAPON_RULES, sideLook } from "../data/sideWeapons.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { healFactor } from "../systems/player.js";
 import { heroSkill } from "../systems/skills.js";
@@ -89,9 +89,7 @@ export function updateHud() {
 function updateWeapons() {
   const row = $("uiWeapons");
   const side = player.sideWeapons || [];
-  const key = side
-    .map((w) => `${w.id}${w.level}${player.evolutions[SIDE_WEAPONS[w.id].evolution.id] ? "*" : ""}`)
-    .join();
+  const key = side.map((w) => `${w.id}${sideLook(w, player).badge}`).join();
   if (row.dataset.key === key && row.childElementCount > 0) return;
   row.dataset.key = key;
   const slot = (ico, color, title, badge = "", cls = "") => {
@@ -104,17 +102,8 @@ function updateWeapons() {
   const main = player.weapon;
   const items = [slot(main?.icon || "blaster", main?.color || "#00ffff", main?.name || "Arme", "", "main")];
   for (const w of side) {
-    const def = SIDE_WEAPONS[w.id];
-    const evolved = player.evolutions[def.evolution.id];
-    items.push(
-      slot(
-        def.icon,
-        def.color,
-        sideName(w.id, player),
-        evolved ? "★" : String(w.level),
-        evolved ? "evolved" : "",
-      ),
-    );
+    const look = sideLook(w, player);
+    items.push(slot(look.icon, look.color, look.name, look.badge, look.kind));
   }
   for (let i = side.length; i < SIDE_WEAPON_RULES.slots; i++)
     items.push(slot("", "", "Emplacement d'arme libre", "", "empty"));

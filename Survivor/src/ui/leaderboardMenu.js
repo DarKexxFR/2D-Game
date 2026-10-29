@@ -53,8 +53,8 @@ function selectTab(tab) {
     setText("lbMe", `Saison ${s.number} · remise à zéro dans ${formatDelay(s.timeLeft)}`);
     loadGlobal(tab, fetchSeasonScores, "Aucun score ce mois-ci : à toi de jouer !");
   } else if (tab === "endless") {
-    setText("lbMe", "Parties qui ont continué après la victoire sur le Cœur du Pulse (☠ = Cauchemar).");
-    loadGlobal(tab, fetchEndlessRows, "Personne n'a encore dépassé le Cœur du Pulse");
+    setText("lbMe", "Parties qui ont continué après la victoire sur l'Architecte (☠ = Cauchemar).");
+    loadGlobal(tab, fetchEndlessRows, "Personne n'a encore dépassé l'Architecte");
   } else loadGlobal(tab, fetchTopScores, "Aucun score mondial pour l'instant");
 }
 

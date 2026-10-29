@@ -21,8 +21,34 @@ export function drawBossUnderlays(now) {
     if (e.type === "sandworm" && e.segments?.length) drawWormBody(e);
     else if (e.type === "hive_flower" && e.aura) drawToxicAura(e, now);
     else if (e.type === "chronophage" && e.rewindIn > 0 && e.rewindTo) drawRewindPath(e, now);
+    else if (e.type === "weaver" && e.anchors?.length > 1) drawThreads(e, now);
+    else if (e.type === "weaver" && e.portalTo) drawPortal(e.portalTo, now);
   }
   ctx.globalAlpha = 1;
+}
+
+/** Fils de la Tisseuse : traits fins entre elle et ses ancres (la vraie cage, ce sont les lasers). */
+function drawThreads(e, now) {
+  ctx.globalAlpha = 0.25 + Math.sin(now / 200) * 0.05;
+  ctx.strokeStyle = "#e0b3ff";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (const a of e.anchors) {
+    if (a.dead) continue;
+    ctx.moveTo(e.x, e.y);
+    ctx.lineTo(a.x, a.y);
+  }
+  ctx.stroke();
+  if (e.portalTo) drawPortal(e.portalTo, now);
+}
+
+/** Portail de la Tisseuse : spirale à l'endroit où elle va surgir. */
+function drawPortal(at, now) {
+  ctx.globalAlpha = 0.7;
+  for (let i = 0; i < 3; i++) {
+    const k = (now / 600 + i / 3) % 1;
+    strokeCircle(at.x, at.y, 50 * (1 - k) + 8, "#ff5cf4", 2);
+  }
 }
 
 /** Corps du ver : un cordon épais qui relie la tête à ses anneaux. */

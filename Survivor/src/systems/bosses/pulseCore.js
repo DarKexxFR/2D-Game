@@ -1,4 +1,4 @@
-// Cœur du Pulse (boss final) : immobile au centre de l'arène, il bat de plus en plus vite. Chaque
+// Cœur du Pulse (vague 30, sa mort ouvre la Faille quantique) : immobile au centre de l'arène, il bat de plus en plus vite. Chaque
 // battement joue le pas suivant du motif de sa phase (onde, artères, caillots, veines) ; les coups
 // annoncés tombent sur le battement suivant. Sous 66 % puis 33 % de vie, il passe à la phase
 // suivante : battements plus rapides, motif plus dense et arène qui se resserre (`e.arenaScale`,

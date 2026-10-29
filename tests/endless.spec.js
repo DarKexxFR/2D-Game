@@ -5,16 +5,16 @@ import { expect, game, killPlayer, startGame, test, withSave } from "./fixtures.
 
 test.beforeEach(async ({ isMobile }) => test.skip(isMobile, "logique de jeu : une seule plateforme suffit"));
 
-/** Partie arrivée à la vague 30 : le Cœur du Pulse est vaincu. */
+/** Partie arrivée à la vague 40 : l'Architecte, boss final, est vaincu. */
 async function beatFinalBoss(page) {
   return game(page, ({ state, spawner, combat }) => {
     state.player.health = state.player.maxHealth = 1e7;
-    state.game.wave = 30;
+    state.game.wave = 40;
     state.game.isBossWave = true;
     state.world.enemies.length = 0;
     state.game.pendingBosses.length = 0;
-    spawner.spawnEnemy("pulse_core", state.player.worldX + 400, state.player.worldY);
-    const boss = state.world.enemies.find((e) => e.type === "pulse_core");
+    spawner.spawnEnemy("architect", state.player.worldX + 400, state.player.worldY);
+    const boss = state.world.enemies.find((e) => e.type === "architect");
     state.game.totalRunXp = 5000; // une partie sans XP n'irait pas au classement
     combat.killEnemy(boss);
     return {
@@ -51,7 +51,7 @@ test("boss final vaincu : l'Endless Pulse se lance tout seul, une mutation par v
       xp: state.game.modifier.enemyXp,
     };
   });
-  expect(first).toMatchObject({ wave: 31, depth: 1, stacks: 1 });
+  expect(first).toMatchObject({ wave: 41, depth: 1, stacks: 1 });
   expect(first.xp).toBeCloseTo(1.08);
   await expect(page.locator("#waveLabel")).toHaveText("PULSE 1 · VAGUE");
 
@@ -82,7 +82,7 @@ test("boss final vaincu : l'Endless Pulse se lance tout seul, une mutation par v
   await expect(page.locator("#finalWaveLabel")).toHaveText("Vague · Pulse 5");
   await expect
     .poll(() => supabase.posts.find((p) => p.name === "Testeur"))
-    .toMatchObject({ wave: 35, pulse: 5 });
+    .toMatchObject({ wave: 45, pulse: 5 });
   const stats = await game(page, ({ storage }) => storage.account.achievementStats);
   expect(stats).toMatchObject({ pulseVictories: 1, bestPulse: 5, endlessRuns: 1 });
 });

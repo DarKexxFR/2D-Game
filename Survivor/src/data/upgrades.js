@@ -4,7 +4,14 @@
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
 import { WEAPONS } from "./items.js";
-import { SIDE_WEAPONS, SIDE_WEAPON_IDS, SIDE_WEAPON_RULES, sideWeaponOf } from "./sideWeapons.js";
+import { CARD_EFFECTS as C } from "./cardEffects.js";
+import {
+  SIDE_FUSIONS,
+  SIDE_WEAPONS,
+  SIDE_WEAPON_IDS,
+  SIDE_WEAPON_RULES,
+  sideWeaponOf,
+} from "./sideWeapons.js";
 
 export const UPGRADES = [
   // --- COMMUNES ---
@@ -55,6 +62,25 @@ export const UPGRADES = [
     icon: "impact",
     desc: "+50% Force de Recul",
     apply: (p) => (p.knockbackMult += 0.5),
+  },
+  {
+    name: "Givre",
+    rarity: "common",
+    icon: "snowflake",
+    desc: "Vos tirs ralentissent les ennemis touchés",
+    canApply: (p) => p.frost < C.frost.max,
+    apply: (p) => p.frost++,
+  },
+  {
+    name: "Œil critique",
+    rarity: "common",
+    icon: "eye",
+    desc: "+8% Chance de critique, +25% Dégâts critiques",
+    canApply: (p) => p.critChance < 0.8,
+    apply: (p) => {
+      p.critChance += 0.08;
+      p.critMultiplier += 0.25;
+    },
   },
 
   // --- RARES ---
@@ -107,6 +133,30 @@ export const UPGRADES = [
     desc: "+1 HP / sec",
     apply: (p) => (p.regen += 1),
   },
+  {
+    name: "Ricochet",
+    rarity: "rare",
+    icon: "repeat",
+    desc: "Vos tirs rebondissent vers un ennemi proche (+1 rebond)",
+    canApply: (p) => p.ricochet < C.ricochet.max,
+    apply: (p) => p.ricochet++,
+  },
+  {
+    name: "Bouclier d'énergie",
+    rarity: "rare",
+    icon: "shield",
+    desc: `Bloque un coup toutes les ${C.energyShield.seconds} s (-${C.energyShield.perCard} s par carte)`,
+    canApply: (p) => p.energyShield < C.energyShield.max,
+    apply: (p) => p.energyShield++,
+  },
+  {
+    name: "Dash explosif",
+    rarity: "rare",
+    icon: "bomb",
+    desc: "Le dash fait exploser les ennemis autour de vous",
+    canApply: (p) => p.dashBlast < C.dashBlast.max && !p.noDash,
+    apply: (p) => p.dashBlast++,
+  },
 
   // --- ÉPIQUES ---
   {
@@ -150,6 +200,22 @@ export const UPGRADES = [
     canApply: (p) => p.explosionChance < 1.0,
     apply: (p) => (p.explosionChance += 0.2),
   },
+  {
+    name: "Arc électrique",
+    rarity: "epic",
+    icon: "bolt",
+    desc: `${Math.round(C.arc.chance * 100)}% de chance qu'un tir foudroie 3 ennemis voisins`,
+    canApply: (p) => p.arc < C.arc.max,
+    apply: (p) => p.arc++,
+  },
+  {
+    name: "Pulsar",
+    rarity: "epic",
+    icon: "star",
+    desc: "Un tir sur 5 est géant : plus gros, 3× plus fort, perçant (un de moins par carte)",
+    canApply: (p) => p.pulsar < C.pulsar.max,
+    apply: (p) => p.pulsar++,
+  },
 
   // --- LÉGENDAIRES ---
   {
@@ -191,6 +257,14 @@ export const UPGRADES = [
     desc: "Tue instantanément < 20% HP",
     canApply: (p) => p.executionThreshold < 0.6,
     apply: (p) => (p.executionThreshold += 0.2),
+  },
+  {
+    name: "Surtension",
+    rarity: "legendary",
+    icon: "pulse",
+    desc: `Toutes les ${C.surge.kills} éliminations, une nova foudroie tout autour (-3 par carte)`,
+    canApply: (p) => p.surge < C.surge.max,
+    apply: (p) => p.surge++,
   },
 ];
 
@@ -265,6 +339,31 @@ export const CORRUPTED_UPGRADES = [
       p.damageTaken *= 1.2;
     },
   },
+  {
+    name: "Dette de temps",
+    rarity: "corrupted",
+    icon: "repeat",
+    desc: "Compétence chargée deux fois plus vite",
+    malus: "Dash deux fois plus long à recharger",
+    canApply: once("Dette de temps"),
+    apply: (p) => {
+      p.ultGain *= 2;
+      p.dashCooldown *= 2;
+    },
+  },
+  {
+    name: "Furie aveugle",
+    rarity: "corrupted",
+    icon: "rage",
+    desc: "+40% Dégâts et +20% Cadence de tir",
+    malus: "Champ de vision réduit",
+    canApply: once("Furie aveugle"),
+    apply: (p) => {
+      p.attack *= 1.4;
+      p.attackSpeed *= 0.8;
+      p.blind = true;
+    },
+  },
 ];
 
 // --- ÉVOLUTIONS : amélioration au maximum + amélioration partenaire → super-arme ---
@@ -319,6 +418,24 @@ export const EVOLUTIONS = [
     base: "Vampirisme",
     baseMax: 5,
     partner: "Régénération",
+  }),
+  evolution({
+    id: "absoluteZero",
+    name: "Zéro absolu",
+    icon: "snowflake",
+    desc: "Vos tirs gèlent net les ennemis (les boss ralentissent) et les ennemis gelés prennent +30% de dégâts.",
+    base: "Givre",
+    baseMax: C.frost.max,
+    partner: "Arc électrique",
+  }),
+  evolution({
+    id: "stellarStorm",
+    name: "Tempête stellaire",
+    icon: "star",
+    desc: "Novas deux fois plus grandes et deux fois plus souvent ; chaque tir géant explose.",
+    base: "Pulsar",
+    baseMax: C.pulsar.max,
+    partner: "Surtension",
   }),
 ];
 
@@ -503,7 +620,34 @@ export const SIDE_EVOLUTIONS = SIDE_WEAPON_IDS.map((id) => {
   });
 });
 
-const ALL_EVOLUTIONS = [...WEAPON_EVOLUTIONS, ...SIDE_EVOLUTIONS, ...EVOLUTIONS];
+// --- FUSIONS : deux armes d'appoint au niveau maximum → une seule arme (data/sideWeapons.js SIDE_FUSIONS) ---
+// Proposées en priorité comme les évolutions ; la fusion libère un emplacement d'arme d'appoint.
+const topLevelMaxed = (p, id) =>
+  p.sideWeapons.some((w) => w.id === id && !w.parts && w.level >= SIDE_WEAPON_RULES.maxLevel);
+
+export const SIDE_FUSION_CARDS = Object.entries(SIDE_FUSIONS).map(([id, f]) => ({
+  id,
+  name: f.name,
+  icon: f.icon,
+  desc: `${f.desc} Les deux armes deviennent une seule, renforcée : un emplacement se libère.`,
+  rarity: "fusion",
+  parts: f.parts,
+  recipe: f.parts.map((w) => `${SIDE_WEAPONS[w].name} niv. ${SIDE_WEAPON_RULES.maxLevel}`).join(" + "),
+  canApply: (p) => !p.evolutions[id] && f.parts.every((w) => topLevelMaxed(p, w)),
+  apply: (p) => fuseSideWeapons(p, id, f.parts),
+}));
+
+/** Remplace les deux armes d'appoint par leur fusion (à la place de la première). */
+function fuseSideWeapons(p, id, ids) {
+  const parts = ids.map((w) => p.sideWeapons.find((x) => x.id === w));
+  const at = p.sideWeapons.indexOf(parts[0]);
+  p.sideWeapons = p.sideWeapons.filter((w) => !parts.includes(w));
+  p.sideWeapons.splice(at, 0, { id, level: SIDE_WEAPON_RULES.maxLevel, timer: 0, angle: 0, parts });
+  p.evolutions[id] = true;
+}
+
+/** @type {any[]} évolutions d'armes, d'armes d'appoint, d'améliorations et fusions (formes différentes) */
+const ALL_EVOLUTIONS = [...SIDE_FUSION_CARDS, ...WEAPON_EVOLUTIONS, ...SIDE_EVOLUTIONS, ...EVOLUTIONS];
 const ALL_CARDS = [...UPGRADES, ...SIDE_WEAPON_CARDS, ...CORRUPTED_UPGRADES];
 
 /** Texte d'une carte pour `p` (une arme d'appoint décrit son prochain niveau). */
@@ -528,10 +672,11 @@ export function availableEvolutions(p) {
  * possédé : arme équipée (évolution d'arme), ou l'autre amélioration de la recette au moins une fois.
  */
 export function evolutionsFor(upgrade, p) {
-  if (upgrade.rarity === "evolution") return [];
+  if (upgrade.rarity === "evolution" || upgrade.rarity === "fusion") return [];
   const has = (name) => count(p, name) >= 1;
   return ALL_EVOLUTIONS.filter((e) => {
     if (p.evolutions[e.id]) return false;
+    if (e.parts) return false; // fusion : deux armes au maximum, pas une carte partenaire
     if (e.weapon) return e.partner === upgrade.name && p.weapon?.id === e.weapon;
     return (e.partner === upgrade.name && has(e.base)) || (e.base === upgrade.name && has(e.partner));
   });

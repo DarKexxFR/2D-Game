@@ -27,6 +27,7 @@ import { currentSkin, resolveColor } from "../services/skins.js";
 import { onHit, onKill, onShot } from "./perks.js";
 import { knockEnemy } from "./knockback.js";
 import { timeFactorAt } from "./hazards.js";
+import { cardDamageMult, onCardHit, onCardKill, onCardShot, ricochet } from "./cardEffects.js";
 
 /** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
 export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
@@ -103,6 +104,7 @@ export function killEnemy(enemy) {
   recordKill(enemy.type, enemy.template.isBoss);
   emit("kill", enemy);
   onKill(enemy);
+  onCardKill();
   playSfx("kill");
 
   game.score += 10;
@@ -305,6 +307,7 @@ function createPlayerProjectile(angle) {
     dead: false,
   };
   onShot(proj);
+  onCardShot(proj);
   world.projectiles.push(proj);
 }
 
@@ -347,7 +350,7 @@ export function updateProjectiles() {
         proj.pierce--;
         if (proj.ramp) proj.damage *= 1 + proj.ramp; // Railgun ★3 : chaque ennemi transpercé renforce le tir
         (proj.hits ??= new Set()).add(enemy);
-      } else {
+      } else if (!ricochet(proj, enemy)) {
         proj.dead = true;
       }
       break;
@@ -378,7 +381,7 @@ function blockShot(proj, enemy) {
 
 function hitEnemy(proj, enemy) {
   playSfx("hit");
-  let damage = proj.damage;
+  let damage = proj.damage * cardDamageMult(enemy);
   if (enemy.template.isBoss) damage *= player.bossDamage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
@@ -410,6 +413,7 @@ function hitEnemy(proj, enemy) {
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
   if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
   if (source === "weapon" && player.synergy?.shards && enemy.frozenUntil > game.time) shatter(enemy, damage);
+  if (source === "weapon") onCardHit(enemy, damage);
   onHit(proj, enemy, damage, isCrit);
 }
 

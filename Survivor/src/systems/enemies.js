@@ -20,6 +20,7 @@ import { clampToZone } from "./arena.js";
 import { knockEnemy } from "./knockback.js";
 import { aim, enrage, fireEnemyProjectile, nextAttack, orphaned } from "./bosses/kit.js";
 import { BOSS_MODULES } from "./bosses/index.js";
+import { updateFuser, updateNova, updatePhaser, updateReplicator } from "./riftFoes.js";
 
 const CONTACT_DAMAGE_COOLDOWN = 500; // ms
 
@@ -40,6 +41,21 @@ const BOSS_BEHAVIORS = {
   ...BOSS_MODULES, // boss rangés chacun dans leur fichier (systems/bosses/)
 };
 
+/** Ennemis ordinaires à capacité : (ennemi, distance au joueur) à chaque tick, avant le déplacement. */
+const MOB_BEHAVIORS = {
+  scorpion: updateScorpion,
+  bomber: updateBomber,
+  blinker: updateBlinker,
+  laser_drone: updateLaserDrone,
+  shield: updateShield,
+  healer: updateHealer,
+  magnet: updateMagnet,
+  phaser: updatePhaser,
+  replicator: updateReplicator,
+  fuser: updateFuser,
+  nova: updateNova,
+};
+
 const HYDRA_HEAD_SPREAD = [-0.8, 0, 0.8]; // angle des 3 têtes autour de la direction du joueur
 const HYDRA_SUMMONS = 6;
 
@@ -56,13 +72,8 @@ export function updateEnemies() {
     BOSS_BEHAVIORS[e.type]?.(e);
     if (e.dead) continue; // le Voleur doré a pu s'enfuir
     const d = dist(player.worldX, player.worldY, e.x, e.y);
-    if (e.type === "scorpion") updateScorpion(e, d);
-    else if (e.type === "bomber") updateBomber(e, d);
-    else if (e.type === "blinker") updateBlinker(e, d);
-    else if (e.type === "laser_drone") updateLaserDrone(e, d);
-    else if (e.type === "shield") updateShield(e);
-    else if (e.type === "healer") updateHealer(e);
-    else if (e.type === "magnet") updateMagnet(e, d);
+    MOB_BEHAVIORS[e.type]?.(e, d);
+    if (e.dead) continue; // une Nova a pu exploser
     if (e.rooted > 0)
       e.rooted--; // boss en pleine attaque : il ne se déplace pas
     else moveEnemy(e, d);
@@ -85,6 +96,10 @@ function moveEnemy(e, distToPlayer) {
       Math.atan2(e.y - player.worldY, e.x - player.worldX) + Math.sin(game.time / 500 + e.phase * 9) * 1.1;
     tx = e.x + Math.cos(away) * 100;
     ty = e.y + Math.sin(away) * 100;
+  } else if (e.charging > 0 && e.chargeAngle !== undefined) {
+    // Charge en ligne droite (Nova, charges de boss) : plus de virage vers le joueur
+    tx = e.x + Math.cos(e.chargeAngle) * 100;
+    ty = e.y + Math.sin(e.chargeAngle) * 100;
   } else if (e.type === "fast") {
     // Anticipe légèrement la position du joueur
     tx += (player.worldX - e.x) * 0.2;

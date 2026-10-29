@@ -18,8 +18,8 @@ test("PV et dégâts des ennemis s'envolent après la vague 10, élites de plus 
     };
   });
   expect(r.linear).toBeCloseTo(4.5 / 2.75, 5);
-  expect(r.ramp).toBeGreaterThan(2.5); // ×1,07 par vague en plus du linéaire
-  expect(r.dmgRamp).toBeGreaterThan(2);
+  expect(r.ramp).toBeGreaterThan(2); // ×1,046 par vague en plus du linéaire (fin à la vague 40)
+  expect(r.dmgRamp).toBeGreaterThan(1.6);
   expect(r.elites[0]).toBe(0);
   expect(r.elites[1]).toBeGreaterThan(0);
   expect(r.elites[2]).toBeGreaterThan(r.elites[1]);

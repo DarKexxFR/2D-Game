@@ -1,4 +1,4 @@
-// Mode « Endless Pulse » : après la victoire sur le Cœur du Pulse (vague 30), la partie peut continuer
+// Mode « Endless Pulse » : après la victoire sur l'Architecte (vague 40), la partie peut continuer
 // sans fin. Chaque nouvelle vague ajoute une « pulsation » (mutation des ennemis) qui se cumule avec les
 // précédentes ; les récompenses grimpent aussi (voir systems/endless.js et ENDLESS dans config.js).
 //

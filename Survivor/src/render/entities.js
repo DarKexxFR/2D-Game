@@ -662,9 +662,12 @@ export function drawEnemies() {
   for (const e of world.enemies) {
     if (!isOnScreen(e.x, e.y, e.size)) continue;
     if (e.submerged) {
-      drawSubmerged(e, now);
+      if (e.type === "phaser") drawPhased(e, now);
+      else drawSubmerged(e, now);
       continue;
     }
+    // Déphaseur sur le point de disparaître : il scintille
+    if (e.phaseWarn > 0) ctx.globalAlpha = Math.floor(now / 60) % 2 ? 0.35 : 1;
     const look = ENEMY_LOOKS[e.type] || ENEMY_LOOKS.normal;
     const base = e.template.size;
     const scale = e.size / base;
@@ -697,13 +700,40 @@ export function drawEnemies() {
       if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
+    ctx.globalAlpha = 1;
     if (e.magnetWarn > 0 || e.pulling > 0) drawMagnetPull(e, now);
+    if (e.replicateWarn > 0) drawReplicateWarn(e);
     if (e.enraged) drawFury(e, now);
     if (e.elite) drawElite(e, now);
 
     if (e.health < e.maxHealth || e.mimic?.health < e.mimic?.maxHealth) drawHealthBar(e);
     if (e.stun > 0) drawStun(e, now);
   }
+}
+
+/** Déphaseur hors phase : simple silhouette transparente, intouchable. */
+function drawPhased(e, now) {
+  ctx.globalAlpha = 0.18 + Math.sin(now / 90 + e.phase * 9) * 0.06;
+  const look = ENEMY_LOOKS.phaser;
+  const sprite = getSprite(look.sprite, e.template.size, e.color);
+  drawSprite(
+    ctx,
+    sprite,
+    e.x,
+    e.y,
+    Math.atan2(player.worldY - e.y, player.worldX - e.x),
+    e.size / e.template.size,
+  );
+  ctx.globalAlpha = 1;
+}
+
+/** Réplicateur sur le point de se copier : anneau qui se dédouble. */
+function drawReplicateWarn(e) {
+  const k = e.replicateWarn / BIOME_FOES.replicate.warn; // 0 → 1
+  ctx.globalAlpha = 0.6;
+  strokeCircle(e.x - k * e.size, e.y, e.size + 4, e.color, 2);
+  strokeCircle(e.x + k * e.size, e.y, e.size + 4, e.color, 2);
+  ctx.globalAlpha = 1;
 }
 
 /** Aimant : anneau qui se resserre pendant l'annonce, puis lignes de champ vers le joueur. */

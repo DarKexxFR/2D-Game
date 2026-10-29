@@ -7,9 +7,9 @@ test("biomes : annonce, décor et ennemis du biome", async ({ page, isMobile }) 
   await startGame(page);
   const biomes = await page.evaluate(async () => {
     const { biomeForWave } = await import("/src/data/biomes.js");
-    return [1, 6, 7, 13, 19, 25, 31].map((w) => biomeForWave(w).id);
+    return [1, 6, 7, 13, 19, 25, 31, 36, 41].map((w) => biomeForWave(w).id);
   });
-  expect(biomes).toEqual(["neon", "neon", "desert", "ice", "jungle", "station", "neon"]);
+  expect(biomes).toEqual(["neon", "neon", "desert", "ice", "jungle", "station", "rift", "core", "neon"]);
 
   // Passage de la vague 6 à 7 : bandeau « DÉSERT ROUGE »
   await game(page, ({ state, spawner }) => {
