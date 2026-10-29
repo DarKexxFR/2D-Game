@@ -354,6 +354,15 @@ Principes :
   **en tête** de `CHANGELOG` avec un `id` neuf ; vue une fois par compte (`account.newsSeen`) à l'arrivée sur
   l'accueil, avant la série du jour ; un tout nouveau joueur ne la voit pas ; « VOIR » dans les Options. Dans les
   tests, `withSave` la marque vue par défaut.
+- **Musique** (`services/audio.js` choisit, `services/musicSequencer.js` joue, instruments dans `services/synth.js`,
+  partitions dans `data/music.js`, réglages `MUSIC`) : accueil = fichiers mp3 de `MUSIC.tracks` ; en partie, musiques
+  synthétisées en direct (Web Audio, aucun fichier) : une par biome (clé = id du biome), `boss` (dès l'alerte, et tout
+  le Boss Rush), `final` (Cœur du Pulse), `architect` (boss final ; boss à musique propre : `BOSS_MUSIC`), `endless`. `musicThemeFor` décide, `updateMusic` (chaque image, vérifié toutes
+  les `checkMs`) enchaîne en fondu sur le temps suivant. Notes programmées `lookahead` s à l'avance par une minuterie
+  (un blocage plus court ne coupe pas la musique) ; volume 0 = rien n'est programmé ; qualité basse = un oscillateur
+  par note, sans écho. Contexte audio partagé avec les effets (`services/audioContext.js`, débloqué à la première
+  interaction, suspendu onglet caché). Tests : `tests/music.spec.js` (partitions valides, rendu hors temps réel sans
+  saturation, choix de la musique).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -428,10 +437,10 @@ synergies familier + arme, boss tardifs (Ver des sables, Mère-Ruche, Chronophag
 application installable (PWA, hors connexion) et notifications (série, quêtes, amis, retour), écran de chargement,
 mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes des joueurs (stats.html),
 journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 armes, 5 niveaux, évolutions),
-bestiaire (page wiki, fiches débloquées en jeu), fin repoussée à la vague 40 (biomes Faille quantique et Noyau
-stellaire, 4 mobs, 4 boss dont l'Architecte final), fusion d'armes d'appoint, forge d'équipement, 10 nouvelles
-augmentations, fenêtre des nouveautés.
+bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
+fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
+fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
-Autres idées en attente : sons et musique, manette.
+Autres idées en attente : manette.

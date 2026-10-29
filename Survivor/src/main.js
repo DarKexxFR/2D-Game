@@ -19,7 +19,7 @@ import {
 } from "./core/state.js";
 import { settings } from "./services/settings.js";
 import { render, renderMenuBackground } from "./render/renderer.js";
-import { playRandomMusic, stopMusic } from "./services/audio.js";
+import { playMenuMusic, startRunMusic, updateMusic } from "./services/audio.js";
 import { SUBMIT_MESSAGES, isOnlineEnabled, submitScore } from "./services/onlineLeaderboard.js";
 import { initCloudSave } from "./services/cloudSave.js";
 import { initAds } from "./services/ads.js";
@@ -183,7 +183,7 @@ function startGame(mode = "normal") {
   stopVersus();
   showVersusHud(false);
   commitPseudo();
-  playRandomMusic();
+  startRunMusic();
   restoreRandom();
   resetUpgradeMenu();
   setAutoPick(false);
@@ -248,7 +248,7 @@ function setupRun(mode, difficulty = "normal") {
 function startDuel(online = null, names = []) {
   logEvent("partie", `début duel ${online ? `en ligne (${online.role})` : "sur un écran"}`);
   commitPseudo();
-  playRandomMusic();
+  startRunMusic();
   restoreRandom();
   resetUpgradeMenu();
   resetDuelPicks();
@@ -390,7 +390,7 @@ function returnToMenu() {
   stopVersus();
   resetDuelPicks();
   showVersusHud(false);
-  stopMusic();
+  playMenuMusic();
   showHud(false);
   showMainMenu();
   maybeAskPush(); // retour d'une partie : proposé aux joueurs habitués seulement (voir PUSH.askMinRuns)
@@ -641,6 +641,7 @@ function runFrame(now) {
     else render();
     if (!versus.split) updateHud();
     if (versus.active) updateVersusHud();
+    updateMusic(now);
   } else {
     accumulator = 0;
     renderMenuBackground();
@@ -875,6 +876,7 @@ function offerArrivalStreak() {
 
 function enterHome() {
   showMainMenu();
+  playMenuMusic(); // démarre à la première interaction (exigence des navigateurs)
   // Première ouverture depuis l'icône de l'écran d'accueil : cadeau de bienvenue (une fois par compte)
   const installGold = claimInstallReward();
   if (installGold) {

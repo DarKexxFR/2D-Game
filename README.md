@@ -112,6 +112,12 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Référencement** (moteurs de recherche et IA) : phrase de présentation dans le HTML de l'accueil (lisible
   sans JavaScript, affichée pendant le chargement), données structurées schema.org `VideoGame`, résumé
   [`llms.txt`](Survivor/llms.txt), `robots.txt` et `sitemap.xml`.
+- **Musique** : une piste par biome (synthwave pour la Cité néon, gamme orientale pour le Désert rouge, cloches
+  aériennes pour la Toundra, percussions tribales pour la Jungle, arpèges spatiaux pour la Station, rythme déphasé
+  pour la Faille quantique, nappes immenses pour le Noyau stellaire), une pour les boss (dès l'alerte), une pour le
+  Cœur du Pulse (battements de cœur), une pour l'Architecte et une pour l'Endless Pulse. Composées en
+  données et synthétisées en direct (Web Audio) : aucun fichier à télécharger, enchaînements en fondu calés sur
+  le temps, volume baissé en pause. Les pistes de l'accueil restent des fichiers. Volume et coupure dans les Options.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
   ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
@@ -188,7 +194,7 @@ Survivor/
     │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
     ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
-    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, diagnostic, sons, pubs
+    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, diagnostic, sons et musique, pubs
     ├── stats/            # Page des statistiques (tableau de bord, graphiques)
     └── utils/            # Maths, grille spatiale
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)
@@ -221,4 +227,6 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
 - **Une mutation Endless Pulse** : une entrée dans `PULSE_MUTATORS` (`src/data/endless.js`).
 - **Une saison** : les thèmes tournent tout seuls (`SEASON_THEMES` dans `src/data/season.js`, avec leur coque
   et leur traînée exclusives `season: true` dans `src/data/skins.js`) ; paliers dans `tierReward`.
+- **Une musique** : une entrée dans `SONGS` (`src/data/music.js` : tempo, gamme, accords, motifs de 16 pas,
+  sons), et une règle dans `musicThemeFor` (`src/services/audio.js`) si elle accompagne un nouveau moment.
 - **Équilibrage** : `src/config.js` et `src/data/`, jamais en dur dans la logique.

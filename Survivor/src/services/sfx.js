@@ -1,24 +1,18 @@
 // Effets sonores synthétisés avec la Web Audio API (aucun fichier à charger).
 // Chaque son a un intervalle minimum pour éviter la cacophonie quand tout explose.
 
+import { getAudio, unlockAudio } from "./audioContext.js";
 import { settings } from "./settings.js";
 
+export { unlockAudio };
+
+/** @type {AudioContext | null} */
 let audio = null;
+/** @type {GainNode | null} */
 let master = null;
 const lastPlayed = {};
 
-/** À appeler lors d'une interaction (clic, toucher) : les navigateurs l'exigent. */
-export function unlockAudio() {
-  if (!audio) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
-    audio = new Ctx();
-    master = audio.createGain();
-    master.connect(audio.destination);
-  }
-  if (audio.state === "suspended") audio.resume();
-}
-
+/** @param {{ type?: OscillatorType, from: number, to?: number, duration: number, volume?: number, delay?: number }} o */
 function tone({ type = "square", from, to = from, duration, volume = 0.3, delay = 0 }) {
   const t = audio.currentTime + delay;
   const osc = audio.createOscillator();
@@ -148,7 +142,13 @@ const SOUNDS = {
 };
 
 export function playSfx(name) {
-  if (!audio || settings.sfxVolume <= 0) return;
+  if (settings.sfxVolume <= 0) return;
+  if (!audio) {
+    audio = getAudio();
+    if (!audio) return;
+    master = audio.createGain();
+    master.connect(audio.destination);
+  }
   const sound = SOUNDS[name];
   const now = performance.now();
   if (now - (lastPlayed[name] || 0) < sound.gap) return;

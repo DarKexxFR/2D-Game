@@ -50,6 +50,12 @@ export const CHANGELOG = [
         title: "12 nouvelles augmentations",
         text: "Ricochet, Givre, Arc électrique, Surtension… plus 2 évolutions et 2 cartes corrompues.",
       },
+      {
+        icon: "music",
+        color: "#aa66ff",
+        title: "Musiques",
+        text: "Une musique pour chaque biome, les combats de boss, le Cœur du Pulse, l'Architecte et l'Endless Pulse.",
+      },
     ],
   },
 ];
