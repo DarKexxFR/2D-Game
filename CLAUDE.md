@@ -58,7 +58,7 @@ Principes :
   les collisions : toute recherche d'ennemis proches passe par elle.
 - **Écritures DOM en cache** : utiliser `setText`, `setVisible`, `setClass`, `setWidth` de
   `ui/dom.js` (évite de réécrire le DOM chaque frame). `setVisible` met `display: block`.
-- **Panneau en jeu** (`#ui`, `ui/hud.js`, `css/hud.css`) : vague + éliminations + or, minuteur, vie, jauges
+- **Panneau en jeu** (`#ui`, `ui/hud.js`, `css/hud.css`) : vague + éliminations + or (en Endless, la pulsation `#uiPulse` a sa propre ligne ; `tests/hud-layout.spec.js` vérifie que rien ne déborde), minuteur, vie, jauges
   dash / compétence, stats ; sur téléphone seulement les trois premières lignes. **Aucune aide des touches
   à l'écran** (choix du propriétaire) : les touches se voient dans les Options et le tutoriel.
 - **Sprites** : dessinés une fois dans des canvas hors écran (`getSprite` / `drawSprite`).

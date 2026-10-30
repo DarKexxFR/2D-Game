@@ -53,7 +53,9 @@ test("boss final vaincu : l'Endless Pulse se lance tout seul, une mutation par v
   });
   expect(first).toMatchObject({ wave: 41, depth: 1, stacks: 1 });
   expect(first.xp).toBeCloseTo(1.08);
-  await expect(page.locator("#waveLabel")).toHaveText("PULSE 1 · VAGUE");
+  await expect(page.locator("#waveLabel")).toHaveText("VAGUE");
+  await expect(page.locator("#uiPulse")).toBeVisible();
+  await expect(page.locator("#uiPulse")).toHaveText("ENDLESS · PULSE 1");
 
   // Chaque vague ajoute une pulsation et une mutation ; les ennemis en tiennent compte
   const later = await game(page, ({ state, spawner }) => {

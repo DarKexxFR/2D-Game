@@ -22,11 +22,15 @@
   font-weight: 900;
 }
 .ui-wave {
+  flex: 1;
+  min-width: 0; /* sans lui, un long libellé pousse les compteurs hors du panneau */
   font-size: 16px;
   letter-spacing: 1px;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .ui-counters {
+  flex: none;
   display: flex;
   gap: 12px;
   font-size: 13px;
@@ -43,6 +47,19 @@
 }
 .ui-gold {
   color: #ffd700;
+}
+/* Endless Pulse : profondeur sous la vague (ui/hud.js) */
+.ui-pulse {
+  display: none;
+  margin-top: 3px;
+  color: #ff2a6d;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.ui-pulse span {
+  color: #fff;
 }
 .stat-grid {
   display: grid;
@@ -122,6 +139,13 @@
   justify-content: center;
   font-size: 11px;
   font-weight: bold;
+  line-height: 1;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  /* lisible quelle que soit la limite rouge / sombre de la barre sous le texte */
+  text-shadow:
+    0 0 3px #000,
+    0 1px 2px #000;
   z-index: 2;
 }
 
@@ -222,7 +246,7 @@
 /* --- Compétences : dash et compétence du héros côte à côte --- */
 .skill-row {
   display: grid;
-  grid-template-columns: 2fr 3fr; /* le nom de la compétence est plus long que DASH */
+  grid-template-columns: 1fr 2.5fr; /* le nom de la compétence est plus long que DASH */
   gap: 10px;
   margin-top: 8px;
 }
@@ -238,6 +262,7 @@
   white-space: nowrap;
 }
 #ultName {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -263,6 +288,7 @@
 }
 .ult-label {
   color: #ffaa00;
+  letter-spacing: 0.5px; /* « JUGEMENT CÉLESTE » tient avec « PRÊT » */
 }
 #ultReadyText {
   display: none;
