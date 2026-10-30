@@ -7,7 +7,7 @@ import { arenaShrunk } from "../systems/arena.js";
 import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
-import { ICONS } from "../data/icons.js";
+import { FILLED_ICONS, ICONS } from "../data/icons.js";
 import { drawText, fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
 
@@ -33,7 +33,10 @@ function drawIcon(name, x, y, size, color) {
   ctx.lineJoin = "round";
   ctx.shadowBlur = 8;
   ctx.shadowColor = color;
-  ctx.stroke(iconPath(name));
+  if (FILLED_ICONS.has(name)) {
+    ctx.fillStyle = color;
+    ctx.fill(iconPath(name), "evenodd");
+  } else ctx.stroke(iconPath(name));
   ctx.restore();
 }
 

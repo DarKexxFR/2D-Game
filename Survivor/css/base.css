@@ -99,3 +99,9 @@ button.secondary {
   filter: drop-shadow(0 0 3px currentColor);
   overflow: visible;
 }
+/* Icônes Papicons : formes pleines */
+.ico svg.filled {
+  fill: currentColor;
+  fill-rule: evenodd;
+  stroke: none;
+}

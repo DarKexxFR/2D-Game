@@ -1,7 +1,7 @@
 // Carte de score à partager (Discord, Insta...) : une image 1080×1350 dessinée sur un canvas à partir
 // d'un résumé de la partie (voir ui/shareMenu.js runSummary). Rien ici ne lit l'état du jeu.
 
-import { ICONS } from "../data/icons.js";
+import { FILLED_ICONS, ICONS } from "../data/icons.js";
 import { drawShip } from "./entities.js";
 
 export const CARD_W = 1080;
@@ -33,7 +33,11 @@ function icon(c, name, x, y, size, color) {
   c.lineJoin = "round";
   c.shadowBlur = 10;
   c.shadowColor = color;
-  c.stroke(new Path2D(ICONS[name] || ICONS.unknown));
+  const path = new Path2D(ICONS[name] || ICONS.unknown);
+  if (FILLED_ICONS.has(name)) {
+    c.fillStyle = color;
+    c.fill(path, "evenodd");
+  } else c.stroke(path);
   c.restore();
 }
 

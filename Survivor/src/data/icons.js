@@ -1,5 +1,9 @@
 // Icônes vectorielles au style néon (tracés SVG, grille 24×24, trait seul).
 // Utilisées dans les menus (ui/icons.js) et sur le canvas (Path2D).
+// Les icônes d'interface courantes viennent de la banque Papicons (data/papicons.js) : formes
+// pleines, dessinées remplies (FILLED_ICONS) ; les icônes propres au jeu restent au trait.
+
+import { PAPICONS } from "./papicons.js";
 
 const circle = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0z`;
 
@@ -147,3 +151,27 @@ export const ICONS = {
   rankPredator: "M12 2l8 3.5V12c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5.5z M8.5 7l2 9 M12 6v11 M15.5 7l-2 9",
   season: "M5 22V3 M5 4h13l-3 4.5 3 4.5H5",
 };
+
+/** Icône du jeu → icône Papicons qui la remplace. */
+const FROM_PAPICONS = {
+  crown: "crown",
+  star: "star",
+  heart: "heart",
+  ghost: "ghost",
+  palette: "palette",
+  sparkle: "sparkles",
+  lock: "lock",
+  globe: "globe",
+  play: "play",
+  bell: "bell",
+  user: "user",
+  cog: "gears",
+  warning: "alert-triangle",
+  sound: "volume",
+  quest: "tasks",
+  download: "arrow-down-box",
+};
+for (const [name, papicon] of Object.entries(FROM_PAPICONS)) ICONS[name] = PAPICONS[papicon];
+
+/** Icônes à remplir (règle « evenodd ») plutôt qu'à tracer. */
+export const FILLED_ICONS = new Set(Object.keys(FROM_PAPICONS));
