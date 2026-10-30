@@ -104,6 +104,21 @@ $$);
    La notification arrive au passage suivant (5 minutes au plus). Edge Functions → `send-push` → **Logs**
    montre chaque passage (`{"sent":1,"gone":0,"retry":0,...}`).
 
+## Envoyer une annonce à tous les joueurs
+
+Nouvelle mise à jour, événement… : dans le SQL Editor de Supabase,
+
+```sql
+select push_announce('🚀 Mise à jour !', '4 nouveaux boss t''attendent.');
+```
+
+- Renvoie le nombre d'appareils visés ; la notification part au passage suivant (5 minutes au plus).
+- Titre 60 caractères au plus, texte 200 ; une apostrophe s'écrit `''` (deux apostrophes).
+- Facultatif : la page ouverte au clic, puis l'heure d'envoi :
+  `select push_announce('Titre', 'Texte', './#modal=nouveautes', '2026-11-01 18:00+01');`
+- Tous les appareils abonnés la reçoivent (hors plafond quotidien). Une nouvelle annonce remplace celle qui
+  n'est pas encore partie. Réservé au SQL Editor : le jeu et les joueurs ne peuvent pas l'appeler.
+
 ## Montée en charge
 
 - Chaque passage prend les rappels par lots de 500 et envoie 50 notifications à la fois, pendant 40 s
