@@ -88,7 +88,8 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Défi du jour** (même partie pour tout le monde), **Boss Rush**.
 - **Duel 1 contre 1** : sur un écran (écran scindé) ou en ligne (code de salon, connexion directe WebRTC).
   Les éliminations envoient des ennemis et des sorts à l'adversaire ; le gagnant empoche l'XP et l'or des deux
-  parties. **Classement ELO** pour les joueurs connectés.
+  parties. **Classement ELO** pour les joueurs connectés, avec des **rangs** visibles (Bronze, Argent, Or, Diamant,
+  Prédateur) sur l'accueil, l'écran Duel, face à l'adversaire et dans le classement.
 - **Amis** : ajout par pseudo ou code ami, présence en ligne et défi direct en duel classé.
 
 **Progression**

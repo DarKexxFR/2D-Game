@@ -176,6 +176,13 @@ Principes :
     déclare avec `report_duel` et le serveur ne compte le duel que si les deux déclarations concordent
     (jamais sur la parole d'un seul client). Quitter un duel classé = défaite déclarée. Anti-farm : plus de
     points après 5 duels comptés entre les deux mêmes joueurs en 24 h. Tests : faux RPC dans `fixtures.js`.
+    **Rangs** (`data/duelRanks.js` : Bronze, Argent 1100, Or 1250, Diamant 1450, Prédateur 1700 ; `duelRankOf` de
+    `services/duelRanking.js`, affichage `ui/duelRank.js`) : purement visuels, calculés sur l'ELO (rien de plus côté
+    serveur). Son ELO est relu à la connexion et à l'ouverture de l'écran Duel (`refreshMyDuelRating`, événement
+    `duelRating`) ; badge `#homeRank` de l'accueil (ouvre l'onglet DUEL ELO), carte `#duelRankCard`, emblème de
+    l'adversaire (`rating` annoncé dans les messages `start` / `ranked`, affichage seulement), « PROMU … ! » en fin
+    de duel, emblèmes du classement et de la liste d'amis. Rien tant qu'aucun duel n'est compté. Tests :
+    `tests/duel-ranks.spec.js`.
     Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
     propriétaire : du **duel** en ligne, pas de coop.
   - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par le bouton « AMIS » de l'accueil, avec amis en ligne et demandes reçues, ou par « MES AMIS » de l'écran Duel ; RETOUR ramène à l'écran d'origine) : joueurs

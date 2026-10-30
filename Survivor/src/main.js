@@ -134,14 +134,24 @@ import {
   onNetMessage,
   onOwnDeath,
   onRivalLeft,
+  ratingOf,
   resetOnline,
   rival,
 } from "./systems/versusOnline.js";
 import { leaveRoom, net, sendGame, setNetHandlers } from "./services/netplay.js";
-import { canRank, reportDuel } from "./services/duelRanking.js";
+import {
+  canRank,
+  duelRankOf,
+  initDuelRanking,
+  myDuelRating,
+  reportDuel,
+  setMyDuelRating,
+} from "./services/duelRanking.js";
+import { initDuelRank, rankChangeText } from "./ui/duelRank.js";
 import {
   initVersusMenu,
   showDuelElo,
+  showDuelRankChange,
   showRematchWaiting,
   showRivalGone,
   showVersusHud,
@@ -381,7 +391,7 @@ function startDuel(online = null, names = []) {
 function startOnlineDuel() {
   const names = [getPseudo(), net.peerName || "ADVERSAIRE"];
   const match = crypto.randomUUID(); // identifiant du duel, déclaré par les deux joueurs (classement ELO)
-  sendGame({ t: "start", names, match, ranked: canRank() });
+  sendGame({ t: "start", names, match, ranked: canRank(), rating: myDuelRating() });
   startDuel({ role: "host", match }, names);
 }
 
@@ -397,7 +407,8 @@ function onNetGame(msg) {
   if (net.role === "guest" && msg.t === "start") {
     startDuel({ role: "guest", match: msg.match }, [msg.names[1], msg.names[0]]);
     rival.ranked = !!msg.ranked;
-    sendGame({ t: "ranked", on: canRank() });
+    rival.rating = ratingOf(msg.rating);
+    sendGame({ t: "ranked", on: canRank(), rating: myDuelRating() });
     return;
   }
   if (net.role === "host" && msg.t === "rematch" && currentScreen() === "versusOver")
@@ -427,6 +438,7 @@ function reportRanked(won) {
   if (!rival.ranked) return showDuelElo("Duel non classé : ton adversaire n'est pas connecté.");
   const { match } = versus.online;
   showDuelElo("Duel classé : calcul de l'ELO…");
+  const before = myDuelRating();
   const attempt = async (tries) => {
     let res = null;
     try {
@@ -437,7 +449,9 @@ function reportRanked(won) {
     if (id !== eloRequest) return;
     if (res?.status === "settled") {
       const delta = res.delta ? ` (${res.delta > 0 ? "+" : ""}${res.delta})` : " (duel non compté)";
-      return showDuelElo(`ELO : ${res.rating}${delta}`);
+      setMyDuelRating(res.rating);
+      showDuelRankChange(rankChangeText(before, res.rating), res.delta > 0);
+      return showDuelElo(`${duelRankOf(res.rating).rank.name.toUpperCase()} · ${res.rating} ELO${delta}`);
     }
     if (tries > 0) return setTimeout(() => attempt(tries - 1), NET.eloRetryMs);
     showDuelElo(res ? "Duel classé : en attente de l'adversaire." : "Classement ELO indisponible.");
@@ -907,6 +921,9 @@ function init() {
   $("btnFriends").addEventListener("click", () => openFriends());
   $("btnVersusPause").addEventListener("click", pause);
   initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu, onFriends: openFriends });
+  initDuelRanking();
+  initDuelRank();
+  $("homeRank").addEventListener("click", () => openLeaderboard("duel"));
   initFriendsMenu({
     // « menu » : libre pour un défi ; une partie de duel en préparation compte comme occupé
     getStatus: () => (game.started ? (versus.active ? "duel" : "jeu") : net.role ? "duel" : "menu"),

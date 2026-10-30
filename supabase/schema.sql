@@ -606,13 +606,17 @@ create index if not exists push_subscriptions_user_idx on public.push_subscripti
 -- Un rappel par type et par appareil : la liste envoyée par le jeu remplace la précédente.
 create table if not exists public.push_reminders (
   subscription_id uuid not null references public.push_subscriptions (id) on delete cascade,
-  kind text not null check (kind in ('streak', 'quests', 'friends', 'comeback1', 'comeback2')),
+  kind text not null,
   send_at timestamptz not null,
   data jsonb not null default '{}',
   claimed_at timestamptz, -- pris par un envoi en cours
   primary key (subscription_id, kind)
 );
 create index if not exists push_reminders_due_idx on public.push_reminders (send_at);
+-- Types acceptés (contrainte refaite à chaque exécution : la liste peut s'allonger)
+alter table public.push_reminders drop constraint if exists push_reminders_kind_check;
+alter table public.push_reminders add constraint push_reminders_kind_check
+  check (kind in ('streak', 'quests', 'friends', 'comeback1', 'comeback2', 'announce'));
 
 alter table public.push_subscriptions enable row level security;
 alter table public.push_reminders enable row level security;
@@ -664,10 +668,11 @@ begin
         topics = excluded.topics, last_seen = now(), failures = 0
   returning id into sub;
 
-  -- La liste du jeu remplace l'ancienne (les demandes d'ami viennent du serveur : gardées si voulues)
+  -- La liste du jeu remplace l'ancienne (demandes d'ami et annonces viennent du serveur : gardées)
   delete from push_reminders
   where subscription_id = sub
     and claimed_at is null
+    and kind <> 'announce'
     and (kind <> 'friends' or not ('friends' = any(v_topics)));
   for r in select * from jsonb_array_elements(p_reminders) loop
     k := r->>'kind';
@@ -706,10 +711,11 @@ language plpgsql security definer set search_path = public as $$
 begin
   -- Rappels trop en retard (envois arrêtés longtemps) : abandonnés plutôt qu'envoyés à contretemps
   delete from push_reminders r where r.send_at < now() - interval '1 day';
-  -- Plafond : 2 notifications par appareil et par jour, hors réponses d'amis
+  -- Plafond : 2 notifications par appareil et par jour, hors réponses d'amis et annonces
   delete from push_reminders r
   using push_subscriptions s
-  where s.id = r.subscription_id and r.send_at <= now() and r.kind <> 'friends' and r.claimed_at is null
+  where s.id = r.subscription_id and r.send_at <= now() and r.kind not in ('friends', 'announce')
+    and r.claimed_at is null
     and s.sent_day = current_date and s.sent_count >= 2;
 
   return query
@@ -768,6 +774,38 @@ begin
   delete from push_subscriptions where failures >= 5;
 end;
 $$;
+
+-- Annonce à tous les appareils abonnés (nouvelle mise à jour, événement…), lancée à la main par le
+-- propriétaire depuis le SQL Editor de Supabase :
+--   select push_announce('🚀 Mise à jour !', '4 nouveaux boss t''attendent.');
+-- Facultatif : p_url (page ouverte au clic, ex. './#modal=nouveautes'), p_at (envoi programmé).
+-- Partie au passage suivant de send-push (5 minutes au plus), hors plafond quotidien. Une nouvelle
+-- annonce remplace celle qui n'est pas encore partie. Renvoie le nombre d'appareils visés.
+create or replace function public.push_announce(
+  p_title text, p_body text, p_url text default './', p_at timestamptz default now()
+) returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  n int;
+begin
+  if char_length(coalesce(trim(p_title), '')) not between 1 and 60
+     or char_length(coalesce(trim(p_body), '')) not between 1 and 200 then
+    raise exception 'Titre (1 à 60 caractères) et texte (1 à 200) obligatoires';
+  end if;
+  if coalesce(p_url, '') !~ '^\./' then
+    raise exception 'Lien : une page du jeu, commençant par ./';
+  end if;
+  insert into push_reminders (subscription_id, kind, send_at, data)
+  select s.id, 'announce', greatest(coalesce(p_at, now()), now()),
+         jsonb_build_object('title', trim(p_title), 'body', trim(p_body), 'url', p_url)
+  from push_subscriptions s
+  on conflict (subscription_id, kind) do update
+    set send_at = excluded.send_at, data = excluded.data, claimed_at = null;
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+revoke all on function public.push_announce(text, text, text, timestamptz) from public, anon, authenticated;
 
 -- Demandes d'ami : prévient le joueur visé (demande reçue) ou le demandeur (demande acceptée).
 -- Une erreur ici ne doit jamais empêcher l'amitié elle-même.

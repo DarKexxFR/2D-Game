@@ -66,6 +66,9 @@ Au choix :
 - **Depuis le site** : Edge Functions → **Deploy a new function** → **Via Editor** → nom `send-push`,
   coller le contenu de `supabase/functions/send-push/index.ts` → **Deploy**. Puis dans les réglages de la
   fonction, **désactiver « Verify JWT »** (l'appel est protégé par `PUSH_CRON_SECRET`).
+  Vérifier son **adresse** (« Endpoint URL ») : le site peut lui donner un autre nom que `send-push`
+  (ex. `smooth-function`). L'adresse de l'étape 5 doit être exactement celle-là, sinon chaque passage
+  répond 404 et rien ne part (`select status_code, content from net._http_response order by created desc limit 5;`).
 - **En ligne de commande** :
   ```bash
   npx supabase login
@@ -103,6 +106,21 @@ $$);
    ```
    La notification arrive au passage suivant (5 minutes au plus). Edge Functions → `send-push` → **Logs**
    montre chaque passage (`{"sent":1,"gone":0,"retry":0,...}`).
+
+## Envoyer une annonce à tous les joueurs
+
+Nouvelle mise à jour, événement… : dans le SQL Editor de Supabase,
+
+```sql
+select push_announce('🚀 Mise à jour !', '4 nouveaux boss t''attendent.');
+```
+
+- Renvoie le nombre d'appareils visés ; la notification part au passage suivant (5 minutes au plus).
+- Titre 60 caractères au plus, texte 200 ; une apostrophe s'écrit `''` (deux apostrophes).
+- Facultatif : la page ouverte au clic, puis l'heure d'envoi :
+  `select push_announce('Titre', 'Texte', './#modal=nouveautes', '2026-11-01 18:00+01');`
+- Tous les appareils abonnés la reçoivent (hors plafond quotidien). Une nouvelle annonce remplace celle qui
+  n'est pas encore partie. Réservé au SQL Editor : le jeu et les joueurs ne peuvent pas l'appeler.
 
 ## Montée en charge
 

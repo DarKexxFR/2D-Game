@@ -119,8 +119,8 @@ test("amis : ajout, défi accepté, duel classé ELO", async ({ page, browser, i
     state.player.revives = 0;
     player.takeDamage(1e12);
   });
-  await expect(page.locator("#versusElo")).toHaveText("ELO : 1016 (+16)");
-  await expect(other.locator("#versusElo")).toHaveText("ELO : 984 (-16)");
+  await expect(page.locator("#versusElo")).toHaveText("BRONZE · 1016 ELO (+16)");
+  await expect(other.locator("#versusElo")).toHaveText("BRONZE · 984 ELO (-16)");
 
   // La cote apparaît dans la liste d'amis
   await page.locator("#btnVersusMenu").click();

@@ -709,3 +709,48 @@ button.dock-btn .ico {
     letter-spacing: 0.3px;
   }
 }
+
+/* Rang du duel classé (ui/duelRank.js) : emblème à côté du niveau, ouvre le classement DUEL ELO */
+button.home-rank {
+  flex-shrink: 0;
+  width: auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(10, 5, 20, 0.7);
+  box-shadow: 0 0 10px color-mix(in srgb, currentColor 35%, transparent);
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+button.home-rank.rank-off {
+  display: none;
+}
+.home-rank-icon .ico {
+  font-size: 20px;
+}
+@media (max-width: 760px) {
+  /* Téléphone : petit emblème posé sur le coin de l'hexagone du niveau (la place manque dans l'en-tête) */
+  .home-profile {
+    position: relative;
+    overflow: visible;
+  }
+  button.home-rank {
+    position: absolute;
+    left: 28px;
+    top: 30px;
+    padding: 2px;
+    z-index: 2;
+  }
+  .home-rank-icon .ico {
+    font-size: 16px;
+  }
+  .home-rank b {
+    display: none; /* le nom est dans son titre et sur l'écran Duel */
+  }
+}

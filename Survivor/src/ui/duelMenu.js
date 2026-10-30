@@ -2,6 +2,7 @@
 // ou défier un ami : écran « Amis », ui/friendsMenu.js).
 
 import { hostRoom, joinRoom, leaveRoom, normalizeCode } from "../services/netplay.js";
+import { refreshMyDuelRating } from "../services/duelRanking.js";
 import { $, setText } from "./dom.js";
 import { getPseudo } from "./mainMenu.js";
 import { showScreen } from "./screens.js";
@@ -36,6 +37,7 @@ export function initDuelMenu({ onLocal, onBack, onFriends }) {
 
 export function openDuel() {
   busy = false;
+  refreshMyDuelRating();
   setText("duelRoomCode", "");
   setDuelStatus("");
   showScreen("duelMenu");

@@ -527,3 +527,81 @@ body.duel-live #comboDisplay {
     padding-top: 8px;
   }
 }
+
+/* --- Rangs du duel (ui/duelRank.js) --- */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+  overflow: visible;
+}
+.rank-badge .ico {
+  font-size: 1.3em;
+}
+.rival-head {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.rival-rank:empty {
+  display: none;
+}
+.lb-with-badge .rank-badge {
+  margin-right: 5px;
+}
+.friend-name small .rank-badge {
+  margin-right: 4px;
+}
+.duel-rank-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  background: rgba(10, 5, 20, 0.6);
+  text-align: left;
+}
+.duel-rank-card.rank-off {
+  display: none;
+}
+.duel-rank-icon .ico {
+  font-size: 38px;
+}
+.duel-rank-text {
+  flex: 1;
+  min-width: 0;
+}
+.duel-rank-text b {
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+.duel-rank-elo {
+  color: #ddd;
+  font-size: 12px;
+}
+.duel-rank-text .vs-bar {
+  margin: 5px 0 3px;
+}
+.duel-rank-text small {
+  color: #aaa;
+  font-size: 10px;
+}
+.versus-rank-up {
+  margin: -8px 0 14px;
+  color: #ffd700;
+  font-family: "Press Start 2P";
+  font-size: 13px;
+  text-shadow: 0 0 10px currentColor;
+}
+.versus-rank-up.down {
+  color: #999;
+  font-family: "Orbitron", sans-serif;
+  text-shadow: none;
+}
+.versus-rank-up:empty {
+  display: none;
+}

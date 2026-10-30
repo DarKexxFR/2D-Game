@@ -32,6 +32,7 @@ export type Status = "sent" | "gone" | "retry";
 const HOUR = 3600;
 const num = (v: unknown, fallback: number) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
 const name = (v: unknown) => String(v ?? "Un pilote").slice(0, 12);
+const text = (v: unknown, max: number) => String(v ?? "").slice(0, max);
 
 /** Texte de chaque type de rappel (null = type inconnu, le rappel est simplement retiré). */
 export function messageFor(kind: string, data: Record<string, unknown> = {}): Message | null {
@@ -84,6 +85,14 @@ export function messageFor(kind: string, data: Record<string, unknown> = {}): Me
         url: "./",
         ttl: 24 * HOUR,
       };
+    case "announce": {
+      // Écrite par le propriétaire (push_announce dans schema.sql) : titre et texte libres
+      const title = text(data.title, 60);
+      const body = text(data.body, 200);
+      if (!title || !body) return null;
+      const url = typeof data.url === "string" && data.url.startsWith("./") ? data.url : "./";
+      return { title, body, tag: "announce", url, ttl: 24 * HOUR };
+    }
     default:
       return null;
   }
