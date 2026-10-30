@@ -8,7 +8,9 @@
 // tant que le joueur s'y tient, son tir est coupé (brouillage du Hacker). Option `swing` d'un laser :
 // il oscille comme un pendule (Chronophage).
 // Zones rondes des événements de carte (systems/mapEvents.js) : `fall` = ce qui tombe du ciel pendant
-// l'alerte (dessin), `onImpact(h)` = effet en plus à l'impact (ennemis touchés, butin...).
+// l'alerte (dessin), `impact` = effet en plus à l'impact (ennemis touchés, butin...), en données simples
+// `{ type, ...réglages }` dont le comportement est inscrit par `registerImpact` : une zone garde ainsi
+// la partie sauvegardable (services/runSave.js refuse les fonctions).
 
 import { TICK_MS } from "../config.js";
 import { game, player, world } from "../core/state.js";
@@ -20,13 +22,25 @@ import { isProtected, stunPlayer, takeDamage } from "./player.js";
 const POOL_TICK = 30; // une flaque blesse au plus toutes les 0,5 s
 const BEAM_TICK = 12; // un laser actif blesse au plus toutes les 0,2 s
 
+/** @type {Record<string, (h: any, impact: any) => void>} effets à l'impact, par type */
+const IMPACTS = {};
+
+/**
+ * Inscrit l'effet à l'impact d'un type de zone ronde (option `impact: { type, ... }` de addCircle).
+ * @param {string} type
+ * @param {(h: any, impact: any) => void} effect reçoit la zone et ses réglages `impact`
+ */
+export function registerImpact(type, effect) {
+  IMPACTS[type] = effect;
+}
+
 /** Zone ronde : alerte pendant `delay` ticks, puis dégâts ; `pool` = durée de la flaque restante. */
 export function addCircle(
   x,
   y,
   radius,
   damage,
-  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0, jam = 0, fall = null, onImpact = null } = {},
+  { delay = 60, color = "#ff2a6d", pool = 0, slow = 0, stun = 0, jam = 0, fall = null, impact = null } = {},
 ) {
   world.hazards.push({
     kind: "circle",
@@ -42,7 +56,7 @@ export function addCircle(
     stun,
     jam,
     fall,
-    onImpact,
+    impact,
     hit: 0,
   });
 }
@@ -149,7 +163,7 @@ const UPDATERS = {
         createParticles(h.x, h.y, h.color, 10);
         addScreenShake(5);
         playSfx("explosion");
-        if (h.onImpact) h.onImpact(h);
+        if (h.impact) IMPACTS[h.impact.type](h, h.impact);
         if (h.damage > 0 && dist(player.worldX, player.worldY, h.x, h.y) < h.radius + player.size * 0.5) {
           hurt(h);
         }
