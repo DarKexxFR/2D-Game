@@ -66,6 +66,9 @@ Au choix :
 - **Depuis le site** : Edge Functions → **Deploy a new function** → **Via Editor** → nom `send-push`,
   coller le contenu de `supabase/functions/send-push/index.ts` → **Deploy**. Puis dans les réglages de la
   fonction, **désactiver « Verify JWT »** (l'appel est protégé par `PUSH_CRON_SECRET`).
+  Vérifier son **adresse** (« Endpoint URL ») : le site peut lui donner un autre nom que `send-push`
+  (ex. `smooth-function`). L'adresse de l'étape 5 doit être exactement celle-là, sinon chaque passage
+  répond 404 et rien ne part (`select status_code, content from net._http_response order by created desc limit 5;`).
 - **En ligne de commande** :
   ```bash
   npx supabase login
