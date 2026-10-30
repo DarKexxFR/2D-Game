@@ -131,12 +131,6 @@ export function addAccountRewards(xp, gold) {
   saveAccount();
 }
 
-export function resetProgress() {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.save);
-  } catch {}
-}
-
 // --- PSEUDO ---
 
 export const DEFAULT_PSEUDO = "Joueur";

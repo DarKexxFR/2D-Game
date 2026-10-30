@@ -40,8 +40,11 @@ button.rush-play {
   box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
 }
 button.dock-rush {
-  border-color: rgba(255, 215, 0, 0.5);
+  border-color: rgba(255, 215, 0, 0.75);
   color: #ffd700;
+}
+button.dock-rush .ico {
+  color: inherit;
 }
 @media (max-width: 760px), (max-height: 560px) {
   .rush-list {
@@ -52,30 +55,20 @@ button.dock-rush {
     font-size: 10px;
   }
 }
-/* Boutons du bas de l'accueil : sur une ligne tant que la largeur le permet */
+/* Boutons du bas de l'accueil : sur une ligne tant que la largeur le permet, sinon deux
+   lignes de deux (plutôt que des libellés trop petits pour être lus) */
 .home-dock button.dock-btn {
   white-space: nowrap;
 }
 @media (max-width: 420px) {
   .home-dock {
-    gap: 6px;
-  }
-  .home-dock button.dock-btn {
-    padding: 10px 4px;
-    font-size: 10px;
-    letter-spacing: 0;
-  }
-  .home-dock .dock-btn .ico {
-    display: none;
-  }
-}
-/* Très petit écran (iPhone SE) : les quatre boutons passent sur deux lignes */
-@media (max-width: 360px) {
-  .home-dock {
     flex-wrap: wrap;
+    gap: 8px;
   }
   .home-dock button.dock-btn {
     flex: 1 1 40%;
-    font-size: 11px;
+    padding: 10px 6px;
+    font-size: 12px;
+    letter-spacing: 0;
   }
 }

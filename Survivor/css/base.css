@@ -63,13 +63,6 @@ button.secondary {
   background: linear-gradient(180deg, #444, #222);
   color: #ccc;
 }
-button.reset-btn {
-  background: transparent;
-  border: 1px solid #ff3333;
-  color: #ff3333;
-  font-size: 12px;
-  margin-top: 30px;
-}
 
 /* --- Utilitaires --- */
 .c-cyan {

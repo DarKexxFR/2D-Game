@@ -1,24 +1,64 @@
-/* Menu Options */
+/* Menu Options : des cartes par thème (deux colonnes sur grand écran, une sur téléphone).
+   Textes clairs et assez grands : la lisibilité passe avant la discrétion. */
 #optionsMenu {
+  --accent: #00ccff;
   border-color: #00ccff;
+}
+#optionsMenu.menu-wide {
+  width: min(980px, calc(100vw - 30px));
+}
+.opt-grid {
+  columns: 2 340px;
+  column-gap: 16px;
+  text-align: left;
+}
+.opt-card {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  padding: 14px 16px 10px;
+  border: 1px solid rgba(0, 204, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+.menu-overlay .opt-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 204, 255, 0.28);
+  color: #00e5ff;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.opt-card > :last-child,
+.opt-card .option-push > :last-child {
+  border-bottom: none;
 }
 .option-row {
   display: grid;
-  grid-template-columns: 140px 1fr 52px;
+  grid-template-columns: 130px 1fr 48px;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #333;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   text-align: left;
 }
 .option-row label,
-.option-row > span {
-  color: #ddd;
+.option-row > span,
+.option-cloud > span {
+  color: #f0f0f8;
   font-size: 14px;
+}
+.option-row .ico,
+.option-cloud > span .ico {
+  color: #00e5ff;
 }
 .option-value {
   text-align: right;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 700;
   color: #00ffff;
 }
 .option-row input[type="range"] {
@@ -28,13 +68,13 @@
   height: 28px;
 }
 #optVibrationRow {
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: 130px 1fr;
 }
 .toggle-btn {
   padding: 8px;
   font-size: 13px;
   background: linear-gradient(180deg, #444, #222);
-  color: #888;
+  color: #ddd;
 }
 .toggle-btn.on {
   background: linear-gradient(180deg, #00ff88, #00aa55);
@@ -42,7 +82,6 @@
 }
 .option-quality {
   grid-template-columns: 1fr;
-  border-bottom: none;
 }
 .segmented {
   display: grid;
@@ -52,31 +91,37 @@
 .segmented button {
   padding: 10px 4px;
   font-size: 12px;
-  background: linear-gradient(180deg, #333, #1a1a1a);
-  color: #888;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(20, 10, 35, 0.9);
+  color: #d6d6e6;
 }
 .segmented button.active {
+  border-color: #00ffff;
   background: linear-gradient(180deg, #00ffff, #0088aa);
   color: #000;
 }
 .option-hint {
-  font-size: 11px;
-  color: #777;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #a9a9c0;
+}
+#tutorialReplayHint:empty,
+#pushHint:empty,
+#cloudStatus:empty {
+  display: none;
 }
 
 /* Touches */
 .option-keys {
-  padding: 12px 0;
-  border-bottom: 1px solid #333;
   text-align: left;
-  color: #ddd;
+  color: #f0f0f8;
   font-size: 14px;
 }
 .key-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 12px;
-  margin: 8px 0;
+  margin: 10px 0;
 }
 .key-row {
   display: grid;
@@ -84,12 +129,14 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  color: #e6e6f0;
 }
 .key-row button {
-  min-width: 92px;
+  min-width: 84px;
   padding: 7px 8px;
   font-size: 12px;
-  background: linear-gradient(180deg, #333, #1a1a1a);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: rgba(20, 10, 35, 0.9);
   color: #00ffff;
 }
 .key-row button.waiting {
@@ -97,17 +144,15 @@
   animation: pulseGold 1s infinite;
 }
 .option-keys > button {
-  padding: 8px;
+  margin-bottom: 6px;
+  padding: 9px;
   font-size: 12px;
 }
 
 /* Sauvegarde en ligne */
 .option-cloud {
-  padding: 12px 0;
-  border-bottom: 1px solid #333;
+  padding: 10px 0;
   text-align: left;
-  color: #ddd;
-  font-size: 14px;
 }
 .option-cloud .option-hint {
   margin: 6px 0;
@@ -138,18 +183,33 @@
   font-size: 14px;
   text-transform: uppercase;
 }
-#cloudMessage:empty,
-#tutorialReplayHint:empty {
+#cloudMessage:empty {
   display: none;
 }
 
+.option-legal {
+  display: block;
+  padding: 12px 0 6px;
+  color: #00ffff;
+  font-size: 13px;
+}
+button.opt-back {
+  display: block;
+  max-width: 360px;
+  margin: 4px auto 0;
+}
+
 @media (max-width: 760px), (max-height: 560px) {
+  .opt-card {
+    margin-bottom: 12px;
+    padding: 12px 12px 8px;
+  }
   .option-row {
-    grid-template-columns: 110px 1fr 44px;
+    grid-template-columns: 105px 1fr 44px;
     gap: 8px;
   }
   #optVibrationRow {
-    grid-template-columns: 110px 1fr;
+    grid-template-columns: 105px 1fr;
   }
   .option-row.option-quality {
     grid-template-columns: 1fr;
@@ -157,13 +217,6 @@
   .segmented button {
     font-size: 11px;
   }
-}
-
-.option-legal {
-  display: block;
-  margin-top: 22px;
-  color: #00ffff;
-  font-size: 13px;
 }
 
 /* --- Compte (connexion facultative) --- */
@@ -199,6 +252,7 @@
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 button.google-btn,
 button.discord-btn {

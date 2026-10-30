@@ -132,7 +132,6 @@ function renderCloud() {
 /** Ouvre les options ; `from` est l'écran auquel revenir. */
 export function openOptions(from) {
   returnTo = from;
-  setVisible("btnReset", from === "mainMenu"); // pas de remise à zéro en pleine partie
   render();
   showScreen("optionsMenu");
 }

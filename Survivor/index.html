@@ -660,108 +660,133 @@
       </div>
 
       <!-- ===== OPTIONS ===== -->
-      <div id="optionsMenu" class="menu-overlay">
-        <h2>OPTIONS</h2>
-        <div class="option-row">
-          <label for="optMusic"><i data-icon="music"></i> Musique</label>
-          <input type="range" id="optMusic" min="0" max="100" step="5" />
-          <span id="optMusicValue" class="option-value"></span>
+      <div id="optionsMenu" class="menu-overlay menu-wide">
+        <div class="menu-head">
+          <h2>OPTIONS</h2>
+          <p class="menu-sub">Son, affichage, commandes et compte</p>
         </div>
-        <div class="option-row">
-          <label for="optSfx"><i data-icon="sound"></i> Effets</label>
-          <input type="range" id="optSfx" min="0" max="100" step="5" />
-          <span id="optSfxValue" class="option-value"></span>
-        </div>
-        <div class="option-row" id="optVibrationRow">
-          <label for="optVibration"><i data-icon="vibrate"></i> Vibrations</label>
-          <button id="optVibration" class="toggle-btn"></button>
-        </div>
-        <div class="option-row option-quality">
-          <span><i data-icon="monitor"></i> Qualité graphique</span>
-          <div class="segmented">
-            <button data-quality="low">BASSE</button>
-            <button data-quality="medium">MOYENNE</button>
-            <button data-quality="high">HAUTE</button>
-          </div>
-          <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
-        </div>
-        <div id="optKeysSection" class="option-keys">
-          <span><i data-icon="cog"></i> Touches</span>
-          <p class="option-hint">
-            Clique sur une action puis appuie sur la nouvelle touche (Échap pour annuler).
-          </p>
-          <div id="keyBindingList" class="key-list"></div>
-          <button id="btnResetKeys" class="secondary">TOUCHES PAR DÉFAUT</button>
-        </div>
-        <div id="optTutorialRow" class="option-row option-account-row">
-          <span><i data-icon="quest"></i> Tutoriel</span>
-          <button id="btnTutorialReplay" class="secondary">REVOIR</button>
-        </div>
-        <p id="tutorialReplayHint" class="option-hint"></p>
-        <div id="optNewsRow" class="option-row option-account-row">
-          <span><i data-icon="sparkle"></i> Nouveautés</span>
-          <button id="btnNewsReplay" class="secondary">VOIR</button>
-        </div>
-        <div id="optAppRow" class="option-row option-account-row">
-          <span><i data-icon="download"></i> Application</span>
-          <button id="btnOptionsInstall" class="secondary">INSTALLER</button>
-        </div>
-        <div id="optPushSection" class="option-push">
-          <div class="option-row option-account-row">
-            <span><i data-icon="bell"></i> Notifications</span>
-            <button id="optPush" class="toggle-btn"></button>
-          </div>
-          <div id="pushTopics" class="push-topics"></div>
-          <p id="pushHint" class="option-hint"></p>
-        </div>
-        <div class="option-row option-account-row">
-          <span><i data-icon="chartUp"></i> Statistiques anonymes</span>
-          <button id="optAnalytics" class="toggle-btn"></button>
-        </div>
-        <p class="option-hint">
-          Temps de jeu, parties et rapports d'erreurs, sans pseudo ni compte : ça aide à améliorer le jeu.
-        </p>
-        <div class="option-row option-account-row">
-          <span><i data-icon="warning"></i> Journal de diagnostic</span>
-          <button id="btnCopyJournal" class="secondary">COPIER</button>
-        </div>
-        <p id="journalHint" class="option-hint">
-          Un bug ? Copie le journal et envoie-le au développeur : il montre ce qui s'est passé.
-        </p>
-        <div id="optAccountRow" class="option-row option-account-row">
-          <span><i data-icon="user"></i> Compte <small class="optional-tag">facultatif</small></span>
-          <button id="btnOptionsAccount" class="secondary">SE CONNECTER</button>
-        </div>
-        <div class="option-cloud">
-          <span
-            ><i data-icon="cloud"></i> Code de sauvegarde
-            <small class="optional-tag">sans compte</small></span
-          >
-          <div id="cloudOff">
-            <p class="option-hint">
-              Sans te connecter : un code secret pour retrouver ta progression sur un autre appareil.
-            </p>
-            <button id="btnCloudEnable">ACTIVER</button>
-          </div>
-          <div id="cloudOn">
-            <p class="option-hint">Ton code secret (note-le, il sert à tout récupérer) :</p>
-            <div class="cloud-code-row">
-              <code id="cloudCode" class="cloud-code"></code>
-              <button id="btnCloudCopy" class="secondary">COPIER</button>
+        <div class="opt-grid">
+          <section class="opt-card">
+            <h3 class="opt-title"><i data-icon="sound"></i> Son et image</h3>
+            <div class="option-row">
+              <label for="optMusic"><i data-icon="music"></i> Musique</label>
+              <input type="range" id="optMusic" min="0" max="100" step="5" />
+              <span id="optMusicValue" class="option-value"></span>
             </div>
-            <p id="cloudStatus" class="option-hint"></p>
-          </div>
-          <div class="cloud-restore">
-            <input id="cloudRestoreInput" class="pseudo-input" placeholder="XXXX-XXXX-XXXX" maxlength="16" />
-            <button id="btnCloudRestore" class="secondary">RESTAURER</button>
-          </div>
-          <p id="cloudMessage" class="option-hint"></p>
+            <div class="option-row">
+              <label for="optSfx"><i data-icon="sound"></i> Effets</label>
+              <input type="range" id="optSfx" min="0" max="100" step="5" />
+              <span id="optSfxValue" class="option-value"></span>
+            </div>
+            <div class="option-row" id="optVibrationRow">
+              <label for="optVibration"><i data-icon="vibrate"></i> Vibrations</label>
+              <button id="optVibration" class="toggle-btn"></button>
+            </div>
+            <div class="option-row option-quality">
+              <span><i data-icon="monitor"></i> Qualité graphique</span>
+              <div class="segmented">
+                <button data-quality="low">BASSE</button>
+                <button data-quality="medium">MOYENNE</button>
+                <button data-quality="high">HAUTE</button>
+              </div>
+              <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+            </div>
+          </section>
+
+          <section id="optKeysSection" class="opt-card option-keys">
+            <h3 class="opt-title"><i data-icon="cog"></i> Commandes</h3>
+            <p class="option-hint">
+              Clique sur une action puis appuie sur la nouvelle touche (Échap pour annuler).
+            </p>
+            <div id="keyBindingList" class="key-list"></div>
+            <button id="btnResetKeys" class="secondary">TOUCHES PAR DÉFAUT</button>
+          </section>
+
+          <section class="opt-card">
+            <h3 class="opt-title"><i data-icon="quest"></i> Jeu</h3>
+            <div id="optTutorialRow" class="option-row option-account-row">
+              <span><i data-icon="quest"></i> Tutoriel</span>
+              <button id="btnTutorialReplay" class="secondary">REVOIR</button>
+            </div>
+            <p id="tutorialReplayHint" class="option-hint"></p>
+            <div id="optNewsRow" class="option-row option-account-row">
+              <span><i data-icon="sparkle"></i> Nouveautés</span>
+              <button id="btnNewsReplay" class="secondary">VOIR</button>
+            </div>
+            <div id="optAppRow" class="option-row option-account-row">
+              <span><i data-icon="download"></i> Application</span>
+              <button id="btnOptionsInstall" class="secondary">INSTALLER</button>
+            </div>
+            <div id="optPushSection" class="option-push">
+              <div class="option-row option-account-row">
+                <span><i data-icon="bell"></i> Notifications</span>
+                <button id="optPush" class="toggle-btn"></button>
+              </div>
+              <div id="pushTopics" class="push-topics"></div>
+              <p id="pushHint" class="option-hint"></p>
+            </div>
+          </section>
+
+          <section class="opt-card">
+            <h3 class="opt-title"><i data-icon="user"></i> Compte et sauvegarde</h3>
+            <div id="optAccountRow" class="option-row option-account-row">
+              <span><i data-icon="user"></i> Compte <small class="optional-tag">facultatif</small></span>
+              <button id="btnOptionsAccount" class="secondary">SE CONNECTER</button>
+            </div>
+            <div class="option-cloud">
+              <span
+                ><i data-icon="cloud"></i> Code de sauvegarde
+                <small class="optional-tag">sans compte</small></span
+              >
+              <div id="cloudOff">
+                <p class="option-hint">
+                  Sans te connecter : un code secret pour retrouver ta progression sur un autre appareil.
+                </p>
+                <button id="btnCloudEnable">ACTIVER</button>
+              </div>
+              <div id="cloudOn">
+                <p class="option-hint">Ton code secret (note-le, il sert à tout récupérer) :</p>
+                <div class="cloud-code-row">
+                  <code id="cloudCode" class="cloud-code"></code>
+                  <button id="btnCloudCopy" class="secondary">COPIER</button>
+                </div>
+                <p id="cloudStatus" class="option-hint"></p>
+              </div>
+              <div class="cloud-restore">
+                <input
+                  id="cloudRestoreInput"
+                  class="pseudo-input"
+                  placeholder="XXXX-XXXX-XXXX"
+                  maxlength="16"
+                />
+                <button id="btnCloudRestore" class="secondary">RESTAURER</button>
+              </div>
+              <p id="cloudMessage" class="option-hint"></p>
+            </div>
+          </section>
+
+          <section class="opt-card">
+            <h3 class="opt-title"><i data-icon="chartUp"></i> Confidentialité et aide</h3>
+            <div class="option-row option-account-row">
+              <span><i data-icon="chartUp"></i> Statistiques anonymes</span>
+              <button id="optAnalytics" class="toggle-btn"></button>
+            </div>
+            <p class="option-hint">
+              Temps de jeu, parties et rapports d'erreurs, sans pseudo ni compte : ça aide à améliorer le jeu.
+            </p>
+            <div class="option-row option-account-row">
+              <span><i data-icon="warning"></i> Journal de diagnostic</span>
+              <button id="btnCopyJournal" class="secondary">COPIER</button>
+            </div>
+            <p id="journalHint" class="option-hint">
+              Un bug ? Copie le journal et envoie-le au développeur : il montre ce qui s'est passé.
+            </p>
+            <a class="option-legal" href="legal.html" target="_blank" rel="noopener"
+              >Conditions générales et confidentialité</a
+            >
+          </section>
         </div>
-        <a class="option-legal" href="legal.html" target="_blank" rel="noopener"
-          >Conditions générales et confidentialité</a
-        >
-        <button id="btnReset" class="reset-btn"><i data-icon="warning"></i> RESET PROGRESSION</button>
-        <button id="btnOptionsBack" class="secondary mt-15">RETOUR</button>
+        <button id="btnOptionsBack" class="secondary opt-back">RETOUR</button>
       </div>
 
       <!-- ===== INSTALLER LE JEU (ui/appMenu.js) ===== -->
