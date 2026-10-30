@@ -253,7 +253,10 @@ export async function startGame(page, { invincible = true, levelUps = false } = 
 }
 
 export async function killPlayer(page) {
-  await game(page, ({ player }) => player.takeDamage(1e12));
+  await game(page, ({ state, player }) => {
+    state.player.energyShield = 0; // la carte Bouclier d'énergie, tirée au hasard, bloquerait le coup
+    player.takeDamage(1e12);
+  });
   await declineRevive(page);
   await expect(page.locator("#gameOver")).toBeVisible();
 }

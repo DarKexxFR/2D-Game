@@ -231,32 +231,44 @@ test.describe("logique", () => {
     const types = await page.evaluate(async () =>
       (await import("/src/data/enemies.js")).BOSS_RUSH.order.map((b) => b.type),
     );
-    for (const type of types) {
-      const result = await page.evaluate(async (type) => {
-        const state = await import("/src/core/state.js");
-        const spawner = await import("/src/systems/spawner.js");
-        const runSave = await import("/src/services/runSave.js");
-        const { world, game: g, player: p } = state;
-        world.enemies.length = 0;
-        world.hazards.length = 0;
-        world.enemyProjectiles.length = 0;
-        g.wave = 25;
-        g.paused = false;
-        g.running = true;
-        spawner.spawnEnemy(type, p.worldX + 260, p.worldY);
-        await new Promise((r) => setTimeout(r, 1200)); // le boss attaque
-        const count = world.enemies.length;
-        const bossHp = world.enemies.find((e) => e.isBoss)?.health;
-        if (!runSave.saveRun("normal")) return { type, saved: false };
-        const saved = runSave.savedRun();
-        g.running = false;
-        runSave.restoreRunState(saved);
-        Object.assign(g, { started: true, running: true, paused: false });
-        const after = { count: world.enemies.length, bossHp: world.enemies.find((e) => e.isBoss)?.health };
-        await new Promise((r) => setTimeout(r, 800)); // le combat continue après la reprise
-        return { type, saved: true, same: after.count === count && after.bossHp === bossHp };
-      }, type);
-      expect(result, type).toEqual({ type, saved: true, same: true });
+    // En furie aussi : certaines attaques s'y gardent pour plus tard (écho du Chronophage)
+    for (const [type, fury] of types.flatMap((type) => [
+      [type, false],
+      [type, true],
+    ])) {
+      const result = await page.evaluate(
+        async ([type, fury]) => {
+          const state = await import("/src/core/state.js");
+          const spawner = await import("/src/systems/spawner.js");
+          const runSave = await import("/src/services/runSave.js");
+          const { world, game: g, player: p } = state;
+          world.enemies.length = 0;
+          world.hazards.length = 0;
+          world.enemyProjectiles.length = 0;
+          g.wave = 25;
+          g.paused = false;
+          g.running = true;
+          spawner.spawnEnemy(type, p.worldX + 260, p.worldY);
+          const boss = world.enemies.find((e) => e.template.isBoss);
+          if (fury && boss) Object.assign(boss, { health: boss.maxHealth * 0.4, attackTimer: 2 });
+          await new Promise((r) => setTimeout(r, 1200)); // le boss attaque
+          const count = world.enemies.length;
+          const bossHp = world.enemies.find((e) => e.template.isBoss)?.health;
+          if (!runSave.saveRun("normal")) return { type, saved: false };
+          const saved = runSave.savedRun();
+          g.running = false;
+          runSave.restoreRunState(saved);
+          Object.assign(g, { started: true, running: true, paused: false });
+          const after = {
+            count: world.enemies.length,
+            bossHp: world.enemies.find((e) => e.template.isBoss)?.health,
+          };
+          await new Promise((r) => setTimeout(r, 800)); // le combat continue après la reprise
+          return { type, saved: true, same: after.count === count && after.bossHp === bossHp };
+        },
+        [type, fury],
+      );
+      expect(result, `${type}${fury ? " (furie)" : ""}`).toEqual({ type, saved: true, same: true });
     }
   });
 
