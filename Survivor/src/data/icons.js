@@ -1,177 +1,149 @@
-// Icônes vectorielles au style néon (tracés SVG, grille 24×24, trait seul).
-// Utilisées dans les menus (ui/icons.js) et sur le canvas (Path2D).
-// Les icônes d'interface courantes viennent de la banque Papicons (data/papicons.js) : formes
-// pleines, dessinées remplies (FILLED_ICONS) ; les icônes propres au jeu restent au trait.
+// Icônes du jeu : formes pleines tirées de deux banques libres, remplies de la couleur du texte.
+// - Papicons (data/papicons.js, licence MIT) pour l'interface : réglages, son, cadenas, cloche…
+// - game-icons.net (data/gameIcons.js, licence CC BY 3.0, crédits dans legal.html) pour tout ce qui
+//   est propre au jeu : armes, armures, héros, boss, coffres, rangs…
+// Utilisées dans les menus (ui/icons.js) et sur le canvas (Path2D) ; `iconGrid` donne la taille de
+// leur grille (24 pour Papicons, 512 pour game-icons.net).
 
+import { GAME_ICONS } from "./gameIcons.js";
 import { PAPICONS } from "./papicons.js";
 
-const circle = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0z`;
-
-export const ICONS = {
+/** Nom de l'icône dans le jeu → `p:fichier` (Papicons) ou `g:fichier` (game-icons.net). */
+const SOURCES = {
   // --- Armes ---
-  blaster: "M3 7h14l3 3v2h-7l-1.5 2H10l-1.5 6H5l1.5-6H3z M20 10h2 M13 9h2",
-  smg: "M2 9h17v3H2z M19 10.5h3 M6 12l-1 7h3l1-7 M12 12v4h2.5v-4 M4 7h5",
-  shotgun: "M2 10h14l3-2h3v3h-3l-3 2H8l-2 6H3l2-6H2z M19 4l2-1 M19 16l2 1",
-  railgun: "M2 8h20 M2 16h20 M13 5l-3 7h5l-3 7",
-  rocket: `M12 2c3 2 5 6 5 10v4l-2 2H9l-2-2v-4c0-4 2-8 5-10z ${circle(12, 9.5, 2)} M7 12l-3 3v4l3-2 M17 12l3 3v4l-3-2 M10 21l2 2 2-2`,
-  plasma: `M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 ${circle(12, 12, 1.5)} M21 3l-3 3`,
-  star: "M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z",
-  blades: `${circle(12, 12, 2.5)} M12 9.5C12 6 13.5 3.5 17 2 M14.5 12c3.5 0 6 1.5 7.5 5 M12 14.5c0 3.5-1.5 6-5 7.5 M9.5 12C6 12 3.5 10.5 2 7`,
-  book: "M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z M20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z",
+  blaster: "g:blaster",
+  smg: "g:uzi",
+  shotgun: "g:sawed-off-shotgun",
+  railgun: "g:laser-gun",
+  rocket: "g:rocket",
+  plasma: "g:plasma-bolt",
+  star: "p:star",
+  blades: "g:spinning-blades",
+  book: "g:black-book",
   // --- Armes d'appoint (data/sideWeapons.js) ---
-  missile: `M20 4c-4 0-8 2-11 5l-3 3 6 6 3-3c3-3 5-7 5-11z M9 12l-4 1-2 3 4-1 M12 15l-1 4-3 2 1-4 M3 21l3-3 ${circle(15, 9, 1.5)}`,
-  mine: `${circle(12, 13, 5)} ${circle(12, 13, 1.5)} M12 3v5 M12 18v3 M3 13h4 M17 13h4 M5.6 6.6l2.1 2.1 M16.3 17.3l2.1 2.1 M18.4 6.6l-2.1 2.1 M7.7 17.3l-2.1 2.1`,
-  beam: `${circle(12, 12, 2.5)} M14.5 12H23 M9.5 12H1 M12 4v3 M12 17v3 M6 6l2 2 M16 16l2 2`,
-  whip: "M3 21l4-4 M5 15l4 4 M7 17c3-3 2-7 6-9s7 1 8-3",
-
+  missile: "g:missile-swarm",
+  mine: "g:land-mine",
+  beam: "g:laser-blast",
+  whip: "g:whip",
   // --- Armures ---
-  vest: "M8 3 5 5v15h14V5l-3-2-2 3h-4z M12 6v14 M5 12h4 M15 12h4",
-  feather: "M18 3C11 3 6 8 6 15v5l3-3c7 0 11-5 11-12V3z M6 20 15 11 M10 15h5 M12 10h5",
-  shield: "M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z M12 6v12 M8 10h8",
-  helmet: "M4 14a8 8 0 0 1 16 0v6H4z M4 14h16 M10 14v6 M14 14v6 M12 6V3",
-  ghost: `M5 21V11a7 7 0 0 1 14 0v10l-2.3-2-2.4 2-2.3-2-2.3 2-2.4-2z ${circle(9.5, 11, 1)} ${circle(14.5, 11, 1)}`,
-  robot: `M5 8h14v11H5z M12 4v4 ${circle(12, 3, 1.3)} ${circle(9, 12.5, 1.2)} ${circle(15, 12.5, 1.2)} M9 16h6 M2 11v5 M22 11v5`,
-  aegis:
-    "M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z M12 7l1.4 2.8 3.1.4-2.3 2.1.6 3.1L12 13.9l-2.8 1.5.6-3.1-2.3-2.1 3.1-.4z M1 5l3 2 M23 5l-3 2",
-
+  vest: "g:kevlar-vest",
+  feather: "g:feather",
+  shield: "g:bordered-shield",
+  helmet: "g:visored-helm",
+  ghost: "p:ghost",
+  robot: "g:vintage-robot",
+  aegis: "g:checked-shield",
   // --- Modules ---
-  chip: "M7 7h10v10H7z M10 10h4v4h-4z M9 3v4 M12 3v4 M15 3v4 M9 17v4 M12 17v4 M15 17v4 M3 9h4 M3 12h4 M3 15h4 M17 9h4 M17 12h4 M17 15h4",
-  cpu: "M5 5h14v14H5z M9 9h6v6H9z M9 2v3 M15 2v3 M9 19v3 M15 19v3 M2 9h3 M2 15h3 M19 9h3 M19 15h3 M12 9v6 M9 12h6",
-  blackhole: `${circle(12, 12, 3)} M12 3a9 9 0 0 1 9 9 M21 12a9 9 0 0 1-9 9 M12 21a9 9 0 0 1-9-9 M3 12a9 9 0 0 1 9-9 M12 6a6 6 0 0 1 6 6 M6 12a6 6 0 0 1 6-6`,
+  chip: "g:microchip",
+  cpu: "g:cpu",
+  blackhole: "g:vortex",
   // --- Héros et familier mythiques ---
-  wings:
-    "M12 6v14 M12 8C9 4 4 3 2 4c1 3 3 5 6 6-2 0-4 1-5 2 2 1 5 1 7 0-1 1-2 3-2 5 2 0 4-2 4-4 M12 8c3-4 8-5 10-4-1 3-3 5-6 6 2 0 4 1 5 2-2 1-5 1-7 0 1 1 2 3 2 5-2 0-4-2-4-4",
-  phoenix:
-    "M12 4c1 2 3 3 3 6 0 2-1 3-3 4-2-1-3-2-3-4 0-3 2-4 3-6z M9 11C6 9 3 9 2 10c2 2 4 3 7 3 M15 11c3-2 6-2 7-1-2 2-4 3-7 3 M12 14v3 M10 22c0-2 1-4 2-5 1 1 2 3 2 5 M8 21c0-2 1-3 2-4 M16 21c0-2-1-3-2-4",
-
+  wings: "g:angel-wings",
+  phoenix: "g:spiky-wing",
   // --- Coffres et monnaie ---
-  chest: "M3 10h18v10H3z M3 10V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2 M10 10v3h4v-3",
-  gem: "M6 3h12l4 6-10 12L2 9z M2 9h20 M9 3 7.5 9 12 21l4.5-12L15 3",
-  mythicChest:
-    "M3 11h18v9H3z M3 11V9a4 4 0 0 1 4-4h1 M21 11V9a4 4 0 0 0-4-4h-1 M10 11v3h4v-3 M12 1l1.2 2.8L16 5l-2.8 1.2L12 9l-1.2-2.8L8 5l2.8-1.2z",
-  crown: "M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z M5 16h14",
-  coin: `${circle(12, 12, 9)} ${circle(12, 12, 5)}`,
-  gift: "M3 9h18v4H3z M5 13h14v8H5z M12 9v12 M12 9C10 5 6.5 5 7 7.5 7.3 9 12 9 12 9z M12 9c2-4 5.5-4 5-1.5-.3 1.5-5 1.5-5 1.5z",
-
+  chest: "g:chest",
+  gem: "g:cut-diamond",
+  mythicChest: "g:open-treasure-chest",
+  crown: "p:crown",
+  coin: "g:two-coins",
+  gift: "g:present",
   // --- Améliorations ---
-  sword: "M20 4v4L9.5 18.5l-4-4L16 4z M4 14l6 6 M6.5 17.5 3 21",
-  heart:
-    "M12 20s-7.5-4.6-9-9.5C2 7 4.2 4 7.3 4c2 0 3.6 1.2 4.7 3 1.1-1.8 2.7-3 4.7-3C19.8 4 22 7 21 10.5 19.5 15.4 12 20 12 20z",
-  heartPlus:
-    "M12 20s-7.5-4.6-9-9.5C2 7 4.2 4 7.3 4c2 0 3.6 1.2 4.7 3 1.1-1.8 2.7-3 4.7-3C19.8 4 22 7 21 10.5 19.5 15.4 12 20 12 20z M12 9v6 M9 12h6",
+  sword: "g:broadsword",
+  heart: "p:heart",
+  heartPlus: "g:heart-plus",
   // Cœur fissuré : soins réduits par la corruption (vague 12+)
-  heartCrack:
-    "M12 20s-7.5-4.6-9-9.5C2 7 4.2 4 7.3 4c2 0 3.6 1.2 4.7 3 1.1-1.8 2.7-3 4.7-3C19.8 4 22 7 21 10.5 19.5 15.4 12 20 12 20z M12 7l-2 4 3 2-2 4",
-  boot: "M7 3h5v8l6 3c1.6.8 2.5 2 2.5 3.5V20H4V3z M4 16h16.5 M12 7H9 M2 9h2 M1 13h3",
-  magnet: "M5 4h4v8a3 3 0 0 0 6 0V4h4v8A7 7 0 0 1 5 12z M5 8h4 M15 8h4",
-  impact: `M12 2v4 M12 18v4 M2 12h4 M18 12h4 M4.9 4.9l2.8 2.8 M16.3 16.3l2.8 2.8 M4.9 19.1l2.8-2.8 M16.3 7.7l2.8-2.8 ${circle(12, 12, 3)}`,
-  flame:
-    "M12 2c1 3.5 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4.2 2.5-5.5.3 2 1 3 2.2 3.5C11 8.5 11 5 12 2z M12 15a2 2 0 0 0 2 2",
-  target: `${circle(12, 12, 8)} ${circle(12, 12, 4)} M12 1v5 M12 18v5 M1 12h5 M18 12h5`,
-  pierce: "M2 22 20 4 M13 3h8v8 M5 12l7 7 M9 8l7 7",
-  orbit: `${circle(12, 12, 3)} M2.5 12a9.5 4.5 0 1 0 19 0a9.5 4.5 0 1 0-19 0z ${circle(19, 7, 1.3)}`,
-  kunai: `M21 3 11 8l-3 5 3 3 5-3z M9.5 14.5 5 19 ${circle(4, 20, 1.6)}`,
-  multishot: "M6 21V7 M3 10l3-3 3 3 M12 21V3 M9 6l3-3 3 3 M18 21V7 M15 10l3-3 3 3",
-  thorns: "M2 20h20 M4 20l2-8 2 8 M9.5 20 12 7l2.5 13 M16 20l2-8 2 8",
-  bomb: `${circle(11, 14.5, 6.5)} M15.6 9.9 18 7.5 M19.5 4.5l1.5-1.5 M20.5 7.5H22 M18 4V2.5`,
-  drop: "M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z M9.5 14.5A2.5 2.5 0 0 0 12 17",
-  rage: `${circle(12, 12, 9)} M7 8.5l3 1.5 M17 8.5l-3 1.5 M8.5 16.5c2-1.5 5-1.5 7 0`,
-  palette: `M12 3a9 9 0 1 0 0 18c1.6 0 2.2-1 1.6-2.2-.7-1.3.2-2.8 1.7-2.8H17a4 4 0 0 0 4-4c0-5-4-9-9-9z ${circle(7.5, 11, 1.3)} ${circle(10, 7, 1.3)} ${circle(15, 7.5, 1.3)}`,
-  sparkle:
-    "M12 2c.8 5 2 6.2 7 7-5 .8-6.2 2-7 7-.8-5-2-6.2-7-7 5-.8 6.2-2 7-7z M19 15c.3 2 .8 2.7 3 3-2.2.3-2.7 1-3 3-.3-2-.8-2.7-3-3 2.2-.3 2.7-1 3-3z",
-  skull: `M12 3c-4.4 0-8 3.1-8 7.3 0 2.6 1.4 4.5 3 5.5V19h10v-3.2c1.6-1 3-2.9 3-5.5C20 6.1 16.4 3 12 3z ${circle(9, 11, 1.6)} ${circle(15, 11, 1.6)} M10 19v2 M14 19v2`,
-  crossbones:
-    "M5 5l14 14 M19 5 5 19 M2.5 5.5a2 2 0 1 1 3-3 M18.5 2.5a2 2 0 1 1 3 3 M5.5 21.5a2 2 0 1 1-3-3 M21.5 18.5a2 2 0 1 1-3 3",
-  bolt: "M13 2 4 14h7l-1 8 9-12h-7z",
-
+  heartCrack: "g:broken-heart",
+  boot: "g:boots",
+  magnet: "g:magnet",
+  impact: "g:impact-point",
+  flame: "g:flame",
+  target: "g:on-target",
+  pierce: "g:piercing-sword",
+  orbit: "g:orbital",
+  kunai: "g:thrown-daggers",
+  multishot: "g:striking-arrows",
+  thorns: "g:thorny-vine",
+  bomb: "g:unlit-bomb",
+  drop: "g:drop",
+  rage: "g:enrage",
+  palette: "p:palette",
+  sparkle: "p:sparkles",
+  skull: "g:death-skull",
+  crossbones: "g:crossed-bones",
+  bolt: "g:power-lightning",
   // --- Succès et menus ---
-  wave: "M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 5-1 M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 5-1 M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-3 5-1",
-  chartUp: "M3 3v18h18 M7 15l4-4 3 3 6-6 M15 8h5v5",
-  repeat: "M17 2l4 4-4 4 M3 11V9a3 3 0 0 1 3-3h15 M7 22l-4-4 4-4 M21 13v2a3 3 0 0 1-3 3H3",
-  quest:
-    "M6 3h11a3 3 0 0 1 3 3v2h-4 M6 3a3 3 0 0 0-3 3v1h3 M6 3v15a3 3 0 0 0 3 3h9a2 2 0 0 0 2-2V8 M9 11l2 2 4-4 M9 17h7",
-  lock: "M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4 M12 15v2",
-  share: `${circle(18, 5, 2.5)} ${circle(6, 12, 2.5)} ${circle(18, 19, 2.5)} M8.2 10.8l7.6-4.5 M8.2 13.2l7.6 4.5`,
-  unknown: "M4 4h16v16H4z M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7 M12 17v.5",
-  trophy: "M7 4h10v5a5 5 0 0 1-10 0z M7 6H4a3 3 0 0 0 3 4 M17 6h3a3 3 0 0 1-3 4 M12 14v4 M8 21h8 M9 18h6",
-  medal: `M7 2l3 7 M17 2l-3 7 ${circle(12, 15, 6)} M12 12.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z`,
-  cog: `${circle(12, 12, 3.5)} M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9 7 7 M17 17l2.1 2.1 M4.9 19.1 7 17 M17 7l2.1-2.1`,
-  backpack: "M6 8a6 6 0 0 1 12 0v12H6z M9 8V4h6v4 M6 13h12 M10 13v3h4v-3",
-  globe: `${circle(12, 12, 9)} M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18`,
-  save: "M4 4h13l3 3v13H4z M8 4v5h7V4 M8 20v-6h8v6",
-  music: `M9 18V5l11-2v13 ${circle(6.5, 18, 2.5)} ${circle(17.5, 16, 2.5)}`,
-  sound: "M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M19 6a8 8 0 0 1 0 12",
-  vibrate: "M8 3h8v18H8z M11 18h2 M4 8v8 M20 8v8 M1.5 10v4 M22.5 10v4",
-  monitor: "M3 4h18v12H3z M8 21h8 M12 16v5",
-  play: "M7 4v16l13-8z",
-  cloud: "M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 8.5a4.5 4.5 0 0 1-.5 9.5z M12 10v6 M9.5 13.5 12 16l2.5-2.5",
-  warning: "M12 3 2 21h20z M12 10v5 M12 18v.5",
+  wave: "g:wave-strike",
+  chartUp: "g:growth",
+  repeat: "g:cycle",
+  quest: "p:tasks",
+  lock: "p:lock",
+  share: "g:share",
+  unknown: "g:uncertainty",
+  trophy: "g:trophy-cup",
+  medal: "g:medal",
+  cog: "p:gears",
+  backpack: "g:backpack",
+  globe: "p:globe",
+  save: "g:save",
+  music: "g:musical-notes",
+  sound: "p:volume",
+  vibrate: "g:vibrating-smartphone",
+  monitor: "g:tv",
+  play: "p:play",
+  cloud: "g:fluffy-cloud",
+  warning: "p:alert-triangle",
   // --- Héros, familiers et leurs coffres ---
-  ship: "M21 12 6 4l2 8-2 8z M8 12h6 M3 9v6",
-  shuriken: `M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z ${circle(12, 12, 2)}`,
-  titan: "M7 3h10l3 5v6l-3 7H7l-3-7V8z M8 9h8 M9 13h6 M12 9v8",
-  mage: `M12 2 6 14h12z M4 14h16 M8 14l-1 7 M16 14l1 7 ${circle(12, 9.5, 1.3)}`,
-  anchor: `${circle(12, 5, 2)} M12 7v14 M8 11h8 M4 14c0 4 3.5 7 8 7s8-3 8-7 M2 16l2-2 2 2 M18 16l2-2 2 2`,
-  drone: `M12 6l6 6-6 6-6-6z ${circle(12, 12, 1.6)} M3 12a9 9 0 0 1 2-5.6 M21 12a9 9 0 0 1-2 5.6`,
-  medic: "M9 3h6v6h6v6h-6v6H9v-6H3V9h6z",
-  scythe: "M5 21 15 4 M15 4c3 0 6 2 7 5-3-1.5-6-1.5-8.5 0 M8 16h4",
-  heroChest:
-    "M3 10h18v10H3z M3 10V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2 M12 12l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z",
+  ship: "g:spaceship",
+  shuriken: "g:shuriken",
+  titan: "g:giant",
+  mage: "g:wizard-staff",
+  anchor: "g:anchor",
+  drone: "g:delivery-drone",
+  medic: "g:medical-pack",
+  scythe: "g:scythe",
+  heroChest: "g:locked-chest",
   // --- Nouveautés : armes, armures, héros, familiers ---
-  flamer:
-    "M2 10h9v4H2z M11 9h3v6h-3 M14 12c2-3 5-3 8-5-1 3-1 4 0 5-3-1-6 1-8 0z M14 12c2 1 5 2 7 5-3 0-5 0-7-2 M5 14v4h3v-4",
-  disc: `${circle(12, 12, 9)} ${circle(12, 12, 3)} M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1`,
-  tesla: "M4 21h6 M7 21v-8 M4 13h6 M5 13l2-5 2 5 M7 8V5 M10 5l4 3-2 1 4 3-2 1 6 4",
-  atom: `${circle(12, 12, 1.8)} M2.5 12a9.5 4 0 1 0 19 0a9.5 4 0 1 0-19 0z M5 4c7 1 14 12 14 16-7-1-14-12-14-16z M19 4c-7 1-14 12-14 16 7-1 14-12 14-16z`,
-  wrench: "M14.5 3.5a5 5 0 0 0-5.4 6.6L3 16.2V21h4.8l6.1-6.1a5 5 0 0 0 6.6-5.4l-3 3-3.2-.8-.8-3.2z",
-  spectre: `M12 2c-4.5 0-7 3.5-7 8v11l3.5-2.5L12 21l3.5-2.5L19 21V10c0-4.5-2.5-8-7-8z M9 10.5l2 1 M15 10.5l-2 1 M9.5 15h5`,
-  snowflake:
-    "M12 2v20 M3.3 7l17.4 10 M3.3 17l17.4-10 M9.5 3.5 12 6l2.5-2.5 M9.5 20.5 12 18l2.5 2.5 M3 10l3.3 1-1 3.3 M21 14l-3.3-1 1-3.3",
-  guardian: `M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z ${circle(12, 11, 3)} M12 8V5 M12 14v3`,
-  dragon: "M3 12c3-1 5-4 6-8 1 3 2 4 4 4l4-2-1 4 5 2-5 1 1 4-4-2c-2 0-3 1-4 4-1-4-3-6-6-7z M13 11.5h.5",
-  user: `${circle(12, 8, 4)} M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7`,
-  friends: `${circle(9, 8, 3.5)} M2 20c0-3.9 3.1-6.2 7-6.2s7 2.3 7 6.2 ${circle(17, 7, 3)} M17 13c3 0 5 2 5 5.5`,
-  eye: `M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z ${circle(12, 12, 3.5)} ${circle(12, 12, 1)}`,
-  paw: `${circle(6, 10, 2)} ${circle(10, 5.5, 2)} ${circle(14, 5.5, 2)} ${circle(18, 10, 2)} M12 11c-3 0-6 4-6 7 0 2 2 3 3.5 2.5 1-.3 1.7-.8 2.5-.8s1.5.5 2.5.8C16 21 18 20 18 18c0-3-3-7-6-7z`,
+  flamer: "g:flamethrower",
+  disc: "g:circular-sawblade",
+  tesla: "g:tesla-coil",
+  atom: "g:atom",
+  wrench: "g:wrench",
+  spectre: "g:spectre",
+  snowflake: "g:snowflake-2",
+  guardian: "g:shield-reflect",
+  dragon: "g:dragon-head",
+  user: "p:user",
+  friends: "g:three-friends",
+  eye: "g:eyeball",
+  paw: "g:paw-print",
   // --- Application (installation, notifications) ---
-  download: "M12 3v12 M7 10l5 5 5-5 M4 17v3h16v-3",
-  bell: "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z M10 21h4 M12 3v2",
-  iosShare: "M12 3v12 M8 7l4-4 4 4 M8 10H5v11h14V10h-3",
-  homeAdd: "M4 4h16v16H4z M12 8v8 M8 12h8",
+  download: "p:arrow-down-box",
+  bell: "p:bell",
+  iosShare: "p:arrow-up-box",
+  homeAdd: "p:add",
   // --- Endless Pulse, saison ---
-  pulse: "M2 12h4l2-5 3 11 3-14 3 10 2-2h3",
-  infinity:
-    "M12 12c-2-3-4-4.5-6-4.5a4.5 4.5 0 0 0 0 9c2 0 4-1.5 6-4.5s4-4.5 6-4.5a4.5 4.5 0 0 1 0 9c-2 0-4-1.5-6-4.5z",
+  pulse: "g:heart-beats",
+  infinity: "g:infinity",
   // --- Rangs du duel (data/duelRanks.js) ---
-  rankBronze: "M12 2l8 3.5V12c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5.5z M8 11l4 3 4-3",
-  rankSilver: "M12 2l8 3.5V12c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5.5z M8 9l4 3 4-3 M8 13l4 3 4-3",
-  rankGold:
-    "M12 2l8 3.5V12c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5.5z M8 7.5l4 3 4-3 M8 11l4 3 4-3 M8 14.5l4 3 4-3",
-  rankDiamond: "M6 3h12l4 6-10 12L2 9z M2 9h20 M9 3l3 6 3-6 M12 9v12",
-  rankPredator: "M12 2l8 3.5V12c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5.5z M8.5 7l2 9 M12 6v11 M15.5 7l-2 9",
-  season: "M5 22V3 M5 4h13l-3 4.5 3 4.5H5",
+  rankBronze: "g:rank-1",
+  rankSilver: "g:rank-2",
+  rankGold: "g:rank-3",
+  rankDiamond: "g:diamond-hard",
+  rankPredator: "g:fangs",
+  season: "g:flying-flag",
 };
 
-/** Icône du jeu → icône Papicons qui la remplace. */
-const FROM_PAPICONS = {
-  crown: "crown",
-  star: "star",
-  heart: "heart",
-  ghost: "ghost",
-  palette: "palette",
-  sparkle: "sparkles",
-  lock: "lock",
-  globe: "globe",
-  play: "play",
-  bell: "bell",
-  user: "user",
-  cog: "gears",
-  warning: "alert-triangle",
-  sound: "volume",
-  quest: "tasks",
-  download: "arrow-down-box",
-};
-for (const [name, papicon] of Object.entries(FROM_PAPICONS)) ICONS[name] = PAPICONS[papicon];
+/** Tracés des icônes par nom. */
+export const ICONS = /** @type {Record<string, string>} */ ({});
+/** Taille de la grille de chaque icône. */
+const GRID = /** @type {Record<string, number>} */ ({});
+for (const [name, source] of Object.entries(SOURCES)) {
+  const [bank, file] = source.split(":");
+  ICONS[name] = bank === "p" ? PAPICONS[file] : GAME_ICONS[file][1];
+  GRID[name] = bank === "p" ? 24 : 512;
+}
 
-/** Icônes à remplir (règle « evenodd ») plutôt qu'à tracer. */
-export const FILLED_ICONS = new Set(Object.keys(FROM_PAPICONS));
+/** Côté de la grille du tracé de l'icône (son viewBox). */
+export function iconGrid(name) {
+  return GRID[name] ?? 24;
+}

@@ -7,7 +7,7 @@ import { arenaShrunk } from "../systems/arena.js";
 import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
-import { FILLED_ICONS, ICONS } from "../data/icons.js";
+import { ICONS, iconGrid } from "../data/icons.js";
 import { drawText, fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
 
@@ -22,21 +22,16 @@ function iconPath(name) {
   return p;
 }
 
-/** Dessine une icône de 24×24 centrée en (x, y) à la taille voulue. */
+/** Dessine une icône (pleine) centrée en (x, y) à la taille voulue. */
 function drawIcon(name, x, y, size, color) {
+  const grid = iconGrid(name);
   ctx.save();
   ctx.translate(x - size / 2, y - size / 2);
-  ctx.scale(size / 24, size / 24);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
+  ctx.scale(size / grid, size / grid);
+  ctx.fillStyle = color;
   ctx.shadowBlur = 8;
   ctx.shadowColor = color;
-  if (FILLED_ICONS.has(name)) {
-    ctx.fillStyle = color;
-    ctx.fill(iconPath(name), "evenodd");
-  } else ctx.stroke(iconPath(name));
+  ctx.fill(iconPath(name), "evenodd");
   ctx.restore();
 }
 
