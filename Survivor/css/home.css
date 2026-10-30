@@ -438,46 +438,75 @@ button.resume-drop {
   border: 1px solid rgba(255, 42, 109, 0.5);
 }
 
-/* --- Choix de la difficulté (sous JOUER) --- */
+/* --- Choix de la difficulté (sous JOUER) ---
+   Textes clairs, fonds opaques et ombre portée : la grille animée derrière ne doit
+   jamais gêner la lecture. */
 .diff-picker {
   display: flex;
-  gap: 6px;
-  width: min(100%, 380px);
+  gap: 8px;
+  width: min(100%, 400px);
 }
 button.diff-btn {
   --diff: #00ffff;
   flex: 1;
   width: auto;
-  padding: 7px 4px;
-  font-size: 11px;
+  padding: 9px 4px;
+  font-size: 12px;
   letter-spacing: 1px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(20, 10, 35, 0.75);
-  color: #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(14, 6, 28, 0.92);
+  color: #d6d6e6;
   box-shadow: none;
+  white-space: nowrap;
 }
 button.diff-btn.active {
-  color: var(--diff);
-  border-color: var(--diff);
-  background: color-mix(in srgb, var(--diff) 14%, rgba(20, 10, 35, 0.85));
-  box-shadow: 0 0 10px color-mix(in srgb, var(--diff) 45%, transparent);
+  color: #fff;
+  border: 2px solid var(--diff);
+  padding: 8px 3px;
+  background: color-mix(in srgb, var(--diff) 30%, rgba(14, 6, 28, 0.92));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--diff) 60%, transparent);
+  text-shadow: 0 0 6px var(--diff);
 }
 button.diff-btn.locked {
-  opacity: 0.55;
+  color: #8f8fa3;
+  border-style: dashed;
+}
+@media (max-width: 420px) {
+  .diff-picker {
+    gap: 6px;
+  }
+  button.diff-btn {
+    letter-spacing: 0.3px;
+  }
+}
+@media (max-width: 380px) {
+  button.diff-btn {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
 }
 .diff-btn .diff-lock {
   display: none;
-  font-size: 10px;
+  font-size: 11px;
 }
 .diff-btn.locked .diff-lock {
   display: inline-block;
 }
 .diff-hint {
   min-height: 1.2em;
-  font-size: 11px;
-  color: #999;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(10, 4, 22, 0.8);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #ececf6;
   text-align: center;
+  text-shadow: 0 1px 2px #000;
+}
+.diff-hint:empty {
+  visibility: hidden;
 }
 
 /* --- Barre du bas --- */
@@ -489,28 +518,47 @@ button.diff-btn.locked {
 }
 button.dock-btn {
   width: auto;
-  padding: 11px 20px;
-  font-size: 13px;
+  padding: 12px 20px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(20, 10, 35, 0.75);
-  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(14, 6, 28, 0.92);
+  color: #f2f2fa;
+}
+button.dock-btn .ico {
+  color: #00ffff;
 }
 
 .home-links {
   grid-column: 1 / -1;
   justify-self: center;
   display: flex;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 11px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(10, 4, 22, 0.7);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
 }
 .home-links a {
-  color: rgba(255, 255, 255, 0.45);
-  text-decoration: none;
+  color: #d6d6e6;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 3px;
 }
 .home-links a.home-bestiary {
-  color: rgba(0, 255, 136, 0.7);
+  color: #00ff88;
+  text-decoration-color: rgba(0, 255, 136, 0.45);
+}
+/* Sur une ligne trop étroite, le séparateur resterait seul en bout de ligne */
+@media (max-width: 420px) {
+  .home-links > span {
+    display: none;
+  }
 }
 @media (hover: hover) {
   .home-links a:hover {
@@ -656,6 +704,9 @@ button.dock-btn {
   }
   button.dock-btn {
     padding: 8px 16px;
+  }
+  button.diff-btn {
+    letter-spacing: 0.3px;
   }
 }
 

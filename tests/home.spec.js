@@ -32,11 +32,12 @@ test("accueil : héros équipé, tuiles et accès rapides", async ({ page }) => 
   await expect(page.locator("#homeHeroName")).toHaveText("PILOTE");
 });
 
-test("la remise à zéro est dans les options, pas pendant une partie", async ({ page }) => {
+test("les options n'ont plus de remise à zéro de la progression", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#mainMenu #btnReset")).toHaveCount(0);
   await page.locator("#btnOptions").click();
-  await expect(page.locator("#btnReset")).toBeVisible();
+  await expect(page.locator("#optionsMenu")).toBeVisible();
+  await expect(page.locator("#optionsMenu .opt-card").first()).toBeVisible();
+  await expect(page.locator("#btnReset")).toHaveCount(0);
   await page.locator("#btnOptionsBack").click();
   await expect(page.locator("#mainMenu")).toBeVisible();
 });

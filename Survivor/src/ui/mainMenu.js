@@ -7,7 +7,7 @@ import { getDailyBest } from "../services/daily.js";
 import { getEquipped } from "../services/inventory.js";
 import { isDifficultyUnlocked, selectedDifficulty, setDifficulty } from "../services/difficulty.js";
 import { getWeeklyQuests } from "../services/quests.js";
-import { account, loadPseudo, resetProgress, savePseudo } from "../services/storage.js";
+import { account, loadPseudo, savePseudo } from "../services/storage.js";
 import { $, setClass, setText, setWidth } from "./dom.js";
 import { initChestMenu, renderChests } from "./chestMenu.js";
 import { initInventoryMenu, openInventory } from "./inventoryMenu.js";
@@ -46,15 +46,6 @@ export function initMainMenu({ onPlay }) {
   $("heroStage").addEventListener("click", openInventory); // toucher son héros = le changer
   initInventoryMenu({ onBack: showMainMenu, onAccountChange: refreshAccountUI });
   initChestMenu({ onAccountChange: refreshAccountUI });
-  $("btnReset").addEventListener("click", () => {
-    const warning =
-      "Effacer la progression (Niveau, Or) ?\nLe classement et le pseudo seront CONSERVÉS.\n" +
-      "Si tu es connecté à un compte, sa sauvegarde sera aussi remise à zéro.";
-    if (confirm(warning)) {
-      resetProgress();
-      location.reload();
-    }
-  });
   $("btnShopBack").addEventListener("click", showMainMenu);
   initLeaderboardMenu({ onBack: showMainMenu });
 }

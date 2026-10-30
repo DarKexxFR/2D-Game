@@ -37,7 +37,6 @@ test("ouvrir les options change l'adresse, le retour du navigateur les ferme", a
 test("un lien #modal=option ouvre directement les options", async ({ page }) => {
   await page.goto("/#modal=option");
   await expect(page.locator("#optionsMenu")).toBeVisible();
-  await expect(page.locator("#btnReset")).toBeVisible(); // ouvertes depuis l'accueil
 
   await page.goBack();
   await expect(page.locator("#mainMenu")).toBeVisible();

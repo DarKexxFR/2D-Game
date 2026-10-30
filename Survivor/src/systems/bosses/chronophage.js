@@ -56,46 +56,51 @@ function rewindHealth(e) {
   e.mark = e.health;
 }
 
-/** Écho (furie) : l'attaque se rejoue `C.echo` ticks plus tard, au même endroit. */
-function echo(e, replay) {
-  if (e.enraged) e.echoes.push({ in: C.echo, replay });
+/**
+ * Écho (furie) : l'attaque se rejoue `C.echo` ticks plus tard, au même endroit. Gardé en données
+ * simples (pas de fonction) : la partie doit rester sauvegardable (`services/runSave.js`).
+ */
+function echo(e, attack) {
+  if (e.enraged) e.echoes.push({ in: C.echo, ...attack });
 }
 
 function playEchoes(e) {
   if (!e.echoes) return;
   for (let i = e.echoes.length - 1; i >= 0; i--) {
     if (--e.echoes[i].in > 0) continue;
-    const { replay } = e.echoes.splice(i, 1)[0];
-    replay();
+    const a = e.echoes.splice(i, 1)[0];
+    if (a.kind === "dial") dialAt(e, a.x, a.y, a.start, a.dir);
+    else if (a.kind === "blast") blastAt(e, a.x, a.y, C.rewind.blast);
+    else if (a.kind === "pendulum") swingAt(e, a.x, a.y, a.angle);
   }
 }
 
 /** Cadran : douze zones autour du boss, qui explosent l'une après l'autre comme une aiguille. */
 function dial(e) {
-  const d = C.dial;
-  const x = e.x;
-  const y = e.y;
   const start = aim(e);
   const dir = Math.random() < 0.5 ? -1 : 1;
-  const play = () => {
-    for (const [radius, sense] of e.enraged
-      ? [
-          [d.radius, dir],
-          [d.outer, -dir],
-        ]
-      : [[d.radius, dir]]) {
-      for (let k = 0; k < d.count; k++) {
-        const a = start + sense * ((Math.PI * 2 * k) / d.count);
-        addCircle(x + Math.cos(a) * radius, y + Math.sin(a) * radius, d.zone, e.damage * d.damage, {
-          delay: d.delay + k * d.step,
-          color: k === 0 ? GOLD : e.color,
-        });
-      }
-    }
-  };
-  play();
-  echo(e, play);
+  dialAt(e, e.x, e.y, start, dir);
+  echo(e, { kind: "dial", x: e.x, y: e.y, start, dir });
   shout(e, "CADRAN !", GOLD);
+}
+
+function dialAt(e, x, y, start, dir) {
+  const d = C.dial;
+  const rings = e.enraged
+    ? [
+        [d.radius, dir],
+        [d.outer, -dir],
+      ]
+    : [[d.radius, dir]];
+  for (const [radius, sense] of rings) {
+    for (let k = 0; k < d.count; k++) {
+      const a = start + sense * ((Math.PI * 2 * k) / d.count);
+      addCircle(x + Math.cos(a) * radius, y + Math.sin(a) * radius, d.zone, e.damage * d.damage, {
+        delay: d.delay + k * d.step,
+        color: k === 0 ? GOLD : e.color,
+      });
+    }
+  }
 }
 
 /** Bulles temporelles : les tirs du joueur qui y entrent avancent au ralenti. */
@@ -121,11 +126,14 @@ function rewind(e) {
   const at = clampToZone(past.x, past.y, 30);
   e.rewindTo = at;
   e.rewindIn = r.warn;
-  const blast = () =>
-    addCircle(at.x, at.y, r.radius, e.damage * r.damage, { delay: r.warn + r.blast, color: GOLD });
-  blast();
-  echo(e, () => addCircle(at.x, at.y, r.radius, e.damage * r.damage, { delay: r.blast, color: GOLD }));
+  blastAt(e, at.x, at.y, r.warn + r.blast);
+  echo(e, { kind: "blast", x: at.x, y: at.y });
   addFloatingText(player.worldX, player.worldY - 60, "RETOUR ARRIÈRE !", GOLD, 22, 60);
+}
+
+function blastAt(e, x, y, delay) {
+  const r = C.rewind;
+  addCircle(x, y, r.radius, e.damage * r.damage, { delay, color: GOLD });
 }
 
 /** Le joueur est ramené à sa position passée (le dash ou le bouclier l'en protègent). */
@@ -144,20 +152,21 @@ function snapBack(e) {
 /** Pendule : un grand laser qui se balance de part et d'autre du joueur. */
 function pendulum(e) {
   const p = C.pendulum;
-  const play = (x, y, angle) =>
-    addBeam(x, y, angle, e.damage * p.damage, {
-      length: p.length,
-      width: p.width,
-      delay: p.delay,
-      active: p.active,
-      color: GOLD,
-      swing: { amp: p.amp, speed: p.speed },
-    });
-  const x = e.x;
-  const y = e.y;
   const angle = aim(e);
-  play(x, y, angle);
-  echo(e, () => play(x, y, angle + Math.PI));
+  swingAt(e, e.x, e.y, angle);
+  echo(e, { kind: "pendulum", x: e.x, y: e.y, angle: angle + Math.PI });
   e.rooted = p.delay + p.active;
   shout(e, "PENDULE !", GOLD);
+}
+
+function swingAt(e, x, y, angle) {
+  const p = C.pendulum;
+  addBeam(x, y, angle, e.damage * p.damage, {
+    length: p.length,
+    width: p.width,
+    delay: p.delay,
+    active: p.active,
+    color: GOLD,
+    swing: { amp: p.amp, speed: p.speed },
+  });
 }
