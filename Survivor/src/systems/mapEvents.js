@@ -9,7 +9,7 @@ import { WAVE_SCALING } from "../data/enemies.js";
 import { angleTo, dist, weightedPick } from "../utils/math.js";
 import { damageEnemy } from "./combat.js";
 import { createParticles } from "./effects.js";
-import { addCircle } from "./hazards.js";
+import { addCircle, registerImpact } from "./hazards.js";
 import { arenaPointNear, createGem, dropLootBox } from "./pickups.js";
 import { isProtected, takeDamage } from "./player.js";
 import { bossFight, waveMultipliers } from "./spawner.js";
@@ -74,13 +74,22 @@ function radius(cfg) {
   return min + Math.random() * (max - min);
 }
 
+// Effets à l'impact, en données simples dans la zone (la partie reste sauvegardable)
+
 /** Dégâts d'un impact aux ennemis dessous (proportionnels aux PV de la vague). */
-function hitEnemies(h, amount) {
+registerImpact("hitEnemies", (h, { damage }) => {
   for (const e of world.enemies) {
     if (e.dead || e.template.isBoss) continue;
-    if (dist(e.x, e.y, h.x, h.y) < h.radius + e.size * 0.5) damageEnemy(e, amount, "event");
+    if (dist(e.x, e.y, h.x, h.y) < h.radius + e.size * 0.5) damageEnemy(e, damage, "event");
   }
-}
+});
+
+/** Étoile filante : gemme d'XP, et parfois une boîte de soin. */
+registerImpact("star", (h, { xp, healChance }) => {
+  createGem(h.x, h.y, xp);
+  createParticles(h.x, h.y, "#ffffff", 8);
+  if (Math.random() < healChance) dropLootBox(h.x, h.y);
+});
 
 const UPDATERS = {
   asteroids(ev, cfg) {
@@ -91,7 +100,7 @@ const UPDATERS = {
       delay: cfg.delay,
       color: cfg.color,
       fall: "rock",
-      onImpact: (h) => hitEnemies(h, enemyDamage),
+      impact: { type: "hitEnemies", damage: enemyDamage },
     });
   },
 
@@ -105,7 +114,7 @@ const UPDATERS = {
       pool: cfg.pool,
       slow: cfg.slow,
       fall: "drop",
-      onImpact: (h) => hitEnemies(h, enemyDamage),
+      impact: { type: "hitEnemies", damage: enemyDamage },
     });
   },
 
@@ -117,11 +126,7 @@ const UPDATERS = {
       delay: cfg.delay,
       color: cfg.color,
       fall: "star",
-      onImpact: (h) => {
-        createGem(h.x, h.y, xp);
-        createParticles(h.x, h.y, "#ffffff", 8);
-        if (Math.random() < cfg.healChance) dropLootBox(h.x, h.y);
-      },
+      impact: { type: "star", xp, healChance: cfg.healChance },
     });
   },
 

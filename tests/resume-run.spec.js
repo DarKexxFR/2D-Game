@@ -260,6 +260,39 @@ test.describe("logique", () => {
     }
   });
 
+  test("chaque événement de carte se sauvegarde et se reprend, impacts compris", async ({ page }) => {
+    await page.goto("/");
+    await startGame(page, { invincible: true });
+    const types = await page.evaluate(async () => (await import("/src/systems/mapEvents.js")).EVENT_TYPES);
+    for (const type of types) {
+      const result = await page.evaluate(async (type) => {
+        const state = await import("/src/core/state.js");
+        const mapEvents = await import("/src/systems/mapEvents.js");
+        const hazards = await import("/src/systems/hazards.js");
+        const runSave = await import("/src/services/runSave.js");
+        const { world, game: g } = state;
+        world.hazards.length = 0;
+        g.wave = 5;
+        mapEvents.startMapEvent(type);
+        g.mapEvent.warn = 0;
+        for (let i = 0; i < 200; i++) mapEvents.updateMapEvents(); // l'événement lance ses impacts
+        const pending = world.hazards.filter((h) => h.delay > 0).length;
+        if (!runSave.saveRun("normal")) return { type, saved: false };
+        runSave.restoreRunState(runSave.savedRun());
+        const restored = world.hazards.filter((h) => h.delay > 0).length;
+        const gems = world.gems.length;
+        for (let i = 0; i < 200; i++) hazards.updateHazards(); // les impacts tombent après la reprise
+        return {
+          type,
+          saved: true,
+          same: g.mapEvent?.type === type && restored === pending,
+          starsDropGems: type !== "stars" || world.gems.length > gems,
+        };
+      }, type);
+      expect(result, type).toEqual({ type, saved: true, same: true, starsDropGems: true });
+    }
+  });
+
   test("partie sauvegardée avant une mise à jour : les nouveaux champs prennent leur valeur de départ", async ({
     page,
   }) => {
