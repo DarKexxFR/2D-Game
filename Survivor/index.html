@@ -210,7 +210,9 @@
 
       <!-- ===== DUEL : ADVERSAIRE EN LIGNE, ÉCRAN SCINDÉ ===== -->
       <div id="duelRival" class="duel-rival">
-        <b id="rivalName">ADVERSAIRE</b>
+        <b class="rival-head"
+          ><span id="rivalRank" class="rival-rank"></span><span id="rivalName">ADVERSAIRE</span></b
+        >
         <span id="rivalInfo" class="rival-info"></span>
         <div class="vs-bar"><div id="rivalHealth" class="vs-fill"></div></div>
         <small class="vs-attack">TON ATTAQUE</small>
@@ -275,6 +277,9 @@
                 <div class="ac-bar-bg"><div class="ac-bar-fill" id="acBarFill"></div></div>
                 <span id="acXpDisplay" class="home-xp">0/1000 XP</span>
               </div>
+              <button id="homeRank" class="home-rank rank-off" aria-label="Rang de duel">
+                <span id="homeRankIcon" class="home-rank-icon"></span><b id="homeRankName"></b>
+              </button>
             </div>
             <div class="home-res">
               <div class="home-gold" title="Or en banque">
@@ -905,6 +910,14 @@
         <div class="duel-online">
           <h3>EN LIGNE</h3>
           <p class="duel-ranked">Classé (ELO) quand les deux joueurs sont connectés à leur compte</p>
+          <div id="duelRankCard" class="duel-rank-card rank-off">
+            <span id="duelRankIcon" class="duel-rank-icon"></span>
+            <div class="duel-rank-text">
+              <b id="duelRankName"></b> <span id="duelRankElo" class="duel-rank-elo"></span>
+              <div class="vs-bar"><div id="duelRankFill" class="vs-fill"></div></div>
+              <small id="duelRankNext"></small>
+            </div>
+          </div>
           <button id="btnDuelHost" class="duel-host">CRÉER UNE PARTIE</button>
           <div class="duel-join">
             <input
@@ -968,6 +981,7 @@
         </div>
         <p id="versusScore" class="menu-sub"></p>
         <p id="versusElo" class="versus-elo"></p>
+        <p id="versusRankUp" class="versus-rank-up"></p>
         <div class="btn-grid">
           <button id="btnVersusReplay">REVANCHE</button>
           <button id="btnVersusMenu" class="secondary">MENU</button>

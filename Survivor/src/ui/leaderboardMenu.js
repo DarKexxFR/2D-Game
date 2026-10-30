@@ -1,7 +1,8 @@
 // Classement : mondial (Supabase), saison (mois en cours), Cauchemar, Endless Pulse, classement ELO du duel en
 // ligne et scores locaux (ce navigateur).
 
-import { fetchDuelRanking } from "../services/duelRanking.js";
+import { duelRankOf, fetchDuelRanking, setMyDuelRating } from "../services/duelRanking.js";
+import { rankBadge } from "./duelRank.js";
 import {
   fetchEndlessScores,
   fetchNightmareScores,
@@ -33,7 +34,9 @@ export function initLeaderboardMenu({ onBack }) {
   for (const [tab, id] of Object.entries(TABS)) $(id).addEventListener("click", () => selectTab(tab));
 }
 
-export function openLeaderboard() {
+/** @param {string} [tab] onglet à ouvrir (sinon le dernier consulté) */
+export function openLeaderboard(tab) {
+  if (typeof tab === "string" && TABS[tab]) activeTab = tab;
   selectTab(isOnlineEnabled() ? activeTab : "local");
   showScreen("leaderboardMenu");
 }
@@ -90,9 +93,19 @@ async function loadDuel() {
   try {
     const { top, me } = await fetchDuelRanking();
     if (id !== requestId || activeTab !== "duel") return;
-    const rows = top.map((p) => ({ name: p.name, wave: p.rating, xp: `${p.wins} / ${p.losses}` }));
+    const rows = top.map((p) => ({
+      name: p.name,
+      wave: p.rating,
+      xp: `${p.wins} / ${p.losses}`,
+      badge: rankBadge(p.rating),
+    }));
     renderRows(rows, "Aucun duel classé pour l'instant");
-    if (me) setText("lbMe", `Ta place : #${me.rank} · ${me.rating} ELO · ${me.wins} V / ${me.losses} D`);
+    if (currentUser()) setMyDuelRating(me ? me.rating : null);
+    if (me)
+      setText(
+        "lbMe",
+        `Ta place : #${me.rank} · ${duelRankOf(me.rating).rank.name} · ${me.rating} ELO · ${me.wins} V / ${me.losses} D`,
+      );
     else if (currentUser())
       setText("lbMe", "Joue un duel en ligne contre un joueur connecté pour être classé.");
     else setText("lbMe", "Connecte-toi à ton compte pour être classé en duel.");
@@ -113,12 +126,19 @@ function renderRows(rows, emptyText) {
       row.append(
         el("td", "lb-rank", i + 1),
         el("td", "", entry.name),
-        el("td", "", entry.wave),
+        entry.badge ? cellWith(entry.wave, entry.badge) : el("td", "", entry.wave),
         el("td", "", typeof entry.xp === "number" ? Math.floor(entry.xp) : entry.xp),
       );
       return row;
     }),
   );
+}
+
+/** Cellule avec un emblème devant la valeur (rang du duel). */
+function cellWith(value, badge) {
+  const cell = el("td", "lb-with-badge");
+  cell.append(badge, document.createTextNode(String(value)));
+  return cell;
 }
 
 function renderMessage(text) {

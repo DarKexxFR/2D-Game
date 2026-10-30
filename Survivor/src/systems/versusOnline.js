@@ -22,6 +22,7 @@ export const rival = {
   final: null,
   left: false,
   ranked: false,
+  rating: null, // son ELO annoncé (affichage du rang seulement, le serveur fait foi pour le classement)
   view: null,
   log: newLog(), // récap de fin : sa vie (reçue avec ses statistiques), ses attaques et sorts reçus ici
 };
@@ -36,6 +37,7 @@ export function resetOnline() {
     final: null,
     left: false,
     ranked: false,
+    rating: null,
     view: null,
     log: newLog(),
   });
@@ -106,11 +108,16 @@ function onView(msg) {
   rival.view = { prev: v?.cur || msg, cur: msg, at: now, gap: v ? Math.min(500, now - v.at) : 125 };
 }
 
+/** ELO annoncé par l'adversaire : un nombre plausible, sinon rien. */
+export const ratingOf = (v) => (Number.isFinite(v) && v >= 0 && v < 10000 ? Math.round(v) : null);
+
 /** Message reçu de l'adversaire. */
 export function onNetMessage(msg) {
   if (!msg || !versus.online) return;
-  if (msg.t === "ranked") rival.ranked = !!msg.on;
-  else if (msg.t === "st" && rival.alive) {
+  if (msg.t === "ranked") {
+    rival.ranked = !!msg.on;
+    rival.rating = ratingOf(msg.rating);
+  } else if (msg.t === "st" && rival.alive) {
     rival.stats = msg;
     if (msg.m > 0) logHealth(rival.log, (msg.h / msg.m) * 100);
   } else if (msg.t === "vw" && rival.alive) onView(msg);
