@@ -8,6 +8,7 @@ import { SPELLS, attackProgress, spellProgress } from "../systems/duelAttacks.js
 import { rival } from "../systems/versusOnline.js";
 import { $, el, setClass, setText, setVisible, setWidth } from "./dom.js";
 import { drawDuelRecap } from "./duelRecap.js";
+import { rankBadge } from "./duelRank.js";
 import { showScreen } from "./screens.js";
 import { isTouchDevice, showTouchControls } from "./touchControls.js";
 import { showVersusTouch } from "./versusTouch.js";
@@ -46,9 +47,19 @@ export function updateVersusHud() {
   setClass("btnTouchSpell", "ready", !!game.spellReady);
   const s = rival.stats;
   setText("rivalName", fighterName(1));
+  showRivalRank(rival.rating);
   if (!s) return setText("rivalInfo", "En route…");
   setText("rivalInfo", `VAGUE ${s.w} · NIV. ${s.l} · ${s.k} ÉLIM.`);
   setWidth("rivalHealth", s.h / s.m);
+}
+
+let rivalShown;
+
+/** Emblème du rang de l'adversaire en ligne, redessiné seulement quand son ELO change. */
+function showRivalRank(rating) {
+  if (rating === rivalShown) return;
+  rivalShown = rating;
+  $("rivalRank").replaceChildren(...(rating === null ? [] : [rankBadge(rating)]));
 }
 
 const ROWS = [
@@ -106,9 +117,16 @@ export function showVersusOver({ winner, runs, logs }, prize) {
   if (logs) drawDuelRecap($("versusChart"), logs); // une fois l'écran visible (taille connue)
 }
 
-/** Duel en ligne : ligne du classement ELO sur l'écran de fin (vide = rien à afficher). */
+/** Duel en ligne : ligne du classement ELO sur l'écran de fin (vide = rien à afficher, efface aussi le rang). */
 export function showDuelElo(text) {
   setText("versusElo", text);
+  if (!text) showDuelRankChange("");
+}
+
+/** Écran de fin : changement de rang (promotion en or et néon, rétrogradation en gris). */
+export function showDuelRankChange(text, up = true) {
+  setText("versusRankUp", text);
+  setClass("versusRankUp", "down", !up);
 }
 
 /** En ligne : l'invité a demandé la revanche, l'hôte doit la lancer. */

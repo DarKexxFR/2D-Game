@@ -16,7 +16,9 @@ import {
   syncFriends,
 } from "../services/friends.js";
 import { hostRoom, leaveRoom, net } from "../services/netplay.js";
+import { duelRankOf } from "../services/duelRanking.js";
 import { $, el, setText, setVisible } from "./dom.js";
+import { rankBadge } from "./duelRank.js";
 import { getPseudo } from "./mainMenu.js";
 import { currentScreen, showScreen } from "./screens.js";
 
@@ -201,8 +203,10 @@ function friendRow(f) {
   row.dataset.state = state;
   const name = el("span", "friend-name", f.name);
   const info = [f.online ? STATUS_LABELS[f.status] || STATUS_LABELS.menu : "Hors ligne"];
-  if (f.rating) info.push(`${f.rating} ELO`);
-  name.append(el("small", "", info.join(" · ")));
+  if (f.rating) info.push(`${duelRankOf(f.rating).rank.name} · ${f.rating} ELO`);
+  const small = el("small", "", info.join(" · "));
+  if (f.rating) small.prepend(rankBadge(f.rating));
+  name.append(small);
   row.append(el("span", "friend-dot"), name);
   if (challenged?.id === f.id) {
     row.append(button("ANNULER", "secondary friend-btn", stopChallenge));

@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-10-rangs-duel",
+    date: "Octobre 2026",
+    title: "Rangs de duel",
+    items: [
+      {
+        icon: "rankDiamond",
+        color: "#00ffff",
+        title: "Bronze, Argent, Or, Diamant, Prédateur",
+        text: "Chaque duel classé fait monter (ou descendre) votre ELO, et votre rang suit. Promotion annoncée en fin de duel.",
+      },
+      {
+        icon: "rankPredator",
+        color: "#ff2a6d",
+        title: "Votre emblème partout",
+        text: "Sur l'accueil, l'écran Duel, face à votre adversaire, dans le classement DUEL ELO et la liste d'amis.",
+      },
+    ],
+  },
+  {
     id: "2026-10-reprendre",
     date: "Octobre 2026",
     title: "Reprenez votre partie plus tard",

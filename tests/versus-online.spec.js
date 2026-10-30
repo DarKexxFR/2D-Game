@@ -268,21 +268,23 @@ test("duel en ligne classé : ELO des deux joueurs connectés, abandon = défait
 
   // L'invité meurt : les deux déclarent le résultat, le serveur compte le duel
   await kill(guest);
-  await expect(page.locator("#versusElo")).toHaveText("ELO : 1016 (+16)");
-  await expect(guest.locator("#versusElo")).toHaveText("ELO : 984 (-16)");
+  await expect(page.locator("#versusElo")).toHaveText("BRONZE · 1016 ELO (+16)");
+  await expect(guest.locator("#versusElo")).toHaveText("BRONZE · 984 ELO (-16)");
 
   // Revanche, puis l'hôte quitte en pleine partie : défaite pour lui, victoire pour l'invité
   await guest.locator("#btnVersusReplay").click();
   for (const p of [page, guest]) {
     await expect(p.locator("#duelRival")).toBeVisible();
     await expect(p.locator("#versusElo")).toHaveText("");
+    await expect(p.locator("#rivalRank .rank-bronze")).toBeVisible(); // ELO connu depuis le premier duel
     await protect(p);
   }
   page.once("dialog", (d) => d.accept());
   await page.keyboard.press("Escape");
   await expect(page.locator("#mainMenu")).toBeVisible();
+  await expect(page.locator("#homeRank")).toBeVisible(); // rang sur l'accueil après un duel compté
   await expect(guest.locator("#versusWinner")).toHaveText("TU GAGNES !");
-  await expect(guest.locator("#versusElo")).toHaveText(/^ELO : 1001 \(\+17\)$/);
+  await expect(guest.locator("#versusElo")).toHaveText(/^BRONZE · 1001 ELO \(\+17\)$/);
 
   // Classement : onglet DUEL ELO, avec sa propre place
   await page.locator("#btnLeaderboard").click();
@@ -290,7 +292,7 @@ test("duel en ligne classé : ELO des deux joueurs connectés, abandon = défait
   await expect(page.locator("#lbContent tr")).toHaveCount(2);
   await expect(page.locator("#lbContent tr").first()).toContainText("Invite");
   await expect(page.locator("#lbContent tr").first()).toContainText("1001");
-  await expect(page.locator("#lbMe")).toHaveText("Ta place : #2 · 999 ELO · 1 V / 1 D");
+  await expect(page.locator("#lbMe")).toHaveText("Ta place : #2 · Bronze · 999 ELO · 1 V / 1 D");
 });
 
 test("duel en ligne : un code inconnu est signalé", async ({ page }) => {
