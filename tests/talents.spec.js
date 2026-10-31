@@ -35,7 +35,10 @@ test("acheter des talents puis en profiter en partie", async ({ page }) => {
   await page.locator(".upgrade-option").first().click();
 
   // Seconde chance : le premier coup fatal laisse à 50 % des PV
-  await game(page, ({ player }) => player.takeDamage(1e12));
+  await game(page, ({ state, player }) => {
+    state.player.energyShield = 0; // la carte Bouclier d'énergie, tirée au hasard, bloquerait le coup
+    player.takeDamage(1e12);
+  });
   const after = await game(page, ({ state }) => ({
     ...state.game,
     hp: state.player.health,

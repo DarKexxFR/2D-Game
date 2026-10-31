@@ -8,6 +8,7 @@ const DEFAULTS = {
   musicVolume: 0.3,
   sfxVolume: 0.6,
   vibration: true,
+  shotOpacity: 1, // opacité des tirs du joueur (Options), de SHOT_OPACITY.min à 1
   quality: isTouch ? "medium" : "high", // low | medium | high
   keyBindings: null, // touches personnalisées { action: [touches] } (voir core/input.js), null = défaut
 };

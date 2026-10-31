@@ -1,9 +1,9 @@
 // Build de la partie (menu Pause, écran de fin) : armes (équipée + armes d'appoint), évolutions obtenues
-// et améliorations, chacune avec son icône à la couleur de sa rareté, son niveau et son effet.
+// et pouvoirs (emplacements limités), chacun avec son icône à la couleur de sa rareté, son niveau et son effet.
 
 import { RARITIES } from "../config.js";
 import { SIDE_WEAPON_RULES, sideLook } from "../data/sideWeapons.js";
-import { cardByName, ownedEvolutions } from "../data/upgrades.js";
+import { POWER_RULES, cardByName, ownedEvolutions, ownedPowers } from "../data/upgrades.js";
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
 
@@ -42,7 +42,7 @@ export function buildView(p, { compact = false, title = "" } = {}) {
     }
     root.append(section("Évolutions", list));
   }
-  root.append(section("Améliorations", cardTiles(p, compact)));
+  root.append(section(`Pouvoirs ${ownedPowers(p).length}/${POWER_RULES.slots}`, cardTiles(p, compact)));
   return root;
 }
 
@@ -128,17 +128,27 @@ function cardTiles(p, compact) {
     const color = rarityColor(def.rarity);
     const tile = el("div", `bv-card rarity-${def.rarity}`);
     tile.style.setProperty("--c", color);
-    tile.title = `${name} ×${count} · ${RARITY_NAMES[def.rarity] || ""} · ${def.desc}`;
+    const max = def.max ?? count;
+    tile.title = `${name} · niv. ${count}/${max} · ${RARITY_NAMES[def.rarity] || ""} · ${def.desc}`;
     const box = el("div", "bv-cicon");
     box.append(icon(def.icon, color));
-    if (count > 1 || compact) box.append(el("span", "bv-count", `×${count}`));
+    if (count > 1 || compact) box.append(el("span", "bv-count", `${count}`));
     tile.append(box);
     if (!compact) {
       const text = el("div", "bv-ctext");
-      text.append(el("b", "", name), el("small", "", def.malus ? `${def.desc} · ${def.malus}` : def.desc));
+      text.append(el("b", "", name));
+      if (max > 1) text.append(pips(count, max));
+      text.append(el("small", "", def.malus ? `${def.desc} · ${def.malus}` : def.desc));
       tile.append(text);
     }
     grid.append(tile);
+  }
+  // Emplacements de pouvoir encore libres
+  for (let i = cards.length; i < POWER_RULES.slots; i++) {
+    const empty = el("div", "bv-card empty");
+    empty.title = "Emplacement de pouvoir libre";
+    empty.append(el("div", "bv-cicon"), compact ? "" : el("div", "bv-ctext", "Libre"));
+    grid.append(empty);
   }
   return grid;
 }

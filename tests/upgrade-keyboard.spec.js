@@ -98,5 +98,5 @@ test("duel sur un écran : J1 choisit avec D puis ESPACE, sans toucher au choix 
     const { player } = await import("/src/core/state.js");
     return [0, 1].map((i) => v.withRun(i, () => Object.keys(player.inventory)));
   });
-  expect(owned).toEqual([[second.replace(/ · niv\. \d+$/, "")], []]);
+  expect(owned).toEqual([[second.replace(/ · (?:niv\. [\d/]+|nouveau)$/, "")], []]);
 });

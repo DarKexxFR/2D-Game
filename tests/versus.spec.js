@@ -111,7 +111,7 @@ test("duel : la montée de niveau n'arrête que la partie du joueur, qui choisit
   await expect(page.locator("#duelPick2")).toBeHidden();
   const inventories = await both(page, ({ state }) => Object.keys(state.player.inventory));
   expect(inventories[0]).toEqual([]);
-  expect(inventories[1]).toEqual([second.replace(/ · niv\. \d+$/, "")]);
+  expect(inventories[1]).toEqual([second.replace(/ · (?:niv\. [\d/]+|nouveau)$/, "")]);
   await expect.poll(() => run(page, 1, ({ state }) => state.game.running)).toBe(true);
 });
 

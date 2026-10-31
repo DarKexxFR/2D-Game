@@ -58,9 +58,12 @@ test("démantèlement : un doublon légendaire donne des Éclats de Pulse ; attr
   await expect(slots.first()).toContainText("Emplacement vide");
   await slots.first().locator(".affix-reroll").click(); // 15 éclats, au hasard
   await expect(slots.first()).not.toContainText("Emplacement vide");
-  await slots.nth(1).locator(".affix-select").selectOption("hunter");
+  // Attribut ciblé : jamais celui que la relance vient de tirer (il n'est plus proposé)
+  const rolled = await game(page, ({ storage }) => storage.account.items.nova.affixes[0]);
+  const wanted = rolled === "hunter" ? "power" : "hunter";
+  await slots.nth(1).locator(".affix-select").selectOption(wanted);
   await slots.nth(1).locator(".affix-target").click(); // 45 éclats, au choix
-  await expect(slots.nth(1)).toContainText("Chasseur de boss");
+  await expect(slots.nth(1)).toContainText(wanted === "hunter" ? "Chasseur de boss" : "Puissance");
 
   const acc = await game(page, ({ storage }) => ({
     shards: storage.account.pulseShards,
@@ -69,8 +72,7 @@ test("démantèlement : un doublon légendaire donne des Éclats de Pulse ; attr
   }));
   expect(acc.shards).toBe(0);
   expect(acc.copies).toBe(1);
-  expect(acc.affixes[1]).toBe("hunter");
-  expect(acc.affixes[0]).not.toBe("hunter"); // jamais deux fois le même attribut
+  expect(acc.affixes).toEqual([rolled, wanted]); // jamais deux fois le même attribut
   await expect(slots.first().locator(".affix-reroll")).toBeDisabled(); // plus assez d'éclats
 
   // En partie, les attributs s'appliquent quand le mythique est équipé
