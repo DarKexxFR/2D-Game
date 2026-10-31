@@ -37,6 +37,27 @@ export function shortNumber(n) {
   return text.replace(".", ",") + unit;
 }
 
+let headerFit = "";
+
+/**
+ * Compteurs toujours à droite de la vague, sur la même ligne : si une police plus large les fait passer à la
+ * ligne, l'en-tête passe en version serrée (classe `tight`). Mesuré seulement quand la longueur des textes,
+ * la largeur du panneau ou les polices changent (pas à chaque élimination).
+ */
+function fitHeader() {
+  const ui = $("ui");
+  const key = [$("wave")._text, $("kills")._text, $("uiRunGold")._text]
+    .map((t) => (t || "").length)
+    .concat(ui.clientWidth, document.fonts?.status ?? "")
+    .join("|");
+  if (key === headerFit || ui.clientWidth === 0) return;
+  headerFit = key;
+  setClass("uiHeader", "tight", false);
+  // passés à la ligne = sous la vague (sur la même ligne, ils sont centrés verticalement, donc un peu plus bas)
+  const wave = $("uiWave");
+  setClass("uiHeader", "tight", $("uiCounters").offsetTop >= wave.offsetTop + wave.offsetHeight);
+}
+
 /** Pourcentage de soins perdus à cause de la corruption (0 avant la vague SURVIVAL.healFatigueFrom). */
 export function corruptionPercent() {
   return Math.round((1 - healFactor()) * 100);
@@ -86,6 +107,7 @@ export function updateHud() {
   setText("statCrit", Math.round(player.critChance * 100) + "%");
   setText("statCdmg", Math.round(player.critMultiplier * 100) + "%");
   setText("uiRunGold", shortNumber(game.runGold));
+  fitHeader();
   setVisible("autoShootOff", !player.autoShoot);
 
   setWidth("ultBar", player.ultCharge / player.maxUltCharge);

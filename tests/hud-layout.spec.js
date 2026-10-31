@@ -89,26 +89,29 @@ test("panneau en jeu : gros compteurs abrégés, et rien ne sort même avec une 
   });
   await expect(page.locator("#kills")).toHaveText("10,5k");
   await expect(page.locator("#uiRunGold")).toHaveText("312k");
+  // Avec la police du jeu, tout tient à taille normale : pas de version serrée
+  await expect(page.locator("#uiHeader")).not.toHaveClass(/tight/);
 
-  // Polices plus larges qu'Orbitron (autre appareil, police pas encore chargée, texte agrandi)
-  for (const [font, size] of [
-    ["Orbitron", ""],
-    ["'Press Start 2P'", ""],
-    ["monospace", "20px"],
+  // Polices plus larges qu'Orbitron (autre appareil, police pas encore chargée) : les compteurs restent à
+  // droite de la vague, sur la même ligne. Le nombre d'éliminations change de longueur pour relancer la mesure.
+  for (const [font, kills] of [
+    ["Orbitron", 10543],
+    ["'Press Start 2P'", 1234],
+    ["monospace", 99999],
   ]) {
-    await page.evaluate(
-      ([f, s]) => {
-        const header = /** @type {HTMLElement} */ (document.querySelector(".ui-header"));
-        header.style.fontFamily = f;
-        header.style.fontSize = s;
-      },
-      [font, size],
-    );
+    await page.evaluate((f) => {
+      /** @type {HTMLElement} */ (document.querySelector(".ui-header")).style.fontFamily = f;
+    }, font);
+    await game(page, ({ state }, n) => (state.game.kills = n), kills);
+    await page.waitForTimeout(100);
     const b = await boxes(page, ["ui", "uiWave", "kills", "uiRunGold"]);
     for (const id of ["uiWave", "kills", "uiRunGold"]) {
       expect(b[id].left, `${id} (${font})`).toBeGreaterThanOrEqual(b.ui.left);
       expect(b[id].right, `${id} (${font})`).toBeLessThanOrEqual(b.ui.right + 0.5);
       expect(b[id].clipped, `${id} (${font})`).toBe(false);
     }
+    expect(b.kills.left, font).toBeGreaterThanOrEqual(b.uiWave.right);
+    expect(b.kills.top, font).toBeLessThan(b.uiWave.bottom);
+    expect(b.uiRunGold.right, font).toBeGreaterThan(b.ui.right - 20); // calé à droite
   }
 });

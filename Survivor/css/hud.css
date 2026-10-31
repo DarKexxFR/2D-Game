@@ -16,7 +16,7 @@
 }
 .ui-header {
   display: flex;
-  flex-wrap: wrap; /* filet de sécurité : si une police plus large ne tient pas, les compteurs passent dessous */
+  flex-wrap: wrap; /* dernier recours si même la version serrée (.tight) ne tient pas */
   align-items: center;
   justify-content: space-between;
   gap: 2px 8px;
@@ -47,6 +47,24 @@
 }
 .ui-gold {
   color: #ffd700;
+}
+/* Police plus large que prévu : l'en-tête se serre pour garder les compteurs à droite de la vague (fitHeader) */
+.ui-header.tight {
+  gap: 2px 4px;
+}
+.ui-header.tight .ui-wave {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.ui-header.tight .ui-counters {
+  gap: 6px;
+  font-size: 10px;
+}
+.ui-header.tight .ui-count {
+  gap: 2px;
+}
+.ui-header.tight .ui-count .ico {
+  font-size: 10px;
 }
 /* Endless Pulse : profondeur sous la vague (ui/hud.js) */
 .ui-pulse {
