@@ -1,7 +1,7 @@
 // Icônes néon dans le DOM : <span class="ico"><svg>…</svg></span>, taille = font-size,
 // couleur = color (la lueur suit la couleur).
 
-import { ICONS } from "../data/icons.js";
+import { ICONS, iconGrid } from "../data/icons.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -10,11 +10,13 @@ export function icon(name, color) {
   const span = document.createElement("span");
   span.className = "ico";
   if (color) span.style.color = color;
+  const key = ICONS[name] ? name : "unknown";
+  const size = iconGrid(key);
   const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
   svg.setAttribute("aria-hidden", "true");
   const path = document.createElementNS(SVG_NS, "path");
-  path.setAttribute("d", ICONS[name] || ICONS.unknown);
+  path.setAttribute("d", ICONS[key]);
   svg.append(path);
   span.append(svg);
   return span;

@@ -88,14 +88,12 @@ button.secondary {
   vertical-align: -0.15em;
   line-height: 1;
 }
+/* Icônes pleines (Papicons, game-icons.net) remplies de la couleur du texte */
 .ico svg {
   width: 1em;
   height: 1em;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: currentColor;
+  fill-rule: evenodd;
   filter: drop-shadow(0 0 3px currentColor);
   overflow: visible;
 }
