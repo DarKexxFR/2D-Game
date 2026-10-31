@@ -140,7 +140,7 @@ test("évolutions et corrompues : Zéro absolu (Givre ×3 + Arc électrique), Fu
   const r = await game(page, ({ state, upgrades }) => {
     const p = state.player;
     const take = (name) => upgrades.applyUpgrade(upgrades.cardByName(name), p);
-    for (let i = 0; i < 3; i++) take("Givre");
+    for (let i = 0; i < 5; i++) take("Givre"); // niveau maximum du pouvoir
     const frostMaxed = !upgrades.availableUpgrades(p).some((u) => u.name === "Givre");
     take("Arc électrique");
     const evo = upgrades.availableEvolutions(p).map((e) => e.id);

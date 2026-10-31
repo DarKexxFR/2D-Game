@@ -530,8 +530,26 @@ button.kill-cam-btn {
   color: #fff;
   box-shadow: 0 0 14px rgba(255, 42, 109, 0.45);
 }
-body.kill-cam #gameContainer > :not(#gameCanvas) {
+body.kill-cam #gameContainer > :not(#gameCanvas):not(#btnKillCamReplay) {
   visibility: hidden !important;
+}
+
+/* REJOUER pendant le ralenti : au-dessus du bandeau noir du bas, à droite */
+button.kill-cam-replay {
+  display: none;
+  position: absolute;
+  right: 16px;
+  bottom: calc(9vh + 14px);
+  z-index: 50;
+  width: auto;
+  padding: 12px 20px;
+  font-size: 14px;
+  background: linear-gradient(180deg, #00ff88, #00aa55);
+  color: #000;
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.45);
+}
+body.kill-cam button.kill-cam-replay {
+  display: block;
 }
 
 /* Statistiques de fin de partie */

@@ -195,7 +195,7 @@ test("cartes rendables : une carte de statistiques se rend exactement, une carte
     ["Berserker", 1],
   ]);
   expect(r.removed).toBe(true);
-  expect(r.attack).toBe(4); // il reste une Force Brute
+  expect(r.attack).toBe(6); // il reste une Force Brute
   expect(r.maxHealth).toBe(0); // Berserker rendu : PV max d'avant
   expect(r.inv).toBe(1);
   expect(r.berserker).toBe(0);
@@ -253,7 +253,7 @@ test("Marchand Noir : remplace un sanctuaire, échange une carte contre une lég
   );
   expect(after).toEqual({ running: true, force: 0, reward: 1 });
   if (reward !== "Berserker" && reward !== "Divinité") {
-    expect(await game(page, ({ state }) => state.player.attack)).toBe(attack - 4);
+    expect(await game(page, ({ state }) => state.player.attack)).toBe(attack - 6);
   }
   await killPlayer(page);
 });
@@ -312,5 +312,49 @@ test("Marchand Noir : payer en PV max, ou partir sans rien ; jamais en Boss Rush
     return r;
   });
   expect(rush).toBe(false);
+  await killPlayer(page);
+});
+
+test("Marchand Noir : emplacements de pouvoir pleins, un nouveau pouvoir se prend en rendant un pouvoir de niveau 1", async ({
+  page,
+}) => {
+  await quietRun(page, 6);
+  const filled = await game(page, async ({ state, upgrades }) => {
+    const p = state.player;
+    // Remplit les emplacements avec des pouvoirs communs et rares (aucune légendaire ni corrompue)
+    const names = upgrades.UPGRADES.filter((u) => u.rarity === "common" || u.rarity === "rare")
+      .filter((u) => u.canApply(p))
+      .slice(0, upgrades.POWER_RULES.slots)
+      .map((u) => u.name);
+    for (const name of names) upgrades.applyUpgrade(upgrades.cardByName(name), p);
+    upgrades.applyUpgrade(upgrades.cardByName("Force Brute"), p); // niveau 2 : ne libère rien
+    const { spawnMerchant } = await import("/src/systems/blackMarket.js");
+    spawnMerchant();
+    const m = state.world.merchants[0];
+    p.worldX = m.x;
+    p.worldY = m.y;
+    return upgrades.ownedPowers(p).length;
+  });
+  expect(filled).toBe(8);
+  await expect(page.locator("#blackMarket")).toBeVisible();
+  await page.locator("#marketOffers .upgrade-option").first().click();
+  await expect(page.locator("#marketNote")).toContainText("Emplacements de pouvoir pleins");
+  await expect(page.locator('#marketPrices [data-price="hp"]')).toBeDisabled();
+  await expect(page.locator('#marketPrices [data-price="Force Brute"]')).toBeDisabled();
+  const given = await page.locator('#marketPrices [data-frees="1"]').first().getAttribute("data-price");
+  await page.locator(`#marketPrices [data-price="${given}"]`).click();
+  const reward = await page.locator("#marketOffers .upgrade-option.selected h4").textContent();
+  await page.locator("#btnMarketDeal").click();
+  await expect(page.locator("#blackMarket")).toBeHidden();
+  const after = await game(
+    page,
+    ({ state, upgrades }, [given, reward]) => ({
+      powers: upgrades.ownedPowers(state.player).length,
+      given: state.player.inventory[given] ?? 0,
+      reward: state.player.inventory[reward],
+    }),
+    [given, reward],
+  );
+  expect(after).toEqual({ powers: 8, given: 0, reward: 1 });
   await killPlayer(page);
 });

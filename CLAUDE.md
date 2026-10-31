@@ -56,6 +56,9 @@ Principes :
   `requestAnimationFrame`. Les durées de jeu sont en ticks, pas en millisecondes.
 - **Grille spatiale** `enemyGrid` reconstruite à chaque tick (et dans `activateSkill`) pour
   les collisions : toute recherche d'ennemis proches passe par elle.
+- **Opacité des tirs alliés** (`render/allyAlpha.js`, réglage `shotOpacity`, `SHOT_OPACITY` dans `config.js`) : tout dessin
+  d'un tir du joueur (projectiles, orbes, aura, armes d'appoint, éclairs, météores) multiplie son alpha par `allyAlpha()` ;
+  jamais les tirs ennemis ni les attaques de boss.
 - **Écritures DOM en cache** : utiliser `setText`, `setVisible`, `setClass`, `setWidth` de
   `ui/dom.js` (évite de réécrire le DOM chaque frame). `setVisible` met `display: block`.
 - **Panneau en jeu** (`#ui`, `ui/hud.js`, `css/hud.css`) : vague + éliminations + or (en Endless, la pulsation `#uiPulse` a sa propre ligne ; `tests/hud-layout.spec.js` vérifie que rien ne déborde), minuteur, vie, jauges
@@ -197,6 +200,13 @@ Principes :
   (équipée + appoint avec niveau en pastilles, emplacements libres), les évolutions et les améliorations (icône à la
   couleur de la rareté, ×nombre, effet), triées de la plus rare à la plus commune. Pause : build complet (un par joueur
   en duel sur un écran) ; écran de fin : version `compact` (icônes seules) dans `#runBuild`. Tests : `tests/build-view.spec.js`.
+- **Pouvoirs limités** (`POWER_RULES` dans `data/upgrades.js`) : chaque carte de `UPGRADES` et chaque corrompue est
+  un pouvoir, déclaré par `power()` ; au plus `slots` (8) pouvoirs différents, chacun monte de niveau jusqu'à `max`
+  (défaut `maxLevel` 5 ; corrompues 1). Niveau = nombre dans `p.inventory` ; `ownedPowers(p)`. Emplacements pleins =
+  seuls les pouvoirs possédés (et armes d'appoint, évolutions) sont proposés. Pool trop court = cartes de secours
+  `FILLER_CARDS` (`ui/upgradeMenu.js` : Réparation, Butin ; `filler`, jamais notées dans l'inventaire). Évolution
+  d'un pouvoir = son `max` + partenaire (`baseMax` déduit). Choix du propriétaire : moins de pouvoirs, plus forts,
+  à faire monter. Tests : `tests/powers.spec.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
@@ -279,7 +289,8 @@ Principes :
   Le rejoindre ouvre l'échange par la file des choix de `ui/upgradeMenu.js` (kind `market` : une légendaire + une
   corrompue, sauvegardé avec la partie). Prix : une carte rendable ou `hpCost` des PV max. Cartes rendables :
   `applyUpgrade` note dans `player.cardLog` ce que chaque carte a changé ; seules celles qui n'ont touché que des
-  nombres se rendent (`tradeableCards` / `removeCard` de `data/upgrades.js`), jamais évolution, fusion, arme ou corrompue.
+  nombres se rendent (`tradeableCards` / `removeCard` de `data/upgrades.js`), jamais évolution, fusion, arme ou corrompue. Rendre une carte = un niveau de pouvoir en moins (le dernier libère l'emplacement) ; emplacements pleins = un
+  nouveau pouvoir (`marketCards`, `needsSlot`) ne se paie qu'en rendant un pouvoir de niveau 1.
 - **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
   Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
   Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
@@ -297,7 +308,7 @@ Principes :
 - **Ralenti de la mort** (`systems/killCam.js` enregistre, `render/killCam.js` rejoue, réglages `KILL_CAM`) :
   les 4 dernières secondes (vaisseau, ennemis, tirs, attaques de zone autour du vaisseau) sont gardées dans
   `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,
-  explosion, « TUÉ PAR » + viseur sur le coupable). `takeDamage(montant, source)` : source = l'ennemi, son type
+  explosion, « TUÉ PAR » + viseur sur le coupable). Bouton `#btnKillCamReplay` (visible seulement pendant le ralenti) = REJOUER. `takeDamage(montant, source)` : source = l'ennemi, son type
   ou un événement de carte ; sans source, c'est le boss en vie. Pas en duel.
 - **Carte de score** (`render/shareCard.js` dessine, `ui/shareMenu.js` écran `shareMenu`, `#modal=partage`) :
   bouton « PARTAGER » de l'écran de fin ; image 1080×1350 (vague, stats, build, « tué par ») tirée d'un

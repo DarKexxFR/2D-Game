@@ -11,6 +11,7 @@ import {
 import { analyticsEnabled, setAnalyticsEnabled } from "../services/analytics.js";
 import { journalText } from "../services/diagnostics.js";
 import { settings, updateSettings } from "../services/settings.js";
+import { allyAlpha } from "../render/allyAlpha.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { canVibrate, playSfx, vibrate } from "../services/sfx.js";
 import { $, setText, setVisible } from "./dom.js";
@@ -24,6 +25,7 @@ let returnTo = "mainMenu";
 export function initOptionsMenu() {
   bindVolume("optMusic", "musicVolume");
   bindVolume("optSfx", "sfxVolume", () => playSfx("pickup"));
+  bindVolume("optShotOpacity", "shotOpacity");
 
   $("optVibrationRow").style.display = canVibrate && isTouchDevice ? "" : "none";
   $("optVibration").addEventListener("click", () => {
@@ -158,6 +160,9 @@ function render() {
   $("optSfx").value = Math.round(settings.sfxVolume * 100);
   setText("optMusicValue", `${Math.round(settings.musicVolume * 100)}%`);
   setText("optSfxValue", `${Math.round(settings.sfxVolume * 100)}%`);
+  const shots = Math.round(allyAlpha() * 100);
+  $("optShotOpacity").value = shots;
+  setText("optShotOpacityValue", `${shots}%`);
   const vib = $("optVibration");
   vib.textContent = settings.vibration ? "ACTIVÉES" : "DÉSACTIVÉES";
   vib.classList.toggle("on", settings.vibration);

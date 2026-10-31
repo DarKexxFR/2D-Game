@@ -70,8 +70,10 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
   (53 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
   éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
-- **Améliorations** à chaque niveau (dont Givre, Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique,
-  Pulsar, Surtension), **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
+- **Pouvoirs** à chaque niveau : **8 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
+  Berserker et Exécution, 4 pour Multi-Tir) et chaque niveau compte. Emplacements pleins = seules les cartes des
+  pouvoirs possédés reviennent ; tout au maximum = cartes de secours (Réparation, Butin). Pouvoirs dont Givre,
+  Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique, Pulsar, Surtension ; **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
 - **Anomalies de biome** : le terrain change avec le biome, pendant toutes ses vagues. Toundra de glace :
@@ -81,11 +83,13 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Marchand Noir** : apparaît parfois à la place d'un sanctuaire maudit (dès la vague 5). Pas d'or : il
   échange une carte déjà prise (ses effets sont retirés) ou 20 % des PV max contre une carte légendaire ou
   corrompue garantie. Une seule affaire, puis il disparaît.
-- **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
-  icône à la couleur de sa rareté, son nombre et son effet). Les fenêtres de partie (pause, choix, revivre,
+- **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque pouvoir avec son
+  icône à la couleur de sa rareté, son niveau en pastilles et son effet, emplacements libres). Les fenêtres de partie (pause, choix, revivre,
   fin) ont un style néon commun.
+- **Tirs alliés lisibles** : un curseur dans les Options (20 à 100 %) rend les tirs du joueur plus transparents ;
+  tirs ennemis et attaques de boss restent à 100 %.
 - **Renaissance** : Seconde chance, Phénix ou pub déclenchent une onde de choc autour du vaisseau.
-- **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
+- **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR » et REJOUER sans attendre la fin)
   et **carte de score à partager** (image 1080×1350 avec vague, build et coupable, à partager depuis le
   téléphone, copier pour Discord ou télécharger).
 
@@ -231,8 +235,9 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
   effet combiné dans `src/systems/sideWeapons.js` ; la carte « Fusion » se crée seule.
 - **Une fiche du bestiaire** : obligatoire pour chaque nouvel ennemi (`src/data/bestiary.js`, vérifié par
   `tests/bestiary.spec.js`).
-- **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`
-  (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
+- **Un pouvoir** : un objet `{ name, rarity, icon, desc, max?, canApply?, apply }` dans `UPGRADES`
+  (`src/data/upgrades.js`) ; `apply` donne **un niveau**, `max` vaut `POWER_RULES.maxLevel` par défaut, les
+  emplacements sont gérés seuls (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
 - **Une mise à jour** : une entrée en tête de `CHANGELOG` (`src/data/changelog.js`, `id` nouveau) pour la
   fenêtre « Nouveautés ».
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).

@@ -30,6 +30,9 @@ export const MAP_BOUNDS = {
 export const WAVE_DURATION = 3600; // en ticks (60 s)
 export const NEXT_WAVE_DELAY = 60; // ticks entre la mort du boss et la vague suivante
 
+/** Options > « Tirs alliés » : opacité des tirs du joueur (render/allyAlpha.js), de `min` à 100 %. */
+export const SHOT_OPACITY = { min: 0.2 };
+
 export const LIMITS = {
   gems: 300,
   particles: 1000,

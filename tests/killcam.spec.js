@@ -67,3 +67,19 @@ test("boss presque mort : le replay le rappelle et se termine tout seul", async 
   await expect(page.locator("body")).not.toHaveClass(/kill-cam/, { timeout: 20_000 });
   await expect(page.locator("#gameOver")).toBeVisible();
 });
+
+test("REJOUER pendant le ralenti relance aussitôt une partie", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  await dieTo(page, "tank");
+
+  await expect(page.locator("#btnKillCamReplay")).toBeHidden();
+  await page.locator("#btnKillCam").click();
+  await expect(page.locator("body")).toHaveClass(/kill-cam/);
+  await page.locator("#btnKillCamReplay").click();
+  await expect(page.locator("body")).not.toHaveClass(/kill-cam/);
+  await expect(page.locator("#gameOver")).toBeHidden();
+  await expect(page.locator("#btnKillCamReplay")).toBeHidden();
+  const run = await game(page, ({ state }) => ({ over: state.game.over, killer: state.game.killCam.killer }));
+  expect(run).toEqual({ over: false, killer: null });
+});

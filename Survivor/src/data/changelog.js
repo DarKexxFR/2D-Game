@@ -29,6 +29,44 @@ export const CHANGELOG = [
     ],
   },
   {
+    id: "2026-10-tirs-allies",
+    date: "Octobre 2026",
+    title: "Plus lisible en fin de partie",
+    items: [
+      {
+        icon: "eye",
+        color: "#00ffff",
+        title: "Opacité des tirs alliés",
+        text: "Options > Tirs alliés : de 20 à 100 %. Vos tirs s'effacent, les tirs ennemis et attaques de boss restent nets.",
+      },
+      {
+        icon: "repeat",
+        color: "#00ff88",
+        title: "Rejouer depuis le ralenti",
+        text: "Pendant « Revoir ma mort », le bouton REJOUER relance aussitôt une partie.",
+      },
+    ],
+  },
+  {
+    id: "2026-10-pouvoirs-limites",
+    date: "Octobre 2026",
+    title: "Pouvoirs limités, mais plus forts",
+    items: [
+      {
+        icon: "sparkle",
+        color: "#ffd700",
+        title: "8 emplacements de pouvoir",
+        text: "Plus question d'empiler tous les pouvoirs : choisissez-en 8, puis faites-les monter jusqu'au niveau 5.",
+      },
+      {
+        icon: "sword",
+        color: "#00ffff",
+        title: "Chaque niveau compte",
+        text: "Les pouvoirs sont plus puissants à chaque niveau. Tout au maximum ? Des cartes Réparation et Butin prennent le relais.",
+      },
+    ],
+  },
+  {
     id: "2026-10-rangs-duel",
     date: "Octobre 2026",
     title: "Rangs de duel",

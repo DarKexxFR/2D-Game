@@ -30,6 +30,7 @@ test("cadence de tir maximale : peu de dessins flous et effets plafonnés", asyn
     p.attackSpeed = 500 * p.weapon.cooldown;
     const smg = upgrades.UPGRADES.find((u) => u.name === "Mitraillette");
     while (smg.canApply(p)) upgrades.applyUpgrade(smg, p);
+    p.attackSpeed = 50; // plafond de cadence (STAT_CAPS.attackSpeed : équipement + talents + cartes)
     state.game.wave = 15; // élites et ennemis solides : beaucoup de coups et de textes de dégâts
     for (let i = 0; i < 120; i++) spawner.spawnEnemy();
   });

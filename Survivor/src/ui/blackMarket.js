@@ -62,12 +62,13 @@ export function marketPrices(p) {
       desc: `-${loss} PV max`,
     });
   }
-  for (const { card, count } of tradeableCards(p)) {
+  for (const { card, count, freesSlot } of tradeableCards(p)) {
     prices.push({
       id: card.name,
-      name: count > 1 ? `${card.name} ×${count}` : card.name,
+      name: count > 1 ? `${card.name} · niv. ${count}` : card.name,
       card,
-      desc: "Rends un exemplaire",
+      freesSlot,
+      desc: freesSlot ? "Rends le pouvoir (libère sa place)" : "Perd un niveau",
     });
   }
   return prices;
@@ -98,6 +99,7 @@ function renderPrices() {
   for (const price of marketPrices(deal.p)) {
     const btn = el("button", "market-price secondary");
     btn.dataset.price = price.id;
+    btn.dataset.frees = price.freesSlot ? "1" : "";
     const color = price.card ? RARITIES[price.card.rarity].color : "#ff2a6d";
     btn.append(
       icon(price.card ? price.card.icon : "heart", color),
@@ -117,14 +119,26 @@ function chooseReward(u) {
   refresh();
 }
 
-/** Surligne la carte et le prix choisis ; ÉCHANGER n'est possible qu'avec les deux. */
+/** Nouveau pouvoir alors que les emplacements sont pleins : il faut rendre un pouvoir de niveau 1. */
+const needsSlot = (u) => !!u?.power && !u.canApply(deal.p);
+
+/**
+ * Surligne la carte et le prix choisis ; ÉCHANGER n'est possible qu'avec les deux. Une carte qui
+ * demande une place grise les prix qui n'en libèrent pas.
+ */
 function refresh() {
+  const slot = needsSlot(deal.reward);
   for (const card of $("marketOffers").children) {
     card.classList.toggle("selected", card.dataset.name === deal.reward?.name);
   }
-  for (const btn of $("marketPrices").children) {
+  for (const btn of /** @type {HTMLCollectionOf<HTMLButtonElement>} */ ($("marketPrices").children)) {
+    btn.disabled = slot && !btn.dataset.frees;
+    if (btn.disabled && btn.dataset.price === deal.price) deal.price = null;
     btn.classList.toggle("selected", btn.dataset.price === deal.price);
   }
+  $("marketNote").textContent = slot
+    ? "Emplacements de pouvoir pleins : rends un pouvoir pour lui faire place"
+    : "";
   /** @type {HTMLButtonElement} */ ($("btnMarketDeal")).disabled = !deal.reward || !deal.price;
 }
 
