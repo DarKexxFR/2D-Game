@@ -100,6 +100,9 @@
   background: linear-gradient(180deg, #00ffff, #0088aa);
   color: #000;
 }
+.option-row > .option-hint {
+  grid-column: 1 / -1;
+}
 .option-hint {
   font-size: 12px;
   line-height: 1.45;

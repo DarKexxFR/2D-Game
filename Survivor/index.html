@@ -140,6 +140,8 @@
       </div>
 
       <canvas id="gameCanvas"></canvas>
+      <!-- Visible seulement pendant « Revoir ma mort » (ui/gameOverScreen.js) -->
+      <button id="btnKillCamReplay" class="kill-cam-replay"><i data-icon="repeat"></i> REJOUER</button>
 
       <!-- ===== HUD EN JEU ===== -->
       <div id="xpContainer"><div id="xpBar"></div></div>
@@ -695,6 +697,14 @@
                 <button data-quality="high">HAUTE</button>
               </div>
               <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+            </div>
+            <div class="option-row">
+              <label for="optShotOpacity"><i data-icon="eye"></i> Tirs alliés</label>
+              <input type="range" id="optShotOpacity" min="20" max="100" step="5" />
+              <span id="optShotOpacityValue" class="option-value"></span>
+              <p class="option-hint">
+                Rend tes tirs plus transparents. Tirs ennemis et attaques de boss restent nets.
+              </p>
             </div>
           </section>
 

@@ -849,7 +849,7 @@ function init() {
   window.addEventListener("pagehide", persistRun);
   $("btnReplay").addEventListener("click", () => startGame(lastMode));
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
-  initKillCamButton();
+  initKillCamButton(() => startGame(lastMode)); // REJOUER directement depuis le ralenti
   initShareMenu();
   $("btnOptions").addEventListener("click", () => openOptions("mainMenu"));
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));

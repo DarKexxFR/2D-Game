@@ -5,6 +5,7 @@ import { ctx } from "../core/canvas.js";
 import { world } from "../core/state.js";
 import { fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
+import { allyAlpha } from "./allyAlpha.js";
 
 const TAU = Math.PI * 2;
 
@@ -231,6 +232,7 @@ export function drawTurrets(now) {
  * shadowBlur : une arme électrique rapide en dessine des dizaines par image).
  */
 export function drawBolts() {
+  const k = allyAlpha();
   ctx.lineCap = "round";
   for (const b of world.bolts) {
     ctx.strokeStyle = b.color;
@@ -247,10 +249,10 @@ export function drawBolts() {
       ctx.lineTo(p1.x, p1.y);
     }
     const fade = b.life / 10;
-    ctx.globalAlpha = fade * 0.3;
+    ctx.globalAlpha = fade * 0.3 * k;
     ctx.lineWidth = 8;
     ctx.stroke();
-    ctx.globalAlpha = fade;
+    ctx.globalAlpha = fade * k;
     ctx.lineWidth = 2.5;
     ctx.stroke();
   }
