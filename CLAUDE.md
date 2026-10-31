@@ -197,6 +197,13 @@ Principes :
   (équipée + appoint avec niveau en pastilles, emplacements libres), les évolutions et les améliorations (icône à la
   couleur de la rareté, ×nombre, effet), triées de la plus rare à la plus commune. Pause : build complet (un par joueur
   en duel sur un écran) ; écran de fin : version `compact` (icônes seules) dans `#runBuild`. Tests : `tests/build-view.spec.js`.
+- **Pouvoirs limités** (`POWER_RULES` dans `data/upgrades.js`) : chaque carte de `UPGRADES` et chaque corrompue est
+  un pouvoir, déclaré par `power()` ; au plus `slots` (8) pouvoirs différents, chacun monte de niveau jusqu'à `max`
+  (défaut `maxLevel` 5 ; corrompues 1). Niveau = nombre dans `p.inventory` ; `ownedPowers(p)`. Emplacements pleins =
+  seuls les pouvoirs possédés (et armes d'appoint, évolutions) sont proposés. Pool trop court = cartes de secours
+  `FILLER_CARDS` (`ui/upgradeMenu.js` : Réparation, Butin ; `filler`, jamais notées dans l'inventaire). Évolution
+  d'un pouvoir = son `max` + partenaire (`baseMax` déduit). Choix du propriétaire : moins de pouvoirs, plus forts,
+  à faire monter. Tests : `tests/powers.spec.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).

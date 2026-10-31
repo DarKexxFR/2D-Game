@@ -5,11 +5,13 @@ import { BOSS_CHEST, RARITIES, VERSUS } from "../config.js";
 import { bindingsOf } from "../core/input.js";
 import { game, player } from "../core/state.js";
 import {
+  POWER_RULES,
   applyUpgrade,
   availableEvolutions,
   availableUpgrades,
   cardDesc,
   evolutionsFor,
+  ownedPowers,
 } from "../data/upgrades.js";
 import { addStat, recordBest } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
@@ -29,6 +31,30 @@ const ALLOWED = {
   chest: (u) => u.rarity !== "common" && u.rarity !== "corrupted",
   shrine: (u) => u.rarity === "rare" || u.rarity === "epic",
 };
+
+// Cartes de secours : proposées seulement quand les pouvoirs, armes et évolutions ne suffisent plus à
+// remplir le choix (tout est au maximum). Ni pouvoir ni emplacement : rien n'est noté dans l'inventaire.
+const F = POWER_RULES.filler;
+export const FILLER_CARDS = [
+  {
+    name: "Réparation",
+    rarity: "common",
+    icon: "heartPlus",
+    desc: `Soigne ${Math.round(F.heal * 100)}% de vos PV max`,
+    filler: true,
+    apply: (p) => heal(p.maxHealth * F.heal),
+  },
+  {
+    name: "Butin",
+    rarity: "common",
+    icon: "coin",
+    desc: "Or immédiat (plus à chaque vague)",
+    describe: () => `+${fillerGold()} or`,
+    filler: true,
+    apply: () => (game.runGold += fillerGold()),
+  },
+];
+const fillerGold = () => F.gold + game.wave * F.goldPerWave;
 
 /** Choix en attente (un coffre ramassé pendant qu'un autre choix est affiché, par exemple). */
 const queue = [];
@@ -54,6 +80,7 @@ function drawUpgrades(count, req = current) {
     picks.push(pick);
     pool.splice(pool.indexOf(pick), 1); // pas de doublon
   }
+  for (const filler of FILLER_CARDS) if (picks.length < count) picks.push(filler);
   return picks;
 }
 
@@ -196,7 +223,11 @@ function open(req) {
   setText("upgradeTitle", chest ? "COFFRE DE BOSS" : shrine ? "SANCTUAIRE MAUDIT" : "CHOISISSEZ !");
   setText(
     "upgradeSubtitle",
-    chest ? `+${gold} or · choisis une augmentation` : shrine ? "Défi relevé · choisis une carte" : "",
+    chest
+      ? `+${gold} or · choisis une augmentation`
+      : shrine
+        ? "Défi relevé · choisis une carte"
+        : powerSlotsText(req.target),
   );
   setClass("upgradeMenu", "boss-chest", chest);
   setClass("upgradeMenu", "cursed-reward", shrine);
@@ -231,7 +262,7 @@ export function restoreChoices(list = []) {
 /** Cartes déjà tirées pour ce choix (partie reprise), si elles sont toujours disponibles. */
 function restoredPicks(req) {
   if (!req.picks?.length) return null;
-  const cards = [...availableEvolutions(req.target), ...availableUpgrades(req.target)];
+  const cards = [...availableEvolutions(req.target), ...availableUpgrades(req.target), ...FILLER_CARDS];
   const picks = req.picks.map((name) => cards.find((u) => u.name === name));
   return picks.every(Boolean) ? picks : null;
 }
@@ -274,6 +305,21 @@ export function evolutionHint(u, p) {
   return hint;
 }
 
+/** « Pouvoirs 4/6 », ou le rappel que seuls les pouvoirs possédés montent encore. */
+export function powerSlotsText(p) {
+  const n = ownedPowers(p).length;
+  return n >= POWER_RULES.slots
+    ? `Pouvoirs ${n}/${POWER_RULES.slots} · améliore ceux que tu as`
+    : `Pouvoirs ${n}/${POWER_RULES.slots}`;
+}
+
+/** Titre d'une carte : nom, puis le niveau visé pour un pouvoir déjà possédé (« niv. 3/5 »). */
+export function cardTitle(u, p) {
+  const level = p.inventory[u.name] || 0;
+  if (level === 0) return u.power && u.max > 1 ? `${u.name} · nouveau` : u.name;
+  return u.max ? `${u.name} · niv. ${level + 1}/${u.max}` : `${u.name} · niv. ${level + 1}`;
+}
+
 /** Carte choisie : appliquée au joueur `p`, puis comptée pour les succès (évolutions, armes d'appoint). */
 export function takeCard(u, p) {
   applyUpgrade(u, p);
@@ -294,11 +340,7 @@ function renderChoices(picks) {
     const tag = el("span", "rarity-tag", RARITY_NAMES[u.rarity] || u.rarity);
     tag.style.color = RARITIES[u.rarity].color;
     const info = el("div", "upg-info");
-    const level = p.inventory[u.name] || 0;
-    info.append(
-      el("h4", "", level > 0 ? `${u.name} · niv. ${level + 1}` : u.name),
-      el("p", "", cardDesc(u, p)),
-    );
+    info.append(el("h4", "", cardTitle(u, p)), el("p", "", cardDesc(u, p)));
     if (u.malus) info.append(el("p", "upg-malus", u.malus));
     if (u.recipe)
       info.append(el("p", "upg-recipe", `${u.rarity === "fusion" ? "Fusion" : "Évolution"} : ${u.recipe}`));

@@ -187,7 +187,7 @@ button.pause-abandon {
   font-size: 16px;
 }
 
-/* Améliorations : icône à la couleur de la rareté, nombre de cartes, effet */
+/* Pouvoirs : icône à la couleur de la rareté, niveau (pastilles), effet ; emplacements libres en pointillés */
 .bv-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -237,6 +237,15 @@ button.pause-abandon {
   font-weight: 900;
   line-height: 14px;
 }
+.bv-card.empty {
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: none;
+  color: #5d5672;
+  font-size: 12px;
+}
+.bv-card.empty .bv-cicon {
+  border-style: dashed;
+}
 .bv-empty {
   color: #6b6484;
   font-size: 13px;
@@ -253,11 +262,12 @@ button.pause-abandon {
   padding: 4px;
   border-radius: 10px;
 }
-.build-view.compact .bv-weapon.empty {
+.build-view.compact .bv-weapon.empty,
+.build-view.compact .bv-card.empty {
   display: none;
 }
 .build-view.compact .bv-card {
-  padding: 0 7px 6px 0; /* place pour le badge ×N qui déborde de l'icône */
+  padding: 0 7px 6px 0; /* place pour le badge de niveau qui déborde de l'icône */
   border: none;
   background: none;
   overflow: visible;
