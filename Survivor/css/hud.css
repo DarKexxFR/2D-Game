@@ -16,21 +16,21 @@
 }
 .ui-header {
   display: flex;
+  flex-wrap: wrap; /* filet de sécurité : si une police plus large ne tient pas, les compteurs passent dessous */
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 2px 8px;
   font-weight: 900;
 }
 .ui-wave {
-  flex: 1;
-  min-width: 0; /* sans lui, un long libellé pousse les compteurs hors du panneau */
+  flex: 1 0 auto; /* « VAGUE 31 » ne se coupe jamais */
   font-size: 16px;
   letter-spacing: 1px;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .ui-counters {
   flex: none;
+  margin-left: auto;
   display: flex;
   gap: 12px;
   font-size: 13px;
