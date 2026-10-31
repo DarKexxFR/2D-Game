@@ -126,7 +126,7 @@ test("vitesse de déplacement plafonnée, et la carte Vitesse n'est plus propos�
     const p = s.player;
     p.baseSpeed = 25; // équipement + talents + cartes empilés
     pl.updatePlayer();
-    const card = UPGRADES.find((u) => u.canApply && u.canApply.toString().includes("STAT_CAPS.speed"));
+    const card = UPGRADES.find((u) => u.name === "Bottes Légères");
     return { speed: p.speed, cap: STAT_CAPS.speed, offered: card.canApply(p) };
   });
   expect(r.speed).toBe(r.cap);

@@ -1,5 +1,11 @@
 // Liste des améliorations proposées à chaque montée de niveau.
 // `canApply(p)` filtre les cartes proposées, `apply(p)` modifie le joueur.
+//
+// POUVOIRS : chaque amélioration (UPGRADES) et chaque carte corrompue est un pouvoir. Un joueur en porte
+// au plus `POWER_RULES.slots` ; reprendre la carte d'un pouvoir possédé le fait monter de niveau
+// (jusqu'à `max`, par défaut `POWER_RULES.maxLevel`). Emplacements pleins = seules les cartes des
+// pouvoirs possédés (et les armes d'appoint, évolutions, fusions) sont proposées. Le niveau d'un pouvoir
+// est son nombre dans `p.inventory`, comme avant.
 
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
@@ -13,23 +19,62 @@ import {
   sideWeaponOf,
 } from "./sideWeapons.js";
 
+export const POWER_RULES = {
+  slots: 8, // pouvoirs différents au plus par partie
+  maxLevel: 5, // niveau maximum par défaut d'un pouvoir
+  // Tout est au maximum : cartes de secours (ui/upgradeMenu.js) à la place des pouvoirs
+  filler: { heal: 0.3, gold: 30, goldPerWave: 6 },
+};
+
+/** Niveau du pouvoir (ou de la carte) `name` chez `p` : 0 s'il ne le possède pas. */
+const count = (p, name) => p.inventory[name] || 0;
+
+/** Noms des pouvoirs (remplis plus bas, une fois les listes définies). */
+const POWER_NAMES = new Set();
+
+/** Pouvoirs possédés par `p` (noms), dans l'ordre où il les a pris. */
+export const ownedPowers = (p) => Object.keys(p.inventory).filter((name) => POWER_NAMES.has(name));
+
+/**
+ * Déclare un pouvoir : niveau maximum, emplacement libre exigé pour le prendre, puis la condition
+ * propre à la carte (`canApply`, plafonds de statistiques).
+ * @param {any} def
+ */
+function power(def) {
+  const max = def.max ?? POWER_RULES.maxLevel;
+  const extra = def.canApply;
+  return {
+    ...def,
+    max,
+    power: true,
+    /** @param {any} p */
+    canApply: (p) => {
+      const level = count(p, def.name);
+      if (level >= max) return false;
+      if (level === 0 && ownedPowers(p).length >= POWER_RULES.slots) return false;
+      return !extra || extra(p);
+    },
+  };
+}
+
+// Valeurs par niveau : moins de pouvoirs, donc chaque niveau compte plus qu'une ancienne carte.
 export const UPGRADES = [
   // --- COMMUNES ---
   {
     name: "Force Brute",
     rarity: "common",
     icon: "sword",
-    desc: "+4 Attaque",
-    apply: (p) => (p.attack += 4),
+    desc: "+6 Attaque",
+    apply: (p) => (p.attack += 6),
   },
   {
     name: "Vitalité",
     rarity: "common",
     icon: "heart",
-    desc: "+50 HP Max",
+    desc: "+80 HP Max",
     apply: (p) => {
-      p.maxHealth += 50;
-      p.health += 50;
+      p.maxHealth += 80;
+      p.health += 80;
       createHealEffect(p.worldX, p.worldY);
     },
   },
@@ -37,49 +82,49 @@ export const UPGRADES = [
     name: "Bottes Légères",
     rarity: "common",
     icon: "boot",
-    desc: "+10% Vitesse",
+    desc: "+12% Vitesse",
     canApply: (p) => p.baseSpeed < STAT_CAPS.speed,
-    apply: (p) => (p.baseSpeed *= 1.1),
+    apply: (p) => (p.baseSpeed *= 1.12),
   },
   {
     name: "Aimant",
     rarity: "common",
     icon: "magnet",
-    desc: "+50% Portée",
+    desc: "+60% Portée de ramassage",
     canApply: (p) => p.magnetRadius < STAT_CAPS.magnet,
-    apply: (p) => (p.magnetRadius *= 1.5),
+    apply: (p) => (p.magnetRadius *= 1.6),
   },
   {
     name: "Avidité",
     rarity: "common",
     icon: "coin",
-    desc: "+20% Gain d'Or",
-    apply: (p) => (p.greed += 0.2),
+    desc: "+30% Gain d'Or",
+    apply: (p) => (p.greed += 0.3),
   },
   {
     name: "Recul",
     rarity: "common",
     icon: "impact",
-    desc: "+50% Force de Recul",
-    apply: (p) => (p.knockbackMult += 0.5),
+    desc: "+75% Force de Recul",
+    apply: (p) => (p.knockbackMult += 0.75),
   },
   {
     name: "Givre",
     rarity: "common",
     icon: "snowflake",
-    desc: "Vos tirs ralentissent les ennemis touchés",
-    canApply: (p) => p.frost < C.frost.max,
+    desc: `Vos tirs ralentissent les ennemis touchés (-${Math.round(C.frost.slow * 100)}% de vitesse par niveau)`,
+    max: C.frost.max,
     apply: (p) => p.frost++,
   },
   {
     name: "Œil critique",
     rarity: "common",
     icon: "eye",
-    desc: "+8% Chance de critique, +25% Dégâts critiques",
+    desc: "+10% Chance de critique, +30% Dégâts critiques",
     canApply: (p) => p.critChance < 0.8,
     apply: (p) => {
-      p.critChance += 0.08;
-      p.critMultiplier += 0.25;
+      p.critChance += 0.1;
+      p.critMultiplier += 0.3;
     },
   },
 
@@ -88,14 +133,14 @@ export const UPGRADES = [
     name: "Aura de Feu",
     rarity: "rare",
     icon: "flame",
-    desc: "Dégâts de zone constants",
+    desc: "Dégâts de zone constants (plus large et plus forte à chaque niveau)",
     apply: (p) => {
       if (p.auraRadius === 0) {
-        p.auraRadius = 100;
-        p.auraDamage = 5;
+        p.auraRadius = 110;
+        p.auraDamage = 8;
       } else {
-        p.auraRadius += 20;
-        p.auraDamage += 3;
+        p.auraRadius += 25;
+        p.auraDamage += 5;
       }
     },
   },
@@ -103,19 +148,19 @@ export const UPGRADES = [
     name: "Mitraillette",
     rarity: "rare",
     icon: "smg",
-    desc: "-15% Cooldown Tir",
+    desc: "-18% Cooldown Tir",
     canApply: (p) => p.attackSpeed > STAT_CAPS.attackSpeed,
-    apply: (p) => (p.attackSpeed *= 0.85),
+    apply: (p) => (p.attackSpeed *= 0.82),
   },
   {
     name: "Sniper",
     rarity: "rare",
     icon: "target",
-    desc: "+20% Crit & Dégâts",
+    desc: "+15% Crit, +7 Attaque",
     canApply: (p) => p.critChance < 0.8,
     apply: (p) => {
-      p.critChance += 0.2;
-      p.attack += 5;
+      p.critChance += 0.15;
+      p.attack += 7;
     },
   },
   {
@@ -123,38 +168,38 @@ export const UPGRADES = [
     rarity: "rare",
     icon: "pierce",
     desc: "Balles traversent +1 ennemi",
-    canApply: (p) => p.piercing < 5,
     apply: (p) => (p.piercing += 1),
   },
   {
     name: "Régénération",
     rarity: "rare",
     icon: "heartPlus",
-    desc: "+1 HP / sec",
-    apply: (p) => (p.regen += 1),
+    desc: "+2 HP / sec",
+    apply: (p) => (p.regen += 2),
   },
   {
     name: "Ricochet",
     rarity: "rare",
     icon: "repeat",
     desc: "Vos tirs rebondissent vers un ennemi proche (+1 rebond)",
-    canApply: (p) => p.ricochet < C.ricochet.max,
+    max: C.ricochet.max,
     apply: (p) => p.ricochet++,
   },
   {
     name: "Bouclier d'énergie",
     rarity: "rare",
     icon: "shield",
-    desc: `Bloque un coup toutes les ${C.energyShield.seconds} s (-${C.energyShield.perCard} s par carte)`,
-    canApply: (p) => p.energyShield < C.energyShield.max,
+    desc: `Bloque un coup toutes les ${C.energyShield.seconds} s (-${C.energyShield.perCard} s par niveau)`,
+    max: C.energyShield.max,
     apply: (p) => p.energyShield++,
   },
   {
     name: "Dash explosif",
     rarity: "rare",
     icon: "bomb",
-    desc: "Le dash fait exploser les ennemis autour de vous",
-    canApply: (p) => p.dashBlast < C.dashBlast.max && !p.noDash,
+    desc: "Le dash fait exploser les ennemis autour de vous (plus large et plus fort à chaque niveau)",
+    max: C.dashBlast.max,
+    canApply: (p) => !p.noDash,
     apply: (p) => p.dashBlast++,
   },
 
@@ -163,40 +208,38 @@ export const UPGRADES = [
     name: "Orbe Protecteur",
     rarity: "epic",
     icon: "orbit",
-    desc: "+1 Projectile Rotatif",
+    desc: "Projectiles rotatifs autour de vous (2 au niveau 1, puis +1)",
     canApply: (p) => p.orbitals < 6,
-    apply: (p) => p.orbitals++,
+    apply: (p) => (p.orbitals = Math.min(6, p.orbitals + (count(p, "Orbe Protecteur") === 0 ? 2 : 1))),
   },
   {
     name: "Kunai",
     rarity: "epic",
     icon: "kunai",
     desc: "Lance automatiquement +1 kunai perçant",
-    canApply: (p) => (p.inventory.Kunai || 0) < 5,
     apply: () => {},
   },
   {
     name: "Multi-Tir",
     rarity: "epic",
     icon: "multishot",
-    desc: "+1 Projectile (Max 5)",
-    // Le nombre de projectiles est dérivé de l'inventaire (voir combat.js)
-    canApply: (p) => (p.inventory["Multi-Tir"] || 0) < 4,
+    desc: "+1 Projectile",
+    // Le nombre de projectiles est dérivé du niveau du pouvoir (voir combat.js)
+    max: 4,
     apply: () => {},
   },
   {
     name: "Épines",
     rarity: "epic",
     icon: "thorns",
-    desc: "Renvoie 50% des dégâts",
-    canApply: (p) => p.thorns < 2.0,
-    apply: (p) => (p.thorns += 0.5),
+    desc: "Renvoie 60% des dégâts reçus",
+    apply: (p) => (p.thorns += 0.6),
   },
   {
     name: "Explosion",
     rarity: "epic",
     icon: "bomb",
-    desc: "20% chance boum ennemis",
+    desc: "+20% de chance que l'ennemi touché explose",
     canApply: (p) => p.explosionChance < 1.0,
     apply: (p) => (p.explosionChance += 0.2),
   },
@@ -204,16 +247,16 @@ export const UPGRADES = [
     name: "Arc électrique",
     rarity: "epic",
     icon: "bolt",
-    desc: `${Math.round(C.arc.chance * 100)}% de chance qu'un tir foudroie 3 ennemis voisins`,
-    canApply: (p) => p.arc < C.arc.max,
+    desc: `+${Math.round(C.arc.chance * 100)}% de chance qu'un tir foudroie ${C.arc.jumps} ennemis voisins`,
+    max: C.arc.max,
     apply: (p) => p.arc++,
   },
   {
     name: "Pulsar",
     rarity: "epic",
     icon: "star",
-    desc: "Un tir sur 5 est géant : plus gros, 3× plus fort, perçant (un de moins par carte)",
-    canApply: (p) => p.pulsar < C.pulsar.max,
+    desc: `Un tir sur ${C.pulsar.every} est géant : plus gros, ${C.pulsar.damage}× plus fort, perçant (un de moins par niveau)`,
+    max: C.pulsar.max,
     apply: (p) => p.pulsar++,
   },
 
@@ -222,15 +265,16 @@ export const UPGRADES = [
     name: "Vampirisme",
     rarity: "legendary",
     icon: "drop",
-    desc: "2% Vol de Vie par tir",
+    desc: "+4% Vol de Vie par tir",
     canApply: (p) => p.vampirism < 0.2,
-    apply: (p) => (p.vampirism += 0.02),
+    apply: (p) => (p.vampirism += 0.04),
   },
   {
     name: "Berserker",
     rarity: "legendary",
     icon: "rage",
     desc: "+30 Dégâts, -20% HP",
+    max: 3,
     canApply: (p) => p.maxHealth > 100,
     apply: (p) => {
       p.attack += 30;
@@ -242,39 +286,35 @@ export const UPGRADES = [
     name: "Divinité",
     rarity: "legendary",
     icon: "sparkle",
-    desc: "Tout +15%",
+    desc: "Attaque, PV max et vitesse +18%",
     apply: (p) => {
-      p.attack *= 1.15;
-      p.maxHealth *= 1.15;
-      p.health += 20;
-      p.baseSpeed *= 1.15;
+      p.attack *= 1.18;
+      p.maxHealth *= 1.18;
+      p.health += 30;
+      p.baseSpeed *= 1.18;
     },
   },
   {
     name: "Exécution",
     rarity: "legendary",
     icon: "skull",
-    desc: "Tue instantanément < 20% HP",
-    canApply: (p) => p.executionThreshold < 0.6,
+    desc: "Tue instantanément sous +20% de PV (hors boss)",
+    max: 3,
     apply: (p) => (p.executionThreshold += 0.2),
   },
   {
     name: "Surtension",
     rarity: "legendary",
     icon: "pulse",
-    desc: `Toutes les ${C.surge.kills} éliminations, une nova foudroie tout autour (-3 par carte)`,
-    canApply: (p) => p.surge < C.surge.max,
+    desc: `Toutes les ${C.surge.kills} éliminations, une nova foudroie tout autour (-${C.surge.perCard} par niveau)`,
+    max: C.surge.max,
     apply: (p) => p.surge++,
   },
-];
+].map(power);
 
 // --- CORROMPUES : gros bonus contre un malus (risque / récompense) ---
-// Une seule fois par partie chacune ; jamais dans un coffre de boss ni un sanctuaire maudit.
-// `malus` est affiché en rouge sous la description.
-const once =
-  (name, extra = (/** @type {any} */ p) => true) =>
-  (p) =>
-    !p.inventory[name] && extra(p);
+// Pouvoirs à un seul niveau (une fois par partie chacun, ils prennent un emplacement) ; jamais dans un
+// coffre de boss ni un sanctuaire maudit. `malus` est affiché en rouge sous la description.
 const BLOOD_PACT = { ms: 5000, heal: 0.012 }; // soin par gemme : 1,2 % des PV max
 
 export const CORRUPTED_UPGRADES = [
@@ -284,7 +324,7 @@ export const CORRUPTED_UPGRADES = [
     icon: "bolt",
     desc: "+35% Vitesse de déplacement",
     malus: "Dash désactivé",
-    canApply: once("Surcharge moteur", (p) => p.baseSpeed < STAT_CAPS.speed),
+    canApply: (p) => p.baseSpeed < STAT_CAPS.speed,
     apply: (p) => {
       p.baseSpeed *= 1.35;
       p.noDash = true;
@@ -297,7 +337,6 @@ export const CORRUPTED_UPGRADES = [
     icon: "blackhole",
     desc: "+50% Taille des tirs et des explosions",
     malus: "-25% Cadence de tir",
-    canApply: once("Singularité"),
     apply: (p) => {
       p.projScale *= 1.5;
       p.attackSpeed /= 0.75;
@@ -309,7 +348,6 @@ export const CORRUPTED_UPGRADES = [
     icon: "drop",
     desc: "Après un coup reçu, les gemmes d'XP soignent pendant 5 s",
     malus: "-15% XP gagnée",
-    canApply: once("Pacte de sang"),
     apply: (p) => {
       p.bloodPact = BLOOD_PACT;
       p.xpBonus -= 0.15;
@@ -321,7 +359,6 @@ export const CORRUPTED_UPGRADES = [
     icon: "impact",
     desc: "+50% Dégâts",
     malus: "Soins réduits de moitié",
-    canApply: once("Cœur de verre"),
     apply: (p) => {
       p.attack *= 1.5;
       p.healMult *= 0.5;
@@ -333,7 +370,6 @@ export const CORRUPTED_UPGRADES = [
     icon: "coin",
     desc: "+60% Or gagné",
     malus: "+20% Dégâts reçus",
-    canApply: once("Fièvre de l'or"),
     apply: (p) => {
       p.goldBonus += 0.6;
       p.damageTaken *= 1.2;
@@ -345,7 +381,6 @@ export const CORRUPTED_UPGRADES = [
     icon: "repeat",
     desc: "Compétence chargée deux fois plus vite",
     malus: "Dash deux fois plus long à recharger",
-    canApply: once("Dette de temps"),
     apply: (p) => {
       p.ultGain *= 2;
       p.dashCooldown *= 2;
@@ -357,19 +392,22 @@ export const CORRUPTED_UPGRADES = [
     icon: "rage",
     desc: "+40% Dégâts et +20% Cadence de tir",
     malus: "Champ de vision réduit",
-    canApply: once("Furie aveugle"),
     apply: (p) => {
       p.attack *= 1.4;
       p.attackSpeed *= 0.8;
       p.blind = true;
     },
   },
-];
+].map((u) => power({ ...u, max: 1 }));
 
-// --- ÉVOLUTIONS : amélioration au maximum + amélioration partenaire → super-arme ---
+for (const u of [...UPGRADES, ...CORRUPTED_UPGRADES]) POWER_NAMES.add(u.name);
+
+/** Niveau maximum d'un pouvoir d'après son nom. */
+const powerMax = (name) => UPGRADES.find((u) => u.name === name)?.max ?? POWER_RULES.maxLevel;
+
+// --- ÉVOLUTIONS : pouvoir au niveau maximum + pouvoir partenaire → super-arme ---
 // Elles sont proposées en priorité à la montée de niveau dès que la recette est complète.
-const count = (p, name) => p.inventory[name] || 0;
-const evolution = ({ id, name, icon, desc, base, baseMax, partner }) => ({
+const evolution = ({ id, name, icon, desc, base, baseMax = powerMax(base), partner }) => ({
   id,
   name,
   icon,
@@ -389,7 +427,6 @@ export const EVOLUTIONS = [
     icon: "shuriken",
     desc: "Des kunai partent dans toutes les directions et transpercent tout.",
     base: "Kunai",
-    baseMax: 5,
     partner: "Multi-Tir",
   }),
   evolution({
@@ -398,7 +435,6 @@ export const EVOLUTIONS = [
     icon: "flame",
     desc: "Aura immense qui brûle deux fois plus vite et plus fort.",
     base: "Aura de Feu",
-    baseMax: 5,
     partner: "Explosion",
   }),
   evolution({
@@ -407,7 +443,6 @@ export const EVOLUTIONS = [
     icon: "orbit",
     desc: "Orbes géants, plus rapides, qui frappent 5 fois plus fort.",
     base: "Orbe Protecteur",
-    baseMax: 6,
     partner: "Épines",
   }),
   evolution({
@@ -416,7 +451,6 @@ export const EVOLUTIONS = [
     icon: "drop",
     desc: "Les éliminations rendent jusqu'à 5 % de vos PV max par seconde.",
     base: "Vampirisme",
-    baseMax: 5,
     partner: "Régénération",
   }),
   evolution({
@@ -425,7 +459,6 @@ export const EVOLUTIONS = [
     icon: "snowflake",
     desc: "Vos tirs gèlent net les ennemis (les boss ralentissent) et les ennemis gelés prennent +30% de dégâts.",
     base: "Givre",
-    baseMax: C.frost.max,
     partner: "Arc électrique",
   }),
   evolution({
@@ -434,7 +467,6 @@ export const EVOLUTIONS = [
     icon: "star",
     desc: "Novas deux fois plus grandes et deux fois plus souvent ; chaque tir géant explose.",
     base: "Pulsar",
-    baseMax: C.pulsar.max,
     partner: "Surtension",
   }),
 ];
@@ -587,6 +619,7 @@ export const SIDE_WEAPON_CARDS = SIDE_WEAPON_IDS.map((id) => {
     icon: def.icon,
     desc: def.desc,
     sideWeapon: id,
+    max: SIDE_WEAPON_RULES.maxLevel,
     /** @param {any} p */
     describe: (p) => {
       const w = sideWeaponOf(p, id);
@@ -684,5 +717,6 @@ export function evolutionsFor(upgrade, p) {
 
 export function applyUpgrade(upgrade, p) {
   upgrade.apply(p);
+  if (upgrade.filler) return; // carte de secours : ni pouvoir ni niveau
   p.inventory[upgrade.name] = (p.inventory[upgrade.name] || 0) + 1;
 }
