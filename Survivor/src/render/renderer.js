@@ -16,6 +16,7 @@ import {
   drawShrines,
 } from "./world.js";
 import { drawBeams, drawMines, drawSlashes } from "./sideWeapons.js";
+import { drawAnomalyGround, drawAnomalyObjects, drawMerchants } from "./anomalies.js";
 import { renderSplit } from "./versus.js";
 import { drawRivalView } from "./rivalView.js";
 import { rival } from "../systems/versusOnline.js";
@@ -43,14 +44,17 @@ function drawScene(now) {
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
   drawMapBorder();
+  drawAnomalyGround(now); // verglas, portails : au sol, sous tout le reste
   drawMysteryBox();
   drawShrines(now);
   drawCursedShrines(now);
+  drawMerchants(now);
   drawPickups();
   drawVortex(now);
   drawHazards(now); // au sol, sous les entités
   drawBossChests(now);
   drawTurrets(now);
+  drawAnomalyObjects(now);
   drawMines(now);
   drawBeams(now);
   drawPlayer(now);

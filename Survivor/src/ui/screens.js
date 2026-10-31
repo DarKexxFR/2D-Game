@@ -20,6 +20,7 @@ const SCREENS = [
   "cyberCoreMenu",
   "skinMenu",
   "upgradeMenu",
+  "blackMarket",
   "pauseMenu",
   "optionsMenu",
   "loginMenu",

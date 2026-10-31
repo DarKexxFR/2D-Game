@@ -71,6 +71,9 @@ import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { updateArena } from "./systems/arena.js";
 import { updateMapEvents } from "./systems/mapEvents.js";
 import { updateCursedShrines } from "./systems/cursedShrines.js";
+import { updateAnomaly } from "./systems/anomalies/index.js";
+import { updateBlackMarket } from "./systems/blackMarket.js";
+import { initBlackMarket } from "./ui/blackMarket.js";
 import { $ } from "./ui/dom.js";
 import { initKillCamButton, setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { initShareMenu } from "./ui/shareMenu.js";
@@ -98,6 +101,7 @@ import {
   setAutoPick,
   showBossChest,
   showShrineReward,
+  showBlackMarket,
   showUpgradeMenu,
 } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
@@ -706,6 +710,8 @@ function simulate() {
   updateArena();
   updateMapEvents();
   updateCursedShrines();
+  updateBlackMarket();
+  updateAnomaly();
   updatePlayer();
   updateTrail();
   rebuildEnemyGrid();
@@ -835,6 +841,7 @@ function init() {
   initCyberCoreMenu({ onBack: openTalents, onChange: refreshAccountUI });
   initSkinMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
+  initBlackMarket();
   initDuelPicks();
   initAchievementMenu({ onBack: showMainMenu });
   initQuestMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
@@ -901,6 +908,7 @@ function init() {
 
   on("levelUp", () => (versus.split ? requestDuelPick(versus.current, "level") : showUpgradeMenu()));
   on("bossChest", () => (versus.split ? requestDuelPick(versus.current, "chest") : showBossChest()));
+  on("blackMarket", showBlackMarket);
   on("cursedReward", () => (versus.split ? requestDuelPick(versus.current, "shrine") : showShrineReward()));
   on("goblin", () => {
     if (versus.split) splitBanner("VOLEUR DORÉ !", "#ffd700");
@@ -986,6 +994,11 @@ function init() {
   on("biomeChange", (biome) =>
     versus.split ? splitBanner(biome.name, biome.color) : showBiomeBanner(biome),
   );
+  on("anomaly", ({ name, desc, color }) => {
+    if (versus.split) splitBanner(name, color);
+    else showBossWarning(`ANOMALIE · ${name}`, false, color);
+    addFloatingText(player.worldX, player.worldY - 90, desc, color, 16, 150);
+  });
   on("mapEvent", ({ name, color }) => {
     if (versus.split) splitBanner(name, color);
     else showBossWarning(name, false, color);

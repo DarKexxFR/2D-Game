@@ -30,6 +30,8 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
   céleste, onde pulsée, faisceau rotatif, fouet laser), 5 niveaux chacune et une évolution ; deux armes au
   niveau maximum peuvent fusionner en une seule (6 fusions).
 - Cartes corrompues (gros bonus contre un malus), sanctuaires maudits, événements de carte, boîte mystère.
+- Anomalies de biome : plaques de verglas (Toundra de glace), tourelles piratables (Station orbitale), portails aux quatre coins (Faille quantique).
+- Marchand Noir : échange une carte déjà prise ou 20 % des PV max contre une carte légendaire ou corrompue garantie.
 
 ## Modes de jeu
 

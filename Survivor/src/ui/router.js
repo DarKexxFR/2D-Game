@@ -26,6 +26,7 @@ const ROUTES = {
   cyberCoreMenu: "coeur",
   skinMenu: "skins",
   upgradeMenu: "amelioration",
+  blackMarket: "marchand",
   pauseMenu: "pause",
   reviveMenu: "revivre",
   gameOver: "fin",

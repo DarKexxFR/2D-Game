@@ -23,6 +23,7 @@ import { recordPlayerLevel } from "../services/achievements.js";
 import { onDash, onHurt, onLevelUp } from "./perks.js";
 import { noteKiller } from "./killCam.js";
 import { absorbHit, onCardDash } from "./cardEffects.js";
+import { steerOnTerrain } from "./anomalies/index.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -115,8 +116,9 @@ function move() {
     dy = -dy;
   }
   const r = player.size;
-  player.worldX = clamp(player.worldX + dx * player.speed, game.bounds.minX + r, game.bounds.maxX - r);
-  player.worldY = clamp(player.worldY + dy * player.speed, game.bounds.minY + r, game.bounds.maxY - r);
+  const v = steerOnTerrain(dx * player.speed, dy * player.speed); // anomalie de biome (glace)
+  player.worldX = clamp(player.worldX + v.x, game.bounds.minX + r, game.bounds.maxX - r);
+  player.worldY = clamp(player.worldY + v.y, game.bounds.minY + r, game.bounds.maxY - r);
 }
 
 /** Le joueur est-il invulnérable aux coups « normaux » (contact, projectiles) ? */

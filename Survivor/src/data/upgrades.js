@@ -47,14 +47,18 @@ function power(def) {
     ...def,
     max,
     power: true,
+    condition: extra, // condition propre à la carte, sans la règle des emplacements
     /** @param {any} p */
-    canApply: (p) => {
-      const level = count(p, def.name);
-      if (level >= max) return false;
-      if (level === 0 && ownedPowers(p).length >= POWER_RULES.slots) return false;
-      return !extra || extra(p);
-    },
+    canApply: (p) => fitsPower(p, def.name, max, extra, 0),
   };
+}
+
+/** Le pouvoir peut-il être pris (ou monter de niveau) si `freed` emplacements se libèrent d'abord ? */
+function fitsPower(p, name, max, extra, freed) {
+  const level = count(p, name);
+  if (level >= max) return false;
+  if (level === 0 && ownedPowers(p).length - freed >= POWER_RULES.slots) return false;
+  return !extra || extra(p);
 }
 
 // Valeurs par niveau : moins de pouvoirs, donc chaque niveau compte plus qu'une ancienne carte.
@@ -716,7 +720,108 @@ export function evolutionsFor(upgrade, p) {
 }
 
 export function applyUpgrade(upgrade, p) {
+  const before = statSnapshot(p);
   upgrade.apply(p);
   if (upgrade.filler) return; // carte de secours : ni pouvoir ni niveau
   p.inventory[upgrade.name] = (p.inventory[upgrade.name] || 0) + 1;
+  (p.cardLog ??= []).push({ name: upgrade.name, delta: statDelta(before, statSnapshot(p)) });
+}
+
+// --- ÉCHANGE DE CARTES (Marchand Noir, voir systems/blackMarket.js) ---
+// Chaque carte prise note ce qu'elle a changé chez le joueur (`p.cardLog`). Une carte qui n'a touché
+// que des nombres (attaque, PV max, cadence...) peut être rendue : on retire exactement ce qu'elle
+// avait ajouté. Une carte qui a changé autre chose (arme, drapeau, effet spécial) ne se rend pas.
+
+// Valeurs qui bougent toutes seules ou qui ne sont pas des statistiques : jamais comparées
+const VOLATILE = new Set([
+  "health",
+  "worldX",
+  "worldY",
+  "inventory",
+  "cardLog",
+  "lastAttack",
+  "lastKunaiAttack",
+]);
+const NOT_TRADEABLE = new Set(["evolution", "fusion", "weapon", "corrupted"]);
+
+/** Nombres du joueur, et le reste en texte (pour voir si la carte y a touché). */
+function statSnapshot(p) {
+  /** @type {Record<string, number | string>} */
+  const snap = {};
+  for (const [k, v] of Object.entries(p)) {
+    if (VOLATILE.has(k)) continue;
+    if (typeof v === "number") snap[k] = v;
+    else {
+      try {
+        snap[k] = "~" + JSON.stringify(v);
+      } catch {
+        snap[k] = "~?" + Math.random(); // valeur impossible à comparer : la carte ne se rendra pas
+      }
+    }
+  }
+  return snap;
+}
+
+/** Écart numérique entre deux instantanés, ou null si autre chose qu'un nombre a changé. */
+function statDelta(before, after) {
+  /** @type {Record<string, number>} */
+  const delta = {};
+  for (const k of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    const a = before[k] ?? 0;
+    const b = after[k] ?? 0;
+    if (a === b) continue;
+    if (typeof a !== "number" || typeof b !== "number") return null;
+    if (Math.abs(b - a) > 1e-9) delta[k] = b - a;
+  }
+  return delta;
+}
+
+/**
+ * Cartes du Marchand Noir de rareté `rarities` que `p` pourrait prendre : [{ card, needsSlot }].
+ * `needsSlot` : nouveau pouvoir alors que les emplacements sont pleins, il ne se prend qu'en rendant
+ * un pouvoir de niveau 1 (l'échange libère sa place).
+ * @param {any} p @param {string[]} rarities
+ */
+export function marketCards(p, rarities) {
+  return ALL_CARDS.filter((u) => rarities.includes(u.rarity))
+    .map((card) => ({
+      card,
+      fits: card.power
+        ? fitsPower(p, card.name, card.max, card.condition, 1)
+        : !card.canApply || card.canApply(p),
+      needsSlot: card.power && !card.canApply(p),
+    }))
+    .filter((o) => o.fits)
+    .map(({ card, needsSlot }) => ({ card, needsSlot }));
+}
+
+/**
+ * Cartes que `p` peut rendre, regroupées par nom : [{ card, count }]. Ni évolution, ni fusion, ni
+ * arme d'appoint, ni corrompue, ni carte à effet spécial (voir plus haut).
+ */
+export function tradeableCards(p) {
+  /** @type {Map<string, { card: any, count: number }>} */
+  const found = new Map();
+  for (const entry of p.cardLog ?? []) {
+    const card = cardByName(entry.name);
+    if (!card || !entry.delta || NOT_TRADEABLE.has(card.rarity) || !(p.inventory[entry.name] > 0)) continue;
+    const row = found.get(entry.name) ?? { card, count: 0 };
+    row.count++;
+    found.set(entry.name, row);
+  }
+  // Niveau du pouvoir = exemplaires possédés ; rendre le dernier libère son emplacement
+  return [...found.values()].map((row) => ({ ...row, freesSlot: p.inventory[row.card.name] === 1 }));
+}
+
+/** Rend un exemplaire de la carte `name` (le dernier pris) : ses effets sont retirés. Vrai si fait. */
+export function removeCard(p, name) {
+  const log = p.cardLog ?? [];
+  let i = log.length - 1;
+  while (i >= 0 && !(log[i].name === name && log[i].delta)) i--;
+  if (i < 0 || !(p.inventory[name] > 0)) return false;
+  for (const [k, d] of Object.entries(log[i].delta)) p[k] -= d;
+  log.splice(i, 1);
+  if (--p.inventory[name] <= 0) delete p.inventory[name];
+  p.health = Math.min(p.health, p.maxHealth);
+  return true;
 }

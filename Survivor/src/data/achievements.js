@@ -52,6 +52,16 @@ export const ACHIEVEMENTS = [
   a("combat", "combo_200", "rage", "Carnage", "Atteindre un combo de ×200.", "bestCombo", 200, 1000),
   a("combat", "evolution", "sparkle", "Évolution", "Obtenir une évolution d'arme.", "evolutions", 1, 400),
   a("combat", "fusion", "atom", "Fusion", "Fusionner deux armes d'appoint.", "fusions", 1, 600),
+  a(
+    "combat",
+    "black_market",
+    "coin",
+    "Marché noir",
+    "Conclure une affaire avec le Marchand Noir.",
+    "blackMarketDeals",
+    1,
+    400,
+  ),
   a("combat", "goblin", "coin", "Voleur volé", "Attraper un Voleur doré.", "kill_goblin", 1, 500),
   a(
     "combat",
