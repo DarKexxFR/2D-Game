@@ -3,6 +3,7 @@
 import { PLAYER_DEFAULTS } from "../config.js";
 import { player, resetPet } from "../core/state.js";
 import { armorStats, heroStats, moduleStats, petStats, weaponStats } from "../data/items.js";
+import { MYTHIC_AFFIXES } from "../data/pulseShards.js";
 import { UPGRADES, applyUpgrade } from "../data/upgrades.js";
 import { getEquipped } from "../services/inventory.js";
 import { applyPerks } from "./perks.js";
@@ -51,11 +52,19 @@ export function applyEquipment(loadout = equippedLoadout()) {
   player.module = m ? moduleStats(m.id, m.level, m.prestige) : null;
   if (player.module) applyStats(player.module.stats);
 
+  applyAffixes(loadout);
   applyPerks({ ...loadout, weapon: w, hero: h });
   player.health = player.maxHealth;
 }
 
-/** Bonus communs aux armures et aux héros. */
+/** Attributs de Pulse des objets mythiques équipés (relancés à la Forge, data/pulseShards.js). */
+function applyAffixes(loadout) {
+  for (const it of Object.values(loadout)) {
+    for (const id of it?.affixes || []) if (MYTHIC_AFFIXES[id]) applyStats(MYTHIC_AFFIXES[id].stats);
+  }
+}
+
+/** Bonus communs aux armures, aux héros, aux modules et aux attributs de Pulse. */
 function applyStats(s) {
   player.maxHealth = Math.max(1, player.maxHealth + (s.health || 0));
   player.defense += s.defense || 0;
@@ -70,6 +79,7 @@ function applyStats(s) {
   player.attackSpeed /= 1 + (s.fireRate || 0);
   player.attack *= 1 + (s.damage || 0);
   player.xpBonus += s.xp || 0;
+  player.bossDamage += s.boss || 0;
 }
 
 function applyHero(hero) {

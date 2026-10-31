@@ -124,3 +124,91 @@
 #btnReroll:empty {
   display: none;
 }
+
+/* Cœur Cybernétique (ouvert depuis les Talents) */
+button.core-open {
+  display: block;
+  margin: 12px auto 0;
+  background: linear-gradient(180deg, #ff2a6d, #6a1fa8);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 42, 109, 0.4);
+}
+#cyberCoreMenu {
+  border-color: #ff2a6d;
+}
+.core-status {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #ffb3c9;
+}
+.core-tree {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  text-align: left;
+}
+@media (max-width: 900px) {
+  .core-tree {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .core-tree {
+    grid-template-columns: 1fr;
+  }
+}
+.core-branch {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--branch) 45%, transparent);
+  background: rgba(0, 0, 0, 0.3);
+}
+.core-branch-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--branch);
+}
+.core-node {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  border-left: 3px solid var(--branch);
+  background: rgba(255, 255, 255, 0.03);
+}
+.core-node.locked {
+  opacity: 0.55;
+}
+.core-node.active {
+  border-color: var(--branch);
+  background: color-mix(in srgb, var(--branch) 14%, transparent);
+}
+.core-tier {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #888;
+}
+.core-node h4 {
+  font-size: 13px;
+  color: #fff;
+}
+.core-node p {
+  font-size: 11px;
+  color: #aaa;
+}
+.core-node button.core-btn {
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.core-locked .core-tree {
+  filter: grayscale(0.7);
+}

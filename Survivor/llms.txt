@@ -45,10 +45,11 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 ## Progression
 
 - Équipement en 5 emplacements (héros, familier, arme, armure, module), raretés de commun à mythique ;
-  la Forge fusionne 3 objets en trop en un objet de la rareté au-dessus.
+  la Forge fusionne 3 objets en trop en un objet de la rareté au-dessus et démantèle les doublons légendaires
+  en Éclats de Pulse qui relancent les attributs des objets mythiques. Une synergie familier + arme par familier.
 - Bestiaire : une fiche par ennemi et par boss (53 fiches), débloquée en l'éliminant, consultable sur
   https://last-pulse.com/bestiaire.html.
-- Talents, succès, quêtes hebdomadaires, série de connexion sur 7 jours, skins du vaisseau.
+- Talents, puis Cœur Cybernétique (niveau de compte 20 ou vague 30 battue : 3 passifs actifs sur 12), succès, quêtes hebdomadaires, série de connexion sur 7 jours, skins du vaisseau.
 - Saison mensuelle avec un passe gratuit de 30 paliers et un classement de saison.
 - Classements mondiaux : Normal, saison, Cauchemar, Endless, défi du jour, duel ELO.
 

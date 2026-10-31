@@ -247,13 +247,16 @@ export function setOf(id) {
   return SETS.find((s) => s.weapon === id || s.armor === id) || null;
 }
 
-// --- SYNERGIES : familier + arme équipés ensemble (comportements dans systems/perks.js et combat.js) ---
+// --- SYNERGIES : familier + arme équipés ensemble (comportements dans systems/synergies.js) ---
+// Une synergie par familier, avec une ou plusieurs armes partenaires (`weapons`) ; chaque arme en a au
+// moins une. Les dégâts sont des multiples de l'attaque du joueur (ou du tir d'origine), les durées en
+// millisecondes. Nouvelle synergie = une entrée ici + son comportement dans `BEHAVIORS` de systems/synergies.js.
 export const SYNERGIES = [
   {
     id: "iceShatter",
     name: "Givre brisé",
     pet: "frost",
-    weapon: "railgun",
+    weapons: ["railgun"],
     desc: "Les ennemis gelés touchés par le Railgun éclatent en éclats de glace.",
     color: "#9fe8ff",
     shards: 6,
@@ -265,15 +268,87 @@ export const SYNERGIES = [
     id: "dragonFire",
     name: "Souffle ardent",
     pet: "dragon",
-    weapon: "flamer",
+    weapons: ["flamer"],
     desc: "Rayon de l'Aura de feu et portée des flammes +20 %.",
     color: "#ff5a1f",
     aura: 0.2,
     range: 0.2,
   },
+  {
+    id: "soulHarvest",
+    name: "Moissonneuse d'âmes",
+    pet: "reaper",
+    weapons: ["blades"],
+    desc: "Chaque élimination écarte les lames : portée des lames et orbite de la Faucheuse grandissent (max 15), retombent après 3 s sans élimination.",
+    color: "#ff3355",
+    maxStacks: 15,
+    range: 0.04, // portée des lames en plus par cumul
+    orbit: 5, // rayon d'orbite de la Faucheuse en plus par cumul (px)
+    damage: 0.03, // dégâts de la Faucheuse en plus par cumul
+    keep: 3000, // durée des cumuls sans nouvelle élimination
+  },
+  {
+    id: "barrage",
+    name: "Tir de barrage",
+    pet: "drone",
+    weapons: ["smg"],
+    desc: "Le drone copie chaque tir du joueur (même angle, Multi-Tir et Ricochet compris) à 40 % des dégâts.",
+    color: "#00ff88",
+    damage: 0.4,
+  },
+  {
+    id: "fatalPull",
+    name: "Attraction fatale",
+    pet: "collector",
+    weapons: ["nova", "rocket"],
+    desc: "Chaque gemme d'XP ramassée déclenche une micro-explosion autour de vous.",
+    color: "#ffee00",
+    radius: 70,
+    damage: 0.8,
+    cooldown: 90, // au plus une explosion toutes les 90 ms (beaucoup de gemmes d'un coup)
+  },
+  {
+    id: "vitalCurrent",
+    name: "Courant vital",
+    pet: "medic",
+    weapons: ["tesla", "plasma"],
+    desc: "Chaque intervention du Médic lance un arc électrique qui rebondit sur 4 ennemis.",
+    color: "#00ffcc",
+    range: 320,
+    damage: 2,
+    jumps: 4,
+  },
+  {
+    id: "bulwark",
+    name: "Rempart offensif",
+    pet: "guardian",
+    weapons: ["shotgun"],
+    desc: "Tant que le bouclier du Gardien tient, les plombs font +35 % de dégâts et transpercent un ennemi de plus.",
+    color: "#4d9bff",
+    damage: 0.35,
+    pierce: 1,
+  },
+  {
+    id: "cinders",
+    name: "Cendres ardentes",
+    pet: "phoenix",
+    weapons: ["disc", "blaster"],
+    desc: "Les tirs ont 30 % de chance d'enflammer ; un ennemi qui meurt en brûlant explose et enflamme ses voisins.",
+    color: "#ff4d2e",
+    chance: 0.3,
+    burn: { ticks: 180, dps: 0.6 },
+    radius: 80,
+    damage: 1.5,
+    perTick: 3, // explosions en chaîne au plus par tick
+  },
 ];
 
 /** Synergie entre un familier et une arme (identifiants), ou null. */
 export function synergyOf(petId, weaponId) {
-  return SYNERGIES.find((s) => s.pet === petId && s.weapon === weaponId) || null;
+  return SYNERGIES.find((s) => s.pet === petId && s.weapons.includes(weaponId)) || null;
+}
+
+/** Synergies d'un objet (familier ou arme). */
+export function synergiesOf(id) {
+  return SYNERGIES.filter((s) => s.pet === id || s.weapons.includes(id));
 }

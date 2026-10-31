@@ -9,6 +9,7 @@ import { chainLightning, damageEnemy, enemyGrid, spawnProjectile } from "./comba
 import { addFloatingText, createAoEEffect, createParticles, createShockwave } from "./effects.js";
 import { chargeUltimate, heal } from "./player.js";
 import { knockEnemy, pullEnemy } from "./knockback.js";
+import { freshSynergyState, synergyHook } from "./synergies.js";
 
 const BURN_STEP = 15; // ticks entre deux dégâts de brûlure
 
@@ -23,10 +24,10 @@ export function applyPerks(loadout) {
   player.perkTimers = {};
   player.perkZones = [];
   player.synergy = synergyOf(loadout.pet?.id, loadout.weapon?.id);
+  player.synergyState = freshSynergyState();
   applyStaticPerks(perks);
   applyStaticSet(player.set);
-  if (player.synergy?.aura) player.auraMult *= 1 + player.synergy.aura;
-  if (player.synergy?.range) player.rangeMult *= 1 + player.synergy.range;
+  synergyHook("start");
 }
 
 /** Paramètres de l'effet ★3 d'un objet s'il est actif, sinon null. */

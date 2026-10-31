@@ -18,6 +18,7 @@ import {
   maxLevel,
 } from "../data/items.js";
 import { ADS } from "../config.js";
+import { AFFIX_IDS, AFFIX_RULES, DISMANTLE, MYTHIC_AFFIXES } from "../data/pulseShards.js";
 import { weightedPick } from "../utils/math.js";
 import { addStat, recordBest } from "./achievements.js";
 import { hash, seededRandom, todayKey } from "./daily.js";
@@ -301,4 +302,79 @@ export function buyDailyOffer() {
   account.gold -= offer.price;
   account.dailyOffer = { day: offer.day, bought: true };
   return grantItem(offer.item);
+}
+
+// --- RECYCLAGE MYTHIQUE : DÉMANTÈLEMENT ET ATTRIBUTS DE PULSE (data/pulseShards.js) ---
+
+/** Objets dont un doublon peut être démantelé (légendaires avec doublons), les plus fournis d'abord. */
+export function dismantleSources() {
+  return Object.values(ITEMS)
+    .filter((it) => it.rarity === DISMANTLE.rarity && account.items[it.id]?.copies > 0)
+    .sort((a, b) => account.items[b.id].copies - account.items[a.id].copies);
+}
+
+/**
+ * Démantèle `count` doublons d'un objet légendaire : + `DISMANTLE.shards` Éclats de Pulse chacun.
+ * Renvoie les éclats gagnés (0 si impossible).
+ * @param {string} id
+ * @param {number} [count]
+ */
+export function dismantle(id, count = 1) {
+  const owned = account.items[id];
+  if (!owned || ITEMS[id]?.rarity !== DISMANTLE.rarity) return 0;
+  const n = Math.min(Math.max(0, Math.floor(count)), owned.copies);
+  if (n === 0) return 0;
+  owned.copies -= n;
+  const gained = n * DISMANTLE.shards;
+  account.pulseShards += gained;
+  addStat("dismantled", n);
+  saveAccount();
+  return gained;
+}
+
+/** Attributs de Pulse d'un objet possédé (toujours `AFFIX_RULES.slots` cases, null = vide), ou null. */
+export function affixesOf(id) {
+  const owned = account.items[id];
+  if (!owned || ITEMS[id]?.rarity !== AFFIX_RULES.rarity) return null;
+  const list = Array.isArray(owned.affixes) ? owned.affixes : [];
+  return Array.from({ length: AFFIX_RULES.slots }, (_, i) => (MYTHIC_AFFIXES[list[i]] ? list[i] : null));
+}
+
+/** Pose l'attribut `affix` dans la case `slot` (jamais deux fois le même attribut sur un objet). */
+function setAffix(id, slot, affix, cost) {
+  const current = affixesOf(id);
+  if (!current || slot < 0 || slot >= current.length || account.pulseShards < cost) return false;
+  if (!MYTHIC_AFFIXES[affix] || current.some((a, i) => i !== slot && a === affix)) return false;
+  current[slot] = affix;
+  account.items[id].affixes = current;
+  account.pulseShards -= cost;
+  addStat("affixRolls");
+  saveAccount();
+  return true;
+}
+
+/**
+ * Relance au hasard l'attribut d'une case (jamais celui qu'elle avait, ni celui de l'autre case).
+ * Renvoie le nouvel attribut, ou null.
+ * @param {string} id
+ * @param {number} slot
+ */
+export function rerollAffix(id, slot) {
+  const current = affixesOf(id);
+  if (!current) return null;
+  const pool = AFFIX_IDS.filter((a) => !current.includes(a));
+  const affix = pool[Math.floor(Math.random() * pool.length)];
+  return affix && setAffix(id, slot, affix, AFFIX_RULES.cost.reroll) ? affix : null;
+}
+
+/**
+ * Cible un attribut choisi pour une case (plus cher qu'une relance).
+ * @param {string} id
+ * @param {number} slot
+ * @param {string} affix
+ */
+export function targetAffix(id, slot, affix) {
+  const current = affixesOf(id);
+  if (!current || current[slot] === affix) return false;
+  return setAffix(id, slot, affix, AFFIX_RULES.cost.target);
 }
