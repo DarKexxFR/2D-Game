@@ -1,4 +1,4 @@
-// Build de la partie : le menu Pause montre armes, évolutions et améliorations (icône, nombre, effet),
+// Build de la partie : le menu Pause montre armes, évolutions et pouvoirs (icône, niveau, effet),
 // l'écran de fin le reprend en icônes.
 import { expect, game, killPlayer, startGame, test } from "./fixtures.js";
 
@@ -26,15 +26,19 @@ test("la pause montre les armes et les améliorations prises", async ({ page, is
   await expect(view.locator(".bv-weapon")).toHaveCount(4);
   await expect(view.locator(".bv-weapon", { hasText: "Niveau 2" })).toBeVisible();
   await expect(view.locator(".bv-weapon.empty")).toHaveCount(2);
-  // Améliorations : une tuile par carte, avec son nombre et son effet ; la carte d'arme n'y est pas
-  await expect(view.locator(".bv-card")).toHaveCount(2);
+  // Pouvoirs : une tuile par pouvoir, avec son niveau et son effet ; la carte d'arme n'y est pas.
+  // Les emplacements de pouvoir encore libres suivent.
+  await expect(view).toContainText("Pouvoirs 2/6");
+  await expect(view.locator(".bv-card:not(.empty)")).toHaveCount(2);
+  await expect(view.locator(".bv-card.empty")).toHaveCount(4);
   const multi = view.locator(".bv-card", { hasText: "Multi-Tir" });
-  await expect(multi.locator(".bv-count")).toHaveText("×2");
+  await expect(multi.locator(".bv-count")).toHaveText("2");
+  await expect(multi.locator(".bv-pips i.on")).toHaveCount(2);
   await expect(multi).toContainText("Projectile");
   await page.locator("#btnResume").click();
 
   await killPlayer(page);
-  await expect(page.locator("#runBuild .build-view.compact .bv-card")).toHaveCount(2);
+  await expect(page.locator("#runBuild .build-view.compact .bv-card:not(.empty)")).toHaveCount(2);
 });
 
 test("sans amélioration, la pause le dit", async ({ page, isMobile }) => {

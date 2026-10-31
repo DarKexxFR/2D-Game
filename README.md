@@ -70,12 +70,14 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
   (53 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
   éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
-- **Améliorations** à chaque niveau (dont Givre, Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique,
-  Pulsar, Surtension), **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
+- **Pouvoirs** à chaque niveau : **6 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
+  Berserker et Exécution, 4 pour Multi-Tir) et chaque niveau compte. Emplacements pleins = seules les cartes des
+  pouvoirs possédés reviennent ; tout au maximum = cartes de secours (Réparation, Butin). Pouvoirs dont Givre,
+  Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique, Pulsar, Surtension ; **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
-- **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
-  icône à la couleur de sa rareté, son nombre et son effet). Les fenêtres de partie (pause, choix, revivre,
+- **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque pouvoir avec son
+  icône à la couleur de sa rareté, son niveau en pastilles et son effet, emplacements libres). Les fenêtres de partie (pause, choix, revivre,
   fin) ont un style néon commun.
 - **Renaissance** : Seconde chance, Phénix ou pub déclenchent une onde de choc autour du vaisseau.
 - **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
@@ -224,8 +226,9 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
   effet combiné dans `src/systems/sideWeapons.js` ; la carte « Fusion » se crée seule.
 - **Une fiche du bestiaire** : obligatoire pour chaque nouvel ennemi (`src/data/bestiary.js`, vérifié par
   `tests/bestiary.spec.js`).
-- **Une amélioration** : un objet `{ name, rarity, icon, desc, canApply?, apply }` dans `src/data/upgrades.js`
-  (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
+- **Un pouvoir** : un objet `{ name, rarity, icon, desc, max?, canApply?, apply }` dans `UPGRADES`
+  (`src/data/upgrades.js`) ; `apply` donne **un niveau**, `max` vaut `POWER_RULES.maxLevel` par défaut, les
+  emplacements sont gérés seuls (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
 - **Une mise à jour** : une entrée en tête de `CHANGELOG` (`src/data/changelog.js`, `id` nouveau) pour la
   fenêtre « Nouveautés ».
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).
