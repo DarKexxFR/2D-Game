@@ -50,6 +50,9 @@ export const account = {
   bestiary: {}, // éliminations par type d'ennemi : fiches du bestiaire débloquées (voir services/bestiary.js)
   appInstalled: false, // récompense de la première ouverture depuis l'icône déjà versée (voir services/pwa.js)
   newsSeen: "", // dernière entrée des nouveautés vue (data/changelog.js, ui/newsMenu.js)
+  pulseShards: 0, // Éclats de Pulse (démantèlement à la Forge, voir data/pulseShards.js)
+  // Cœur Cybernétique (data/cyberCore.js) : nœuds achetés et nœuds actifs (au plus CYBER_CORE.activeSlots)
+  cyberCore: { owned: [], active: [] },
 };
 
 export function loadAccount() {
@@ -84,6 +87,11 @@ export function loadAccount() {
   account.loginStreak = { day: "", count: 0, ...saved.loginStreak };
   account.appInstalled = saved.appInstalled === true;
   account.newsSeen = typeof saved.newsSeen === "string" ? saved.newsSeen : ""; // ancienne sauvegarde : tout est nouveau
+  account.pulseShards = Math.max(0, Math.floor(saved.pulseShards) || 0);
+  account.cyberCore = {
+    owned: Array.isArray(saved.cyberCore?.owned) ? saved.cyberCore.owned : [],
+    active: Array.isArray(saved.cyberCore?.active) ? saved.cyberCore.active : [],
+  };
   account.bestiary = { ...bestiaryFromStats(account.achievementStats), ...saved.bestiary };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;

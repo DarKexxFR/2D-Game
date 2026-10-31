@@ -9,6 +9,7 @@ import { playSfx } from "../services/sfx.js";
 import { heal } from "./player.js";
 import { perk } from "./perks.js";
 import { knockEnemy } from "./knockback.js";
+import { reaperBonus, synergyHook } from "./synergies.js";
 
 const DRONE_RANGE = 300;
 const DRONE_PROJECTILE_SPEED = 8;
@@ -80,6 +81,7 @@ function updateMedic() {
     urgent && player.health < player.maxHealth * urgent.below ? pet.power.cooldown / 2 : pet.power.cooldown;
   if (game.time - pet.lastAction <= cooldown) return;
   pet.lastAction = game.time;
+  synergyHook("petAct"); // Courant vital : arc électrique à chaque intervention
   if (player.health >= player.maxHealth) return;
   heal(pet.power.heal);
   playSfx("petHeal");
@@ -90,14 +92,16 @@ function updateMedic() {
 /** Faucheuse : tourne autour du joueur et tranche les ennemis touchés. */
 function updateReaper() {
   pet.angle += REAPER_SPIN;
-  pet.x = player.worldX + Math.cos(pet.angle) * pet.power.radius;
-  pet.y = player.worldY + Math.sin(pet.angle) * pet.power.radius;
+  const bonus = reaperBonus(); // Moissonneuse d'âmes : orbite et dégâts selon les éliminations récentes
+  const radius = pet.power.radius + bonus.orbit;
+  pet.x = player.worldX + Math.cos(pet.angle) * radius;
+  pet.y = player.worldY + Math.sin(pet.angle) * radius;
   for (const e of enemyGrid.query(pet.x, pet.y, REAPER_BLADE).slice()) {
     if (e.dead || dist(e.x, e.y, pet.x, pet.y) >= e.size + REAPER_BLADE) continue;
     if (game.time - (e.reaperHit ?? -1e9) < REAPER_HIT_COOLDOWN) continue;
     e.reaperHit = game.time;
     playSfx("petSlash");
-    damageEnemy(e, pet.power.damage, "pet");
+    damageEnemy(e, pet.power.damage * bonus.damage, "pet");
     if (perk("reaper")) heal(perk("reaper").heal);
   }
 }

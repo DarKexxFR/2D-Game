@@ -26,6 +26,8 @@ import { addStat, recordKill } from "../services/achievements.js";
 import { currentSkin, resolveColor } from "../services/skins.js";
 import { onHit, onKill, onShot } from "./perks.js";
 import { knockEnemy } from "./knockback.js";
+import { synergyHook } from "./synergies.js";
+import { coreHitMult, coreShotMult } from "./cyberCore.js";
 import { timeFactorAt } from "./hazards.js";
 import { cardDamageMult, onCardHit, onCardKill, onCardShot, ricochet } from "./cardEffects.js";
 
@@ -82,7 +84,7 @@ export function damageEnemy(enemy, amount, source = "other") {
  */
 export function strikeEnemy(enemy, base, source) {
   if (enemy.dead || enemy.submerged) return 0;
-  let damage = base;
+  let damage = base * coreHitMult();
   if (enemy.template.isBoss) damage *= player.bossDamage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) damage *= player.critMultiplier;
@@ -105,6 +107,7 @@ export function killEnemy(enemy) {
   emit("kill", enemy);
   onKill(enemy);
   onCardKill();
+  synergyHook("kill", enemy);
   playSfx("kill");
 
   game.score += 10;
@@ -294,7 +297,7 @@ function createPlayerProjectile(angle) {
     vx: Math.cos(angle) * w.speed,
     vy: Math.sin(angle) * w.speed,
     size: (ray ? Math.max(8, w.size) : w.size) * player.projScale,
-    damage: player.attack * w.damage,
+    damage: player.attack * w.damage * coreShotMult(!player.autoShoot), // Viseur manuel (Cœur Cybernétique)
     color: ray ? "#00ff88" : resolveColor(currentSkin().shot, w.color),
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
     explosion: (w.explosion || 0) * player.projScale,
@@ -309,6 +312,7 @@ function createPlayerProjectile(angle) {
   onShot(proj);
   onCardShot(proj);
   world.projectiles.push(proj);
+  synergyHook("shot", proj);
 }
 
 export function spawnProjectile(props) {
@@ -381,7 +385,7 @@ function blockShot(proj, enemy) {
 
 function hitEnemy(proj, enemy) {
   playSfx("hit");
-  let damage = proj.damage * cardDamageMult(enemy);
+  let damage = proj.damage * cardDamageMult(enemy) * coreHitMult();
   if (enemy.template.isBoss) damage *= player.bossDamage;
   const isCrit = Math.random() < player.critChance;
   if (isCrit) {
@@ -412,33 +416,9 @@ function hitEnemy(proj, enemy) {
   damageEnemy(enemy, damage, source);
   if (proj.explosion) explode(proj.x, proj.y, proj.explosion, damage * 0.6, enemy, source);
   if (proj.chain) chainLightning(enemy, damage * 0.7, proj.chain, proj.color, source);
-  if (source === "weapon" && player.synergy?.shards && enemy.frozenUntil > game.time) shatter(enemy, damage);
+  if (source === "weapon") synergyHook("hit", proj, enemy, damage);
   if (source === "weapon") onCardHit(enemy, damage);
   onHit(proj, enemy, damage, isCrit);
-}
-
-/** Synergie Cristal de givre + Railgun : l'ennemi gelé touché éclate en éclats de glace (une fois par gel). */
-function shatter(enemy, damage) {
-  const s = player.synergy;
-  enemy.frozenUntil = 0;
-  createParticles(enemy.x, enemy.y, s.color, 10);
-  const offset = Math.random() * Math.PI;
-  for (let i = 0; i < s.shards; i++) {
-    const a = offset + (Math.PI * 2 * i) / s.shards;
-    spawnProjectile({
-      x: enemy.x,
-      y: enemy.y,
-      vx: Math.cos(a) * s.speed,
-      vy: Math.sin(a) * s.speed,
-      size: 4,
-      damage: damage * s.damage,
-      color: s.color,
-      pierce: 1,
-      life: s.life,
-      hits: new Set([enemy]),
-      source: "synergy",
-    });
-  }
 }
 
 /** Disque laser : après un moment il revient vers le joueur et peut retoucher les ennemis. */

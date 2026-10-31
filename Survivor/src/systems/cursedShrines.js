@@ -15,6 +15,7 @@ import {
   createSpawnEffect,
 } from "./effects.js";
 import { arenaPointNear } from "./pickups.js";
+import { shrineHold } from "./cyberCore.js";
 import { bossFight, pickEnemyType, spawnEnemy } from "./spawner.js";
 import { playSfx } from "../services/sfx.js";
 
@@ -61,8 +62,9 @@ function updateShrine(s) {
   } else if (++s.out > C.grace) {
     return fail(s);
   }
-  if (s.salvo === 1 && s.progress >= C.hold / 2) summonHorde(s);
-  if (s.progress >= C.hold) succeed(s);
+  const hold = shrineHold(C.hold); // Rituel express (Cœur Cybernétique) : plus court
+  if (s.salvo === 1 && s.progress >= hold / 2) summonHorde(s);
+  if (s.progress >= hold) succeed(s);
 }
 
 function activate(s) {

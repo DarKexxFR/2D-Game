@@ -10,6 +10,7 @@ import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { ICONS, iconGrid } from "../data/icons.js";
 import { drawText, fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
+import { shrineHold } from "../systems/cyberCore.js";
 
 const GRID_SIZE = 60;
 const MAJOR_EVERY = 4; // une ligne plus lumineuse toutes les 4 cases
@@ -211,7 +212,7 @@ export function drawCursedShrines(now) {
     fillCircle(s.x, s.y - h + 24 + bob, 4 + (active ? 2 : 0), active ? "#fff" : CURSED_COLOR, 10);
     if (active) {
       // Jauge : arc qui fait le tour du cercle
-      const pct = s.progress / CURSED_SHRINE.hold;
+      const pct = s.progress / shrineHold(CURSED_SHRINE.hold);
       ctx.shadowBlur = 12;
       ctx.shadowColor = "#ffd700";
       ctx.strokeStyle = "#ffd700";
@@ -220,7 +221,7 @@ export function drawCursedShrines(now) {
       ctx.arc(s.x, s.y, R + 8, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
       ctx.stroke();
       ctx.shadowBlur = 0;
-      const left = Math.ceil(((CURSED_SHRINE.hold - s.progress) / 60) * 10) / 10;
+      const left = Math.ceil(((shrineHold(CURSED_SHRINE.hold) - s.progress) / 60) * 10) / 10;
       const warn = s.out > 0;
       drawText(
         warn ? "REVENEZ DANS LE CERCLE !" : `${left.toFixed(1)} s`,

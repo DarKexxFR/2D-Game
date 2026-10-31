@@ -9,6 +9,7 @@ import { clamp, dist, removeWhere } from "../utils/math.js";
 import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.js";
 import { gainXp, heal } from "./player.js";
 import { onGem } from "./perks.js";
+import { synergyHook } from "./synergies.js";
 
 const LOOTBOX_HEAL = 25;
 const MAX_LOOTBOXES = 5; // soins au sol en même temps
@@ -95,6 +96,7 @@ function updateGems() {
       playSfx("pickup");
       gainXp(g.xp);
       onGem();
+      synergyHook("gem");
       // Carte « Pacte de sang » : juste après un coup reçu, chaque gemme soigne un peu
       if (player.bloodPact && game.time < player.pactUntil) heal(player.maxHealth * player.bloodPact.heal);
     }

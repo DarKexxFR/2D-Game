@@ -35,6 +35,7 @@ import {
   starsText,
   statsText,
 } from "./itemView.js";
+import { affixPanel, dismantleSection } from "./forgePulse.js";
 import { showScreen } from "./screens.js";
 
 const RARITY_ORDER = ["common", "rare", "epic", "legendary", "mythic"];
@@ -82,6 +83,12 @@ function selectItem(id) {
   selectedId = id;
   renderInventory();
   $("itemDetail").scrollIntoView({ block: "nearest" });
+}
+
+/** Rafraîchit tout l'affichage après un changement déjà sauvegardé (éclats, attributs). */
+function refresh() {
+  onChange();
+  renderInventory();
 }
 
 /** Après une action : sauvegarde déjà faite, on rafraîchit tout l'affichage. */
@@ -157,6 +164,7 @@ function renderForge() {
   });
   const parts = [head, ...rows];
   if (forged) parts.push(forgedResult(forged));
+  parts.push(dismantleSection(activeSlot, refresh));
   $("forgePanel").replaceChildren(...parts);
 }
 
@@ -324,6 +332,7 @@ function renderDetail(item) {
     el("p", "item-desc", item.desc),
     el("p", "item-stats", statsText(item, owned.level, owned.prestige)),
     ...extras(item, owned, isEquipped),
+    ...[affixPanel(item.id, refresh)].filter(Boolean),
     actions,
   );
 }

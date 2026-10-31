@@ -32,6 +32,9 @@ import { initCloudSave } from "./services/cloudSave.js";
 import { initAds } from "./services/ads.js";
 import { dailyChallenge, restoreRandom, saveDailyBest, useSeed } from "./services/daily.js";
 import { applyTalents } from "./data/talents.js";
+import { CYBER_CORE } from "./data/cyberCore.js";
+import { applyCyberCore } from "./systems/cyberCore.js";
+import { activeNodes } from "./services/cyberCore.js";
 import { difficultyModifier, selectedDifficulty } from "./services/difficulty.js";
 import { ensureStarterItems } from "./services/inventory.js";
 import { addStat, getStat, recordBest, recordCompletedRun } from "./services/achievements.js";
@@ -111,6 +114,7 @@ import { initStreakMenu, offerLoginStreak } from "./ui/streakMenu.js";
 import { closeNews, initNewsMenu, offerNews } from "./ui/newsMenu.js";
 import { initBossRushMenu, openBossRush } from "./ui/bossRushMenu.js";
 import { initTalentMenu, openTalents } from "./ui/talentMenu.js";
+import { initCyberCoreMenu, openCyberCore } from "./ui/cyberCoreMenu.js";
 import { initSkinMenu, openSkins } from "./ui/skinMenu.js";
 import { openInventory } from "./ui/inventoryMenu.js";
 import { openLeaderboard } from "./ui/leaderboardMenu.js";
@@ -327,6 +331,7 @@ function setupRun(mode, difficulty = "normal") {
     resetPlayer(account.level);
     applyEquipment();
     applyTalents(player, account.talents);
+    if (CYBER_CORE.modes.includes(mode)) applyCyberCore(activeNodes()); // nœuds actifs (Cœur Cybernétique)
   }
   if (mode === "rush") {
     game.rush = { stage: 0, defeated: 0, bestBefore: getStat("bestBossRush") };
@@ -635,6 +640,7 @@ const MENUS = {
   duelMenu: openDuel,
   friendsMenu: () => openFriends(),
   talentMenu: openTalents,
+  cyberCoreMenu: openCyberCore,
   skinMenu: openSkins,
   loginMenu: () => (isOnlineEnabled() ? openLogin("mainMenu") : showMainMenu()),
   installMenu: () => openInstall("mainMenu"),
@@ -826,6 +832,7 @@ function init() {
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });
   initBossRushMenu({ onPlay: () => startGame("rush"), onBack: showMainMenu });
   initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
+  initCyberCoreMenu({ onBack: openTalents, onChange: refreshAccountUI });
   initSkinMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initUpgradeMenu();
   initDuelPicks();
