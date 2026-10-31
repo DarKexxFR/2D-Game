@@ -10,7 +10,7 @@ import {
   petStats,
   weaponStats,
 } from "../data/items.js";
-import { PERKS, PERK_PRESTIGE, SYNERGIES, setOf } from "../data/perks.js";
+import { PERKS, PERK_PRESTIGE, setOf, synergiesOf } from "../data/perks.js";
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
 
@@ -169,15 +169,22 @@ export function setInfo(item, equipped) {
   };
 }
 
-/** Synergie familier + arme de l'objet : { name, desc, partner, active } ou null. */
+/**
+ * Synergie familier + arme de l'objet : { name, desc, partner, active } ou null. Une arme peut avoir
+ * plusieurs familiers partenaires : celle du familier équipé passe en premier.
+ */
 export function synergyInfo(item, equipped) {
-  const s = SYNERGIES.find((s) => s.pet === item.id || s.weapon === item.id);
-  if (!s) return null;
+  const all = synergiesOf(item.id);
+  if (all.length === 0) return null;
+  const s =
+    all.find((s) => (item.slot === "pet" ? s.weapons.includes(equipped.weapon) : s.pet === equipped.pet)) ||
+    all[0];
+  const partners = item.slot === "pet" ? s.weapons.map((id) => ITEMS[id]) : [ITEMS[s.pet]];
   return {
     name: s.name,
     desc: s.desc,
-    partner: ITEMS[item.slot === "pet" ? s.weapon : s.pet],
-    active: equipped.pet === s.pet && equipped.weapon === s.weapon,
+    partner: { name: partners.map((p) => p.name).join(" ou ") },
+    active: equipped.pet === s.pet && s.weapons.includes(equipped.weapon),
   };
 }
 

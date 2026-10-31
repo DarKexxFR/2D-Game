@@ -10,6 +10,31 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-10-coeur-cybernetique",
+    date: "Octobre 2026",
+    title: "Synergies, recyclage mythique et Cœur Cybernétique",
+    items: [
+      {
+        icon: "paw",
+        color: "#00ff88",
+        title: "Une synergie pour chaque familier",
+        text: "Moissonneuse d'âmes, Tir de barrage, Attraction fatale, Courant vital, Rempart offensif, Cendres ardentes : chaque arme a désormais son familier partenaire.",
+      },
+      {
+        icon: "gem",
+        color: "#ff3b30",
+        title: "Démantèlement à la Forge",
+        text: "Vos doublons légendaires deviennent des Éclats de Pulse, pour relancer ou cibler les deux attributs de vos objets mythiques.",
+      },
+      {
+        icon: "cpu",
+        color: "#ff2a6d",
+        title: "Cœur Cybernétique",
+        text: "Au niveau de compte 20 ou après la vague 30 : 12 passifs à débloquer avec votre or, 3 actifs à la fois (dont +25 % de dégâts en tir manuel).",
+      },
+    ],
+  },
+  {
     id: "2026-10-tirs-allies",
     date: "Octobre 2026",
     title: "Plus lisible en fin de partie",

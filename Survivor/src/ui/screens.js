@@ -17,6 +17,7 @@ const SCREENS = [
   "newsMenu",
   "bossRushMenu",
   "talentMenu",
+  "cyberCoreMenu",
   "skinMenu",
   "upgradeMenu",
   "pauseMenu",

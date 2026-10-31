@@ -101,7 +101,14 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Équipement** en 5 emplacements (héros, familier, arme, armure, module), raretés commun → légendaire puis
   **mythique** (coffre mythique), niveaux, prestige ★1 à ★5, effets ★3, panoplies, synergies familier + arme,
   3 équipements enregistrés, offre du jour en boutique. **Forge** : 3 objets en double d'une rareté + de l'or
-  donnent un objet de la rareté au-dessus (jusqu'au légendaire).
+  donnent un objet de la rareté au-dessus (jusqu'au légendaire). **Démantèlement** : un doublon légendaire = des
+  Éclats de Pulse, qui relancent (au hasard) ou ciblent (au choix) les 2 **attributs de Pulse** d'un objet mythique.
+- **Synergies familier + arme** : une par familier (8), et chaque arme a au moins un familier partenaire (Givre
+  brisé, Souffle ardent, Moissonneuse d'âmes, Tir de barrage, Attraction fatale, Courant vital, Rempart offensif,
+  Cendres ardentes).
+- **Cœur Cybernétique** (écran Talents, débloqué au niveau de compte 20 ou après la vague 30) : 4 branches de 3
+  passifs achetés une fois avec de l'or, au plus 3 actifs à la fois (ex. tir manuel +25 % de dégâts, arme
+  d'appoint au départ contre -20 % d'or, sanctuaires maudits tenus en 3 s).
 - Talents, succès avec récompenses, **quêtes hebdomadaires**, **série de connexion** sur 7 jours, **skins** du
   vaisseau (forme, couleurs, traînée), tutoriel de première partie.
 - **Saison mensuelle** et son **passe gratuit** : 30 paliers (or, coffres jusqu'au mythique, une traînée et une

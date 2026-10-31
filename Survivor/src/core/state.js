@@ -151,6 +151,8 @@ export function resetPlayer(accountLevel) {
     bloodPact: null, // carte Pacte de sang : { ms, heal } ; pactUntil = fin de la fenêtre de soins
     pactUntil: 0,
     synergy: null, // duo familier + arme actif (data/perks.js SYNERGIES)
+    synergyState: { stacks: 0, until: 0, last: -1e9, tick: -1, bursts: 0 }, // systems/synergies.js
+    core: null, // effets des nœuds actifs du Cœur Cybernétique (systems/cyberCore.js), ou null
     sideWeapons: [], // armes d'appoint de la partie { id, level, timer, angle, parts? } (systems/sideWeapons.js)
     // Cartes à effet (data/cardEffects.js, systems/cardEffects.js) : nombre de cartes prises et minuteurs
     frost: 0,

@@ -23,6 +23,7 @@ const ROUTES = {
   newsMenu: "nouveautes",
   bossRushMenu: "boss-rush",
   talentMenu: "talents",
+  cyberCoreMenu: "coeur",
   skinMenu: "skins",
   upgradeMenu: "amelioration",
   pauseMenu: "pause",

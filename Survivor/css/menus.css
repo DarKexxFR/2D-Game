@@ -117,6 +117,10 @@
   --accent: #aa66ff;
   --accent-soft: #c9a3ff;
 }
+#cyberCoreMenu {
+  --accent: #ff2a6d;
+  --accent-soft: #ff8fb1;
+}
 #achievementMenu {
   --accent: #ffd700;
   --accent-soft: #ffe680;

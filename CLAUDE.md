@@ -276,9 +276,24 @@ Principes :
 - **Sanctuaires maudits** (`systems/cursedShrines.js`, `CURSED_SHRINE` dans `config.js`) : totem rouge dès la
   vague 3 ; entrer dans le cercle lance le défi (élites en deux salves), tenir 5 s = carte rare / épique
   (`showShrineReward`, choix « shrine ») ou or. Jamais pendant un boss ni en Boss Rush.
-- **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
-  Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
-  Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
+- **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js` : un familier, une ou plusieurs armes `weapons` ;
+  comportements dans `BEHAVIORS` de `systems/synergies.js`, appelés par `synergyHook(événement)` : start, shot, hit,
+  kill, gem, petAct ; état `player.synergyState`). Une par familier (8) et au moins une par arme : Givre brisé,
+  Souffle ardent, Moissonneuse d'âmes (Faucheuse + Couronne de lames), Tir de barrage (Drone + Mitrailleur),
+  Attraction fatale (Collecteur + Lance-étoiles / Lance-roquettes), Courant vital (Médic + Tesla / Plasma), Rempart
+  offensif (Gardien + Fusil à pompe), Cendres ardentes (Phénix + Disque / Blaster ; explosions plafonnées par tick).
+  Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie. Tests : `tests/synergies.spec.js`.
+- **Recyclage mythique** (`data/pulseShards.js`, `dismantle` / `rerollAffix` / `targetAffix` de `services/inventory.js`,
+  `ui/forgePulse.js`) : dans la Forge, un doublon légendaire = `DISMANTLE.shards` Éclats de Pulse (`account.pulseShards`) ;
+  un objet mythique a `AFFIX_RULES.slots` attributs (`account.items[id].affixes`, jamais deux fois le même) relancés au
+  hasard ou ciblés au choix (plus cher), appliqués par `applyAffixes` de `systems/equipment.js`. Le mythique reste
+  introuvable par la Forge (choix du propriétaire). Tests : `tests/forge.spec.js`.
+- **Cœur Cybernétique** (`data/cyberCore.js`, compte `services/cyberCore.js`, effets `systems/cyberCore.js`, écran
+  `ui/cyberCoreMenu.js`, `#modal=coeur`, bouton dans les Talents) : débloqué au niveau de compte 20 ou record de vague 31.
+  4 branches de 3 nœuds achetés une fois en or (`requires` = palier d'avant), au plus `activeSlots` (3) actifs
+  (`account.cyberCore`). Effets déclaratifs (`effects`) appliqués après les talents (`applyCyberCore`, jamais en défi
+  du jour), effets lus en partie dans `player.core` (`coreShotMult` tir manuel, `coreHitMult` sous peu de PV,
+  `shrineHold`). Tests : `tests/cyber-core.spec.js`.
 - **Renaissance** (`rebirth` dans `systems/player.js`, réglages `REVIVE` dans `config.js`) : chaque retour à la vie
   (Seconde chance, Phénix consommé en premier avec ses ailes de feu, Renaissance céleste, pub) joue une animation
   (effet `rebirth` dans `render/effects.js`) et une onde de choc : ennemis tués au corps à corps, boss et tentacules
@@ -467,7 +482,7 @@ journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 arm
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
-reprise d'une partie interrompue.
+reprise d'une partie interrompue, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
