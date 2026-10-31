@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-10-tirs-allies",
+    date: "Octobre 2026",
+    title: "Plus lisible en fin de partie",
+    items: [
+      {
+        icon: "eye",
+        color: "#00ffff",
+        title: "Opacité des tirs alliés",
+        text: "Options > Tirs alliés : de 20 à 100 %. Vos tirs s'effacent, les tirs ennemis et attaques de boss restent nets.",
+      },
+      {
+        icon: "repeat",
+        color: "#00ff88",
+        title: "Rejouer depuis le ralenti",
+        text: "Pendant « Revoir ma mort », le bouton REJOUER relance aussitôt une partie.",
+      },
+    ],
+  },
+  {
     id: "2026-10-rangs-duel",
     date: "Octobre 2026",
     title: "Rangs de duel",

@@ -56,6 +56,9 @@ Principes :
   `requestAnimationFrame`. Les durées de jeu sont en ticks, pas en millisecondes.
 - **Grille spatiale** `enemyGrid` reconstruite à chaque tick (et dans `activateSkill`) pour
   les collisions : toute recherche d'ennemis proches passe par elle.
+- **Opacité des tirs alliés** (`render/allyAlpha.js`, réglage `shotOpacity`, `SHOT_OPACITY` dans `config.js`) : tout dessin
+  d'un tir du joueur (projectiles, orbes, aura, armes d'appoint, éclairs, météores) multiplie son alpha par `allyAlpha()` ;
+  jamais les tirs ennemis ni les attaques de boss.
 - **Écritures DOM en cache** : utiliser `setText`, `setVisible`, `setClass`, `setWidth` de
   `ui/dom.js` (évite de réécrire le DOM chaque frame). `setVisible` met `display: block`.
 - **Panneau en jeu** (`#ui`, `ui/hud.js`, `css/hud.css`) : vague + éliminations + or (en Endless, la pulsation `#uiPulse` a sa propre ligne ; `tests/hud-layout.spec.js` vérifie que rien ne déborde), minuteur, vie, jauges
@@ -283,7 +286,7 @@ Principes :
 - **Ralenti de la mort** (`systems/killCam.js` enregistre, `render/killCam.js` rejoue, réglages `KILL_CAM`) :
   les 4 dernières secondes (vaisseau, ennemis, tirs, attaques de zone autour du vaisseau) sont gardées dans
   `game.killCam` ; « REVOIR MA MORT » sur l'écran de fin les rejoue façon cinéma (ralenti et zoom sur la fin,
-  explosion, « TUÉ PAR » + viseur sur le coupable). `takeDamage(montant, source)` : source = l'ennemi, son type
+  explosion, « TUÉ PAR » + viseur sur le coupable). Bouton `#btnKillCamReplay` (visible seulement pendant le ralenti) = REJOUER. `takeDamage(montant, source)` : source = l'ennemi, son type
   ou un événement de carte ; sans source, c'est le boss en vie. Pas en duel.
 - **Carte de score** (`render/shareCard.js` dessine, `ui/shareMenu.js` écran `shareMenu`, `#modal=partage`) :
   bouton « PARTAGER » de l'écran de fin ; image 1080×1350 (vague, stats, build, « tué par ») tirée d'un

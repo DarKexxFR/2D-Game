@@ -77,8 +77,10 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
   icône à la couleur de sa rareté, son nombre et son effet). Les fenêtres de partie (pause, choix, revivre,
   fin) ont un style néon commun.
+- **Tirs alliés lisibles** : un curseur dans les Options (20 à 100 %) rend les tirs du joueur plus transparents ;
+  tirs ennemis et attaques de boss restent à 100 %.
 - **Renaissance** : Seconde chance, Phénix ou pub déclenchent une onde de choc autour du vaisseau.
-- **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR »)
+- **Fin de partie** : statistiques détaillées, build en icônes, **ralenti de la mort** (« REVOIR MA MORT », avec « TUÉ PAR » et REJOUER sans attendre la fin)
   et **carte de score à partager** (image 1080×1350 avec vague, build et coupable, à partager depuis le
   téléphone, copier pour Discord ou télécharger).
 

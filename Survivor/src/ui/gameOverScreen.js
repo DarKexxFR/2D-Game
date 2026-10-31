@@ -30,10 +30,16 @@ export function setOnlineStatus(text) {
   setText("onlineStatus", text);
 }
 
-/** « REVOIR MA MORT » : l'écran de fin s'efface le temps du ralenti (render/killCam.js). */
-export function initKillCamButton() {
+/**
+ * « REVOIR MA MORT » : l'écran de fin s'efface le temps du ralenti (render/killCam.js). Le bouton
+ * REJOUER (`#btnKillCamReplay`, visible pendant le ralenti) relance une partie sans revenir à l'écran de fin.
+ * @param {() => void} onReplay relance une partie du même mode
+ */
+export function initKillCamButton(onReplay) {
   let startedAt = 0;
+  const replayBtn = $("btnKillCamReplay");
   const skip = (e) => {
+    if (e.target instanceof Node && replayBtn.contains(e.target)) return; // le clic sur REJOUER s'en charge
     if (performance.now() - startedAt < SKIP_AFTER_MS) return;
     if (e.type === "keydown" && e.repeat) return;
     stopKillCam();
@@ -48,5 +54,9 @@ export function initKillCamButton() {
       document.removeEventListener("pointerdown", skip);
       document.removeEventListener("keydown", skip);
     });
+  });
+  replayBtn.addEventListener("click", () => {
+    stopKillCam();
+    onReplay();
   });
 }

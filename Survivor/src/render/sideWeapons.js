@@ -6,17 +6,19 @@ import { player, world } from "../core/state.js";
 import { SIDE_WEAPONS, sideWeaponOf } from "../data/sideWeapons.js";
 import { beamSegments, statsOf } from "../systems/sideWeapons.js";
 import { fillCircle, strokeCircle } from "./draw.js";
+import { allyAlpha } from "./allyAlpha.js";
 
 const TAU = Math.PI * 2;
 
 /** Mines : clignotent tant qu'elles ne sont pas armées, puis pulsent doucement. */
 export function drawMines(now) {
+  const k = allyAlpha();
   for (const m of world.mines) {
     const armed = m.arm <= 0;
     const blink = armed ? 0.6 + Math.sin(now / 180) * 0.25 : Math.floor(now / 90) % 2 ? 0.35 : 0.9;
-    ctx.globalAlpha = 0.12;
+    ctx.globalAlpha = 0.12 * k;
     fillCircle(m.x, m.y, 16, m.color);
-    ctx.globalAlpha = blink;
+    ctx.globalAlpha = blink * k;
     strokeCircle(m.x, m.y, 9, m.color, 2);
     fillCircle(m.x, m.y, 3.5, armed ? m.color : "#ffffff");
     for (let k = 0; k < 4; k++) {
@@ -29,6 +31,7 @@ export function drawMines(now) {
 
 /** Faisceaux du Faisceau rotatif, partant du vaisseau. */
 export function drawBeams(now) {
+  const k = allyAlpha();
   const w = player.sideWeapons && sideWeaponOf(player, "beam"); // seul ou dans une fusion
   if (!w) return;
   const s = statsOf(w);
@@ -37,17 +40,17 @@ export function drawBeams(now) {
   ctx.lineCap = "round";
   for (const g of beamSegments(w, s)) {
     ctx.strokeStyle = color;
-    ctx.globalAlpha = 0.18 * flicker;
+    ctx.globalAlpha = 0.18 * flicker * k;
     ctx.lineWidth = 16;
     line(player.worldX, player.worldY, g.x2, g.y2);
-    ctx.globalAlpha = 0.9 * flicker;
+    ctx.globalAlpha = 0.9 * flicker * k;
     ctx.lineWidth = 4;
     line(player.worldX, player.worldY, g.x2, g.y2);
     ctx.strokeStyle = "#ffffff";
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.8 * k;
     ctx.lineWidth = 1.5;
     line(player.worldX, player.worldY, g.x2, g.y2);
-    ctx.globalAlpha = 0.6 * flicker;
+    ctx.globalAlpha = 0.6 * flicker * k;
     fillCircle(g.x2, g.y2, 5, color);
   }
   ctx.globalAlpha = 1;
@@ -55,15 +58,16 @@ export function drawBeams(now) {
 
 /** Coups de fouet : arc lumineux qui s'efface en quelques ticks. */
 export function drawSlashes() {
+  const k = allyAlpha();
   ctx.lineCap = "round";
   for (const s of world.slashes) {
     const t = s.life / 12; // 1 → 0
     const r = s.range * (0.75 + (1 - t) * 0.25);
     ctx.strokeStyle = s.color;
-    ctx.globalAlpha = 0.25 * t;
+    ctx.globalAlpha = 0.25 * t * k;
     ctx.lineWidth = 18;
     arc(s.x, s.y, r, s.angle, s.arc);
-    ctx.globalAlpha = t;
+    ctx.globalAlpha = t * k;
     ctx.lineWidth = 4;
     arc(s.x, s.y, r, s.angle, s.arc);
     ctx.strokeStyle = "#eafff4";
@@ -75,15 +79,16 @@ export function drawSlashes() {
 
 /** Missile chercheur : petit corps orienté, flamme à l'arrière. */
 export function drawMissile(p) {
+  const k = allyAlpha();
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.rotate(Math.atan2(p.vy, p.vx));
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.35 * k;
   ctx.fillStyle = p.color;
   ctx.beginPath();
   ctx.ellipse(-9, 0, 9, 3.5, 0, 0, TAU);
   ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = k;
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = p.color;
   ctx.lineWidth = 1.5;

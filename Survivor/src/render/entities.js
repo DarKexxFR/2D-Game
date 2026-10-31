@@ -10,6 +10,7 @@ import { drawSprite, getSprite, shade } from "./sprites.js";
 import { drawTrail } from "./trail.js";
 import { ENEMY_LOOKS } from "./enemyLooks.js";
 import { drawMissile } from "./sideWeapons.js";
+import { allyAlpha } from "./allyAlpha.js";
 import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 
@@ -36,6 +37,7 @@ export function drawPlayer(now) {
   const aura = auraRadius();
   if (aura > 0) {
     const inferno = player.evolutions.inferno;
+    ctx.globalAlpha = allyAlpha();
     ctx.beginPath();
     ctx.arc(x, y, aura, 0, TAU);
     ctx.fillStyle = inferno
@@ -48,6 +50,7 @@ export function drawPlayer(now) {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   }
 
   if (player.buffs.shield > 0) {
@@ -76,9 +79,11 @@ export function drawPlayer(now) {
 
   const orbSize = orbitalStats().size * 0.7;
   const orbColor = player.evolutions.guardianRing ? "#ffd700" : "#00ffff";
+  ctx.globalAlpha = allyAlpha(); // orbes : tirs alliés
   for (const orb of getOrbitalPositions()) {
     drawSprite(ctx, getSprite("bullet", orbSize, orbColor), orb.x, orb.y);
   }
+  ctx.globalAlpha = 1;
 
   if (player.isUltReady) {
     strokeCircle(x, y, size + 18 + Math.sin(now / 100) * 4, "rgba(255, 170, 0, 0.6)", 3);
@@ -876,13 +881,14 @@ function drawStun(e, now) {
 
 /** Météores du Mage : zone d'impact au sol qui se resserre, puis la boule qui tombe. */
 export function drawSkillEffects() {
+  const k = allyAlpha(); // météores de la compétence : tirs alliés
   for (const m of world.meteors) {
     const t = 1 - m.delay / m.total; // 0 → 1 à l'impact
-    ctx.globalAlpha = 0.25 + t * 0.5;
+    ctx.globalAlpha = (0.25 + t * 0.5) * k;
     strokeCircle(m.x, m.y, 85 * (1.4 - t * 0.4), "#ff5533", 2);
-    ctx.globalAlpha = 0.1 + t * 0.15;
+    ctx.globalAlpha = (0.1 + t * 0.15) * k;
     fillCircle(m.x, m.y, 85 * t, "#ff5533");
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = k;
     const fall = (1 - t) * 420;
     ctx.strokeStyle = "rgba(255, 170, 60, 0.5)";
     ctx.lineWidth = 6;
@@ -892,6 +898,7 @@ export function drawSkillEffects() {
     ctx.stroke();
     drawSprite(ctx, getSprite("bullet", 12, "#ff8844"), m.x + fall * 0.5, m.y - fall);
   }
+  ctx.globalAlpha = 1;
 }
 
 /**
@@ -919,7 +926,10 @@ function drawHealthBar(e) {
 
 export function drawProjectiles() {
   ctx.lineCap = "round";
+  // Tirs du joueur : opacité réglable (Options), les tirs ennemis plus bas restent à 100 %.
+  const k = allyAlpha();
   for (const p of world.projectiles) {
+    ctx.globalAlpha = k;
     if (p.type === "kunai") {
       drawKunai(p);
       continue;
@@ -930,22 +940,22 @@ export function drawProjectiles() {
     }
     if (p.type === "disc") {
       // Fondu pendant les derniers ticks de sa durée de vie
-      if (p.fade) ctx.globalAlpha = Math.min(1, p.life / p.fade);
+      if (p.fade) ctx.globalAlpha = Math.min(1, p.life / p.fade) * k;
       drawSprite(ctx, getSprite("disc", roundSize(p.size), p.color), p.x, p.y, performance.now() / 40);
-      ctx.globalAlpha = 1;
       continue;
     }
     // Traînée puis projectile lumineux
     ctx.strokeStyle = p.color;
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.35 * k;
     ctx.lineWidth = p.size * 1.2;
     ctx.beginPath();
     ctx.moveTo(p.x - p.vx * 1.8, p.y - p.vy * 1.8);
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = k;
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
   }
+  ctx.globalAlpha = 1;
   for (const p of world.enemyProjectiles) {
     if (p.dead || !isOnScreen(p.x, p.y, p.size)) continue; // effacés par une renaissance
     if (p.scythe) {

@@ -48,3 +48,35 @@ test("options depuis la pause : retour à la pause, partie toujours en pause", a
   await expect(page.locator("#pauseMenu")).toBeVisible();
   expect(await game(page, ({ state }) => state.game.paused)).toBe(true);
 });
+
+test("opacité des tirs alliés : seuls les tirs du joueur deviennent transparents", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#btnOptions").click();
+  await page.locator("#optShotOpacity").fill("20");
+  await expect(page.locator("#optShotOpacityValue")).toHaveText("20%");
+  await page.reload();
+  expect(await game(page, ({ settings }) => settings.settings.shotOpacity)).toBe(0.2);
+
+  // Un tir du joueur et un tir ennemi : on relève l'alpha au moment où chacun est dessiné
+  const alphas = await page.evaluate(async () => {
+    const { ctx } = await import("/src/core/canvas.js");
+    const { world } = await import("/src/core/state.js");
+    const { drawProjectiles } = await import("/src/render/entities.js");
+    world.projectiles.length = 0;
+    world.enemyProjectiles.length = 0;
+    world.projectiles.push({ x: 100, y: 100, vx: 5, vy: 0, size: 6, color: "#00ffff" });
+    world.enemyProjectiles.push({ x: 140, y: 100, vx: -5, vy: 0, size: 6, color: "#ff2a6d" });
+    const seen = [];
+    const draw = ctx.drawImage;
+    ctx.drawImage = function (...a) {
+      seen.push(Math.round(ctx.globalAlpha * 100) / 100);
+      return draw.apply(this, a);
+    };
+    drawProjectiles();
+    ctx.drawImage = draw;
+    world.projectiles.length = 0;
+    world.enemyProjectiles.length = 0;
+    return seen;
+  });
+  expect(alphas).toEqual([0.2, 1]);
+});
