@@ -9,7 +9,16 @@ test("emplacements pleins : seuls les pouvoirs possédés sont encore proposés"
   const r = await game(page, ({ state, upgrades }) => {
     const p = state.player;
     const { POWER_RULES, UPGRADES, availableUpgrades, applyUpgrade, ownedPowers } = upgrades;
-    const names = ["Force Brute", "Vitalité", "Avidité", "Recul", "Perçage", "Régénération"];
+    const names = [
+      "Force Brute",
+      "Vitalité",
+      "Avidité",
+      "Recul",
+      "Perçage",
+      "Régénération",
+      "Aimant",
+      "Sniper",
+    ];
     for (const name of names) applyUpgrade(upgrades.cardByName(name), p);
     const offered = availableUpgrades(p).filter((u) => u.power);
     // Un pouvoir au maximum n'est plus proposé
@@ -65,7 +74,7 @@ test("la carte montre le niveau visé et les emplacements", async ({ page, isMob
   expect(await game(page, ({ state }) => state.player.orbitals)).toBe(2); // niveau 1 : deux orbes
   const first = page.locator(".upgrade-option").first();
   await expect(first).toContainText("Orbe Protecteur · niv. 2/5");
-  await expect(page.locator("#upgradeSubtitle")).toHaveText("Pouvoirs 1/6");
+  await expect(page.locator("#upgradeSubtitle")).toHaveText("Pouvoirs 1/8");
 });
 
 test("tout au maximum : cartes de secours (soin et or)", async ({ page, isMobile }) => {

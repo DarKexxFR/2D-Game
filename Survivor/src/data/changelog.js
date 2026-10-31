@@ -17,8 +17,8 @@ export const CHANGELOG = [
       {
         icon: "sparkle",
         color: "#ffd700",
-        title: "6 emplacements de pouvoir",
-        text: "Plus question d'empiler tous les pouvoirs : choisissez-en 6, puis faites-les monter jusqu'au niveau 5.",
+        title: "8 emplacements de pouvoir",
+        text: "Plus question d'empiler tous les pouvoirs : choisissez-en 8, puis faites-les monter jusqu'au niveau 5.",
       },
       {
         icon: "sword",

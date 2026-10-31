@@ -70,7 +70,7 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
 - **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
   (53 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
   éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
-- **Pouvoirs** à chaque niveau : **6 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
+- **Pouvoirs** à chaque niveau : **8 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
   Berserker et Exécution, 4 pour Multi-Tir) et chaque niveau compte. Emplacements pleins = seules les cartes des
   pouvoirs possédés reviennent ; tout au maximum = cartes de secours (Réparation, Butin). Pouvoirs dont Givre,
   Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique, Pulsar, Surtension ; **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus

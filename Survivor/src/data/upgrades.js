@@ -20,7 +20,7 @@ import {
 } from "./sideWeapons.js";
 
 export const POWER_RULES = {
-  slots: 6, // pouvoirs différents au plus par partie
+  slots: 8, // pouvoirs différents au plus par partie
   maxLevel: 5, // niveau maximum par défaut d'un pouvoir
   // Tout est au maximum : cartes de secours (ui/upgradeMenu.js) à la place des pouvoirs
   filler: { heal: 0.3, gold: 30, goldPerWave: 6 },

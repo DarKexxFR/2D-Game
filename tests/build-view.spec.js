@@ -28,9 +28,9 @@ test("la pause montre les armes et les améliorations prises", async ({ page, is
   await expect(view.locator(".bv-weapon.empty")).toHaveCount(2);
   // Pouvoirs : une tuile par pouvoir, avec son niveau et son effet ; la carte d'arme n'y est pas.
   // Les emplacements de pouvoir encore libres suivent.
-  await expect(view).toContainText("Pouvoirs 2/6");
+  await expect(view).toContainText("Pouvoirs 2/8");
   await expect(view.locator(".bv-card:not(.empty)")).toHaveCount(2);
-  await expect(view.locator(".bv-card.empty")).toHaveCount(4);
+  await expect(view.locator(".bv-card.empty")).toHaveCount(6);
   const multi = view.locator(".bv-card", { hasText: "Multi-Tir" });
   await expect(multi.locator(".bv-count")).toHaveText("2");
   await expect(multi.locator(".bv-pips i.on")).toHaveCount(2);
