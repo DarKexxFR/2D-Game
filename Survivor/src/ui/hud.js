@@ -22,6 +22,42 @@ export function showHud(visible) {
   showTouchControls(visible);
 }
 
+/**
+ * Nombre court pour les compteurs du panneau : 9999 tel quel, puis 10,5k / 312k / 1,2M.
+ * Au-delà de 4 chiffres, l'or et les éliminations sortaient du panneau.
+ * @param {number} n
+ */
+export function shortNumber(n) {
+  const v = Math.floor(n);
+  if (v < 10000) return String(v);
+  const [unit, div] = v < 1e6 ? ["k", 1e3] : ["M", 1e6];
+  const x = v / div;
+  // une décimale tant qu'il y a moins de 3 chiffres avant la virgule (tronquée : jamais arrondie vers le haut)
+  const text = x < 100 ? (Math.floor(x * 10) / 10).toString() : String(Math.floor(x));
+  return text.replace(".", ",") + unit;
+}
+
+let headerFit = "";
+
+/**
+ * Compteurs toujours à droite de la vague, sur la même ligne : si une police plus large les fait passer à la
+ * ligne, l'en-tête passe en version serrée (classe `tight`). Mesuré seulement quand la longueur des textes,
+ * la largeur du panneau ou les polices changent (pas à chaque élimination).
+ */
+function fitHeader() {
+  const ui = $("ui");
+  const key = [$("wave")._text, $("kills")._text, $("uiRunGold")._text]
+    .map((t) => (t || "").length)
+    .concat(ui.clientWidth, document.fonts?.status ?? "")
+    .join("|");
+  if (key === headerFit || ui.clientWidth === 0) return;
+  headerFit = key;
+  setClass("uiHeader", "tight", false);
+  // passés à la ligne = sous la vague (sur la même ligne, ils sont centrés verticalement, donc un peu plus bas)
+  const wave = $("uiWave");
+  setClass("uiHeader", "tight", $("uiCounters").offsetTop >= wave.offsetTop + wave.offsetHeight);
+}
+
 /** Pourcentage de soins perdus à cause de la corruption (0 avant la vague SURVIVAL.healFatigueFrom). */
 export function corruptionPercent() {
   return Math.round((1 - healFactor()) * 100);
@@ -52,7 +88,7 @@ export function updateHud() {
   }
   setText("wave", game.rush ? game.rush.stage : game.wave);
   setVisible("timerContainer", !game.rush);
-  setText("kills", game.kills);
+  setText("kills", shortNumber(game.kills));
   setText("healthText", `${Math.round(Math.max(0, player.health))}/${Math.round(player.maxHealth)}`);
   setWidth("playerHealth", player.health / player.maxHealth);
   updateCorruption();
@@ -70,7 +106,8 @@ export function updateHud() {
   setText("statMagnet", Math.round(player.magnetRadius));
   setText("statCrit", Math.round(player.critChance * 100) + "%");
   setText("statCdmg", Math.round(player.critMultiplier * 100) + "%");
-  setText("uiRunGold", game.runGold);
+  setText("uiRunGold", shortNumber(game.runGold));
+  fitHeader();
   setVisible("autoShootOff", !player.autoShoot);
 
   setWidth("ultBar", player.ultCharge / player.maxUltCharge);
