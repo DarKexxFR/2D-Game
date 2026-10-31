@@ -19,6 +19,7 @@ const SCREENS = [
   "talentMenu",
   "skinMenu",
   "upgradeMenu",
+  "blackMarket",
   "pauseMenu",
   "optionsMenu",
   "loginMenu",

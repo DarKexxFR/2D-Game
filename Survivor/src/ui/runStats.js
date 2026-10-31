@@ -44,6 +44,8 @@ function sourceName(source) {
       return "Surtension";
     case "dash":
       return "Dash explosif";
+    case "station":
+      return "Tourelles piratées";
     default:
       return SIDE_WEAPONS[source] ? sideName(source, player) : "Autres";
   }

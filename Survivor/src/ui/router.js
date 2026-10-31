@@ -25,6 +25,7 @@ const ROUTES = {
   talentMenu: "talents",
   skinMenu: "skins",
   upgradeMenu: "amelioration",
+  blackMarket: "marchand",
   pauseMenu: "pause",
   reviveMenu: "revivre",
   gameOver: "fin",

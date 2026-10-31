@@ -266,6 +266,20 @@ Principes :
 - **Sanctuaires maudits** (`systems/cursedShrines.js`, `CURSED_SHRINE` dans `config.js`) : totem rouge dès la
   vague 3 ; entrer dans le cercle lance le défi (élites en deux salves), tenir 5 s = carte rare / épique
   (`showShrineReward`, choix « shrine ») ou or. Jamais pendant un boss ni en Boss Rush.
+- **Anomalies de biome** (`systems/anomalies/` : `index.js` chef d'orchestre, un module par anomalie avec
+  `layout` / `place` / `update` / `steer` ; réglages `data/anomalies.js`, dessin `render/anomalies.js`) : une par biome
+  qui en a une, active toutes ses vagues (`game.anomaly`, données simples). Toundra : verglas (`steerOnTerrain` appelé
+  par `move` de `systems/player.js` : vitesse ×1,3, inertie). Station : tourelles piratables (3 s à côté, tirs source
+  `station`). Faille : 4 portails aux coins de `combatZone()`, chacun vers le coin opposé (joueur seulement, jamais les
+  ennemis ni les boss). Objets en coordonnées relatives à la zone de combat, reposés quand l'arène d'un boss se ferme
+  ou se rouvre, jamais sous le vaisseau (`scatter`). Nouvelle anomalie = entrée dans `ANOMALIES` + module déclaré dans
+  `MODULES` + dessin. Tests : `tests/anomalies.spec.js`.
+- **Marchand Noir** (`systems/blackMarket.js`, fenêtre `ui/blackMarket.js`, `#modal=marchand`, réglages `BLACK_MARKET`) :
+  remplace parfois un sanctuaire maudit (`merchantReplacesShrine`), jamais en Boss Rush, en duel ni pendant un boss.
+  Le rejoindre ouvre l'échange par la file des choix de `ui/upgradeMenu.js` (kind `market` : une légendaire + une
+  corrompue, sauvegardé avec la partie). Prix : une carte rendable ou `hpCost` des PV max. Cartes rendables :
+  `applyUpgrade` note dans `player.cardLog` ce que chaque carte a changé ; seules celles qui n'ont touché que des
+  nombres se rendent (`tradeableCards` / `removeCard` de `data/upgrades.js`), jamais évolution, fusion, arme ou corrompue.
 - **Synergies familier + arme** (`SYNERGIES` dans `data/perks.js`, `player.synergy`) : Cristal de givre +
   Railgun (éclats de glace sur les ennemis gelés), Dragonnet + Lance-flammes (aura et portée +20 %).
   Affichées dans l'équipement (bandeau et fiche) et annoncées en début de partie.
@@ -457,7 +471,7 @@ journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 arm
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
-reprise d'une partie interrompue.
+reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

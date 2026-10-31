@@ -308,7 +308,7 @@ button.pause-abandon {
   padding: 4px;
   overflow: visible;
 }
-#upgradeMenu .upgrade-option {
+:is(#upgradeMenu, #blackMarket) .upgrade-option {
   --c: #aaa;
   margin: 0;
   padding: 14px 16px 14px 14px;
@@ -321,35 +321,35 @@ button.pause-abandon {
     box-shadow 0.12s;
   animation: none;
 }
-#upgradeMenu .upgrade-option.rarity-common {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-common {
   --c: #b8b8b8;
 }
-#upgradeMenu .upgrade-option.rarity-rare {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-rare {
   --c: #2b9bff;
 }
-#upgradeMenu .upgrade-option.rarity-epic {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-epic {
   --c: #b84dff;
 }
-#upgradeMenu .upgrade-option.rarity-legendary {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-legendary {
   --c: #ffaa00;
   animation: pulseGold 2s infinite;
 }
-#upgradeMenu .upgrade-option.rarity-evolution {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-evolution {
   --c: #ff2a6d;
   animation: pulseGold 1.2s infinite;
 }
-#upgradeMenu .upgrade-option.rarity-corrupted {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-corrupted {
   --c: #ff1f4b;
 }
-#upgradeMenu .upgrade-option.rarity-weapon {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-weapon {
   --c: #00e5ff;
 }
-#upgradeMenu .upgrade-option.rarity-fusion {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.rarity-fusion {
   --c: #ff8cf8;
   animation: pulseGold 1.2s infinite;
 }
 /* Survol / sélection : lueur à la couleur de la rareté, sans déplacement (la carte ne sort plus du cadre) */
-#upgradeMenu .upgrade-option.selected {
+:is(#upgradeMenu, #blackMarket) .upgrade-option.selected {
   border-color: var(--c);
   background: linear-gradient(100deg, color-mix(in srgb, var(--c) 24%, transparent), rgba(8, 4, 18, 0.7) 70%);
   box-shadow:
@@ -357,12 +357,12 @@ button.pause-abandon {
     inset 0 0 12px color-mix(in srgb, var(--c) 18%, transparent);
 }
 @media (hover: hover) {
-  #upgradeMenu .upgrade-option:hover {
+  :is(#upgradeMenu, #blackMarket) .upgrade-option:hover {
     transform: none;
     border-color: var(--c);
   }
 }
-#upgradeMenu .upgrade-option .icon {
+:is(#upgradeMenu, #blackMarket) .upgrade-option .icon {
   width: 52px;
   height: 52px;
   margin-right: 14px;
@@ -371,7 +371,7 @@ button.pause-abandon {
   background: radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent), rgba(0, 0, 0, 0.6) 75%);
   font-size: 28px;
 }
-#upgradeMenu .rarity-tag {
+:is(#upgradeMenu, #blackMarket) .rarity-tag {
   top: 8px;
   right: 10px;
   padding: 1px 8px;
@@ -380,22 +380,93 @@ button.pause-abandon {
   font-size: 9px;
   font-weight: 700;
 }
-#upgradeMenu .upg-info {
+:is(#upgradeMenu, #blackMarket) .upg-info {
   min-width: 0;
   padding-right: 64px;
 }
-#upgradeMenu .upg-info h4 {
+:is(#upgradeMenu, #blackMarket) .upg-info h4 {
   font-size: 16px;
 }
-#upgradeMenu .upg-info p {
+:is(#upgradeMenu, #blackMarket) .upg-info p {
   color: #c8c1dd;
 }
-#upgradeMenu .upg-key {
+:is(#upgradeMenu, #blackMarket) .upg-key {
   top: auto;
   bottom: 8px;
   left: auto;
   right: 12px;
   color: color-mix(in srgb, var(--c) 60%, #555);
+}
+
+/* --- Marchand Noir (ui/blackMarket.js) --- */
+#blackMarket {
+  --accent: #aa66ff;
+  width: min(620px, calc(100vw - 30px));
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+}
+#blackMarket .market-step {
+  margin: 14px 0 8px;
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+  font-family: Orbitron, sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-align: left;
+}
+#marketOffers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px;
+  overflow: visible;
+}
+#blackMarket .upgrade-option {
+  cursor: pointer;
+}
+#marketPrices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  max-height: 210px;
+  overflow-y: auto;
+  padding: 4px;
+}
+#blackMarket button.market-price {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+#blackMarket button.market-price .ico {
+  grid-row: span 2;
+  font-size: 22px;
+}
+#blackMarket button.market-price b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#blackMarket button.market-price small {
+  color: #a99fc4;
+  font-size: 10px;
+}
+#blackMarket button.market-price.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+#blackMarket .btn-grid {
+  margin-top: 14px;
+}
+#blackMarket #btnMarketDeal:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* --- Revivre --- */

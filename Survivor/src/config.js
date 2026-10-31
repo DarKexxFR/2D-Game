@@ -247,6 +247,19 @@ export const CURSED_SHRINE = {
   goldPerWave: 25,
 };
 
+// Marchand Noir : remplace parfois un sanctuaire maudit (voir systems/blackMarket.js, ui/blackMarket.js).
+// Pas d'or : il échange une carte déjà prise (ou une part des PV max) contre une carte légendaire ou
+// corrompue garantie. Une seule affaire par marchand ; jamais pendant un boss, en Boss Rush ni en duel.
+export const BLACK_MARKET = {
+  color: "#aa66ff",
+  fromWave: 5,
+  chance: 0.25, // part des sanctuaires remplacés par le marchand
+  radius: 70, // s'approcher à cette distance ouvre l'échange
+  idleLife: 2700, // il repart au bout de 45 s
+  hpCost: 0.2, // prix en PV : 20 % des PV max
+  minHealth: 80, // en dessous de ces PV max, il ne prend plus de PV
+};
+
 export const BUFF_DURATIONS = {
   frenzy: 600,
   shield: 600,

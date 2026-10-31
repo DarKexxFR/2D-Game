@@ -74,6 +74,13 @@ boutons DASH et compétence à droite, tir automatique ; portrait et paysage son
   Pulsar, Surtension), **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.
+- **Anomalies de biome** : le terrain change avec le biome, pendant toutes ses vagues. Toundra de glace :
+  plaques de verglas (vitesse +30 % mais le vaisseau glisse). Station orbitale : tourelles neutres à pirater
+  en restant 3 s à côté (elles tirent ensuite 15 s sur les ennemis). Faille quantique : un portail dans chaque
+  coin, qui envoie au coin opposé. Pendant un boss, les anomalies se replacent dans l'arène.
+- **Marchand Noir** : apparaît parfois à la place d'un sanctuaire maudit (dès la vague 5). Pas d'or : il
+  échange une carte déjà prise (ses effets sont retirés) ou 20 % des PV max contre une carte légendaire ou
+  corrompue garantie. Une seule affaire, puis il disparaît.
 - **Pause** : le build complet de la partie (armes et leur niveau, évolutions, chaque amélioration avec son
   icône à la couleur de sa rareté, son nombre et son effet). Les fenêtres de partie (pause, choix, revivre,
   fin) ont un style néon commun.

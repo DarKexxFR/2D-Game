@@ -18,6 +18,7 @@ import { RARITY_NAMES } from "./buildView.js";
 import { $, el, isVisible, setClass, setText, setVisible } from "./dom.js";
 import { icon } from "./icons.js";
 import { hideScreens, showScreen } from "./screens.js";
+import { openBlackMarket } from "./blackMarket.js";
 import { isTouchDevice } from "./touchControls.js";
 
 const CHOICES = 3;
@@ -28,7 +29,10 @@ const ALLOWED = {
   level: () => true,
   chest: (u) => u.rarity !== "common" && u.rarity !== "corrupted",
   shrine: (u) => u.rarity === "rare" || u.rarity === "epic",
+  market: (u) => MARKET_RARITIES.includes(u.rarity),
 };
+// Marchand Noir : une carte garantie de chaque rareté (voir ui/blackMarket.js)
+const MARKET_RARITIES = ["legendary", "corrupted"];
 
 /** Choix en attente (un coffre ramassé pendant qu'un autre choix est affiché, par exemple). */
 const queue = [];
@@ -43,6 +47,7 @@ let shownAt = 0;
 const CONFIRM_DELAY_MS = 350;
 
 function drawUpgrades(count, req = current) {
+  if (req.kind === "market") return drawMarket(req.target);
   const chest = req.kind === "chest";
   const p = req.target;
   const allowed = ALLOWED[req.kind];
@@ -54,6 +59,20 @@ function drawUpgrades(count, req = current) {
     picks.push(pick);
     pool.splice(pool.indexOf(pick), 1); // pas de doublon
   }
+  return picks;
+}
+
+/** Marchand Noir : une légendaire et une corrompue (deux de l'une si l'autre n'est plus disponible). */
+function drawMarket(p) {
+  const pool = availableUpgrades(p).filter(ALLOWED.market);
+  const pickFrom = (cards) => cards.splice(Math.floor(Math.random() * cards.length), 1)[0];
+  const picks = [];
+  for (const rarity of MARKET_RARITIES) {
+    const cards = pool.filter((u) => u.rarity === rarity && !picks.includes(u));
+    if (cards.length > 0) picks.push(pickFrom(cards));
+  }
+  const rest = pool.filter((u) => !picks.includes(u));
+  while (picks.length < MARKET_RARITIES.length && rest.length > 0) picks.push(pickFrom(rest));
   return picks;
 }
 
@@ -144,6 +163,11 @@ export function showBossChest() {
   request({ kind: "chest", target: player });
 }
 
+/** Marchand Noir rejoint : échange d'une carte (ou de PV max) contre une carte garantie. */
+export function showBlackMarket() {
+  request({ kind: "market", target: player });
+}
+
 /** Sanctuaire maudit réussi : une carte rare ou épique au choix. */
 export function showShrineReward() {
   request({ kind: "shrine", target: player });
@@ -192,6 +216,9 @@ function open(req) {
 
   game.running = false;
   game.paused = true;
+  if (req.kind === "market") {
+    return openBlackMarket(req.target, picks, { take: (u) => takeCard(u, req.target), done: resume });
+  }
   const shrine = req.kind === "shrine";
   setText("upgradeTitle", chest ? "COFFRE DE BOSS" : shrine ? "SANCTUAIRE MAUDIT" : "CHOISISSEZ !");
   setText(

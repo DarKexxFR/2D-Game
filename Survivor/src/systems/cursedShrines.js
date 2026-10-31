@@ -1,6 +1,7 @@
 // Sanctuaires maudits : un totem rouge apparaît sur la carte. Le joueur l'active en entrant dans son
 // cercle, puis doit y rester 5 s pendant qu'une mini-horde d'élites arrive (en deux salves). Réussi :
 // une carte rare / épique au choix ou un gros tas d'or. Jamais pendant un boss ni en Boss Rush.
+// Parfois, c'est le Marchand Noir qui apparaît à la place (systems/blackMarket.js).
 // Réglages : CURSED_SHRINE (config.js). État dans `world.cursedShrines` (échangé en duel sur un écran).
 
 import { CURSED_SHRINE as C } from "../config.js";
@@ -17,6 +18,7 @@ import {
 import { arenaPointNear } from "./pickups.js";
 import { bossFight, pickEnemyType, spawnEnemy } from "./spawner.js";
 import { playSfx } from "../services/sfx.js";
+import { merchantReplacesShrine, spawnMerchant } from "./blackMarket.js";
 
 const CURSED_COLOR = C.color;
 
@@ -29,7 +31,10 @@ export function updateCursedShrines() {
     return;
   }
   if (list.length === 0) {
-    if (game.wave >= C.fromWave && Math.random() < C.chance) spawnCursedShrine();
+    // Un seul totem (ou marchand) à la fois ; le Marchand Noir prend parfois sa place
+    if (world.merchants.length > 0 || game.wave < C.fromWave || Math.random() >= C.chance) return;
+    if (merchantReplacesShrine()) spawnMerchant();
+    else spawnCursedShrine();
     return;
   }
   for (const s of list) updateShrine(s);

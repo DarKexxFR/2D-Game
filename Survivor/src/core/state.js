@@ -17,6 +17,7 @@ export const world = {
   lootBoxes: [],
   shrines: [],
   cursedShrines: [], // sanctuaires maudits (voir systems/cursedShrines.js)
+  merchants: [], // Marchand Noir (voir systems/blackMarket.js)
   particles: [],
   visualEffects: [],
   floatingTexts: [],
@@ -75,6 +76,7 @@ export function resetGame() {
     arena: null, // zone visée pendant un combat de boss { minX, maxX, minY, maxY }, sinon null
     mapEvent: null, // événement de carte en cours (voir systems/mapEvents.js), sinon null
     eventTimer: MAP_EVENTS.firstDelay, // ticks avant le prochain événement
+    anomaly: null, // anomalie du biome en cours (voir systems/anomalies/), sinon null
   });
   for (const list of Object.values(world)) list.length = 0;
 }
@@ -104,6 +106,7 @@ export function resetPlayer(accountLevel) {
     orbitals: 0,
     orbitalAngle: 0,
     inventory: {},
+    cardLog: [], // ce que chaque carte prise a changé (voir removeCard dans data/upgrades.js)
     evolutions: {}, // évolutions d'armes obtenues (voir data/upgrades.js)
     thorns: 0,
     vampirism: 0,

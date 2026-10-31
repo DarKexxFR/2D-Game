@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-10-anomalies-marchand",
+    date: "Octobre 2026",
+    title: "Anomalies de biome et Marchand Noir",
+    items: [
+      {
+        icon: "snowflake",
+        color: "#bff4ff",
+        title: "Le terrain s'en mêle",
+        text: "Verglas en Toundra (plus rapide, mais ça glisse), tourelles à pirater dans la Station orbitale, portails aux quatre coins de la Faille quantique.",
+      },
+      {
+        icon: "coin",
+        color: "#aa66ff",
+        title: "Marchand Noir",
+        text: "Il remplace parfois un sanctuaire maudit : rends-lui une carte ou 20 % de tes PV max, repars avec une carte légendaire ou corrompue.",
+      },
+    ],
+  },
+  {
     id: "2026-10-rangs-duel",
     date: "Octobre 2026",
     title: "Rangs de duel",
