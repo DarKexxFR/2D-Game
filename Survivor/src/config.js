@@ -476,6 +476,36 @@ export const NET = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
 };
 
+// Coop en ligne (systems/party.js, systems/coopSync.js, services/coopNet.js) : de 2 à 4 joueurs dans la même
+// partie de survie. L'hôte fait tourner la partie (ennemis, vagues, boss, tous les vaisseaux) ; chaque invité
+// envoie ses commandes et reçoit l'état de la partie, qu'il dessine. Salon et relais : Supabase Realtime,
+// comme le duel ; connexion directe WebRTC entre l'hôte et chaque invité.
+export const COOP = {
+  minPlayers: 2,
+  maxPlayers: 4,
+  colors: ["#00ffff", "#ff2a6d", "#00ff88", "#ffd700"], // couleur de chaque joueur (nom, panneau, réanimation)
+  // Difficulté selon le nombre de joueurs : × (1 + valeur × joueurs en plus)
+  // (carte et arène des boss plus grandes pour avoir la place de jouer à plusieurs)
+  scaling: { enemyHealth: 0.55, mobCount: 0.4, spawnRate: 0.35, map: 0.25, arena: 0.2 },
+  focusTicks: 120, // apparitions et événements de carte autour de chaque joueur à tour de rôle
+  bossRetargetTicks: 240, // un boss change de cible (le joueur le plus proche) toutes les 4 s au plus
+  // À terre : un coéquipier qui reste à côté le relève ; tous à terre = fin de partie
+  reviveRadius: 70,
+  reviveTicks: 150, // 2,5 s à côté du joueur à terre
+  reviveDecay: 2, // progression perdue par tick quand plus personne n'aide
+  reviveHealth: 0.4, // part des PV max rendue
+  reviveShield: 120, // ticks d'invulnérabilité après la réanimation
+  pickSeconds: 15, // choix d'amélioration : la partie attend, puis la carte surlignée est prise
+  // Réseau
+  snapshotsPerSecond: 20, // état de la partie envoyé aux invités (connexion directe)
+  snapshotsPerSecondRelay: 6, // par Supabase (plus lent, quota de messages)
+  inputsPerSecond: 30, // commandes d'un invité (au plus ; envoyées aussi à chaque changement)
+  inputsPerSecondRelay: 10,
+  visualCaps: { particles: 60, floatingTexts: 20, visualEffects: 20, bolts: 10, ghosts: 10, trail: 20 },
+  snapDistance: 220, // au-delà, une entité saute à sa nouvelle place au lieu de glisser
+  lobbyPingMs: 1500, // le salon redit qui est là (un invité arrivé entre-temps se met à jour)
+};
+
 // Amis (services/friends.js, ui/friendsMenu.js) : liste et présence par Supabase, défis en direct par Realtime
 export const FRIENDS = {
   syncMs: 30000, // présence et liste d'amis rafraîchies (un ami est « en ligne » 75 s après son dernier signe)

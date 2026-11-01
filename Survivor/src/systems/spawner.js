@@ -60,7 +60,8 @@ function spawnMobs() {
     spawnEnemy();
   } else if (--game.spawnTimer <= 0) {
     spawnEnemy();
-    game.spawnTimer = Math.max(W.minSpawnInterval, W.spawnInterval - game.wave * W.spawnIntervalPerWave);
+    const interval = Math.max(W.minSpawnInterval, W.spawnInterval - game.wave * W.spawnIntervalPerWave);
+    game.spawnTimer = interval / (game.modifier.spawnRate || 1); // coop : plus d'apparitions
   }
 }
 

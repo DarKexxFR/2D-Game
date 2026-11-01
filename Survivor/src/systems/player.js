@@ -25,6 +25,7 @@ import { onDash, onHurt, onLevelUp } from "./perks.js";
 import { noteKiller } from "./killCam.js";
 import { absorbHit, onCardDash } from "./cardEffects.js";
 import { steerOnTerrain } from "./anomalies/index.js";
+import { downMember, isLocalMember } from "./party.js";
 
 const FROST_SLOW = 0.55; // vitesse quand le joueur est gelé par un golem
 
@@ -158,9 +159,12 @@ export function takeDamage(amount, source) {
   if (absorbHit()) return; // carte Bouclier d'énergie
   amount *= player.damageTaken;
   player.health -= amount;
-  playSfx("hurt");
-  vibrate(40);
-  addScreenShake(5);
+  const local = isLocalMember(); // coop : l'écran de cet appareil ne tremble que pour son propre vaisseau
+  if (local) {
+    playSfx("hurt");
+    vibrate(40);
+    addScreenShake(5);
+  }
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
   if (amount >= player.maxHealth * VISUAL_FX.chroma.heavyHit) kickChroma(0.7); // coup lourd
   if (player.health <= 0 && player.revives > 0) {
@@ -176,6 +180,7 @@ export function takeDamage(amount, source) {
   }
   if (player.health <= 0) {
     noteKiller(source);
+    if (downMember()) return; // coop : à terre, l'équipe continue (un coéquipier peut le relever)
     game.over = true;
     playSfx("death");
     vibrate(300);
@@ -247,10 +252,11 @@ function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) 
   vibrate([80, 40, 120]);
 }
 
-export function gainXp(amount) {
+/** `shared` : XP d'une gemme ramassée par un coéquipier (coop), déjà comptée dans l'XP de la partie. */
+export function gainXp(amount, shared = false) {
   amount *= 1 + player.xpBonus;
   player.xp += amount;
-  game.totalRunXp += amount;
+  if (!shared) game.totalRunXp += amount;
   if (player.xp < player.xpToNextLevel) return;
 
   player.xp -= player.xpToNextLevel;
@@ -258,8 +264,10 @@ export function gainXp(amount) {
   recordPlayerLevel(player.level);
   player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.3);
   addFloatingText(player.worldX, player.worldY - 50, "LEVEL UP!", "#ffd700", 30, 100);
-  playSfx("levelUp");
-  vibrate([30, 40, 30]);
+  if (isLocalMember()) {
+    playSfx("levelUp");
+    vibrate([30, 40, 30]);
+  }
   createSpawnEffect(player.worldX, player.worldY, "#ffd700");
   onLevelUp();
   emit("levelUp");

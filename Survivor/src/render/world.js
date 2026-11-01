@@ -1,9 +1,9 @@
 // Décor et objets posés au sol : grille, bordure, boîte mystère, sanctuaires, butin.
 
-import { CURSED_SHRINE, MAP_BOUNDS, MAP_SIZE, MYSTERY_BOX } from "../config.js";
+import { CURSED_SHRINE, MYSTERY_BOX } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
 import { camera, game, mysteryBox as box, player, world } from "../core/state.js";
-import { arenaShrunk } from "../systems/arena.js";
+import { arenaShrunk, mapBounds } from "../systems/arena.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { ICONS, iconGrid } from "../data/icons.js";
@@ -40,12 +40,15 @@ export function drawMapBorder() {
   ctx.lineWidth = 5;
   ctx.shadowBlur = 20;
   ctx.shadowColor = "#ff0055";
-  ctx.strokeRect(MAP_BOUNDS.minX, MAP_BOUNDS.minY, MAP_SIZE, MAP_SIZE);
+  const m = mapBounds();
+  const w = m.maxX - m.minX;
+  const h = m.maxY - m.minY;
+  ctx.strokeRect(m.minX, m.minY, w, h);
   ctx.shadowBlur = 0;
   // Bande de danger hachurée à l'intérieur de la bordure
   ctx.strokeStyle = "rgba(255, 0, 85, 0.25)";
   ctx.lineWidth = 2;
-  ctx.strokeRect(MAP_BOUNDS.minX + 12, MAP_BOUNDS.minY + 12, MAP_SIZE - 24, MAP_SIZE - 24);
+  ctx.strokeRect(m.minX + 12, m.minY + 12, w - 24, h - 24);
   if (arenaShrunk()) drawArenaWalls();
 }
 

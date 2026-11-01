@@ -18,8 +18,6 @@ export function layout(a, def, arena, zone) {
     sides: Math.random() < 0.5 ? 6 : 4,
     rot: Math.random() * Math.PI,
   }));
-  a.vx = 0;
-  a.vy = 0;
   a.onIce = false;
 }
 
@@ -28,17 +26,28 @@ export function update(a) {
   a.onIce = a.items.some((p) => onPlate(p, player.worldX, player.worldY));
 }
 
+/**
+ * Le vaisseau chargé est-il sur la glace ? (coop : chaque joueur a sa propre glisse, rangée sur son vaisseau)
+ * @param {any} a
+ */
+function iceState(a) {
+  if (!player.ice) player.ice = { vx: 0, vy: 0 };
+  player.ice.on = a.items.some((p) => onPlate(p, player.worldX, player.worldY));
+  return player.ice;
+}
+
 /** Sur la glace : la vitesse ne suit la direction voulue que peu à peu (inertie), mais va plus vite. */
 export function steer(a, def, vx, vy) {
-  if (!a.onIce) {
-    a.vx = vx;
-    a.vy = vy;
+  const ice = iceState(a);
+  if (!ice.on) {
+    ice.vx = vx;
+    ice.vy = vy;
     return { x: vx, y: vy };
   }
   const grip = player.isDashing ? def.dashGrip : def.grip;
-  a.vx += (vx * def.speed - a.vx) * grip;
-  a.vy += (vy * def.speed - a.vy) * grip;
-  return { x: a.vx, y: a.vy };
+  ice.vx += (vx * def.speed - ice.vx) * grip;
+  ice.vy += (vy * def.speed - ice.vy) * grip;
+  return { x: ice.vx, y: ice.vy };
 }
 
 /**

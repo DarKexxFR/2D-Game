@@ -35,6 +35,25 @@ export const CHANGELOG = [
     ],
   },
   {
+    id: "2026-11-coop-en-ligne",
+    date: "Novembre 2026",
+    title: "Coop en ligne, jusqu'à 4 joueurs",
+    items: [
+      {
+        icon: "coop",
+        color: "#00ff88",
+        title: "Survivez ensemble",
+        text: "Bouton COOP de l'accueil : crée un salon, donne le code, et jouez à 2, 3 ou 4 dans la même partie. La carte, les boss et les ennemis s'adaptent au nombre de joueurs.",
+      },
+      {
+        icon: "heartPlus",
+        color: "#ff2a6d",
+        title: "Relève tes coéquipiers",
+        text: "Un joueur à terre se relève si un coéquipier reste à côté de lui. XP partagée, et chacun repart avec l'XP et l'or de la partie.",
+      },
+    ],
+  },
+  {
     id: "2026-11-manette",
     date: "Novembre 2026",
     title: "Jouable à la manette",

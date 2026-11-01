@@ -30,6 +30,7 @@ const SCREENS = [
   "shareMenu",
   "versusOver",
   "duelMenu",
+  "coopMenu",
   "friendsMenu",
 ];
 

@@ -3,7 +3,8 @@
 import { VERSUS, WAVE_DURATION } from "../config.js";
 import { ctx, resetTransform, view } from "../core/canvas.js";
 import { camera, game, player, world } from "../core/state.js";
-import { drawEnemies, drawPlayer, drawProjectiles, drawSkillEffects } from "./entities.js";
+import { drawEnemies, drawProjectiles, drawSkillEffects } from "./entities.js";
+import { drawPlayers, drawTeamPointers } from "./coop.js";
 import { drawFloatingTexts, drawParticles, drawVisualEffects } from "./effects.js";
 import { drawBolts, drawBossChests, drawFallers, drawHazards, drawTurrets } from "./hazards.js";
 import { drawVortex, drawWeather } from "./mapEvents.js";
@@ -59,7 +60,7 @@ function drawScene(now) {
   drawAnomalyObjects(now);
   drawMines(now);
   drawBeams(now);
-  drawPlayer(now);
+  drawPlayers(now); // coop : toute l'équipe
   drawEnemies();
   drawProjectiles();
   drawSlashes();
@@ -82,6 +83,7 @@ function drawScene(now) {
   if (game.hex?.type === "fog") drawFog();
   else if (player.blind) drawBlind();
   drawGoblinPointer(now);
+  drawTeamPointers(now);
   // Sur petit écran, le minuteur du HUD suffit (évite le chevauchement).
   if (view.scale === 1 && !versus.split && !game.rush) drawWaveTimer();
   ctx.restore();

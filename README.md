@@ -118,6 +118,11 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
   Les éliminations envoient des ennemis et des sorts à l'adversaire ; le gagnant empoche l'XP et l'or des deux
   parties. **Classement ELO** pour les joueurs connectés, avec des **rangs** visibles (Bronze, Argent, Or, Diamant,
   Prédateur) sur l'accueil, l'écran Duel, face à l'adversaire et dans le classement.
+- **Coop en ligne, de 2 à 4 joueurs** : un salon avec code, la même partie de survie pour toute l'équipe
+  (mêmes vagues, ennemis et boss). La carte, l'arène des boss et les ennemis grandissent avec le nombre de
+  joueurs ; l'XP des gemmes est partagée ; un joueur à terre est relevé par un coéquipier qui reste à côté de
+  lui ; la partie s'arrête quand toute l'équipe est à terre, et chacun empoche l'XP et l'or de la partie
+  (hors classements). Voir [Coop en ligne](#coop-en-ligne) plus bas.
 - **Amis** : ajout par pseudo ou code ami, présence en ligne et défi direct en duel classé.
 
 **Progression**
@@ -182,6 +187,24 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
   rappels après une absence. Thèmes réglables dans les Options. Mise en place :
   [`supabase/NOTIFICATIONS.md`](supabase/NOTIFICATIONS.md).
 
+## Coop en ligne
+
+Accueil → **COOP** → **CRÉER UN SALON** : un code de 4 caractères s'affiche, les amis le tapent dans
+**REJOINDRE** (3 invités au plus). L'hôte lance la partie dès qu'un coéquipier est connecté.
+
+- **Qui fait quoi** : l'hôte fait tourner toute la partie (`systems/party.js`) ; chaque invité envoie ses
+  commandes (direction, visée, dash, compétence) et dessine l'état reçu (`systems/coopSync.js`). Son propre
+  vaisseau est prédit pour rester réactif malgré la latence. Connexion directe WebRTC entre l'hôte et chaque
+  invité, relais par Supabase Realtime si elle échoue (`services/coopNet.js`).
+- **Chacun son vaisseau** : héros, arme, familier, équipement, talents, Cœur Cybernétique et skin du compte de
+  chaque joueur. Les cartes d'amélioration se choisissent chez soi ; la partie attend (15 s au plus).
+- **Équipe** : chaque ennemi poursuit le joueur le plus proche ; zones et tirs ennemis touchent tout le monde.
+  Panneau de l'équipe en haut à droite, flèches vers les coéquipiers hors de l'écran.
+- **Selon le nombre de joueurs** (`COOP.scaling` dans `config.js`) : carte +25 % et arène des boss +20 % par
+  joueur en plus ; ennemis plus résistants, plus nombreux et plus fréquents.
+- **Pas de** pause, boîte mystère, sanctuaire maudit, Marchand Noir, pub « revivre » ni sauvegarde de la partie
+  en coop. Rien à changer côté Supabase (même Realtime que le duel).
+
 ## Développement
 
 ```bash
@@ -239,11 +262,11 @@ Survivor/
     ├── config.js         # Constantes et équilibrage
     ├── core/             # État global, canvas, entrées, bus d'événements
     ├── data/             # Données pures : ennemis, objets, améliorations, biomes, succès, quêtes, icônes
-    ├── systems/          # Logique par tick : joueur, ennemis, combat, boss, duel, événements...
+    ├── systems/          # Logique par tick : joueur, ennemis, combat, boss, duel, coop, événements...
     │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
     ├── render/           # Dessin sur le canvas (sprites néon en cache, grille, effets d'écran, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
-    ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, diagnostic, sons et musique, pubs
+    ├── services/         # Sauvegarde, compte, Supabase, duel et coop en ligne, amis, saison, statistiques, diagnostic, sons et musique, pubs
     ├── stats/            # Page des statistiques (tableau de bord, graphiques)
     └── utils/            # Maths, grille spatiale
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)

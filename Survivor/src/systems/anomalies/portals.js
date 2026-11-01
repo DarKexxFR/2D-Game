@@ -4,6 +4,7 @@
 // jamais déplacés par le décor) restent où ils sont.
 
 import { player } from "../../core/state.js";
+import { forEachMember } from "../party.js";
 import { playSfx } from "../../services/sfx.js";
 import { dist } from "../../utils/math.js";
 import { addFloatingText, createParticles, createShockwave } from "../effects.js";
@@ -19,8 +20,6 @@ const CORNERS = [
 /** @param {any} a */
 export function layout(a) {
   a.items = CORNERS.map(([cx, cy]) => ({ cx, cy, x: 0, y: 0 }));
-  a.lock = -1; // portail d'arrivée dont il faut d'abord sortir (-1 : aucun)
-  a.cooldown = 0;
   a.uses = 0;
 }
 
@@ -35,14 +34,25 @@ export function place(a, def, zone) {
 
 /** @param {any} a @param {any} def */
 export function update(a, def) {
-  if (a.cooldown > 0) a.cooldown--;
+  forEachMember(() => step(a, def)); // coop : chaque joueur passe les portails de son côté
+}
+
+/** Portails du vaisseau chargé : `lock` = portail d'arrivée dont il faut d'abord sortir (-1 : aucun). */
+export function portalState() {
+  return (player.portal ??= { lock: -1, cooldown: 0 });
+}
+
+/** @param {any} a @param {any} def */
+function step(a, def) {
+  const s = portalState();
+  if (s.cooldown > 0) s.cooldown--;
   const { worldX: x, worldY: y } = player;
-  if (a.lock >= 0) {
-    const exit = a.items[a.lock];
-    if (dist(x, y, exit.x, exit.y) > def.radius * def.rearm) a.lock = -1;
+  if (s.lock >= 0) {
+    const exit = a.items[s.lock];
+    if (!exit || dist(x, y, exit.x, exit.y) > def.radius * def.rearm) s.lock = -1;
     return;
   }
-  if (a.cooldown > 0) return;
+  if (s.cooldown > 0) return;
   const from = a.items.findIndex((p) => dist(x, y, p.x, p.y) < def.radius);
   if (from >= 0) teleport(a, def, from);
 }
@@ -59,7 +69,6 @@ function teleport(a, def, from) {
   createParticles(exit.x, exit.y, def.exitColor, 18);
   addFloatingText(exit.x, exit.y - 50, "TÉLÉPORTÉ", def.exitColor, 16, 50);
   playSfx("dash");
-  a.lock = to;
-  a.cooldown = def.cooldown;
+  Object.assign(portalState(), { lock: to, cooldown: def.cooldown });
   a.uses++;
 }

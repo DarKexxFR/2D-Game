@@ -16,14 +16,16 @@ import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 import { drawDesignedShip, hasShipDesign } from "./ships.js";
 import { drawBossLayers, hasBossLayers } from "./bossLayers.js";
+import { party } from "../systems/party.js";
 
 const TAU = Math.PI * 2;
 const HIT_FLASH = VISUAL_FX.hitFlash;
 const DASH_STRETCH = VISUAL_FX.dashStretch;
 
-export function drawPlayer(now) {
+/** `shared` : dessine aussi les traces communes (fantômes du dash, traînée) ; coop : une fois pour tous. */
+export function drawPlayer(now, shared = true) {
   const { worldX: x, worldY: y, size } = player;
-  const look = shipLook(player.hero, currentSkin(), now);
+  const look = shipLook(player.hero, currentSkin(player.skin), now); // coop : skin de chaque joueur
   const hull = look.hull;
   // Position à l'image précédente : gardée sur le joueur (deux parties en duel sur un écran)
   const mvx = x - (player.drawnX ?? x);
@@ -32,12 +34,14 @@ export function drawPlayer(now) {
   player.drawnX = x;
   player.drawnY = y;
 
-  for (const g of world.ghosts) {
-    ctx.globalAlpha = g.life / 30;
-    drawShip(g.x, g.y, size, player.aimAngle, look.color, false, now, hull);
+  if (shared) {
+    for (const g of world.ghosts) {
+      ctx.globalAlpha = g.life / 30;
+      drawShip(g.x, g.y, size, player.aimAngle, look.color, false, now, hull);
+    }
+    ctx.globalAlpha = 1;
+    drawTrail(ctx, world.trail);
   }
-  ctx.globalAlpha = 1;
-  drawTrail(ctx, world.trail);
   drawPerkZones(now);
 
   const aura = auraRadius();
@@ -70,7 +74,9 @@ export function drawPlayer(now) {
   }
   if (player.buffs.frenzy > 0) fillCircle(x, y, size + 5, "rgba(255, 0, 0, 0.2)");
 
+  const me = party.current;
   for (const c of world.clones) {
+    if (party.active && (c.owner ?? me) !== me) continue; // coop : les clones de ce joueur
     ctx.globalAlpha = Math.min(0.6, c.life / 40);
     drawShip(c.x, c.y, size * 0.8, player.aimAngle, "#b04dff", false, now, hull);
   }

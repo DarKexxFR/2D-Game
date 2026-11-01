@@ -10,7 +10,7 @@ import {
   setDiagnosticContext,
   watch,
 } from "./services/diagnostics.js";
-import { DIFFICULTIES, LIMITS, LOADING, NET, RUN_SAVE, TICK_MS, VERSUS } from "./config.js";
+import { COOP, DIFFICULTIES, LIMITS, LOADING, NET, RUN_SAVE, TICK_MS, VERSUS } from "./config.js";
 import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
@@ -18,9 +18,11 @@ import {
   camera,
   game,
   mysteryBox,
+  pet,
   player,
   resetGame,
   resetMysteryBox,
+  resetPet,
   resetPlayer,
   world,
 } from "./core/state.js";
@@ -66,7 +68,49 @@ import { updatePerks } from "./systems/perks.js";
 import { updatePet } from "./systems/pet.js";
 import { updatePickups } from "./systems/pickups.js";
 import { reviveFromAd, updatePlayer } from "./systems/player.js";
-import { resetTrail, updateTrail } from "./systems/trail.js";
+import { ageTrail, resetTrail, seedTrail, updateTrail } from "./systems/trail.js";
+import {
+  applyPartyScaling,
+  followCamera,
+  forEachMember,
+  inParty,
+  isLocalMember,
+  memberLeft,
+  memberObj,
+  party,
+  startParty,
+  stopParty,
+  upMembers,
+  updateFocus,
+  updateRevives,
+  withMember,
+  withOwned,
+} from "./systems/party.js";
+import {
+  guestFrame,
+  guestTick,
+  hostFrame,
+  hostTickEnd,
+  hostTickStart,
+  onGuestMessage,
+  onHostMessage,
+  onRemotePick,
+  remotePickers,
+  remotePicksPending,
+  requestRemotePick,
+  requestSkill,
+  sendPick,
+  sendSnapshot,
+  startGuestSync,
+  startHostSync,
+  stopSync,
+  toggleAuto,
+} from "./systems/coopSync.js";
+import { coopRoundOver, initCoopMenu, leaveCoopRoom, openCoop } from "./ui/coopMenu.js";
+import { showCoopHud, updateCoopHud } from "./ui/coopHud.js";
+import { broadcast as coopBroadcast } from "./services/coopNet.js";
+import { decodeSnapshot, encodeSnapshot } from "./utils/snapshot.js";
+import { currentSkin } from "./services/skins.js";
 import { spawnWave, updateSpawning } from "./systems/spawner.js";
 import { updateArena } from "./systems/arena.js";
 import { updateMapEvents } from "./systems/mapEvents.js";
@@ -105,6 +149,7 @@ import {
   showBossChest,
   showShrineReward,
   showBlackMarket,
+  showRemoteChoice,
   showUpgradeMenu,
 } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
@@ -184,6 +229,8 @@ let lastMode = "normal"; // « REJOUER » relance le même mode
 let runReported = false; // partie déjà comptée dans les statistiques (fin, victoire ou abandon)
 let ticking = false; // un tick de la partie est en cours (voir update)
 let deathPending = false; // mort pendant un tick : traitée une fois le tick fini
+let coopEnding = false; // coop : toute l'équipe à terre pendant un tick, fin traitée une fois le tick fini
+let coopSettled = false; // coop : bilan de la partie déjà fait
 
 /** Statistiques anonymes (services/analytics.js) : résumé de la partie chargée. */
 function reportRun(mode, killer) {
@@ -212,7 +259,8 @@ let nextSaveAt = 0; // game.time de la prochaine sauvegarde automatique
  * en attente. Appelée en quittant, en masquant l'onglet et régulièrement en jouant.
  */
 function persistRun() {
-  if (deathPending || currentScreen() === "reviveMenu" || !canSaveRun(versus.active)) return false;
+  if (deathPending || currentScreen() === "reviveMenu" || !canSaveRun(versus.active || inParty()))
+    return false;
   nextSaveAt = game.time + RUN_SAVE.everySeconds * 1000;
   return saveRun(lastMode, { choices: pendingChoices() });
 }
@@ -319,8 +367,11 @@ function startGame(mode = "normal") {
   showHud(true);
 }
 
-/** Prépare une partie (aussi celle de chaque joueur en duel, toujours en Normal). */
-function setupRun(mode, difficulty = "normal") {
+/**
+ * Prépare une partie (aussi celle de chaque joueur en duel, toujours en Normal). `prepare` : réglages
+ * de la partie à appliquer avant la première vague (coop : carte et ennemis selon le nombre de joueurs).
+ */
+function setupRun(mode, difficulty = "normal", prepare = null) {
   friendsRunStarted();
   resetGame();
   resetTrail();
@@ -344,6 +395,7 @@ function setupRun(mode, difficulty = "normal") {
     game.rush = { stage: 0, defeated: 0, bestBefore: getStat("bestBossRush") };
     game.modifier = BOSS_RUSH.modifier;
   }
+  prepare?.();
   applyModifierToPlayer(game.modifier);
   resetMysteryBox();
   if (game.modifier.noMysteryBox) mysteryBox.active = false;
@@ -399,7 +451,233 @@ function startDuel(online = null, names = []) {
   showVersusHud(true);
 }
 
-/** Hôte en ligne : (re)lance le duel chez les deux joueurs. */
+// --- COOP EN LIGNE (2 à 4 joueurs : systems/party.js, systems/coopSync.js, ui/coopMenu.js) ---
+
+/** Début commun d'une partie coop (hôte ou invité). */
+function beginCoop(role) {
+  logEvent("partie", `début coop (${role})`);
+  lastMode = "coop";
+  runReported = false;
+  deathPending = false;
+  coopEnding = false;
+  coopSettled = false;
+  clearTimeout(overTimer);
+  stopKillCam();
+  stopVersus();
+  stopSync();
+  stopParty();
+  showVersusHud(false);
+  commitPseudo();
+  startRunMusic();
+  restoreRandom();
+  resetUpgradeMenu();
+  setAutoPick(true, COOP.pickSeconds); // personne ne bloque l'équipe trop longtemps
+  stopTutorial();
+}
+
+function finishCoopStart() {
+  mysteryBox.active = false; // une seule boîte pour tous : pas en coop
+  /** @type {HTMLElement} */ (document.activeElement)?.blur?.();
+  hideScreens();
+  showHud(true);
+  showCoopHud(true);
+}
+
+/** Vaisseau de ce joueur pour la partie coop (équipement, talents, Cœur Cybernétique, skin). */
+function buildCoopShip() {
+  resetPlayer(account.level);
+  applyEquipment();
+  applyTalents(player, account.talents);
+  if (CYBER_CORE.modes.includes("normal")) applyCyberCore(activeNodes());
+  player.autoShoot = true;
+  player.skin = { ...currentSkin(), resolved: true }; // dessiné tel quel chez les coéquipiers
+  return encodeSnapshot({ player, pet });
+}
+
+/** Hôte : la partie commence avec les joueurs du salon (`seats[0]` = soi ; vaisseaux des invités reçus). */
+function startCoopHost(seats) {
+  beginCoop("host");
+  const names = seats.map((s) => s.name);
+  setupRun("normal", "normal", () => applyPartyScaling(names.length));
+  player.skin = { ...currentSkin(), resolved: true };
+  game.endlessAllowed = true;
+  const template = { ...player };
+  startParty({ role: "host", local: 0, names });
+  seats.forEach((seat, k) => {
+    const m = party.members[k];
+    m.peerId = seat.id;
+    if (k === 0) return;
+    try {
+      decodeSnapshot(seat.data, { player: m.store.player, pet: m.store.pet });
+    } catch (err) {
+      captureError(err);
+      m.gone = true;
+      return;
+    }
+    // Champ inconnu de l'autre appareil (version différente) : valeur de départ
+    for (const key of Object.keys(template))
+      if (!(key in m.store.player)) m.store.player[key] = template[key];
+    if (!Number.isFinite(m.store.player.maxHealth)) m.gone = true;
+  });
+  placeTeam(names.length);
+  startHostSync();
+  finishCoopStart();
+}
+
+/** Équipe placée en cercle au centre de la carte, chacun avec sa caméra et sa traînée. */
+function placeTeam(n) {
+  for (let k = 0; k < n; k++) {
+    withMember(k, () => {
+      const a = (Math.PI * 2 * k) / n - Math.PI / 2;
+      player.worldX = Math.cos(a) * 90;
+      player.worldY = Math.sin(a) * 90;
+      player.health = player.maxHealth;
+      if (pet.active) {
+        pet.x = player.worldX;
+        pet.y = player.worldY;
+      }
+      resetTrail();
+      camera.x = player.worldX - view.width / 2;
+      camera.y = player.worldY - view.height / 2;
+    });
+  }
+  followCamera();
+}
+
+/** Invité : la partie de l'hôte commence ; son état arrive par systems/coopSync.js. */
+function startCoopGuest({ slot, names }) {
+  beginCoop("guest");
+  friendsRunStarted();
+  resetGame();
+  resetTrail();
+  resetMysteryBox();
+  game.coopSize = names.length;
+  startParty({ role: "guest", local: slot, names });
+  startGuestSync();
+  finishCoopStart();
+}
+
+/** Hôte : un tick de la partie commune (chaque vaisseau à son tour, puis les ennemis). */
+function simulateCoop() {
+  hostTickStart();
+  const focus = updateFocus();
+  // Apparitions, arène, événements de carte, anomalies : autour d'un joueur à tour de rôle
+  withMember(focus, () => {
+    updateSpawning();
+    updateArena();
+    updateMapEvents();
+    updateAnomaly();
+  });
+  rebuildEnemyGrid();
+  ageTrail(world.trail);
+  forEachMember(
+    (k) =>
+      withOwned(k, () => {
+        if (player.downed) return updateProjectiles(); // ses tirs déjà partis continuent leur route
+        updatePlayer();
+        seedTrail();
+        updateAura();
+        updatePerks();
+        shoot();
+        throwKunai();
+        updateSideWeapons();
+        updatePet();
+        updatePickups();
+        updateProjectiles();
+        updateOrbitals();
+        updateSkills();
+      }),
+    { down: true },
+  );
+  hostTickEnd();
+  updateRevives();
+  updateEnemies();
+  updateHazards();
+  updateEffects();
+  followCamera();
+}
+
+/** Hôte : qui l'équipe attend (choix d'amélioration en cours), affiché chez tout le monde. */
+function coopWaiting() {
+  const names = remotePickers().map((k) => party.members[k].name);
+  if (currentScreen() === "upgradeMenu") names.unshift(party.members[party.local].name);
+  return names;
+}
+
+/** Hôte : toute l'équipe est à terre (ou plus personne) : fin pour tout le monde. */
+function endCoop(reason = "") {
+  coopEnding = false;
+  if (party.role === "host") {
+    sendSnapshot();
+    coopBroadcast({ t: "over", reason });
+  }
+  settleCoop(reason);
+}
+
+/** Bilan de la partie coop sur cet appareil : chacun empoche l'XP et l'or de la partie. Hors classements. */
+function settleCoop(reason = "") {
+  if (!inParty() || coopSettled) return;
+  coopSettled = true;
+  logEvent("partie", `fin coop · vague ${game.wave}`);
+  game.running = false;
+  game.over = true;
+  holdUpgrades();
+  resetUpgradeMenu();
+  showTouchControls(false);
+  showCoopHud(false);
+  addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
+  recordBest("bestCombo", game.stats.bestCombo);
+  recordCompletedRun();
+  reportRun("coop", reason || "équipe à terre");
+  const season = addRunSeasonXp({
+    wave: game.wave,
+    bosses: game.stats.bosses,
+    kills: game.kills,
+    difficulty: "normal",
+    pulse: game.endless?.depth || 0,
+  });
+  refreshAccountUI();
+  showGameOver({
+    pseudo: getPseudo(),
+    level: player.level,
+    wave: game.wave,
+    waveLabel: `Vague · Coop ${party.members.length} joueurs`,
+    xp: game.totalRunXp,
+    gold: game.runGold,
+    isNewRecord: false,
+  });
+  showSeasonGain(season);
+  setOnlineStatus(reason || "Coop : partie hors classement mondial");
+  coopRoundOver();
+}
+
+/** Fin de la partie coop sur cet appareil (accueil, ou retour au salon). */
+function closeCoopRun() {
+  stopSync();
+  stopParty();
+  showCoopHud(false);
+  coopSettled = false;
+}
+
+/** REJOUER après une partie coop : retour au salon (le même groupe peut relancer). */
+function backToCoopLobby() {
+  if (game.started && !runReported) reportRun("coop", "abandon");
+  game.started = game.running = false;
+  closeCoopRun();
+  showHud(false);
+  playMenuMusic();
+  openCoop();
+}
+
+/** Hôte : un invité a quitté la partie. */
+function onCoopPeerLost(id) {
+  const k = party.members.findIndex((m) => m.peerId === id);
+  if (k < 0 || !inParty() || coopSettled) return;
+  memberLeft(k);
+  if (upMembers().length === 0 && game.started && !game.over) endCoop();
+}
+
+/** Hôte : (re)lance le duel chez les deux joueurs. */
 function startOnlineDuel() {
   const names = [getPseudo(), net.peerName || "ADVERSAIRE"];
   const match = crypto.randomUUID(); // identifiant du duel, déclaré par les deux joueurs (classement ELO)
@@ -514,6 +792,8 @@ function returnToMenu() {
     reportDuel(versus.online.match, false, getPseudo()).catch(() => {});
   eloRequest++;
   if (versus.online) leaveRoom();
+  leaveCoopRoom(); // coop : quitter la partie (ou le salon) prévient les coéquipiers
+  closeCoopRun();
   clearTimeout(overTimer);
   stopVersus();
   resetDuelPicks();
@@ -645,6 +925,7 @@ const MENUS = {
   seasonMenu: openSeason,
   bossRushMenu: openBossRush,
   duelMenu: openDuel,
+  coopMenu: openCoop,
   friendsMenu: () => openFriends(),
   talentMenu: openTalents,
   cyberCoreMenu: openCyberCore,
@@ -658,6 +939,7 @@ function navigate(id) {
   const screen = currentScreen();
   if (!game.started) {
     if (screen === "friendsMenu") stopChallenge();
+    if (screen === "coopMenu" && id !== "coopMenu") leaveCoopRoom();
     if (MENUS[id]) MENUS[id]();
     else if (screen === "loginMenu")
       closeLogin(); // ouverte depuis les options : retour aux options
@@ -670,7 +952,7 @@ function navigate(id) {
   }
   if (screen === null) {
     // En ligne, pas de pause (l'adversaire continue) : le retour arrière ne fait rien
-    if (!versus.online && canTogglePause()) togglePause();
+    if (!versus.online && !inParty() && canTogglePause()) togglePause();
   } else if (screen === "pauseMenu") togglePause();
   else if (screen === "optionsMenu") closeOptions();
   else if (screen === "loginMenu") closeLogin();
@@ -685,17 +967,21 @@ function navigate(id) {
 
 function update() {
   if (versus.split) return updateSplit(simulate, tickDuelPick);
+  if (party.role === "guest") return guestTick(); // coop, invité : l'hôte fait tourner la partie
   if (!game.running || game.paused) return;
+  if (inParty() && remotePicksPending() > 0) return; // un coéquipier choisit une amélioration
   game.time += TICK_MS;
   ticking = true;
   try {
-    simulate();
-    if (!versus.active) recordKillCam();
+    if (inParty()) simulateCoop();
+    else simulate();
+    if (!versus.active && !inParty()) recordKillCam();
     updateTutorial();
     if (game.time >= nextSaveAt && game.running) persistRun();
   } finally {
     ticking = false;
     if (deathPending) onDeath(); // même si le tick a échoué : jamais de partie arrêtée sans écran
+    if (coopEnding) endCoop();
   }
 }
 
@@ -771,9 +1057,14 @@ function runFrame(now) {
       accumulator -= TICK_MS;
     }
     if (versus.online) netTick(now);
+    if (party.role === "host") {
+      if (!game.over) game.coopWaiting = coopWaiting();
+      hostFrame(now);
+    } else if (party.role === "guest") guestFrame(now);
     if (killCamActive()) drawKillCam(now);
     else render();
     if (!versus.split) updateHud();
+    if (inParty()) updateCoopHud(now);
     if (versus.active) updateVersusHud();
     updateMusic(now);
   } else {
@@ -865,7 +1156,9 @@ function init() {
   // Onglet masqué ou fermé (téléphone mis en veille, application quittée) : la partie est sauvegardée
   document.addEventListener("visibilitychange", () => document.hidden && persistRun());
   window.addEventListener("pagehide", persistRun);
-  $("btnReplay").addEventListener("click", () => startGame(lastMode));
+  $("btnReplay").addEventListener("click", () =>
+    lastMode === "coop" ? backToCoopLobby() : startGame(lastMode),
+  );
   $("btnGameOverMenu").addEventListener("click", returnToMenu);
   initKillCamButton(() => startGame(lastMode)); // REJOUER directement depuis le ralenti
   initShareMenu();
@@ -896,14 +1189,25 @@ function init() {
       if (game.running && confirm("Quitter le duel en ligne ?")) returnToMenu();
       return;
     }
+    // Coop : la partie est commune, pas de pause ; on propose seulement de quitter
+    if (inParty()) {
+      if (!game.over && confirm("Quitter la partie coop ?")) returnToMenu();
+      return;
+    }
     if (canTogglePause()) togglePause();
   };
   onAction("pause", pause);
-  onAction("skill", () => {
-    if (game.running && !game.paused && !versus.split) activateSkill();
-  });
+  const useSkillHere = () => {
+    if (party.role === "guest") return game.running && !game.paused && requestSkill(); // l'hôte l'applique
+    if (!game.running || game.paused || versus.split) return;
+    if (inParty())
+      withOwned(party.local, activateSkill); // coop : ce qu'elle crée appartient à ce joueur
+    else activateSkill();
+  };
+  onAction("skill", useSkillHere);
   onAction("autoShoot", () => {
-    if (game.started && !versus.split) player.autoShoot = !player.autoShoot;
+    if (party.role === "guest") player.autoShoot = toggleAuto();
+    else if (game.started && !versus.split) player.autoShoot = !player.autoShoot;
   });
 
   initGamepadControls({
@@ -919,12 +1223,25 @@ function init() {
   initPadNav({ onBack: () => currentScreen() !== "mainMenu" && navigate(null) });
 
   initTouchControls({
-    onUltimate: () => game.running && !game.paused && activateSkill(),
+    onUltimate: useSkillHere,
     onPause: pause,
   });
 
-  on("levelUp", () => (versus.split ? requestDuelPick(versus.current, "level") : showUpgradeMenu()));
-  on("bossChest", () => (versus.split ? requestDuelPick(versus.current, "chest") : showBossChest()));
+  on("levelUp", () => {
+    if (versus.split) return requestDuelPick(versus.current, "level");
+    if (inParty() && !isLocalMember()) return requestRemotePick("level"); // coop : choix chez l'invité
+    showUpgradeMenu();
+  });
+  on("bossChest", () => {
+    if (versus.split) return requestDuelPick(versus.current, "chest");
+    // Coop : chaque joueur choisit une augmentation dans le coffre du boss
+    if (inParty()) {
+      return forEachMember((k) => (k === party.local ? showBossChest() : requestRemotePick("chest")), {
+        down: true,
+      });
+    }
+    showBossChest();
+  });
   on("blackMarket", showBlackMarket);
   on("cursedReward", () => (versus.split ? requestDuelPick(versus.current, "shrine") : showShrineReward()));
   on("goblin", () => {
@@ -950,6 +1267,29 @@ function init() {
   });
 
   $("btnVersus").addEventListener("click", openDuel);
+  $("btnCoop").addEventListener("click", openCoop);
+  initCoopMenu({
+    buildShip: buildCoopShip,
+    startHost: startCoopHost,
+    startGuest: startCoopGuest,
+    onHostMessage: (msg) => (msg.t === "over" ? settleCoop(msg.reason || "") : onHostMessage(msg)),
+    onGuestMessage,
+    onPeerLost: onCoopPeerLost,
+    onLost: () => {
+      if (inParty() && !coopSettled) settleCoop("L'hôte a quitté la partie.");
+    },
+    inGame: () => game.started,
+    onBack: showMainMenu,
+  });
+  onRemotePick((msg) => showRemoteChoice(msg, (name) => sendPick(msg.id, name)));
+  on("memberDown", ({ k, name, last }) => {
+    if (last) return;
+    showBossWarning(k === party.local ? "À TERRE ! UN COÉQUIPIER PEUT TE RELEVER" : `${name} EST À TERRE !`);
+  });
+  on("memberRevived", ({ k, name }) => {
+    showBossWarning(k === party.local ? "TU ES RELEVÉ !" : `${name} EST RELEVÉ !`, false, "#00ff88");
+  });
+  on("memberLeft", ({ name }) => showBossWarning(`${name} A QUITTÉ LA PARTIE`, false, "#aa66ff"));
   $("btnFriends").addEventListener("click", () => openFriends());
   $("btnVersusPause").addEventListener("click", pause);
   initDuelMenu({ onLocal: () => startDuel(), onBack: showMainMenu, onFriends: openFriends });
@@ -1000,6 +1340,12 @@ function init() {
   });
   on("playerDied", () => {
     if (versus.split) return splitDeath(versus.current);
+    if (inParty()) {
+      holdUpgrades();
+      if (ticking) coopEnding = true;
+      else endCoop();
+      return;
+    }
     if (!versus.active) clearRun(); // mort : fermer l'onglet ne doit pas permettre de revenir en arrière
     holdUpgrades(); // choix ouvert plus tôt dans ce tick : mis de côté, l'écran de fin passe devant
     if (versus.online) return onOwnDeath();

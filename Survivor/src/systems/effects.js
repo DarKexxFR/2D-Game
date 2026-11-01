@@ -109,8 +109,12 @@ export function updateEffects() {
   if (game.flash && (game.flash.alpha *= 0.88) < 0.02) game.flash = null;
   if (game.comboTimer > 0 && --game.comboTimer === 0) game.combo = 0;
   if (game.chroma > 0) game.chroma--;
-  updateGridWarp();
+  ageVisuals();
+}
 
+/** Effets purement visuels (étincelles, textes, ondes...) : aussi chez un invité en coop, qui ne simule rien. */
+export function ageVisuals() {
+  updateGridWarp();
   for (const p of world.particles) {
     p.x += p.vx;
     p.y += p.vy;
