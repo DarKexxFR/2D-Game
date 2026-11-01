@@ -326,3 +326,12 @@ a {
     font-size: 13px;
   }
 }
+
+/* Illustration de la fiche (data/art.js), au-dessus de la description */
+.bs-art {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  margin: 0 auto 12px;
+}

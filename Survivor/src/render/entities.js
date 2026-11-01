@@ -14,6 +14,8 @@ import { drawMissile } from "./sideWeapons.js";
 import { allyAlpha } from "./allyAlpha.js";
 import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
+import { drawDesignedShip, hasShipDesign } from "./ships.js";
+import { drawBossLayers, hasBossLayers } from "./bossLayers.js";
 
 const TAU = Math.PI * 2;
 const HIT_FLASH = VISUAL_FX.hitFlash;
@@ -325,6 +327,11 @@ const HULLS = {
 
 /** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge (`c` : autre canvas). */
 export function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow", c = ctx) {
+  // Coques des héros : plans détaillés en couches (render/ships.js)
+  if (hasShipDesign(shape)) {
+    drawDesignedShip(c, x, y, r, angle, color, thrust, now, shape);
+    return;
+  }
   c.save();
   c.translate(x, y);
   c.rotate(angle);
@@ -720,6 +727,7 @@ export function drawEnemies() {
       if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
+    if (hasBossLayers(e)) drawBossLayers(e, now); // anneaux, plaques et repères animés des boss
     ctx.globalAlpha = 1;
     if (e.magnetWarn > 0 || e.pulling > 0) drawMagnetPull(e, now);
     if (e.replicateWarn > 0) drawReplicateWarn(e);

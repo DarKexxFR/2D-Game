@@ -26,6 +26,12 @@ export const CHANGELOG = [
         title: "Plus de lumière, plus d'impact",
         text: "Halo néon, tirs qui s'additionnent vers le blanc, étincelles, ennemis qui flashent quand ils sont touchés, dash étiré et tirs ennemis cerclés de noir pour rester lisibles. Chaque effet se règle dans les Options.",
       },
+      {
+        icon: "ship",
+        color: "#ff2a6d",
+        title: "Vaisseaux et boss redessinés",
+        text: "Les 8 vaisseaux de héros ont de nouvelles coques détaillées (ailes, canons, auréole de l'Archange, orbe du Mage...). Les boss s'animent avec des anneaux et des plaques qui tournent, et leurs repères s'allument juste avant une attaque. Illustrations dans les fiches d'équipement et du bestiaire.",
+      },
     ],
   },
   {

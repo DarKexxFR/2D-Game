@@ -67,6 +67,13 @@ Principes :
   `bloom.budgetMs` ; aberration `game.chroma` lancée par `kickChroma` : furie, coup lourd, renaissance), calque
   `#crtOverlay` (`css/fx.css`, classe `body.fx-crt`). Tirs alliés, étincelles et ondes en `lighter` : **jamais** de
   `shadowBlur` dans ce mode. Tirs ennemis = sprite `enemyBullet` (anneau sombre). Tests : `tests/visual-fx.spec.js`.
+- **Visuels : code en jeu, images en menus** (choix du propriétaire) : en partie tout est dessiné en code
+  (recoloration, flash d'impact, skins, 0 octet). Vaisseaux des héros = plans en couches de `render/ships.js`
+  (`DESIGNS` par coque : `body` en cache borné, `engines`, `live` animé sans shadowBlur ; les autres coques de skin
+  gardent la silhouette de `drawShip`). Boss = sprite + pièces animées de `render/bossLayers.js` (`LAYERS` par type,
+  sinon anneau par défaut ; repères allumés quand `attackTimer` / `skillTimer` < 40 ticks). Illustrations WebP
+  transparentes et sans texte dans `assets/art/`, déclarées dans `data/art.js` (`ITEM_ART`, `ENEMY_ART`) : fiche
+  d'équipement (en ombre si non obtenu) et fiche du bestiaire (débloquée seulement). Tests : `tests/visuals.spec.js`.
 - **Écritures DOM en cache** : utiliser `setText`, `setVisible`, `setClass`, `setWidth` de
   `ui/dom.js` (évite de réécrire le DOM chaque frame). `setVisible` met `display: block`.
 - **Panneau en jeu** (`#ui`, `ui/hud.js`, `css/hud.css`) : vague + éliminations + or (compteurs abrégés au-delà de 9999 par `shortNumber` : 10,5k, 312k ; en Endless, la pulsation `#uiPulse` a sa propre ligne ; si une police plus large ne tient pas, `fitHeader` serre l'en-tête (classe `tight`) pour garder les compteurs à droite de la vague ; `tests/hud-layout.spec.js` vérifie que rien ne sort, polices larges comprises), minuteur, vie, jauges
@@ -517,7 +524,7 @@ journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 arm
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
-reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur), rendu néon (grille vivante, halo, aberration, écran rétro).
+reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur), rendu néon (grille vivante, halo, aberration, écran rétro), vaisseaux de héros et boss animés en code, illustrations des menus.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
