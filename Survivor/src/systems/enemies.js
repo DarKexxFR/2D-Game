@@ -12,6 +12,7 @@ import {
   createAoEEffect,
   createParticles,
   createShockwave,
+  kickChroma,
 } from "./effects.js";
 import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
@@ -925,6 +926,7 @@ function twinFury(fire, ice, pair) {
   pair.fury = fire.enraged = ice.enraged = true;
   addFloatingText(player.worldX, player.worldY - 90, "FURIE JUMELLE !", "#ffd700", 26, 80);
   addScreenShake(12);
+  kickChroma();
   playSfx("boss");
 }
 

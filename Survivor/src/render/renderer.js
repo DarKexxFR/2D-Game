@@ -23,6 +23,7 @@ import { drawRivalView } from "./rivalView.js";
 import { rival } from "../systems/versusOnline.js";
 import { versus } from "../systems/versus.js";
 import { CARD_EFFECTS } from "../data/cardEffects.js";
+import { applyPostFx } from "./postFx.js";
 
 export { renderMenuBackground } from "./menuScene.js";
 
@@ -33,6 +34,7 @@ export function render() {
   if (versus.split) renderSplit(now, drawScene);
   else drawScene(now);
   if (versus.online && rival.view && versus.winner === null) drawRivalView(now);
+  applyPostFx(); // halo lumineux, aberration aux gros chocs (Options > Effets visuels)
 }
 
 /** Une partie, dans la vue courante (l'écran entier, ou sa moitié en duel sur un écran). */

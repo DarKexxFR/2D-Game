@@ -25,7 +25,16 @@ import { captureError, logEvent } from "./diagnostics.js";
 const VERSION = 1;
 
 /** Listes purement visuelles : sauvegardées vides (elles se remplissent à nouveau en jouant). */
-const VISUAL_LISTS = ["particles", "visualEffects", "floatingTexts", "ghosts", "bolts", "slashes", "trail"];
+const VISUAL_LISTS = [
+  "particles",
+  "visualEffects",
+  "floatingTexts",
+  "ghosts",
+  "bolts",
+  "slashes",
+  "trail",
+  "gridPulses",
+];
 
 /**
  * @typedef {object} RunMeta résumé affiché sur l'accueil (bouton REPRENDRE)

@@ -4,6 +4,7 @@
 
 import { BESTIARY, BESTIARY_GROUPS, BESTIARY_TYPES, whereText } from "../data/bestiary.js";
 import { ENEMY_NAMES, ENEMY_TYPES } from "../data/enemies.js";
+import { ENEMY_ART, artImage } from "../data/art.js";
 import { ENEMY_LOOKS } from "../render/enemyLooks.js";
 import { drawSprite, getSprite } from "../render/sprites.js";
 import { account, loadAccount } from "../services/storage.js";
@@ -149,7 +150,8 @@ function openEntry(type) {
 
 function entryBody(type, entry) {
   const t = ENEMY_TYPES[type];
-  const nodes = [el("p", "bs-desc", entry.desc)];
+  const art = artImage(ENEMY_ART[type], "bs-art"); // illustration (fiche débloquée seulement)
+  const nodes = [...(art ? [art] : []), el("p", "bs-desc", entry.desc)];
   const stats = el("dl", "bs-stats");
   const row = (label, value) => stats.append(el("dt", "", label), el("dd", "", String(value)));
   row("PV", t.health);

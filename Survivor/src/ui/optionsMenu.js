@@ -41,6 +41,14 @@ export function initOptionsMenu() {
     });
   }
 
+  // Effets visuels (render/fxFlags.js) : un interrupteur par effet
+  for (const btn of fxButtons()) {
+    btn.addEventListener("click", () => {
+      updateSettings({ [btn.dataset.fx]: settings[btn.dataset.fx] === false });
+      render();
+    });
+  }
+
   $("btnNewsReplay").addEventListener("click", () => openNews(() => showScreen("optionsMenu")));
   $("btnTutorialReplay").addEventListener("click", () => {
     replayTutorial();
@@ -172,4 +180,17 @@ function render() {
   for (const btn of document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-quality]"))) {
     btn.classList.toggle("active", btn.dataset.quality === settings.quality);
   }
+  // En qualité basse, seul l'écran rétro (calque CSS, sans coût) reste réglable
+  const low = settings.quality === "low";
+  for (const btn of fxButtons()) {
+    const on = settings[btn.dataset.fx] !== false;
+    const locked = low && btn.dataset.fx !== "fxCrt";
+    btn.disabled = locked;
+    btn.textContent = locked ? "QUALITÉ BASSE" : on ? "ACTIVÉ" : "DÉSACTIVÉ";
+    btn.classList.toggle("on", on && !locked);
+  }
+}
+
+function fxButtons() {
+  return document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-fx]"));
 }

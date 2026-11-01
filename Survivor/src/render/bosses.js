@@ -10,8 +10,13 @@ const BEAT_MS = 220; // durée du gonflement du Cœur à chaque battement
 
 /** Échelle du Cœur du Pulse : il se gonfle à chaque battement puis revient. */
 export function beatScale(e) {
-  if (e.beatAt === undefined) return 1;
-  return 1 + 0.14 * Math.max(0, 1 - (game.time - e.beatAt) / BEAT_MS);
+  return 1 + 0.14 * beatLevel(e);
+}
+
+/** Force du dernier battement d'un ennemi qui bat (1 au battement, puis 0), sinon 0. */
+export function beatLevel(e) {
+  if (e.beatAt === undefined) return 0;
+  return Math.max(0, 1 - (game.time - e.beatAt) / BEAT_MS);
 }
 
 /** Sous les ennemis : ce qui relie ou entoure les parties de boss. */

@@ -1,5 +1,6 @@
 // Rendu du joueur, du drone, des ennemis et des projectiles (sprites néon).
 
+import { VISUAL_FX } from "../config.js";
 import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
 import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../systems/combat.js";
@@ -13,10 +14,13 @@ import { drawMissile } from "./sideWeapons.js";
 import { allyAlpha } from "./allyAlpha.js";
 import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
+import { drawDesignedShip, hasShipDesign } from "./ships.js";
+import { drawBossLayers, hasBossLayers } from "./bossLayers.js";
 import { party } from "../systems/party.js";
 
 const TAU = Math.PI * 2;
-const HIT_FLASH_MS = 80;
+const HIT_FLASH = VISUAL_FX.hitFlash;
+const DASH_STRETCH = VISUAL_FX.dashStretch;
 
 /** `shared` : dessine aussi les traces communes (fantômes du dash, traînée) ; coop : une fois pour tous. */
 export function drawPlayer(now, shared = true) {
@@ -24,7 +28,9 @@ export function drawPlayer(now, shared = true) {
   const look = shipLook(player.hero, currentSkin(player.skin), now); // coop : skin de chaque joueur
   const hull = look.hull;
   // Position à l'image précédente : gardée sur le joueur (deux parties en duel sur un écran)
-  const moving = Math.hypot(x - (player.drawnX ?? x), y - (player.drawnY ?? y)) > 0.5;
+  const mvx = x - (player.drawnX ?? x);
+  const mvy = y - (player.drawnY ?? y);
+  const moving = Math.hypot(mvx, mvy) > 0.5;
   player.drawnX = x;
   player.drawnY = y;
 
@@ -79,7 +85,17 @@ export function drawPlayer(now, shared = true) {
   drawArmor(x, y, size, now);
   const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : look.color;
   drawWeapon(x, y, size);
-  drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
+  if (player.isDashing && moving) {
+    // Dash : le vaisseau s'étire dans le sens du mouvement (squash & stretch)
+    const a = Math.atan2(mvy, mvx);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(a);
+    ctx.scale(DASH_STRETCH.along, DASH_STRETCH.across);
+    ctx.rotate(-a);
+    drawShip(0, 0, size, player.aimAngle, bodyColor, true, now, hull);
+    ctx.restore();
+  } else drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
 
   if (pet.active) PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
 
@@ -317,6 +333,11 @@ const HULLS = {
 
 /** Vaisseau du héros, orienté vers la visée, réacteur allumé quand il bouge (`c` : autre canvas). */
 export function drawShip(x, y, r, angle, color, thrust, now, shape = "arrow", c = ctx) {
+  // Coques des héros : plans détaillés en couches (render/ships.js)
+  if (hasShipDesign(shape)) {
+    drawDesignedShip(c, x, y, r, angle, color, thrust, now, shape);
+    return;
+  }
   c.save();
   c.translate(x, y);
   c.rotate(angle);
@@ -681,8 +702,9 @@ export function drawEnemies() {
     if (e.phaseWarn > 0) ctx.globalAlpha = Math.floor(now / 60) % 2 ? 0.35 : 1;
     const look = ENEMY_LOOKS[e.type] || ENEMY_LOOKS.normal;
     const base = e.template.size;
-    const scale = e.size / base;
-    const flash = game.time - (e.hitTime ?? -1e9) < HIT_FLASH_MS ? "flash" : "";
+    // Touché : silhouette blanche un peu plus grosse pendant quelques ticks (impact bien senti)
+    const flash = game.time - (e.hitTime ?? -1e9) < HIT_FLASH.ms ? "flash" : "";
+    const scale = (e.size / base) * (flash ? HIT_FLASH.scale : 1);
     const sprite = getSprite(look.sprite, base, e.color, flash);
     const t = now + (e.phase || 0) * 1000;
 
@@ -711,6 +733,7 @@ export function drawEnemies() {
       if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
+    if (hasBossLayers(e)) drawBossLayers(e, now); // anneaux, plaques et repères animés des boss
     ctx.globalAlpha = 1;
     if (e.magnetWarn > 0 || e.pulling > 0) drawMagnetPull(e, now);
     if (e.replicateWarn > 0) drawReplicateWarn(e);
@@ -950,16 +973,25 @@ export function drawProjectiles() {
       drawSprite(ctx, getSprite("disc", roundSize(p.size), p.color), p.x, p.y, performance.now() / 40);
       continue;
     }
-    // Traînée puis projectile lumineux
+    // Traînée effilée puis projectile lumineux, en fusion additive : les tirs qui se croisent
+    // tirent vers le blanc (sans ombre dynamique, qui coûte très cher dans ce mode)
+    ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = p.color;
-    ctx.globalAlpha = 0.35 * k;
-    ctx.lineWidth = p.size * 1.2;
+    ctx.globalAlpha = 0.18 * k;
+    ctx.lineWidth = p.size * 1.6;
     ctx.beginPath();
-    ctx.moveTo(p.x - p.vx * 1.8, p.y - p.vy * 1.8);
+    ctx.moveTo(p.x - p.vx * 2.6, p.y - p.vy * 2.6);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    ctx.globalAlpha = 0.4 * k;
+    ctx.lineWidth = p.size * 0.9;
+    ctx.beginPath();
+    ctx.moveTo(p.x - p.vx * 1.6, p.y - p.vy * 1.6);
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
     ctx.globalAlpha = k;
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
+    ctx.globalCompositeOperation = "source-over";
   }
   ctx.globalAlpha = 1;
   for (const p of world.enemyProjectiles) {
@@ -973,7 +1005,7 @@ export function drawProjectiles() {
       drawSprite(ctx, getSprite("bit", roundSize(p.size), p.color), p.x, p.y);
       continue;
     }
-    drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
+    drawSprite(ctx, getSprite("enemyBullet", roundSize(p.size), p.color), p.x, p.y);
   }
 }
 

@@ -10,6 +10,11 @@ const DEFAULTS = {
   vibration: true,
   shotOpacity: 1, // opacité des tirs du joueur (Options), de SHOT_OPACITY.min à 1
   quality: isTouch ? "medium" : "high", // low | medium | high
+  // Effets visuels (Options > Effets visuels, voir config.js VISUAL_FX) ; coupés en qualité basse
+  fxGrid: true, // grille du sol qui se déforme
+  fxBloom: !isTouch, // halo lumineux global (le plus coûteux : désactivé d'office sur téléphone)
+  fxCrt: true, // vignette et lignes d'écran (CSS, sans coût)
+  fxChroma: true, // aberration chromatique aux gros chocs
   keyBindings: null, // touches personnalisées { action: [touches] } (voir core/input.js), null = défaut
   gamepad: true, // manette prise en compte (Options)
   padVibration: true, // vibrations de la manette (Options)

@@ -1020,6 +1020,33 @@ const SHAPES = {
     c.fill();
   },
 
+  /**
+   * Tir ennemi : halo de sa couleur, anneau sombre d'isolation puis cœur lumineux. L'anneau sombre le
+   * détache des tirs du joueur (toutes les couleurs de la palette) au milieu du chaos des dernières vagues.
+   */
+  enemyBullet(c, r, color) {
+    glow(c, color, r * 3);
+    c.fillStyle = color;
+    c.globalAlpha = 0.55;
+    c.beginPath();
+    c.arc(0, 0, r * 1.55, 0, TAU);
+    c.fill();
+    noGlow(c);
+    c.globalAlpha = 1;
+    c.fillStyle = "#0a0014";
+    c.beginPath();
+    c.arc(0, 0, r * 1.25, 0, TAU);
+    c.fill();
+    c.fillStyle = color;
+    c.beginPath();
+    c.arc(0, 0, r, 0, TAU);
+    c.fill();
+    c.fillStyle = "#ffffff";
+    c.beginPath();
+    c.arc(0, 0, r * 0.45, 0, TAU);
+    c.fill();
+  },
+
   /** Gemme d'expérience. */
   gem(c, r, color) {
     const path = () =>

@@ -4,16 +4,15 @@ import { CURSED_SHRINE, MYSTERY_BOX } from "../config.js";
 import { ctx, view } from "../core/canvas.js";
 import { camera, game, mysteryBox as box, player, world } from "../core/state.js";
 import { arenaShrunk, mapBounds } from "../systems/arena.js";
-import { biomeForWave } from "../data/biomes.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
 import { ICONS, iconGrid } from "../data/icons.js";
 import { drawText, fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
+
+export { drawGrid } from "./grid.js";
 import { shrineHold } from "../systems/cyberCore.js";
 
-const GRID_SIZE = 60;
-const MAJOR_EVERY = 4; // une ligne plus lumineuse toutes les 4 cases
 const iconPaths = new Map();
 
 /** Icône (data/icons.js) convertie une fois en Path2D pour le canvas. */
@@ -34,35 +33,6 @@ function drawIcon(name, x, y, size, color) {
   ctx.shadowColor = color;
   ctx.fill(iconPath(name), "evenodd");
   ctx.restore();
-}
-
-/** Sol : grille néon (lignes fines + lignes principales) en coordonnées écran. */
-export function drawGrid() {
-  const biome = biomeForWave(game.wave);
-  // Teinte du biome par-dessus le fond de la page
-  ctx.fillStyle = biome.tint;
-  ctx.fillRect(0, 0, view.width, view.height);
-  const ox = -camera.x % GRID_SIZE;
-  const oy = -camera.y % GRID_SIZE;
-  const major = GRID_SIZE * MAJOR_EVERY;
-  ctx.lineWidth = 1;
-  for (const pass of ["minor", "major"]) {
-    ctx.strokeStyle = pass === "minor" ? biome.grid : biome.gridMajor;
-    ctx.beginPath();
-    for (let x = ox; x < view.width; x += GRID_SIZE) {
-      const isMajor = Math.round(x + camera.x) % major === 0;
-      if (isMajor !== (pass === "major")) continue;
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, view.height);
-    }
-    for (let y = oy; y < view.height; y += GRID_SIZE) {
-      const isMajor = Math.round(y + camera.y) % major === 0;
-      if (isMajor !== (pass === "major")) continue;
-      ctx.moveTo(0, y);
-      ctx.lineTo(view.width, y);
-    }
-    ctx.stroke();
-  }
 }
 
 export function drawMapBorder() {

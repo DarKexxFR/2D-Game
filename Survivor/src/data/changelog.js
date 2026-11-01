@@ -10,6 +10,31 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-rendu-neon",
+    date: "Novembre 2026",
+    title: "Un néon plus vivant",
+    items: [
+      {
+        icon: "wave",
+        color: "#aa66ff",
+        title: "La grille réagit",
+        text: "Le sol ondule sous les explosions, s'enroule vers les trous noirs, s'assombrit quand un boss prépare une attaque et bat au rythme du Cœur du Pulse.",
+      },
+      {
+        icon: "sparkle",
+        color: "#00ffff",
+        title: "Plus de lumière, plus d'impact",
+        text: "Halo néon, tirs qui s'additionnent vers le blanc, étincelles, ennemis qui flashent quand ils sont touchés, dash étiré et tirs ennemis cerclés de noir pour rester lisibles. Chaque effet se règle dans les Options.",
+      },
+      {
+        icon: "ship",
+        color: "#ff2a6d",
+        title: "Vaisseaux et boss redessinés",
+        text: "Les 8 vaisseaux de héros ont de nouvelles coques détaillées (ailes, canons, auréole de l'Archange, orbe du Mage...). Les boss s'animent avec des anneaux et des plaques qui tournent, et leurs repères s'allument juste avant une attaque. Illustrations dans les fiches d'équipement et du bestiaire.",
+      },
+    ],
+  },
+  {
     id: "2026-11-coop-en-ligne",
     date: "Novembre 2026",
     title: "Coop en ligne, jusqu'à 4 joueurs",

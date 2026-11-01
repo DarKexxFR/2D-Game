@@ -3,6 +3,7 @@
 
 import { CHESTS, CHEST_POOLS, FORGE, ITEMS, LOADOUT_COUNT, MAX_PRESTIGE, maxLevel } from "../data/items.js";
 import { SETS, synergyOf } from "../data/perks.js";
+import { ITEM_ART, artImage } from "../data/art.js";
 import {
   canLevelUp,
   canPrestige,
@@ -277,9 +278,12 @@ function renderDetail(item) {
   const title = el("div", "detail-title");
   title.append(el("h3", "", item.name), rarityTag(item.rarity));
   head.append(itemIcon(owned ? item : { icon: "lock", color: "#666" }, "detail-icon"), title);
+  // Illustration (héros, armes, familiers qui en ont une) : en ombre tant que l'objet n'est pas obtenu
+  const art = artImage(ITEM_ART[item.id], owned ? "detail-art" : "detail-art locked");
 
   if (!owned) {
     box.replaceChildren(
+      ...(art ? [art] : []),
       head,
       el("p", "item-desc", item.desc),
       el("p", "item-stats", statsText(item, 1, 1)),
@@ -327,6 +331,7 @@ function renderDetail(item) {
 
   actions.append(equipBtn, lvlBtn, prestigeBtn);
   box.replaceChildren(
+    ...(art ? [art] : []),
     head,
     progress,
     el("p", "item-desc", item.desc),

@@ -62,7 +62,7 @@ const LISTS = [
   "turrets",
 ];
 /** Effets visuels : envoyés à leur naissance seulement (l'invité les fait vieillir). */
-const VISUALS = ["particles", "floatingTexts", "visualEffects", "ghosts", "bolts", "trail"];
+const VISUALS = ["particles", "floatingTexts", "visualEffects", "ghosts", "bolts", "trail", "gridPulses"];
 /** Champs de `game` propres à chaque appareil (secousses, ralenti de la mort, duel...). */
 const LOCAL_GAME = new Set([
   "started",

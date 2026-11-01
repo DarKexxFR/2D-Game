@@ -18,6 +18,7 @@ import { playSfx } from "../services/sfx.js";
 import { dist, removeWhere } from "../utils/math.js";
 import { addScreenShake, createParticles, createShockwave } from "./effects.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
+import { addGridPulse } from "./gridWarp.js";
 import { memberIndexOf, partyHit } from "./party.js";
 
 const POOL_TICK = 30; // une flaque blesse au plus toutes les 0,5 s
@@ -125,6 +126,7 @@ export function addRing(
     stun,
     done: false,
   });
+  addGridPulse(x, y, max * 0.6); // l'onde soulève aussi la grille du sol
 }
 
 /**
