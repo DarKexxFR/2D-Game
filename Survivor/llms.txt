@@ -14,7 +14,7 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 - Genre : roguelike, bullet heaven, survie en vagues, action
 - Prix : gratuit (publicités récompensées facultatives, pour revivre ou ouvrir un coffre bonus)
 - Joueurs : solo, ou duel 1 contre 1 (sur un même écran ou en ligne)
-- Commandes : clavier et souris (ZQSD / WASD, Espace pour le dash), écran tactile sur mobile ; tir automatique
+- Commandes : clavier et souris (ZQSD / WASD, Espace pour le dash), écran tactile sur mobile, manette (Gamepad API : jeu et menus, une manette par joueur en duel sur un écran) ; tir automatique
 - Éditeur : DarKexxFR (projet indépendant, non commercial)
 
 ## Gameplay

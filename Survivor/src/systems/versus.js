@@ -54,7 +54,8 @@ export const VERSUS_KEYS = [
   },
 ];
 
-const profiles = VERSUS_KEYS.map((keys, i) => ({ keys, virtual: {}, stick: versusTouch[i] }));
+// pad : manette du joueur (place i de core/gamepad.js : la 1re branchée pour J1, la 2e pour J2)
+const profiles = VERSUS_KEYS.map((keys, i) => ({ keys, virtual: {}, stick: versusTouch[i], pad: i }));
 
 export function fighterName(i) {
   return versus.names[i] || `JOUEUR ${i + 1}`;

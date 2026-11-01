@@ -5,7 +5,8 @@
 
 import { TUTORIAL } from "../config.js";
 import { on } from "../core/events.js";
-import { bindingsOf, keyLabel } from "../core/input.js";
+import { bindingsOf, keyLabel, padButtonsOf, usingPad } from "../core/input.js";
+import { buttonLabel } from "./gamepadControls.js";
 import { game, mysteryBox, player } from "../core/state.js";
 import { account, saveAccount } from "../services/storage.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
@@ -14,6 +15,8 @@ import { $, setText, setVisible } from "./dom.js";
 import { isTouchDevice } from "./touchControls.js";
 
 const key = (action) => keyLabel(bindingsOf(action)[0]);
+// À la manette : boutons de la manette branchée (A, ✕...)
+const pad = (action) => buttonLabel(padButtonsOf(action)[0]);
 
 /**
  * Étapes dans l'ordre. `ready` : l'étape peut s'afficher (sinon elle attend, sans bloquer
@@ -23,24 +26,32 @@ const STEPS = [
   {
     id: "move",
     text: () =>
-      isTouchDevice
-        ? "Pose le pouce sur la moitié gauche de l'écran et glisse pour te déplacer."
-        : `Déplace-toi avec ${["up", "left", "down", "right"].map(key).join(" ")} ou les flèches.`,
+      usingPad()
+        ? "Déplace-toi avec le stick gauche (ou la croix)."
+        : isTouchDevice
+          ? "Pose le pouce sur la moitié gauche de l'écran et glisse pour te déplacer."
+          : `Déplace-toi avec ${["up", "left", "down", "right"].map(key).join(" ")} ou les flèches.`,
     done: (t) => Math.hypot(player.worldX - t.startX, player.worldY - t.startY) > TUTORIAL.moveDistance,
   },
   {
     id: "fire",
     text: () =>
       `Ton vaisseau tire tout seul sur l'ennemi le plus proche : détruis-en ${TUTORIAL.kills} !` +
-      (isTouchDevice ? "" : ` (${key("autoShoot")} coupe le tir auto pour viser à la souris)`),
+      (usingPad()
+        ? ` (${pad("autoShoot")} coupe le tir auto pour viser au stick droit)`
+        : isTouchDevice
+          ? ""
+          : ` (${key("autoShoot")} coupe le tir auto pour viser à la souris)`),
     done: () => game.kills >= TUTORIAL.kills,
   },
   {
     id: "dash",
     text: () =>
-      isTouchDevice
-        ? "Touche DASH pour une courte ruée : idéal pour sortir d'un encerclement."
-        : `${key("dash")} : dash, une courte ruée pour sortir d'un encerclement.`,
+      usingPad()
+        ? `${pad("dash")} : dash, une courte ruée pour sortir d'un encerclement.`
+        : isTouchDevice
+          ? "Touche DASH pour une courte ruée : idéal pour sortir d'un encerclement."
+          : `${key("dash")} : dash, une courte ruée pour sortir d'un encerclement.`,
     done: () => player.isDashing,
   },
   {
@@ -54,7 +65,11 @@ const STEPS = [
     ready: () => player.isUltReady,
     text: () =>
       `Ta compétence ${heroSkill().name.toUpperCase()} est chargée : ` +
-      (isTouchDevice ? "touche ULT pour la lancer !" : `appuie sur ${key("skill")} pour la lancer !`),
+      (usingPad()
+        ? `appuie sur ${pad("skill")} pour la lancer !`
+        : isTouchDevice
+          ? "touche ULT pour la lancer !"
+          : `appuie sur ${key("skill")} pour la lancer !`),
     // Ses éliminations peuvent remplir de nouveau la jauge aussitôt : le lancement suffit
     done: (t) => t.skillUsed || !player.isUltReady,
   },
@@ -66,7 +81,11 @@ const BOX_TIP = {
   ready: () => mysteryBox.state === "IDLE" && isPlayerNearBox(),
   text: () =>
     "Boîte mystère : " +
-    (isTouchDevice ? "touche le bouton coffre" : `appuie sur ${key("box")}`) +
+    (usingPad()
+      ? `appuie sur ${pad("box")}`
+      : isTouchDevice
+        ? "touche le bouton coffre"
+        : `appuie sur ${key("box")}`) +
     " pour l'ouvrir contre de l'or (récompense au hasard).",
   done: () => !isPlayerNearBox(),
 };

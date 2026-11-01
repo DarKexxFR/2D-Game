@@ -1,9 +1,12 @@
-// Clavier, souris et joystick tactile.
+// Clavier, souris, joystick tactile et manette.
 // Le jeu raisonne en ACTIONS (haut, dash, compétence...) ; chaque action est liée à une
-// ou plusieurs touches, modifiables dans les Options (sauvegardées dans les réglages).
+// ou plusieurs touches, modifiables dans les Options (sauvegardées dans les réglages),
+// et à des boutons de manette (GAMEPAD.bindings dans config.js, lus par core/gamepad.js).
 
+import { GAMEPAD } from "../config.js";
 import { settings, updateSettings } from "../services/settings.js";
 import { toViewCoords, view } from "./canvas.js";
+import { consumeButtons, padAim, padHeld, padStick, rumblePad } from "./gamepad.js";
 
 export const mouse = { x: view.width / 2, y: view.height / 2 };
 
@@ -28,36 +31,94 @@ const held = {}; // touches enfoncées
 const virtual = {}; // actions tenues par les boutons tactiles
 const listeners = {}; // action → fonction appelée à l'appui
 let capture = null; // attente d'une touche pour la réassigner
-// Duel sur un écran : touches et joystick du joueur dont la partie avance (voir systems/versus.js)
+// Duel sur un écran (ou coop) : touches, joystick et manette du joueur dont la partie avance
+// (voir systems/versus.js)
+/** @type {{ keys: Record<string, string[]>, virtual: Record<string, boolean>, stick: { x: number, y: number }, pad?: number } | null} */
 let profile = null;
+let padMode = false; // dernière commande utilisée : la manette (sinon clavier, souris ou tactile)
 
 /** Touches liées à une action (réglage du joueur, sinon défaut). */
 export function bindingsOf(action) {
   return settings.keyBindings?.[action] || ACTIONS[action].keys;
 }
 
+/** Boutons de manette liés à une action. */
+export function padButtonsOf(action) {
+  return GAMEPAD.bindings[action] || [];
+}
+
+/** Manette à lire : celle du joueur en cours (duel sur un écran, coop), sinon n'importe laquelle. */
+function padSlot() {
+  return profile ? (profile.pad ?? -1) : null;
+}
+
 export function isDown(action) {
+  const slot = padSlot();
+  if (slot !== -1 && padHeld(slot, padButtonsOf(action))) return true;
   if (profile) return !!profile.virtual[action] || (profile.keys[action] || []).some((k) => held[k]);
   return !!virtual[action] || bindingsOf(action).some((k) => held[k]);
 }
 
 /**
- * Duel sur un écran : `p` = { keys: { action: [touches] }, virtual: { action: bool }, stick: { x, y } }
- * remplace les commandes habituelles le temps de faire avancer la partie d'un joueur ; null = normal.
+ * Duel sur un écran (ou coop) : `p` = { keys: { action: [touches] }, virtual: { action: bool },
+ * stick: { x, y }, pad: place de la manette (0 à 3, facultatif) } remplace les commandes habituelles
+ * le temps de faire avancer la partie d'un joueur ; null = normal.
  */
 export function useInputProfile(p) {
   profile = p;
 }
 
-/** Direction du joystick tactile (celui du joueur en cours en duel sur un écran). */
+/** Direction du joystick tactile, sinon du stick gauche (ceux du joueur en cours en duel sur un écran). */
 export function stickDirection() {
-  return profile ? profile.stick : touchMove;
+  const touch = profile ? profile.stick : touchMove;
+  const slot = padSlot();
+  if (touch.x || touch.y || slot === -1) return touch;
+  return padStick(slot);
+}
+
+/**
+ * Angle de visée du tir manuel (tir auto coupé) : stick droit s'il est incliné ; à la manette sans
+ * stick droit, `fallback` (dernière visée) ; sinon la souris, depuis le centre de la vue.
+ */
+export function aimAngle(fallback) {
+  const slot = padSlot();
+  const aim = slot === -1 ? null : padAim(slot);
+  if (aim) return Math.atan2(aim.y, aim.x);
+  if (padMode || profile?.pad != null) return fallback;
+  return Math.atan2(mouse.y - view.height / 2, mouse.x - view.width / 2);
 }
 
 /** Relâche une action (évite qu'un appui maintenu la redéclenche en boucle). */
 export function releaseAction(action) {
   virtual[action] = false;
   for (const k of bindingsOf(action)) held[k] = false;
+  const slot = padSlot();
+  if (slot !== -1) consumeButtons(slot, padButtonsOf(action));
+}
+
+/** Déclenche l'action comme un appui de touche (bouton de manette : pause, compétence, tir auto...). */
+export function triggerAction(action) {
+  listeners[action]?.();
+}
+
+/** Vibration de la manette du joueur en cours (toutes en partie solo), durée selon `pattern`. */
+export function rumble(pattern) {
+  const slot = padSlot();
+  if (slot === -1) return;
+  const ms = Array.isArray(pattern) ? pattern.reduce((a, b) => a + b, 0) : Number(pattern) || 0;
+  rumblePad(slot, ms);
+}
+
+/** La manette est-elle la dernière commande utilisée ? (cercle de sélection, textes du tutoriel...) */
+export function usingPad() {
+  return padMode;
+}
+
+/** Bascule entre manette et clavier / souris / tactile (classe `pad-mode` sur la page). */
+export function setPadMode(on) {
+  if (padMode === on) return;
+  padMode = on;
+  document.body.classList.toggle("pad-mode", on);
 }
 
 /** Bouton tactile maintenu = action enfoncée. */
@@ -130,6 +191,7 @@ document.addEventListener("keydown", (e) => {
     fn(key === "escape" ? null : key);
     return;
   }
+  setPadMode(false);
   if (isTyping(e)) return; // taper son pseudo ne doit pas mettre en pause, etc.
   if (key === "space" || key.startsWith("arrow")) e.preventDefault(); // pas de défilement de la page
   if (!e.repeat) {
@@ -148,7 +210,12 @@ window.addEventListener("blur", () => {
 });
 
 window.addEventListener("mousemove", (e) => {
+  if (e.movementX || e.movementY) setPadMode(false);
   const p = toViewCoords(e.clientX, e.clientY);
   mouse.x = p.x;
   mouse.y = p.y;
+});
+
+window.addEventListener("pointerdown", (e) => {
+  if (e.pointerType) setPadMode(false); // les clics simulés (manette dans les menus) n'en sont pas
 });

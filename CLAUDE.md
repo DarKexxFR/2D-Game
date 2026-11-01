@@ -420,6 +420,18 @@ Principes :
   Jamais en duel. **Tout état de partie doit rester dans ces objets, en données simples** (pas de fonction ni
   d'objet de classe : `SnapshotError`) ; listes purement visuelles sauvegardées vides (`VISUAL_LISTS`).
   Tests : `tests/resume-run.spec.js` (dont chaque boss sauvegardé et repris en plein combat).
+- **Manette** (Gamepad API ; `core/gamepad.js` lit les manettes à chaque image, `ui/gamepadControls.js` aiguille,
+  `ui/padNav.js` menus, `ui/gamepadOptions.js` carte des Options, réglages `GAMEPAD` dans `config.js`, `settings.gamepad`
+  / `settings.padVibration`) : boutons liés aux mêmes actions que le clavier (`GAMEPAD.bindings`, lus par `isDown`),
+  stick gauche via `stickDirection`, stick droit = visée du tir manuel (`aimAngle`). Une **place** par joueur (`pads[0..3]`,
+  la première branchée = J1, débranchement = place libérée) ; un profil d'entrée `{ pad: i }` lit la manette i (duel sur
+  un écran ; à reprendre pour la coop), sans profil n'importe quelle manette commande. `releaseAction` consomme les
+  boutons (un appui = une action). Menus : navigation spatiale sur tout élément cliquable de l'écran affiché (bouton,
+  champ ou curseur « main »), `data-pad-focus` = sélection d'office, `data-pad-back` = bouton de B (sinon `navigate`) ;
+  A ignoré `GAMEPAD.confirmDelay` après l'ouverture. Manette utilisée = `body.pad-mode` (cercle `.pad-focus`, commandes
+  tactiles masquées), la souris ou le clavier l'enlèvent. Débranchée en partie = pause (sauf en ligne). Vibrations :
+  `vibrate` de `services/sfx.js` fait aussi vibrer la manette du joueur en cours. Limite : les `confirm()` natifs ne se
+  répondent pas à la manette. Tests : `tests/gamepad.spec.js` (fausses manettes via `navigator.getGamepads`).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
   (`useSeed` / `restoreRandom` dans `services/daily.js`).
 
@@ -497,8 +509,8 @@ journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 arm
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
-reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique.
+reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur).
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 
-Autres idées en attente : manette.
+Autres idées en attente : fenêtres de confirmation pilotables à la manette (remplacer les `confirm()` natifs).
