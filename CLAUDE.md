@@ -339,7 +339,8 @@ Principes :
   tous les événements du bus (`onAny` de `core/events.js`, sauf `DIAGNOSTICS.quietEvents`), console.error /
   warn, images lentes et blocages (`markFrame` en fin d'image). Exception, promesse rejetée, fichier non chargé
   ou boucle arrêtée (`freeze`, onglet visible sans image) = rapport avec l'état du jeu (`setDiagnosticContext`
-  dans `main.js`), une fois par empreinte et par session. Journal gardé sur l'appareil (`survivor_diag`,
+  dans `main.js`), une fois par empreinte et par session. Erreur dont la pile ne désigne aucun fichier de `src/` (extension, script injecté par le
+  navigateur) = notée au journal « hors jeu », jamais envoyée (`isForeignError`). Journal gardé sur l'appareil (`survivor_diag`,
   session précédente comprise), copiable dans les Options (`journalText`). Envoi : `services/errorReports.js`
   (RPC `report_error`, même consentement et identifiant que les statistiques anonymes), lecture dans la partie
   « Erreurs du jeu » de `stats.html` (`src/stats/errorsPanel.js`). Version = `src/build.js`, réécrit par

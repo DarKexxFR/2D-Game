@@ -133,6 +133,20 @@ function cleanStack(stack) {
     .slice(0, DIAGNOSTICS.stackMax);
 }
 
+/** Dossier des modules du jeu (même origine que la page) : toute autre adresse vient d'ailleurs. */
+const GAME_SRC = new URL("src/", location.href.replace(/[?#].*$/, "").replace(/[^/]*$/, "")).href;
+
+/**
+ * Erreur étrangère au jeu : sa pile désigne des fichiers, mais aucun dans le dossier du jeu (extension,
+ * script injecté par le navigateur comme « /executors/200.js » d'Opera...). Notée au journal, jamais envoyée.
+ * Une erreur sans fichier dans sa pile (message seul) reste envoyée.
+ * @param {string} rawStack pile d'appels d'origine (adresses complètes)
+ */
+export function isForeignError(rawStack) {
+  const files = String(rawStack || "").match(/(?:https?|[a-z-]+-extension|blob):\/\/[^\s)]+/g);
+  return !!files && !files.some((url) => url.startsWith(GAME_SRC));
+}
+
 /** Première ligne de la pile qui désigne un fichier : « fonction@fichier » sans ligne ni colonne. */
 function topFrame(stack) {
   for (const line of stack.split("\n")) {
@@ -180,6 +194,7 @@ export function captureError(error, kind = "error") {
     if (known) known.count = times;
     if (times > 1) return;
     pollWatchers(); // valeurs suivies à jour (relevées toutes les 500 ms) : le journal montre l'état exact
+    if (isForeignError(err?.stack)) return logEvent("erreur", `${kind} hors jeu (non envoyée) : ${message}`);
     logEvent("erreur", `${kind} : ${message}`);
     if (session.reports.length >= DIAGNOSTICS.maxReportsPerSession) return;
     /** @type {ErrorReport} */

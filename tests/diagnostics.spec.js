@@ -61,6 +61,35 @@ test.describe("erreur en partie", () => {
   });
 });
 
+test.describe("erreur d'un script étranger", () => {
+  test.use({
+    allowedErrors: ["Cannot read properties of undefined (reading 'M_ID')", "panne du jeu ?", "panne du jeu"],
+  });
+
+  test("extension ou script injecté par le navigateur : noté au journal, jamais envoyé", async ({
+    page,
+    supabase,
+  }) => {
+    await withSave(page, SAVE);
+    await page.goto("/");
+    await game(page, () => {
+      // Comme le rapport d'Opera : pile qui ne désigne que des fichiers hors du dossier du jeu
+      const err = new TypeError("Cannot read properties of undefined (reading 'M_ID')");
+      err.stack = `TypeError: ${err.message}\n    at Y (${location.origin}/executors/200.js:1:761)`;
+      Promise.reject(err);
+      const ext = new Error("panne du jeu ?");
+      ext.stack = "Error: panne du jeu ?\n    at x (chrome-extension://abc/content.js:3:9)";
+      Promise.reject(ext);
+    });
+    await expect.poll(() => journal(page)).toContain("rejection hors jeu (non envoyée) : Cannot read");
+    await expect.poll(() => journal(page)).toContain("hors jeu (non envoyée) : panne du jeu ?");
+    // Une erreur venue des fichiers du jeu, elle, part bien
+    await game(page, () => void Promise.reject(new Error("panne du jeu")));
+    await expect.poll(() => supabase.errors.length, SLOW).toBe(1);
+    expect(supabase.errors[0].p_message).toBe("panne du jeu");
+  });
+});
+
 test("boucle du jeu arrêtée : rapport « gel »", async ({ page, supabase }) => {
   await withSave(page, SAVE);
   await page.goto("/");
