@@ -44,14 +44,14 @@
         "@type": "VideoGame",
         "name": "Last Pulse",
         "url": "https://last-pulse.com/",
-        "description": "Last Pulse est un jeu vidéo de survie et de stratégie de type roguelike spatial (bullet heaven) jouable gratuitement dans le navigateur web, et installable comme application (PWA). Le joueur survit à des vagues d'ennemis, affronte des boss, améliore son vaisseau et son équipement, et défie d'autres joueurs en duel 1v1 en ligne.",
+        "description": "Last Pulse est un jeu vidéo de survie et de stratégie de type roguelike spatial (bullet heaven) jouable gratuitement dans le navigateur web, et installable comme application (PWA). Le joueur survit à des vagues d'ennemis, affronte des boss, améliore son vaisseau et son équipement, défie d'autres joueurs en duel 1v1 en ligne et survit en équipe en coop en ligne jusqu'à 4 joueurs.",
         "inLanguage": "fr",
         "genre": ["Roguelike", "Bullet heaven", "Shoot 'em up", "Survie", "Action"],
         "gamePlatform": ["Navigateur web", "Mobile (navigateur)", "Progressive Web App"],
         "applicationCategory": "GameApplication",
         "operatingSystem": "Tout navigateur récent (ordinateur, Android, iPhone)",
-        "playMode": ["SinglePlayer", "MultiPlayer"],
-        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
+        "playMode": ["SinglePlayer", "MultiPlayer", "CoOp"],
+        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 4 },
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
         "image": "https://last-pulse.com/assets/og-image.png",
@@ -100,6 +100,7 @@
     <link rel="stylesheet" href="css/ads.css" />
     <link rel="stylesheet" href="css/versus.css" />
     <link rel="stylesheet" href="css/friends.css" />
+    <link rel="stylesheet" href="css/coop.css" />
     <link rel="stylesheet" href="css/gamepad.css" />
     <link rel="stylesheet" href="css/skins.css" />
     <link rel="stylesheet" href="css/app.css" />
@@ -212,6 +213,10 @@
         </div>
         <div id="autoShootOff" class="ui-badge">TIR AUTO COUPÉ</div>
       </div>
+
+      <!-- ===== COOP : ÉQUIPE (vie de chacun) ET ATTENTE D'UN CHOIX ===== -->
+      <div id="coopParty" class="coop-party"></div>
+      <div id="coopWait" class="coop-wait"></div>
 
       <!-- ===== DUEL : ADVERSAIRE EN LIGNE, ÉCRAN SCINDÉ ===== -->
       <div id="duelRival" class="duel-rival">
@@ -394,6 +399,7 @@
             <button id="btnLeaderboard" class="dock-btn"><i data-icon="trophy"></i> CLASSEMENT</button>
             <button id="btnAchievements" class="dock-btn"><i data-icon="medal"></i> SUCCÈS</button>
             <button id="btnVersus" class="dock-btn"><i data-icon="sword"></i> DUEL 1V1</button>
+            <button id="btnCoop" class="dock-btn dock-coop"><i data-icon="coop"></i> COOP</button>
             <button id="btnBossRush" class="dock-btn dock-rush"><i data-icon="crown"></i> BOSS RUSH</button>
           </nav>
           <div class="home-links">
@@ -1024,6 +1030,37 @@
           <p id="duelStatus" class="duel-status"></p>
         </div>
         <button id="btnDuelBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== COOP EN LIGNE (2 à 4 joueurs) ===== -->
+      <div id="coopMenu" class="menu-overlay">
+        <h2>COOP EN LIGNE</h2>
+        <p class="menu-sub">De 2 à 4 joueurs · la même partie · relevez vos coéquipiers à terre</p>
+        <div class="duel-online coop-online">
+          <h3>SALON</h3>
+          <p class="duel-ranked">
+            Carte, ennemis et boss s'adaptent au nombre de joueurs · XP et or pour tous
+          </p>
+          <button id="btnCoopHost" class="duel-host"><i data-icon="coop"></i> CRÉER UN SALON</button>
+          <div class="duel-join">
+            <input
+              type="text"
+              id="coopCode"
+              placeholder="CODE"
+              maxlength="4"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              aria-label="Code du salon"
+            />
+            <button id="btnCoopJoin" class="secondary"><i data-icon="join"></i> REJOINDRE</button>
+          </div>
+          <p id="coopRoomCode" class="duel-code"></p>
+          <ul id="coopLobby" class="coop-lobby"></ul>
+          <p id="coopStatus" class="duel-status"></p>
+          <button id="btnCoopStart" class="coop-start"><i data-icon="play"></i> LANCER LA PARTIE</button>
+        </div>
+        <button id="btnCoopBack" class="secondary">RETOUR</button>
       </div>
 
       <!-- ===== AMIS ===== -->

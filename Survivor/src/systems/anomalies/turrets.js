@@ -9,6 +9,7 @@ import { angleTo, dist } from "../../utils/math.js";
 import { getNearestEnemy, spawnProjectile } from "../combat.js";
 import { addFloatingText, createParticles, createShockwave } from "../effects.js";
 import { scatter } from "./scatter.js";
+import { partyHit } from "../party.js";
 
 /** @param {any} a @param {any} def @param {boolean} arena @param {any} zone */
 export function layout(a, def, arena, zone) {
@@ -38,7 +39,12 @@ export function update(a, def) {
 }
 
 function hack(t, def) {
-  if (dist(player.worldX, player.worldY, t.x, t.y) < def.radius) {
+  let near = false;
+  partyHit(
+    (p) => dist(p.worldX, p.worldY, t.x, t.y) < def.radius,
+    () => (near = true),
+  ); // coop : n'importe quel joueur
+  if (near) {
     if (++t.progress >= def.hack) {
       Object.assign(t, { state: "hacked", timer: def.duration, progress: 0 });
       createShockwave(t.x, t.y, def.radius * 1.4, def.hackedColor);

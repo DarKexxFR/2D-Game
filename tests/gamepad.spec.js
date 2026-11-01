@@ -51,15 +51,30 @@ function frames(page, n = 3) {
 const pad = (page, method, ...args) =>
   page.evaluate(([m, a]) => /** @type {any} */ (window).__pad[m](...a), [method, args]);
 
-/** Appui bref sur un bouton de la manette `i` (une image : tenu plus longtemps, une direction se répète). */
+/**
+ * Appui bref sur un bouton de la manette `i` : relâché dans la page à l'image suivante, sans aller-retour
+ * avec le test (sur une machine chargée, cet aller-retour durait plusieurs images et une direction tenue
+ * se répétait).
+ */
 async function tap(page, i, button) {
-  await pad(page, "set", i, button, true);
-  await frames(page, 1);
-  await pad(page, "set", i, button, false);
+  await page.evaluate(
+    ([i, button]) =>
+      new Promise((resolve) => {
+        const w = /** @type {any} */ (window);
+        w.__pad.set(i, button, true);
+        requestAnimationFrame(() => {
+          w.__pad.set(i, button, false);
+          resolve(undefined);
+        });
+      }),
+    [i, button],
+  );
   await frames(page);
 }
 
 async function connect(page, i = 0, id = XBOX) {
+  // Pendant l'écran de chargement, les appuis sont ignorés : sur une machine lente, ils se perdaient
+  await expect(page.locator("body")).not.toHaveClass(/booting/);
   await pad(page, "connect", i, id);
   await frames(page);
 }
@@ -100,7 +115,8 @@ test("partie : stick gauche pour bouger, A pour le dash, Start pour la pause, B 
   await expect(page.locator("#touchControls")).toBeHidden();
 
   await pad(page, "set", 0, B.A, true);
-  await expect.poll(() => game(page, ({ state }) => state.player.isDashing)).toBe(true);
+  // Le dash ne dure que quelques ticks : on guette son rechargement, qui démarre avec lui
+  await expect.poll(() => game(page, ({ state }) => state.player.dashCooldownTimer > 0)).toBe(true);
   await pad(page, "set", 0, B.A, false);
 
   await tap(page, 0, B.START);

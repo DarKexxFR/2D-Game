@@ -93,7 +93,11 @@ export function updateEffects() {
   if (game.slowMo > 0) game.slowMo--;
   if (game.flash && (game.flash.alpha *= 0.88) < 0.02) game.flash = null;
   if (game.comboTimer > 0 && --game.comboTimer === 0) game.combo = 0;
+  ageVisuals();
+}
 
+/** Effets purement visuels (étincelles, textes, ondes...) : aussi chez un invité en coop, qui ne simule rien. */
+export function ageVisuals() {
   for (const p of world.particles) {
     p.x += p.vx;
     p.y += p.vy;

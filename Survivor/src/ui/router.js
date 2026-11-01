@@ -33,6 +33,7 @@ const ROUTES = {
   shareMenu: "partage",
   versusOver: "fin-duel",
   duelMenu: "duel",
+  coopMenu: "coop",
   friendsMenu: "amis",
 };
 const PLAYING = "#jeu";

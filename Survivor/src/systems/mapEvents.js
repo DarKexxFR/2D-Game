@@ -13,6 +13,7 @@ import { addCircle, registerImpact } from "./hazards.js";
 import { arenaPointNear, createGem, dropLootBox } from "./pickups.js";
 import { isProtected, takeDamage } from "./player.js";
 import { bossFight, waveMultipliers } from "./spawner.js";
+import { forEachMember } from "./party.js";
 
 export const EVENT_TYPES = ["asteroids", "acid", "vortex", "stars"];
 
@@ -148,7 +149,7 @@ const UPDATERS = {
       e.x += Math.cos(a) * pull;
       e.y += Math.sin(a) * pull;
     }
-    pullPlayer(ev, cfg);
+    forEachMember(() => pullPlayer(ev, cfg)); // coop : le trou noir attire chaque joueur
   },
 };
 

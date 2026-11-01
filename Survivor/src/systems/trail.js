@@ -47,6 +47,11 @@ export function resetTrail() {
 /** En partie : sème la traînée du joueur quand il bouge. */
 export function updateTrail() {
   ageTrail(world.trail);
+  seedTrail();
+}
+
+/** Sème la traînée du vaisseau chargé (coop : appelé pour chaque joueur, la traînée vieillit une fois). */
+export function seedTrail() {
   const t = trailState;
   const { worldX: x, worldY: y } = player;
   const dx = t.lastX === null ? 0 : x - t.lastX;
@@ -54,5 +59,5 @@ export function updateTrail() {
   t.lastX = x;
   t.lastY = y;
   if (Math.hypot(dx, dy) < 0.5 || ++t.tick % TRAIL.every) return;
-  pushTrailPoint(world.trail, x, y, dx, dy, player.size, shipLook(player.hero, currentSkin()));
+  pushTrailPoint(world.trail, x, y, dx, dy, player.size, shipLook(player.hero, currentSkin(player.skin)));
 }

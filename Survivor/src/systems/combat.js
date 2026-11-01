@@ -298,7 +298,7 @@ function createPlayerProjectile(angle) {
     vy: Math.sin(angle) * w.speed,
     size: (ray ? Math.max(8, w.size) : w.size) * player.projScale,
     damage: player.attack * w.damage * coreShotMult(!player.autoShoot), // Viseur manuel (Cœur Cybernétique)
-    color: ray ? "#00ff88" : resolveColor(currentSkin().shot, w.color),
+    color: ray ? "#00ff88" : resolveColor(currentSkin(player.skin).shot, w.color),
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
     explosion: (w.explosion || 0) * player.projScale,
     life: w.range ? w.range * player.rangeMult : w.lifetime || Infinity,

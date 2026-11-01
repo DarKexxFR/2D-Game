@@ -115,6 +115,8 @@ const SOURCES = {
   dragon: "g:dragon-head",
   user: "p:user",
   friends: "g:three-friends",
+  coop: "p:link", // coop en ligne (vaisseaux liés)
+  join: "p:login", // rejoindre un salon
   eye: "g:eyeball",
   paw: "g:paw-print",
   // --- Application (installation, notifications) ---

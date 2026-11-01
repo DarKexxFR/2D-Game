@@ -33,7 +33,7 @@ const listeners = {}; // action → fonction appelée à l'appui
 let capture = null; // attente d'une touche pour la réassigner
 // Duel sur un écran (ou coop) : touches, joystick et manette du joueur dont la partie avance
 // (voir systems/versus.js)
-/** @type {{ keys: Record<string, string[]>, virtual: Record<string, boolean>, stick: { x: number, y: number }, pad?: number } | null} */
+/** @type {{ keys: Record<string, string[]>, virtual: Record<string, boolean>, stick: { x: number, y: number }, pad?: number, aim?: number | null } | null} */
 let profile = null;
 let padMode = false; // dernière commande utilisée : la manette (sinon clavier, souris ou tactile)
 
@@ -78,9 +78,11 @@ export function stickDirection() {
 
 /**
  * Angle de visée du tir manuel (tir auto coupé) : stick droit s'il est incliné ; à la manette sans
- * stick droit, `fallback` (dernière visée) ; sinon la souris, depuis le centre de la vue.
+ * stick droit, `fallback` (dernière visée) ; sinon la souris, depuis le centre de la vue. En coop, chez l'hôte,
+ * la visée reçue d'un invité (`profile.aim`).
  */
 export function aimAngle(fallback) {
+  if (profile?.aim != null) return profile.aim; // coop : visée envoyée par un joueur distant
   const slot = padSlot();
   const aim = slot === -1 ? null : padAim(slot);
   if (aim) return Math.atan2(aim.y, aim.x);
