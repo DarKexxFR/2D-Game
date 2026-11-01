@@ -11,6 +11,8 @@ const DEFAULTS = {
   shotOpacity: 1, // opacité des tirs du joueur (Options), de SHOT_OPACITY.min à 1
   quality: isTouch ? "medium" : "high", // low | medium | high
   keyBindings: null, // touches personnalisées { action: [touches] } (voir core/input.js), null = défaut
+  gamepad: true, // manette prise en compte (Options)
+  padVibration: true, // vibrations de la manette (Options)
 };
 
 export const settings = { ...DEFAULTS };

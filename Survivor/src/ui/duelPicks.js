@@ -127,13 +127,26 @@ function next(i) {
 function onKey(e) {
   if (!versus.split || versus.paused) return;
   const key = e.code === "Space" ? "space" : e.key.toLowerCase();
-  for (const [i, p] of picks.entries()) {
-    if (!p.cards) continue;
+  for (const i of picks.keys()) {
     const keys = VERSUS_KEYS[i];
-    const count = p.cards.length;
-    if (keys.left.includes(key) || keys.up.includes(key)) select(i, (p.selected - 1 + count) % count);
-    else if (keys.right.includes(key) || keys.down.includes(key)) select(i, (p.selected + 1) % count);
-    else if (keys.dash.includes(key) && !e.repeat && performance.now() - p.shownAt >= CONFIRM_DELAY_MS)
-      choose(i, p.selected);
+    if (keys.left.includes(key) || keys.up.includes(key)) pickInput(i, "prev");
+    else if (keys.right.includes(key) || keys.down.includes(key)) pickInput(i, "next");
+    else if (keys.dash.includes(key) && !e.repeat) pickInput(i, "confirm");
   }
+}
+
+/**
+ * Commande du joueur `i` sur son choix ouvert (clavier ou manette) : carte précédente, suivante, ou
+ * validation (ignorée juste après l'ouverture). Renvoie false si ce joueur n'a pas de choix ouvert.
+ * @param {number} i
+ * @param {"prev" | "next" | "confirm"} cmd
+ */
+export function pickInput(i, cmd) {
+  const p = picks[i];
+  if (!versus.split || versus.paused || !p?.cards) return false;
+  const count = p.cards.length;
+  if (cmd === "prev") select(i, (p.selected - 1 + count) % count);
+  else if (cmd === "next") select(i, (p.selected + 1) % count);
+  else if (performance.now() - p.shownAt >= CONFIRM_DELAY_MS) choose(i, p.selected);
+  return true;
 }

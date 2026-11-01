@@ -506,6 +506,35 @@ export const MUSIC = {
   timerMs: 60,
 };
 
+// Manette (Gamepad API, disposition « standard » : Xbox, PlayStation, Switch Pro...). Voir core/gamepad.js.
+// Boutons : 0 A / Croix, 1 B / Rond, 2 X / Carré, 3 Y / Triangle, 4 LB, 5 RB, 6 LT, 7 RT, 8 Select / View,
+// 9 Start / Menu, 10 et 11 clic des sticks, 12 à 15 croix directionnelle (haut, bas, gauche, droite).
+export const GAMEPAD = {
+  maxPads: 4, // une manette par joueur (duel sur un écran, coop jusqu'à 4)
+  deadZone: 0.2, // stick gauche : en dessous, le vaisseau ne bouge pas
+  aimDeadZone: 0.35, // stick droit (visée quand le tir auto est coupé)
+  menuThreshold: 0.6, // stick incliné au-delà = une direction dans les menus
+  repeatDelay: 380, // ms avant de répéter une direction maintenue dans les menus
+  repeatMs: 130, // ms entre deux répétitions
+  confirmDelay: 350, // ms : A ignoré juste après l'ouverture d'un écran (un dash ne valide rien)
+  scrollSpeed: 14, // px par image au stick droit dans les menus
+  // Action → boutons (les directions passent aussi par le stick gauche, analogique)
+  bindings: {
+    up: [12],
+    down: [13],
+    left: [14],
+    right: [15],
+    dash: [0, 5, 7],
+    skill: [2, 4, 6],
+    box: [3],
+    spell: [1],
+    autoShoot: [8],
+    pause: [9],
+  },
+  // Vibrations : force (0 à 1) des deux moteurs ; la durée suit celle du téléphone (services/sfx.js)
+  rumble: { strong: 0.6, weak: 0.9, maxMs: 600 },
+};
+
 // Classement mondial (Supabase). Laisser vide pour désactiver le mode en ligne.
 // Valeurs dans Supabase : Project Settings → API. La clé « anon public » est
 // faite pour être publique ; la sécurité est assurée par les règles RLS (voir supabase/schema.sql).

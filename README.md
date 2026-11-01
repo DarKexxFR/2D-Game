@@ -31,6 +31,23 @@ npm start   # sert Survivor/ sur http://localhost:8000
 Toutes les touches se changent dans les **Options**. **Sur mobile** : joystick sur la moitié gauche de l'écran,
 boutons DASH et compétence à droite, tir automatique ; portrait et paysage sont jouables.
 
+**À la manette** (Xbox, PlayStation, Switch Pro… sur PC comme sur mobile, branchée ou en Bluetooth) :
+
+| Bouton (Xbox)        | Action                                        |
+| -------------------- | --------------------------------------------- |
+| Stick gauche / croix | Se déplacer                                   |
+| Stick droit          | Viser (tir automatique coupé)                 |
+| A (ou RB / RT)       | Dash                                          |
+| X (ou LB / LT)       | Compétence du héros                           |
+| Y                    | Ouvrir la boîte mystère                       |
+| B                    | Lancer un sort (duel) ; retour dans les menus |
+| View                 | Tir automatique                               |
+| Menu (Start)         | Pause                                         |
+
+Tous les menus se parcourent à la croix ou au stick (A valide, B revient). Une manette par joueur : la première
+branchée est le joueur 1, la suivante le joueur 2 en duel sur un écran. Branchement annoncé, pause automatique si
+la manette se débranche en pleine partie, vibrations et activation dans les **Options** (carte « Manette »).
+
 ## Contenu du jeu
 
 **Partie**
