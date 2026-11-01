@@ -1,0 +1,68 @@
+/* Manette : cercle de sélection des menus (ui/padNav.js) et carte « Manette » des Options. */
+
+/* Sélection à la manette : contour à l'intérieur de l'élément (les parents en overflow: hidden
+   rogneraient un contour extérieur), visible seulement quand la manette est utilisée. */
+body.pad-mode .pad-focus {
+  outline: 3px solid #00ffff;
+  outline-offset: -3px;
+  box-shadow:
+    0 0 14px rgba(0, 255, 255, 0.55),
+    inset 0 0 10px rgba(0, 255, 255, 0.25);
+}
+body.pad-mode .pad-focus:focus-visible {
+  outline: 3px solid #00ffff;
+}
+
+/* À la manette, les commandes tactiles s'effacent (téléphone ou tablette avec une manette). */
+body.pad-mode #touchControls,
+body.pad-mode #versusTouch {
+  display: none !important;
+}
+
+.pad-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: #e6e6f0;
+}
+.pad-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(0, 255, 255, 0.06);
+}
+.pad-row .pad-player {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  color: #00ff88;
+}
+.pad-row .pad-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pad-row .pad-warn {
+  font-size: 11px;
+  color: #ffd700;
+}
+.pad-empty {
+  color: #a8a8c0;
+  font-size: 13px;
+}
+.pad-legend .key-row b {
+  min-width: 84px;
+  padding: 6px 8px;
+  border: 1px solid rgba(170, 102, 255, 0.35);
+  border-radius: 6px;
+  color: #aa66ff;
+  font-size: 12px;
+  text-align: center;
+}
+.pad-legend {
+  grid-template-columns: 1fr; /* libellés longs (« Stick gauche / croix ») : une colonne */
+}

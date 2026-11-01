@@ -29,6 +29,25 @@ export const CHANGELOG = [
     ],
   },
   {
+    id: "2026-11-manette",
+    date: "Novembre 2026",
+    title: "Jouable à la manette",
+    items: [
+      {
+        icon: "gamepad",
+        color: "#00ffff",
+        title: "Branche ta manette",
+        text: "Xbox, PlayStation ou Switch Pro, sur PC comme sur mobile : stick gauche pour bouger, stick droit pour viser, A pour le dash, X pour la compétence. Tous les menus se parcourent à la croix (A valide, B revient).",
+      },
+      {
+        icon: "friends",
+        color: "#00ff88",
+        title: "Une manette par joueur",
+        text: "En duel sur un écran, la première manette branchée commande le joueur 1, la suivante le joueur 2. Vibrations et réglages dans les Options.",
+      },
+    ],
+  },
+  {
     id: "2026-10-anomalies-marchand",
     date: "Octobre 2026",
     title: "Anomalies de biome et Marchand Noir",

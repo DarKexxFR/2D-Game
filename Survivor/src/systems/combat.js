@@ -2,7 +2,7 @@
 
 import { KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
-import { aimOverride, mouse } from "../core/input.js";
+import { aimAngle } from "../core/input.js";
 import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
 import { BIOME_FOES, GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
@@ -219,7 +219,7 @@ export function shoot() {
     if (!target) return;
     angle = angleTo(player.worldX, player.worldY, target.x, target.y);
   } else {
-    angle = aimOverride() ?? angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y); // coop : visée d'un joueur distant
+    angle = aimAngle(player.aimAngle ?? 0); // souris, ou stick droit de la manette
   }
   player.lastAttack = game.time;
   player.aimAngle = angle;

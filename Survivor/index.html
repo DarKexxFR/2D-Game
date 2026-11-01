@@ -101,6 +101,7 @@
     <link rel="stylesheet" href="css/versus.css" />
     <link rel="stylesheet" href="css/friends.css" />
     <link rel="stylesheet" href="css/coop.css" />
+    <link rel="stylesheet" href="css/gamepad.css" />
     <link rel="stylesheet" href="css/skins.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/touch.css" />
@@ -383,7 +384,7 @@
                 <i data-icon="skull"></i>
               </button>
             </div>
-            <button id="btnPlay" class="play-btn"><i data-icon="play"></i> JOUER</button>
+            <button id="btnPlay" class="play-btn" data-pad-focus><i data-icon="play"></i> JOUER</button>
             <div id="difficultyPicker" class="diff-picker" role="radiogroup" aria-label="Difficulté">
               <button class="diff-btn" data-diff="easy" role="radio">FACILE</button>
               <button class="diff-btn" data-diff="normal" role="radio">NORMAL</button>
@@ -755,6 +756,24 @@
             </p>
             <div id="keyBindingList" class="key-list"></div>
             <button id="btnResetKeys" class="secondary">TOUCHES PAR DÉFAUT</button>
+          </section>
+
+          <section id="optPadSection" class="opt-card option-pad">
+            <h3 class="opt-title"><i data-icon="gamepad"></i> Manette</h3>
+            <div class="option-row option-account-row">
+              <span><i data-icon="gamepad"></i> Manette</span>
+              <button id="optGamepad" class="toggle-btn"></button>
+            </div>
+            <div class="option-row option-account-row">
+              <span><i data-icon="vibrate"></i> Vibrations</span>
+              <button id="optPadVibration" class="toggle-btn"></button>
+            </div>
+            <div id="padList" class="pad-list"></div>
+            <div id="padLegend" class="key-list pad-legend"></div>
+            <p class="option-hint">
+              Une manette par joueur : la première branchée est le joueur 1, la suivante le joueur 2 (duel sur
+              un écran).
+            </p>
           </section>
 
           <section class="opt-card">
@@ -1139,7 +1158,7 @@
       <p id="friendInviteText"><b id="friendInviteName"></b> te défie en duel classé !</p>
       <div class="btn-grid">
         <button id="btnInviteAccept">ACCEPTER</button>
-        <button id="btnInviteDecline" class="secondary">REFUSER</button>
+        <button id="btnInviteDecline" class="secondary" data-pad-back>REFUSER</button>
       </div>
     </div>
 

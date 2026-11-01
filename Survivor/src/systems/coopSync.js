@@ -17,7 +17,7 @@ import { COOP, TICK_MS } from "../config.js";
 import * as CONFIG from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit, onAny } from "../core/events.js";
-import { isDown, mouse, touchMove } from "../core/input.js";
+import { aimAngle, isDown, touchMove } from "../core/input.js";
 import { game, world } from "../core/state.js";
 import * as ANOMALIES from "../data/anomalies.js";
 import * as BIOMES from "../data/biomes.js";
@@ -34,7 +34,7 @@ import * as TALENTS from "../data/talents.js";
 import * as UPGRADES from "../data/upgrades.js";
 import { anyRelay, broadcast, coopPeers, sendTo } from "../services/coopNet.js";
 import { onSfx, playSfx, vibrate } from "../services/sfx.js";
-import { angleTo, clamp } from "../utils/math.js";
+import { clamp } from "../utils/math.js";
 import { addScreenShake, ageVisuals } from "./effects.js";
 import { followCamera, isUp, memberObj, party, withMember, withOwned } from "./party.js";
 import { activateSkill } from "./skills.js";
@@ -451,6 +451,7 @@ const guest = {
   dashHeld: false,
   skill: 0,
   auto: true,
+  aim: /** @type {number | null} */ (null), // dernière visée envoyée (manette sans stick droit incliné)
   health: null,
   started: false, // premier état reçu
 };
@@ -466,6 +467,7 @@ export function startGuestSync() {
     moving: [],
     ack: -1,
     inputSeq: 0,
+    aim: null,
     history: [],
     lastSend: 0,
     lastKey: "",
@@ -691,9 +693,8 @@ export function guestFrame(now) {
 
 function sendInput(now) {
   const last = guest.history[guest.history.length - 1] || { dx: 0, dy: 0 };
-  const aim = guest.auto
-    ? null
-    : Math.round(angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y) * 100) / 100;
+  const aim = guest.auto ? null : Math.round(aimAngle(guest.aim ?? 0) * 100) / 100; // souris ou stick droit
+  if (aim !== null) guest.aim = aim;
   const key = `${last.dx},${last.dy},${aim},${guest.auto},${guest.dash},${guest.skill}`;
   const rate = anyRelay() ? COOP.inputsPerSecondRelay : COOP.inputsPerSecond;
   const due = now - guest.lastSend >= 1000 / rate;

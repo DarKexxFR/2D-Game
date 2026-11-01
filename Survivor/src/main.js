@@ -129,8 +129,11 @@ import { canTogglePause, togglePause } from "./ui/pauseMenu.js";
 import { currentScreen, hideScreens, showScreen } from "./ui/screens.js";
 import { initRouter } from "./ui/router.js";
 import { initTouchControls, showTouchControls } from "./ui/touchControls.js";
+import { initGamepadControls, updateGamepads } from "./ui/gamepadControls.js";
+import { initPadNav } from "./ui/padNav.js";
 import { hydrateIcons } from "./ui/icons.js";
 import { initKeyBindings } from "./ui/keyBindings.js";
+import { initGamepadOptions } from "./ui/gamepadOptions.js";
 import { closeOptions, initOptionsMenu, openOptions } from "./ui/optionsMenu.js";
 import { closeLogin, initAccount, openLogin, resumeAccountCheck } from "./ui/accountMenu.js";
 import { failLoading, finishLoading, runLoadingSteps, setLoading } from "./ui/loadingScreen.js";
@@ -1035,6 +1038,7 @@ function frame(now) {
 }
 
 function runFrame(now) {
+  updateGamepads(now); // manettes : lues avant les ticks de l'image (déplacement, dash...)
   const elapsed = Math.min(now - lastFrame, 250); // borne : évite la « spirale » après un onglet en arrière-plan
   lastFrame = now;
   if (game.started) {
@@ -1162,6 +1166,7 @@ function init() {
   $("btnPauseOptions").addEventListener("click", () => openOptions("pauseMenu"));
   initOptionsMenu();
   initKeyBindings();
+  initGamepadOptions();
   initTutorial();
   initAppMenu();
   initNotifications();
@@ -1204,6 +1209,18 @@ function init() {
     if (party.role === "guest") player.autoShoot = toggleAuto();
     else if (game.started && !versus.split) player.autoShoot = !player.autoShoot;
   });
+
+  initGamepadControls({
+    useSkill,
+    useSpell,
+    // Manette débranchée en pleine partie : pause (sauf en ligne, où l'adversaire continue)
+    onPadLost: () => {
+      if (versus.online || currentScreen() !== null || !canTogglePause()) return;
+      if (versus.split ? !versus.paused : !game.paused) togglePause();
+    },
+  });
+  // B dans un menu = retour du navigateur (rien sur l'accueil)
+  initPadNav({ onBack: () => currentScreen() !== "mainMenu" && navigate(null) });
 
   initTouchControls({
     onUltimate: useSkillHere,

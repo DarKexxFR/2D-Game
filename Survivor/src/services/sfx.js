@@ -1,6 +1,7 @@
 // Effets sonores synthétisés avec la Web Audio API (aucun fichier à charger).
 // Chaque son a un intervalle minimum pour éviter la cacophonie quand tout explose.
 
+import { rumble } from "../core/input.js";
 import { getAudio, unlockAudio } from "./audioContext.js";
 import { settings } from "./settings.js";
 
@@ -165,9 +166,10 @@ export function playSfx(name) {
   sound.play();
 }
 
-/** Vibration courte sur mobile (si activée et supportée). */
+/** Vibration courte sur mobile (si activée et supportée), et de la manette du joueur (réglage à part). */
 export function vibrate(pattern) {
   if (settings.vibration && navigator.vibrate) navigator.vibrate(pattern);
+  rumble(pattern);
 }
 
 export const canVibrate = "vibrate" in navigator;

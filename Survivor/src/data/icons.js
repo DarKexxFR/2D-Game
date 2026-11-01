@@ -88,6 +88,7 @@ const SOURCES = {
   music: "g:musical-notes",
   sound: "p:volume",
   vibrate: "g:vibrating-smartphone",
+  gamepad: "g:gamepad", // pas de manette chez Papicons
   monitor: "g:tv",
   play: "p:play",
   cloud: "g:fluffy-cloud",
