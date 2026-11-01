@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-tous-les-modeles",
+    date: "Novembre 2026",
+    title: "Tous les modèles redessinés",
+    items: [
+      {
+        icon: "skull",
+        color: "#ff2a6d",
+        title: "Chaque boss a son style",
+        text: "Les 20 boss s'animent chacun à leur façon : glace en orbite autour du Colosse, arcs électriques du Titan, cadran du Chronophage, toile de la Tisseuse, plan de l'Architecte... Leurs repères s'allument juste avant une attaque.",
+      },
+      {
+        icon: "ship",
+        color: "#00ffff",
+        title: "Skins, ennemis et familiers",
+        text: "Les 17 formes de vaisseau de la boutique et du passe de saison ont des coques détaillées. Ailes, rotors, mèches et dards animés sur tous les ennemis, et nouveaux détails pour les 8 familiers.",
+      },
+    ],
+  },
+  {
     id: "2026-11-rendu-neon",
     date: "Novembre 2026",
     title: "Un néon plus vivant",

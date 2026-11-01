@@ -80,3 +80,73 @@ test("illustrations : toutes présentes, fiche du bestiaire débloquée seulemen
   await expect(page.locator("#bsEntry")).toHaveClass(/locked/);
   await expect(page.locator("#bsEntry img.bs-art")).toHaveCount(0);
 });
+
+test("chaque forme de skin a un plan détaillé", async ({ page }) => {
+  await page.goto("/");
+  const missing = await page.evaluate(async () => {
+    const ships = await import("/src/render/ships.js");
+    const { SKIN_HULLS } = await import("/src/data/skins.js");
+    const c = document.createElement("canvas").getContext("2d");
+    const ids = SKIN_HULLS.map((h) => h.id).filter((id) => id !== "hero");
+    for (const id of ids) ships.drawDesignedShip(c, 50, 50, 20, 0.5, "#00ffff", true, 1234, id);
+    return ids.filter((id) => !ships.hasShipDesign(id));
+  });
+  expect(missing).toEqual([]);
+});
+
+test("chaque boss a ses propres pièces, chaque ennemi et familier ses détails animés", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page);
+  const r = await page.evaluate(async () => {
+    const { ENEMY_TYPES } = await import("/src/data/enemies.js");
+    const { PETS } = await import("/src/data/items.js");
+    const bosses = await import("/src/render/bossLayers.js");
+    const mobs = await import("/src/render/mobLayers.js");
+    const pets = await import("/src/render/petParts.js");
+    const { player } = await import("/src/core/state.js");
+    const types = Object.entries(ENEMY_TYPES);
+    const ownBoss = new Set(bosses.bossLayerTypes());
+    const ownMob = new Set(mobs.mobLayerTypes());
+    // Chaque pièce se dessine sans erreur, en charge d'attaque et en furie
+    for (const [type, t] of types) {
+      const e = { type, template: t, x: player.worldX + 100, y: player.worldY, size: t.size, color: t.color };
+      Object.assign(e, { attackTimer: 10, skillTimer: 10, enraged: true, heading: 0.3, facing: 1 });
+      if (t.isBoss) bosses.drawBossLayers(e, 5000);
+      else mobs.drawMobLayers(e, 5000);
+    }
+    for (const kind of Object.keys(PETS)) pets.drawPetParts(kind, 100, 100, 10, "#00ffff", 5000, 0.4);
+    return {
+      bossMissing: types.filter(([id, t]) => t.isBoss && !ownBoss.has(id)).map(([id]) => id),
+      mobMissing: types.filter(([id, t]) => !t.isBoss && !ownMob.has(id)).map(([id]) => id),
+      petMissing: Object.keys(PETS).filter((k) => !pets.petPartKinds().includes(k)),
+    };
+  });
+  expect(r.bossMissing).toEqual([]);
+  expect(r.mobMissing).toEqual([]);
+  expect(r.petMissing).toEqual([]);
+});
+
+test("détails des ennemis plafonnés par image, coupés en qualité basse", async ({ page }) => {
+  await page.goto("/");
+  await startGame(page, { invincible: true });
+  await game(page, ({ state, spawner }) => {
+    state.game.spawnTimer = 1e9;
+    state.world.enemies.length = 0;
+    for (let i = 0; i < 150; i++) {
+      const a = (i / 150) * Math.PI * 2;
+      spawner.spawnEnemy(
+        "normal",
+        state.player.worldX + Math.cos(a) * 200,
+        state.player.worldY + Math.sin(a) * 200,
+      );
+    }
+  });
+  await page.waitForTimeout(200);
+  const drawn = await page.evaluate(async () => (await import("/src/render/mobLayers.js")).mobLayersDrawn());
+  expect(drawn).toBe(80);
+  await game(page, ({ settings }) => settings.updateSettings({ quality: "low" }));
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(async () => (await import("/src/render/mobLayers.js")).mobLayersDrawn())).toBe(
+    0,
+  );
+});
