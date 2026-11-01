@@ -60,12 +60,18 @@ export function buySkin(key, value) {
   return true;
 }
 
-/** Réglages effectifs : une pièce invalide ou non possédée reprend sa valeur par défaut. */
+/**
+ * Réglages effectifs : une pièce invalide ou non possédée reprend sa valeur par défaut. `skin.resolved` :
+ * skin déjà vérifié sur l'appareil de son propriétaire (coop : vaisseau d'un coéquipier, qui n'a pas
+ * acheté ses formes sur ce compte-ci).
+ * @param {any} [skin]
+ */
 export function currentSkin(skin = account.skin) {
   const out = {};
   for (const key of Object.keys(DEFAULT_SKIN)) {
     const value = skin?.[key];
-    out[key] = value !== undefined && isValid(key, value) && ownsSkin(key, value) ? value : DEFAULT_SKIN[key];
+    const owned = skin?.resolved || ownsSkin(key, value);
+    out[key] = value !== undefined && isValid(key, value) && owned ? value : DEFAULT_SKIN[key];
   }
   return out;
 }

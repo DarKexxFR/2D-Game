@@ -15,6 +15,7 @@ import {
 } from "./effects.js";
 import { addBeam, addCircle, addRing } from "./hazards.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
+import { assignAggro, forEachMember, inParty, memberIndexOf, nearestMember, partyHit } from "./party.js";
 import { spawnEnemy } from "./spawner.js";
 import { clampToZone } from "./arena.js";
 import { knockEnemy } from "./knockback.js";
@@ -62,9 +63,22 @@ const HYDRA_SUMMONS = 6;
 export function updateEnemies() {
   const enemies = world.enemies;
   const count = enemies.length; // les ennemis apparus pendant ce tick bougeront au suivant
+  if (inParty()) {
+    // Coop : chaque ennemi avance pendant le passage du joueur qu'il poursuit (ses attaques le visent)
+    assignAggro(count);
+    forEachMember((k) => stepEnemies(count, k));
+    contactOthers(count);
+  } else stepEnemies(count, -1);
+  updateEnemyProjectiles();
+  removeWhere(enemies, (e) => e.dead);
+}
+
+/** Fait agir les `count` premiers ennemis ; `only` ≥ 0 : seulement ceux qui poursuivent ce membre (coop). */
+function stepEnemies(count, only) {
+  const enemies = world.enemies;
   for (let i = 0; i < count; i++) {
     const e = enemies[i];
-    if (e.dead) continue;
+    if (e.dead || (only >= 0 && e.aggro !== only)) continue;
     if (e.stun > 0) {
       e.stun--; // étourdi par le Séisme du Titan : ne bouge ni n'attaque
       continue;
@@ -83,8 +97,19 @@ export function updateEnemies() {
     if (e.type === "ranged") rangedAttack(e, d);
     if (d < player.size + e.size && e.damage > 0 && !e.submerged && !e.airborne) handleContact(e);
   }
-  updateEnemyProjectiles();
-  removeWhere(enemies, (e) => e.dead);
+}
+
+/** Coop : un ennemi blesse aussi les coéquipiers qui le touchent sans être sa cible. */
+function contactOthers(count) {
+  const enemies = world.enemies;
+  for (let i = 0; i < count; i++) {
+    const e = enemies[i];
+    if (e.dead || e.damage <= 0 || e.submerged || e.airborne) continue;
+    partyHit(
+      (p) => e.aggro !== memberIndexOf(p) && dist(p.worldX, p.worldY, e.x, e.y) < p.size + e.size,
+      () => handleContact(e),
+    );
+  }
 }
 
 function moveEnemy(e, distToPlayer) {
@@ -1027,8 +1052,9 @@ function twinRevenge(e) {
 function steerToPlayer(p) {
   const speed = Math.hypot(p.vx, p.vy);
   const heading = Math.atan2(p.vy, p.vx);
+  const target = nearestMember(p.x, p.y); // coop : le joueur le plus proche
   const a =
-    heading + clamp(angleDiff(angleTo(p.x, p.y, player.worldX, player.worldY), heading), -p.homing, p.homing);
+    heading + clamp(angleDiff(angleTo(p.x, p.y, target.worldX, target.worldY), heading), -p.homing, p.homing);
   p.vx = Math.cos(a) * speed;
   p.vy = Math.sin(a) * speed;
 }
@@ -1227,17 +1253,19 @@ function updateEnemyProjectiles() {
       continue;
     }
 
-    const d = dist(p.x, p.y, player.worldX, player.worldY);
-    if (d < player.size + p.size * 0.5) {
-      if (!isProtected()) {
+    // Touche le premier joueur sur sa route (coop : n'importe lequel) ; disparaît loin de tout le monde
+    partyHit(
+      (pl) => !p.dead && dist(p.x, p.y, pl.worldX, pl.worldY) < pl.size + p.size * 0.5,
+      () => {
+        p.dead = true;
+        if (isProtected()) return;
         takeDamage(p.damage, p.from);
         if (p.slow) freezePlayer(p.slow);
         if (p.stun) stunPlayer(p.stun);
-      }
-      p.dead = true;
-    } else if (d > 700) {
-      p.dead = true;
-    }
+      },
+    );
+    const near = nearestMember(p.x, p.y);
+    if (!p.dead && dist(p.x, p.y, near.worldX, near.worldY) > 700) p.dead = true;
   }
   removeWhere(list, (p) => p.dead);
 }

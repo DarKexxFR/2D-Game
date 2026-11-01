@@ -141,7 +141,15 @@ const SOUNDS = {
   petSlash: { gap: 90, play: () => noise({ duration: 0.08, volume: 0.1, filter: 6000 }) },
 };
 
+let sfxTap = null;
+
+/** Coop : l'hôte relaie aux invités les sons de la partie (null : rien). */
+export function onSfx(fn) {
+  sfxTap = fn;
+}
+
 export function playSfx(name) {
+  sfxTap?.(name);
   if (settings.sfxVolume <= 0) return;
   if (!audio) {
     audio = getAudio();

@@ -13,7 +13,7 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 - Type : jeu web, Progressive Web App (installable, jouable hors connexion une fois installée)
 - Genre : roguelike, bullet heaven, survie en vagues, action
 - Prix : gratuit (publicités récompensées facultatives, pour revivre ou ouvrir un coffre bonus)
-- Joueurs : solo, ou duel 1 contre 1 (sur un même écran ou en ligne)
+- Joueurs : solo, duel 1 contre 1 (sur un même écran ou en ligne), ou coop en ligne de 2 à 4 joueurs
 - Commandes : clavier et souris (ZQSD / WASD, Espace pour le dash), écran tactile sur mobile ; tir automatique
 - Éditeur : DarKexxFR (projet indépendant, non commercial)
 
@@ -41,6 +41,9 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 - Endless Pulse : après la victoire contre l'Architecte (vague 40), la partie continue avec des mutations cumulées.
 - Duel 1v1 : chaque joueur joue sa partie de survie, les éliminations envoient des ennemis et des sorts à
   l'adversaire, le premier mort perd. En ligne, classement ELO pour les joueurs connectés ; défis entre amis.
+- Coop en ligne (2 à 4 joueurs) : salon avec code, la même partie de survie pour toute l'équipe. Carte, arène
+  des boss et ennemis plus grands ou plus nombreux selon le nombre de joueurs ; XP partagée ; un joueur à terre
+  est relevé par un coéquipier resté à côté de lui ; fin quand toute l'équipe est à terre. Hors classements.
 
 ## Progression
 

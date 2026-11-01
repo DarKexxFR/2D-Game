@@ -10,6 +10,7 @@ import { addFloatingText, createHealEffect, createSpawnEffect } from "./effects.
 import { gainXp, heal } from "./player.js";
 import { onGem } from "./perks.js";
 import { synergyHook } from "./synergies.js";
+import { forOtherMembers, isLocalMember } from "./party.js";
 
 const LOOTBOX_HEAL = 25;
 const MAX_LOOTBOXES = 5; // soins au sol en même temps
@@ -93,8 +94,9 @@ function updateGems() {
     }
     if (d < player.size + 10) {
       g.collected = true;
-      playSfx("pickup");
+      if (isLocalMember()) playSfx("pickup");
       gainXp(g.xp);
+      forOtherMembers(() => gainXp(g.xp, true)); // coop : l'XP est partagée par toute l'équipe
       onGem();
       synergyHook("gem");
       // Carte « Pacte de sang » : juste après un coup reçu, chaque gemme soigne un peu

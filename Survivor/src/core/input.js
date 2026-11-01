@@ -49,6 +49,11 @@ export function useInputProfile(p) {
   profile = p;
 }
 
+/** Coop : angle de visée d'un joueur distant (tir manuel), sinon null (souris de cet appareil). */
+export function aimOverride() {
+  return profile?.aim ?? null;
+}
+
 /** Direction du joystick tactile (celui du joueur en cours en duel sur un écran). */
 export function stickDirection() {
   return profile ? profile.stick : touchMove;

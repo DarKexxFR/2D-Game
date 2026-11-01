@@ -186,8 +186,8 @@ Principes :
     l'adversaire (`rating` annoncé dans les messages `start` / `ranked`, affichage seulement), « PROMU … ! » en fin
     de duel, emblèmes du classement et de la liste d'amis. Rien tant qu'aucun duel n'est compté. Tests :
     `tests/duel-ranks.spec.js`.
-    Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Choix du
-    propriétaire : du **duel** en ligne, pas de coop.
+    Les tests simulent Realtime avec `routeWebSocket` (`tests/versus-online.spec.js`). Duel et coop en ligne
+    coexistent (la coop a été demandée le 2026-11-01, voir ci-dessous).
   - **Amis** (`services/friends.js`, écran `ui/friendsMenu.js` ouvert par le bouton « AMIS » de l'accueil, avec amis en ligne et demandes reçues, ou par « MES AMIS » de l'écran Duel ; RETOUR ramène à l'écran d'origine) : joueurs
     connectés seulement. Ajout par pseudo (s'il est unique) ou code ami, demande à accepter (tables
     `player_profiles` / `friendships`, RPC `friends_sync` / `friend_request` / `friend_respond` / `friend_remove`).
@@ -195,6 +195,45 @@ Principes :
     duel). Chaque joueur écoute son canal Realtime `amis-<id>` : « DÉFIER » crée une partie de duel et y envoie
     le code, l'ami accepte (fenêtre `#friendInvite`) et rejoint ; duel en ligne habituel, donc classé ELO avec
     les mêmes règles anti-abus. En partie, un défi reçu est refusé « occupé ». Tests : faux RPC dans `fixtures.js`.
+- **Coop en ligne** (bouton « COOP », écran `ui/coopMenu.js`, `#modal=coop`, réglages `COOP` dans `config.js`) :
+  **2 à 4 joueurs** dans la **même** partie de survie (choix du propriétaire). Hôte qui fait autorité : il fait
+  tourner toute la partie, les invités envoient leurs commandes et dessinent l'état reçu.
+  - **Réseau** (`services/coopNet.js`) : salon `coop-<code>` sur Supabase Realtime, en étoile (WebRTC hôte ↔ chaque
+    invité, relais Supabase par invité si la connexion directe échoue, envoi groupé `broadcast`). Lancement :
+    `prep` (chaque invité prépare son vaisseau chez lui avec son compte : `buildCoopShip` de `main.js`) → `ready`
+    (vaisseau en `encodeSnapshot`) → `go`. Salon fermé une fois la partie lancée ; REJOUER ramène au salon.
+  - **Plusieurs vaisseaux** (`systems/party.js`) : le moteur garde un seul `player` global ; chaque membre a ses
+    objets (`player`, `pet`, `camera`, traînée) dans `members[k].store` et `withMember(k, fn)` le charge (comme
+    `withRun` du duel, mais `game` / `world` restent communs). Hors `withMember`, le membre chargé est celui de
+    l'appareil (`party.local`). Tirs et objets d'un joueur (`OWNED_LISTS`) portent `owner` et avancent pendant son
+    passage (`withOwned`). Chaque ennemi poursuit le membre debout le plus proche (`e.aggro`, `assignAggro` ; un boss
+    garde sa cible `COOP.bossRetargetTicks`) et agit pendant le passage de ce membre ; **tout ce qui blesse le
+    joueur sans être l'IA d'un ennemi passe par `partyHit(test, apply)`** (zones, tirs ennemis, contacts, trou noir…),
+    jamais par `player` seul. Apparitions et événements de carte autour d'un membre à tour de rôle (`updateFocus`).
+    Sons, vibrations et secousses seulement pour le membre de l'appareil (`isLocalMember`).
+    Tick de l'hôte : `simulateCoop` de `main.js`.
+  - **À terre** : 0 PV (après les résurrections des talents) = `player.downed` (`downMember`, appelé par
+    `takeDamage`) ; un coéquipier qui reste à `COOP.reviveRadius` pendant `reviveTicks` le relève (`updateRevives`).
+    Tous à terre = `playerDied` puis fin de partie chez tout le monde (`endCoop` / `settleCoop`) : chacun empoche
+    l'XP et l'or de la partie, hors classements.
+  - **Selon le nombre de joueurs** (`applyPartyScaling`, `COOP.scaling`) : carte (`game.map`, lue par `mapBounds()` de
+    `systems/arena.js` ; ne plus lire `MAP_BOUNDS` pour les bords), arène des boss (`game.arenaSize`, centrée sur
+    l'équipe), PV, nombre et fréquence des ennemis (`game.modifier.spawnRate`).
+  - **Synchronisation** (`systems/coopSync.js`) : l'hôte envoie `game` (sauf `LOCAL_GAME`), les listes `LISTS`
+    de `world` et chaque vaisseau / familier en différences champ par champ (numéros `$r`, données du jeu par leur
+    chemin `$c`, champs `_…` ignorés) ; effets visuels (`VISUALS`) seulement à leur naissance ; événements
+    `RELAY_EVENTS` et sons rejoués chez l'invité. **Rien à déclarer pour un nouveau champ** ; une nouvelle liste de
+    `world` = l'ajouter à `LISTS` (ou `VISUALS`, ou `OWNED_LISTS` si elle appartient à un joueur). L'invité :
+    positions qui glissent, son vaisseau prédit (`predictOwnShip`), état complet redemandé (`kf`) s'il manque un envoi.
+  - **Cartes** : XP des gemmes partagée (`forOtherMembers` + `gainXp(montant, true)`) ; montée de niveau d'un invité =
+    cartes tirées par l'hôte (`requestRemotePick`), choisies chez lui (`showRemoteChoice` de `ui/upgradeMenu.js`), la
+    partie attend (`remotePicksPending`, bandeau `#coopWait`, carte prise d'office au bout de `COOP.pickSeconds`).
+    Coffre de boss : un choix par joueur.
+  - **Pas en coop** : pause, boîte mystère, sanctuaires maudits, Marchand Noir, pub « revivre », ralenti de la mort,
+    sauvegarde de la partie, tutoriel. Skin de chaque joueur : `player.skin` (`resolved`, `currentSkin(player.skin)`).
+  - Interface : panneau `#coopParty` (`ui/coopHud.js`), vaisseaux de l'équipe, pseudo et cercle de réanimation
+    (`render/coop.js`), flèches vers les coéquipiers hors champ. Icônes Papicons `coop` (link) et `join` (login).
+    Tests : `tests/coop.spec.js` (3 pages, connexion directe et relais).
 - **Fenêtres de partie** (pause, choix d'amélioration, revivre, fin ; classe `game-panel`, styles dans `css/panels.css`,
   une couleur d'accent `--accent` par fenêtre) : le **build** (`ui/buildView.js`, `buildView(player)`) montre les armes
   (équipée + appoint avec niveau en pastilles, emplacements libres), les évolutions et les améliorations (icône à la
@@ -496,7 +535,7 @@ mode Endless Pulse, saison mensuelle avec passe gratuit, statistiques anonymes d
 journal de diagnostic et rapports d'erreurs (stats.html), armes d'appoint (6 armes, 5 niveaux, évolutions),
 bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une par biome, boss, boss final, Endless),
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
-fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés,
+fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés, coop en ligne de 2 à 4 joueurs,
 reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).

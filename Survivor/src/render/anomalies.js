@@ -84,7 +84,7 @@ function drawIce(a, def, now) {
 function drawPortals(a, def, now) {
   for (const [i, p] of a.items.entries()) {
     if (!isOnScreen(p.x, p.y, def.radius * 2)) continue;
-    const locked = a.lock === i;
+    const locked = player.portal?.lock === i; // portail d'arrivée de ce joueur
     const color = locked ? def.exitColor : def.color;
     const spin = now / 400 + i;
     ctx.globalAlpha = 0.14 + Math.sin(now / 200 + i) * 0.04;

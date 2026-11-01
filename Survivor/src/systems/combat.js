@@ -2,7 +2,7 @@
 
 import { KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
-import { mouse } from "../core/input.js";
+import { aimOverride, mouse } from "../core/input.js";
 import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
 import { BIOME_FOES, GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
@@ -219,7 +219,7 @@ export function shoot() {
     if (!target) return;
     angle = angleTo(player.worldX, player.worldY, target.x, target.y);
   } else {
-    angle = angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y);
+    angle = aimOverride() ?? angleTo(view.width / 2, view.height / 2, mouse.x, mouse.y); // coop : visée d'un joueur distant
   }
   player.lastAttack = game.time;
   player.aimAngle = angle;
@@ -298,7 +298,7 @@ function createPlayerProjectile(angle) {
     vy: Math.sin(angle) * w.speed,
     size: (ray ? Math.max(8, w.size) : w.size) * player.projScale,
     damage: player.attack * w.damage * coreShotMult(!player.autoShoot), // Viseur manuel (Cœur Cybernétique)
-    color: ray ? "#00ff88" : resolveColor(currentSkin().shot, w.color),
+    color: ray ? "#00ff88" : resolveColor(currentSkin(player.skin).shot, w.color),
     pierce: player.piercing + w.pierce + (ray ? 2 : 0),
     explosion: (w.explosion || 0) * player.projScale,
     life: w.range ? w.range * player.rangeMult : w.lifetime || Infinity,

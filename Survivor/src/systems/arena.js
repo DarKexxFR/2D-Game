@@ -6,6 +6,7 @@ import { BOSS_ZONE, MAP_BOUNDS } from "../config.js";
 import { game, player, world } from "../core/state.js";
 import { clamp } from "../utils/math.js";
 import { addFloatingText } from "./effects.js";
+import { teamCenter } from "./party.js";
 import { bossFight } from "./spawner.js";
 
 const SIDES = ["minX", "maxX", "minY", "maxY"];
@@ -25,11 +26,16 @@ export function updateArena() {
   }
 }
 
-/** Le boss arrive : arène carrée autour du joueur (décalée pour rester dans la carte). */
+/** Bords de la carte de la partie (plus grande en coop). */
+export const mapBounds = () => game.map ?? MAP_BOUNDS;
+
+/** Le boss arrive : arène carrée autour du joueur, ou du centre de l'équipe en coop (décalée pour rester dans la carte). */
 function sealArena() {
-  const half = BOSS_ZONE.size / 2;
-  const cx = clamp(player.worldX, MAP_BOUNDS.minX + half, MAP_BOUNDS.maxX - half);
-  const cy = clamp(player.worldY, MAP_BOUNDS.minY + half, MAP_BOUNDS.maxY - half);
+  const half = (game.arenaSize ?? BOSS_ZONE.size) / 2;
+  const map = mapBounds();
+  const center = teamCenter();
+  const cx = clamp(center.x, map.minX + half, map.maxX - half);
+  const cy = clamp(center.y, map.minY + half, map.maxY - half);
   game.arena = { minX: cx - half, maxX: cx + half, minY: cy - half, maxY: cy + half };
   addFloatingText(player.worldX, player.worldY - 70, "ARÈNE SCELLÉE", "#ff2a6d", 18, 80);
 }
@@ -40,7 +46,7 @@ function sealArena() {
  */
 function arenaTarget() {
   const a = game.arena;
-  if (!a) return MAP_BOUNDS;
+  if (!a) return mapBounds();
   let scale = 1;
   for (const e of world.enemies) if (!e.dead && e.arenaScale < scale) scale = e.arenaScale;
   if (scale === 1) return a;
@@ -82,5 +88,5 @@ export function clampToZone(x, y, margin) {
 /** Vrai quand la zone de combat est plus petite que la carte (murs de l'arène à dessiner). */
 export function arenaShrunk() {
   const b = game.bounds;
-  return SIDES.some((side) => b[side] !== MAP_BOUNDS[side]);
+  return SIDES.some((side) => b[side] !== mapBounds()[side]);
 }

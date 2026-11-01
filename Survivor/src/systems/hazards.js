@@ -18,6 +18,7 @@ import { playSfx } from "../services/sfx.js";
 import { dist, removeWhere } from "../utils/math.js";
 import { addScreenShake, createParticles, createShockwave } from "./effects.js";
 import { isProtected, stunPlayer, takeDamage } from "./player.js";
+import { memberIndexOf, partyHit } from "./party.js";
 
 const POOL_TICK = 30; // une flaque blesse au plus toutes les 0,5 s
 const BEAM_TICK = 12; // un laser actif blesse au plus toutes les 0,2 s
@@ -164,25 +165,26 @@ const UPDATERS = {
         addScreenShake(5);
         playSfx("explosion");
         if (h.impact) IMPACTS[h.impact.type](h, h.impact);
-        if (h.damage > 0 && dist(player.worldX, player.worldY, h.x, h.y) < h.radius + player.size * 0.5) {
-          hurt(h);
-        }
+        if (h.damage > 0)
+          partyHit(
+            (p) => dist(p.worldX, p.worldY, h.x, h.y) < h.radius + p.size * 0.5,
+            () => hurt(h),
+          );
         if (h.pool <= 0) h.done = true;
       }
       return;
     }
     // Flaque : petits dégâts réguliers tant qu'on reste dedans
     if (--h.pool <= 0) h.done = true;
-    if (h.jam && dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
-      player.buffs.jammed = Math.max(player.buffs.jammed, h.jam); // brouillage : le dash n'y change rien
-    }
+    const inside = (p) => dist(p.worldX, p.worldY, h.x, h.y) < h.radius;
+    if (h.jam) partyHit(inside, () => (player.buffs.jammed = Math.max(player.buffs.jammed, h.jam))); // brouillage : le dash n'y change rien
     if (game.time - h.hit < POOL_TICK * TICK_MS) return;
-    if (dist(player.worldX, player.worldY, h.x, h.y) < h.radius) {
+    partyHit(inside, () => {
       h.hit = game.time;
       if (isProtected()) return;
       if (h.damage > 0) takeDamage(h.damage * 0.25, h.fall);
       if (h.slow) player.buffs.slow = Math.max(player.buffs.slow, h.slow); // flaque d'acide
-    }
+    });
   },
 
   beam(h) {
@@ -199,10 +201,11 @@ const UPDATERS = {
     if (h.swing) h.angle = h.base + Math.sin(++h.age * h.swing.speed) * h.swing.amp; // pendule
     if (--h.active <= 0) h.done = true;
     if (game.time - h.hit < BEAM_TICK * TICK_MS) return;
-    if (distToBeam(h, player.worldX, player.worldY) < h.width / 2 + player.size * 0.5) {
+    const touched = (p) => distToBeam(h, p.worldX, p.worldY) < h.width / 2 + p.size * 0.5;
+    partyHit(touched, () => {
       h.hit = game.time;
       hurt(h);
-    }
+    });
   },
 
   bubble(h) {
@@ -212,12 +215,16 @@ const UPDATERS = {
   ring(h) {
     h.radius += h.speed;
     if (h.radius >= h.max) h.done = true;
-    if (h.hitPlayer) return;
-    const d = dist(player.worldX, player.worldY, h.x, h.y);
-    if (Math.abs(d - h.radius) < h.width / 2 + player.size * 0.5) {
-      h.hitPlayer = true; // une seule fois par onde
-      hurt(h);
-    }
+    // Une seule fois par onde et par joueur (coop : bit du joueur dans `hitMask`)
+    partyHit(
+      (p) =>
+        !(h.hitMask & (1 << memberIndexOf(p))) &&
+        Math.abs(dist(p.worldX, p.worldY, h.x, h.y) - h.radius) < h.width / 2 + p.size * 0.5,
+      () => {
+        h.hitMask = (h.hitMask || 0) | (1 << memberIndexOf(player));
+        hurt(h);
+      },
+    );
   },
 };
 

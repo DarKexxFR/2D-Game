@@ -69,6 +69,7 @@ let current = null;
 // Duel en ligne : choix automatique au bout de quelques secondes (l'adversaire, lui, continue)
 let autoPick = false;
 let autoPickTimer = null;
+let autoPickSeconds = VERSUS.pickSeconds;
 // Choix au clavier : carte surlignée, et heure d'affichage (un dash en cours ne doit pas valider)
 let selected = 0;
 let shownAt = 0;
@@ -122,7 +123,7 @@ function resume() {
 export function initUpgradeMenu() {
   // Talent « Relance » : retire de nouvelles cartes
   $("btnReroll").addEventListener("click", () => {
-    if (!current || current.target.rerolls <= 0) return;
+    if (!current || current.remote || current.target.rerolls <= 0) return;
     current.target.rerolls--;
     const picks = drawUpgrades(CHOICES);
     current.picks = picks.map((u) => u.name);
@@ -173,9 +174,10 @@ export function resetUpgradeMenu() {
   clearTimeout(autoPickTimer);
 }
 
-/** Duel en ligne : au-delà de `VERSUS.pickSeconds`, la carte surlignée est prise. */
-export function setAutoPick(enabled) {
+/** Duel ou coop en ligne : au-delà de `seconds`, la carte surlignée est prise. */
+export function setAutoPick(enabled, seconds = VERSUS.pickSeconds) {
   autoPick = enabled;
+  autoPickSeconds = seconds;
 }
 
 /** Tirage des cartes proposées à `target` (duel sur un écran : voir ui/duelPicks.js). */
@@ -232,15 +234,22 @@ export function resumeUpgrades() {
 
 function open(req) {
   current = req;
-  const picks = restoredPicks(req) ?? drawUpgrades(CHOICES, req);
+  const picks = restoredPicks(req) ?? (req.remote ? [] : drawUpgrades(CHOICES, req));
   req.picks = picks.map((u) => u.name);
   const chest = req.kind === "chest";
+  if (req.remote && picks.length === 0) {
+    // Coop : cartes de l'hôte introuvables ici (versions différentes) : la première est prise
+    req.remote(req.picks?.[0] ?? "");
+    current = null;
+    if (queue.length > 0) open(queue.shift());
+    return;
+  }
   // Or du coffre compté une seule fois (un choix repris après une partie interrompue l'a déjà donné)
-  if (chest && req.gold === undefined) {
+  if (chest && req.gold === undefined && !req.remote) {
     req.gold = chestGold();
     game.runGold += req.gold;
   }
-  const gold = req.gold ?? 0;
+  const gold = req.gold ?? (req.remote && chest ? chestGold() : 0);
   if (picks.length === 0) {
     // soin de secours si plus rien n'est disponible
     heal(50);
@@ -280,7 +289,7 @@ function open(req) {
  */
 export function pendingChoices() {
   return [current, ...queue]
-    .filter((req) => req && req.target === player)
+    .filter((req) => req && req.target === player && !req.remote)
     .map(({ kind, gold, picks }) => ({ kind, gold, picks }));
 }
 
@@ -297,16 +306,32 @@ export function restoreChoices(list = []) {
 /** Cartes déjà tirées pour ce choix (partie reprise), si elles sont toujours disponibles. */
 function restoredPicks(req) {
   if (!req.picks?.length) return null;
-  const cards = [...availableEvolutions(req.target), ...availableUpgrades(req.target), ...FILLER_CARDS];
-  const picks = req.picks.map((name) => cards.find((u) => u.name === name));
+  return findCards(req.picks, req.target);
+}
+
+/** Cartes `names` encore disponibles pour le joueur `p` (toutes, sinon null). */
+export function findCards(names, p) {
+  const cards = [...availableEvolutions(p), ...availableUpgrades(p), ...FILLER_CARDS];
+  const picks = names.map((name) => cards.find((u) => u.name === name));
   return picks.every(Boolean) ? picks : null;
+}
+
+/**
+ * Coop, chez un invité : cartes tirées par l'hôte (`names`), affichées comme d'habitude ; la carte choisie
+ * est renvoyée par `onPick(nom)` (l'hôte l'applique). Cartes introuvables ici : la première est prise.
+ * @param {{ kind: string, names: string[] }} choice
+ * @param {(name: string) => void} onPick
+ */
+export function showRemoteChoice({ kind, names }, onPick) {
+  if (!ALLOWED[kind] || kind === "market") return onPick(names[0]);
+  request({ kind, picks: names, target: player, remote: onPick });
 }
 
 /** Barre qui se vide, puis choix de la carte surlignée (duel en ligne seulement). */
 function startAutoPick() {
   clearTimeout(autoPickTimer);
   const timer = $("upgradeTimer");
-  const autoPickMs = autoPick ? VERSUS.pickSeconds * 1000 : 0;
+  const autoPickMs = autoPick ? autoPickSeconds * 1000 : 0;
   setVisible("upgradeTimer", autoPick);
   if (!autoPick) return;
   const fill = timer.firstElementChild;
@@ -365,7 +390,7 @@ export function takeCard(u, p) {
 
 function renderChoices(picks) {
   const p = current.target;
-  $("btnReroll").textContent = p.rerolls > 0 ? `RELANCER (${p.rerolls})` : "";
+  $("btnReroll").textContent = p.rerolls > 0 && !current.remote ? `RELANCER (${p.rerolls})` : "";
   const options = $("upgradeOptions");
   options.replaceChildren();
   shownAt = performance.now();
@@ -389,7 +414,8 @@ function renderChoices(picks) {
     card.addEventListener("click", () => {
       if (!current) return;
       clearTimeout(autoPickTimer);
-      takeCard(u, p);
+      if (current.remote) current.remote(u.name);
+      else takeCard(u, p);
       resume();
     });
     options.append(card);
