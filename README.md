@@ -197,7 +197,8 @@ Accueil → **COOP** → **CRÉER UN SALON** : un code de 4 caractères s'affich
   vaisseau est prédit pour rester réactif malgré la latence. Connexion directe WebRTC entre l'hôte et chaque
   invité, relais par Supabase Realtime si elle échoue (`services/coopNet.js`).
 - **Chacun son vaisseau** : héros, arme, familier, équipement, talents, Cœur Cybernétique et skin du compte de
-  chaque joueur. Les cartes d'amélioration se choisissent chez soi ; la partie attend (15 s au plus).
+  chaque joueur. Les cartes d'amélioration se choisissent chez soi, sans pause : le temps de son choix (15 s au plus), le joueur
+  est retiré de la partie (ni visé ni touché), puis revient protégé un instant.
 - **Équipe** : chaque ennemi poursuit le joueur le plus proche ; zones et tirs ennemis touchent tout le monde.
   Panneau de l'équipe en haut à droite, flèches vers les coéquipiers hors de l'écran.
 - **Selon le nombre de joueurs** (`COOP.scaling` dans `config.js`) : carte +25 % et arène des boss +20 % par

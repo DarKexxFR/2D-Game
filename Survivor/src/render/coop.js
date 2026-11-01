@@ -18,6 +18,7 @@ export function drawPlayers(now) {
 
 function drawMember(k, now, shared) {
   if (typeof player.worldX !== "number" || !player.buffs) return; // pas encore reçu (invité)
+  if (player.picking) return; // en plein choix d'amélioration : retiré du jeu
   const m = party.members[k];
   const { worldX: x, worldY: y, size } = player;
   if (player.downed) {
@@ -67,7 +68,7 @@ export function drawTeamPointers(now) {
   for (const k of presentMembers()) {
     if (k === party.local) continue;
     const p = memberObj(k);
-    if (typeof p.worldX !== "number") continue;
+    if (typeof p.worldX !== "number" || p.picking) continue; // en plein choix : retiré du jeu
     const sx = p.worldX - camera.x;
     const sy = p.worldY - camera.y;
     if (sx > 0 && sx < view.width && sy > 0 && sy < view.height) continue;

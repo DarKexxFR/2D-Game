@@ -77,6 +77,7 @@ import {
   isLocalMember,
   memberLeft,
   memberObj,
+  presentMembers,
   party,
   startParty,
   stopParty,
@@ -96,7 +97,6 @@ import {
   onHostMessage,
   onRemotePick,
   remotePickers,
-  remotePicksPending,
   requestRemotePick,
   requestSkill,
   sendPick,
@@ -150,6 +150,7 @@ import {
   showShrineReward,
   showBlackMarket,
   showRemoteChoice,
+  choosingUpgrade,
   showUpgradeMenu,
 } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
@@ -559,6 +560,7 @@ function startCoopGuest({ slot, names }) {
 
 /** Hôte : un tick de la partie commune (chaque vaisseau à son tour, puis les ennemis). */
 function simulateCoop() {
+  markPickers();
   hostTickStart();
   const focus = updateFocus();
   // Apparitions, arène, événements de carte, anomalies : autour d'un joueur à tour de rôle
@@ -573,7 +575,8 @@ function simulateCoop() {
   forEachMember(
     (k) =>
       withOwned(k, () => {
-        if (player.downed) return updateProjectiles(); // ses tirs déjà partis continuent leur route
+        // À terre ou en plein choix d'amélioration : ses tirs déjà partis continuent leur route
+        if (player.downed || player.picking) return updateProjectiles();
         updatePlayer();
         seedTrail();
         updateAura();
@@ -597,11 +600,28 @@ function simulateCoop() {
   followCamera();
 }
 
-/** Hôte : qui l'équipe attend (choix d'amélioration en cours), affiché chez tout le monde. */
+/**
+ * Hôte : qui choisit une amélioration. La partie ne l'attend pas : le joueur est retiré du jeu (`picking` : ni
+ * visé, ni touché, ni dessiné) et revient, protégé un instant, une fois sa carte prise.
+ */
+function markPickers() {
+  const remote = remotePickers();
+  forEachMember(
+    (k) => {
+      const picking = k === party.local ? choosingUpgrade() : remote.includes(k);
+      if (player.picking && !picking)
+        player.buffs.shield = Math.max(player.buffs.shield, COOP.pickReturnShield);
+      player.picking = picking;
+    },
+    { down: true },
+  );
+}
+
+/** Hôte : qui est en train de choisir une amélioration, affiché chez tout le monde. */
 function coopWaiting() {
-  const names = remotePickers().map((k) => party.members[k].name);
-  if (currentScreen() === "upgradeMenu") names.unshift(party.members[party.local].name);
-  return names;
+  return presentMembers()
+    .filter((k) => memberObj(k).picking)
+    .map((k) => party.members[k].name);
 }
 
 /** Hôte : toute l'équipe est à terre (ou plus personne) : fin pour tout le monde. */
@@ -969,7 +989,6 @@ function update() {
   if (versus.split) return updateSplit(simulate, tickDuelPick);
   if (party.role === "guest") return guestTick(); // coop, invité : l'hôte fait tourner la partie
   if (!game.running || game.paused) return;
-  if (inParty() && remotePicksPending() > 0) return; // un coéquipier choisit une amélioration
   game.time += TICK_MS;
   ticking = true;
   try {

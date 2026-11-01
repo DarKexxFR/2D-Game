@@ -120,9 +120,15 @@ for (const [mode, net] of [
     await expect
       .poll(() => run(bob, ({ party }) => party.memberObj(1).worldX))
       .toBeGreaterThan(hostView - 30);
-    // Sa propre position est prédite : elle reste proche de celle de l'hôte
-    const own = await run(alice, ({ state }) => state.player.worldX);
-    expect(Math.abs(own - hostView)).toBeLessThan(60);
+    // Sa propre position est prédite : elle rejoint celle de l'hôte (relevées ensemble : le relais n'envoie que
+    // quelques messages par seconde, une mesure prise juste après le relâchement pouvait encore les séparer)
+    await expect
+      .poll(async () => {
+        const own = await run(alice, ({ state }) => state.player.worldX);
+        const host = await run(page, ({ party }) => party.memberObj(1).worldX);
+        return Math.abs(own - host);
+      })
+      .toBeLessThan(60);
 
     // Un ennemi poursuit le joueur le plus proche
     const aggro = await run(page, ({ state, party, spawner, sync }) => {
@@ -134,7 +140,16 @@ for (const [mode, net] of [
     });
     expect(aggro).toBe(2);
 
-    // Les tirs de chaque joueur lui appartiennent
+    // Les tirs de chaque joueur lui appartiennent. Une cible à distance de chacun : collés aux vaisseaux, les
+    // ennemis prenaient chaque tir dans le tick même où il partait, et la liste des tirs restait vide.
+    await run(page, ({ state, party, spawner }) => {
+      state.world.enemies.length = 0;
+      state.game.spawnTimer = 1e9; // plus d'apparitions le temps de la vérification
+      for (const k of [0, 1, 2]) {
+        const p = party.memberObj(k);
+        spawner.spawnEnemy("normal", p.worldX + 260, p.worldY);
+      }
+    });
     await expect
       .poll(() =>
         run(page, ({ state }) => [...new Set(state.world.projectiles.map((p) => p.owner))].sort().join()),
@@ -217,7 +232,7 @@ test("coop en ligne : à terre, réanimation par un coéquipier, fin de partie p
   expect(errors).toEqual([]);
 });
 
-test("coop en ligne : le choix d'amélioration d'un invité se fait chez lui, la partie l'attend", async ({
+test("coop en ligne : pendant son choix d'amélioration, un joueur est retiré du jeu, la partie continue", async ({
   page,
   browser,
   isMobile,
@@ -226,19 +241,49 @@ test("coop en ligne : le choix d'amélioration d'un invité se fait chez lui, la
   test.setTimeout(60_000);
   const { guests, errors } = await startCoop(page, browser, ["Hote", "Alice"]);
   const [alice] = guests;
+  // Protection au retour allongée : vérifiable même si la relève tarde un peu
+  await run(page, ({ config }) => (config.COOP.pickReturnShield = 6000));
 
   // Alice monte de niveau : ses cartes s'affichent chez elle, l'hôte voit qu'elle choisit
   await run(page, ({ party, player, state }) =>
     party.withMember(1, () => {
       state.player.xpToNextLevel = 10;
       player.gainXp(20);
+      state.player.xpToNextLevel = 1e12; // la partie continue : pas d'autre montée de niveau d'ici la fin
     }),
   );
   await expect(alice.locator("#upgradeMenu")).toBeVisible();
   await expect(page.locator("#coopWait")).toHaveText("Alice choisit une amélioration…");
+  await expect(page.locator("#coopParty .coop-member").nth(1)).toHaveClass(/picking/);
+  await expect.poll(() => run(page, ({ party }) => party.memberObj(1).picking)).toBe(true);
+
+  // La partie continue ; Alice n'est ni visée ni touchée, même par un ennemi posé sur elle
   const time = await run(page, ({ state }) => state.game.time);
-  await page.waitForTimeout(300);
-  expect(await run(page, ({ state }) => state.game.time)).toBe(time); // la partie attend
+  const before = await run(page, ({ party, spawner }) => {
+    const a = party.memberObj(1);
+    spawner.spawnEnemy("normal", a.worldX, a.worldY);
+    return { x: a.worldX, y: a.worldY, health: a.health };
+  });
+  await page.waitForTimeout(400);
+  const during = await run(page, ({ party, state }) => {
+    const a = party.memberObj(1);
+    return {
+      time: state.game.time,
+      x: a.worldX,
+      y: a.worldY,
+      health: a.health,
+      aggro: state.world.enemies.some((e) => e.aggro === 1),
+      nearest: party.nearestMember(a.worldX, a.worldY) === a,
+    };
+  });
+  expect(during.time).toBeGreaterThan(time); // la partie n'attend pas
+  expect(during).toMatchObject({
+    x: before.x,
+    y: before.y,
+    health: before.health,
+    aggro: false,
+    nearest: false,
+  });
 
   const card = (await alice.locator("#upgradeOptions .upgrade-option h4").first().textContent()).split(
     " · ",
@@ -249,7 +294,24 @@ test("coop en ligne : le choix d'amélioration d'un invité se fait chez lui, la
     .poll(() => run(page, ({ party }, name) => party.memberObj(1).inventory[name] ?? 0, card))
     .toBeGreaterThan(0);
   await expect(page.locator("#coopWait")).toBeHidden();
-  await expect.poll(() => run(page, ({ state }) => state.game.time)).toBeGreaterThan(time);
+  // De retour dans la partie, protégée un instant
+  await expect.poll(() => run(page, ({ party }) => party.memberObj(1).picking)).toBe(false);
+  expect(await run(page, ({ party }) => party.memberObj(1).buffs.shield)).toBeGreaterThan(0);
+
+  // L'hôte aussi : son choix ne met pas la partie en pause
+  await run(page, ({ state, player }) => {
+    state.player.xpToNextLevel = 10;
+    player.gainXp(20);
+    state.player.xpToNextLevel = 1e12;
+  });
+  await expect(page.locator("#upgradeMenu")).toBeVisible();
+  const hostTime = await run(page, ({ state }) => state.game.time);
+  await expect.poll(() => run(page, ({ state }) => state.game.time)).toBeGreaterThan(hostTime + 200);
+  expect(await run(page, ({ state }) => state.player.picking)).toBe(true);
+  await expect(alice.locator("#coopWait")).toHaveText("Hote choisit une amélioration…");
+  await page.locator("#upgradeOptions .upgrade-option").first().click();
+  await expect(page.locator("#upgradeMenu")).toBeHidden();
+  await expect.poll(() => run(page, ({ state }) => state.player.picking)).toBe(false);
 
   // XP partagée : une gemme ramassée par l'hôte fait aussi progresser Alice
   const xp = await run(page, ({ party }) => {

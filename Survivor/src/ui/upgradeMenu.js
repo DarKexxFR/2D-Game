@@ -16,6 +16,7 @@ import {
   ownedPowers,
 } from "../data/upgrades.js";
 import { addStat, recordBest } from "../services/achievements.js";
+import { inParty } from "../systems/party.js";
 import { heal } from "../systems/player.js";
 import { weightedPick } from "../utils/math.js";
 import { RARITY_NAMES } from "./buildView.js";
@@ -116,6 +117,7 @@ function resume() {
   current = null;
   if (queue.length > 0) return open(queue.shift());
   hideScreens();
+  if (inParty()) return; // coop : la partie n'a pas été arrêtée
   game.running = true;
   game.paused = false;
 }
@@ -165,6 +167,11 @@ function select(index, show = true) {
   selected = index;
   const cards = $("upgradeOptions").children;
   for (let i = 0; i < cards.length; i++) cards[i].classList.toggle("selected", show && i === index);
+}
+
+/** Un choix d'amélioration est-il affiché sur cet appareil ? */
+export function choosingUpgrade() {
+  return current !== null;
 }
 
 /** Nouvelle partie : oublie les choix en attente de la précédente. */
@@ -258,8 +265,11 @@ function open(req) {
     return;
   }
 
-  game.running = false;
-  game.paused = true;
+  // Coop : la partie continue pour les autres ; ce joueur est retiré du jeu le temps de choisir (`picking`)
+  if (!inParty()) {
+    game.running = false;
+    game.paused = true;
+  }
   if (req.kind === "market") {
     return openBlackMarket(req.target, picks, { take: (u) => takeCard(u, req.target), done: resume });
   }

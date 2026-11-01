@@ -155,3 +155,9 @@ button.coop-start:disabled {
     flex: 1 1 28%;
   }
 }
+.coop-member.picking {
+  opacity: 0.55;
+}
+.coop-member.picking .coop-tag {
+  color: #ffd700;
+}

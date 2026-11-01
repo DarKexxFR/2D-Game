@@ -242,7 +242,10 @@ Principes :
     positions qui glissent, son vaisseau prédit (`predictOwnShip`), état complet redemandé (`kf`) s'il manque un envoi.
   - **Cartes** : XP des gemmes partagée (`forOtherMembers` + `gainXp(montant, true)`) ; montée de niveau d'un invité =
     cartes tirées par l'hôte (`requestRemotePick`), choisies chez lui (`showRemoteChoice` de `ui/upgradeMenu.js`), la
-    partie attend (`remotePicksPending`, bandeau `#coopWait`, carte prise d'office au bout de `COOP.pickSeconds`).
+    partie **ne s'arrête pas** (choix du propriétaire) : le joueur qui choisit, hôte compris (son menu ne met pas en pause en
+    coop), est retiré du jeu (`player.picking`, posé par `markPickers` de `main.js` ; `inPlay` / `playingMembers` de `party.js` :
+    ni visé, ni touché, ni dessiné, ne bouge pas), revient avec `COOP.pickReturnShield` ; bandeau `#coopWait`, carte prise
+    d'office au bout de `COOP.pickSeconds`.
     Coffre de boss : un choix par joueur.
   - **Pas en coop** : pause, boîte mystère, sanctuaires maudits, Marchand Noir, pub « revivre », ralenti de la mort,
     sauvegarde de la partie, tutoriel. Skin de chaque joueur : `player.skin` (`resolved`, `currentSkin(player.skin)`).

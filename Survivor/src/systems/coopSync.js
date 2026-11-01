@@ -36,7 +36,7 @@ import { anyRelay, broadcast, coopPeers, sendTo } from "../services/coopNet.js";
 import { onSfx, playSfx, vibrate } from "../services/sfx.js";
 import { clamp } from "../utils/math.js";
 import { addScreenShake, ageVisuals } from "./effects.js";
-import { followCamera, isUp, memberObj, party, withMember, withOwned } from "./party.js";
+import { followCamera, inPlay, memberObj, party, withMember, withOwned } from "./party.js";
 import { activateSkill } from "./skills.js";
 import { ageTrail } from "./trail.js";
 import { drawChoices, findCards, takeCard } from "../ui/upgradeMenu.js";
@@ -303,11 +303,11 @@ function applyInput(k, msg) {
 export function hostTickStart() {
   for (const [k, m] of party.members.entries()) {
     if (!m.profile) continue;
-    m.profile.virtual.dash = !!host.dash[k] && isUp(k);
+    m.profile.virtual.dash = !!host.dash[k] && inPlay(k);
     host.dash[k] = false;
     if (host.skill[k]) {
       host.skill[k] = false;
-      if (isUp(k)) withMember(k, () => withOwned(k, activateSkill)); // ce qu'elle crée lui appartient
+      if (inPlay(k)) withMember(k, () => withOwned(k, activateSkill)); // ce qu'elle crée lui appartient
     }
   }
 }
@@ -722,7 +722,7 @@ function predictOwnShip() {
   if (typeof p.worldX !== "number") return;
   let x = guest.auth.x;
   let y = guest.auth.y;
-  if (!p.downed && !(p.buffs?.stun > 0)) {
+  if (!p.downed && !p.picking && !(p.buffs?.stun > 0)) {
     const speed = p.speed || 0;
     for (const h of guest.history) {
       if (h.n <= guest.ack) continue;

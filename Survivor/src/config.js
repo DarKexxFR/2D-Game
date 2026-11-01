@@ -495,7 +495,10 @@ export const COOP = {
   reviveDecay: 2, // progression perdue par tick quand plus personne n'aide
   reviveHealth: 0.4, // part des PV max rendue
   reviveShield: 120, // ticks d'invulnérabilité après la réanimation
-  pickSeconds: 15, // choix d'amélioration : la partie attend, puis la carte surlignée est prise
+  // Choix d'amélioration : la partie continue, le joueur en est retiré le temps de choisir (ni visé ni touché),
+  // puis revient protégé un instant ; au-delà de `pickSeconds`, la carte surlignée est prise
+  pickSeconds: 15,
+  pickReturnShield: 60, // ticks d'invulnérabilité au retour
   // Réseau
   snapshotsPerSecond: 20, // état de la partie envoyé aux invités (connexion directe)
   snapshotsPerSecondRelay: 6, // par Supabase (plus lent, quota de messages)

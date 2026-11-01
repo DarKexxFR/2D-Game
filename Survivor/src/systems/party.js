@@ -115,6 +115,18 @@ export function upMembers() {
   return presentMembers().filter(isUp);
 }
 
+/**
+ * Membre dans la partie : debout et pas en train de choisir une amélioration. Pendant son choix, un joueur
+ * est retiré du jeu (choix du propriétaire : la partie ne s'arrête pas) : ni visé, ni touché, ni dessiné.
+ */
+export function inPlay(k) {
+  return isUp(k) && !memberObj(k).picking;
+}
+
+export function playingMembers() {
+  return presentMembers().filter(inPlay);
+}
+
 /** Déplace le contenu de `src` dans `dst` (vidé d'abord) et vide `src`. */
 function moveInto(dst, src) {
   for (const k of Object.keys(dst)) delete dst[k];
@@ -179,7 +191,7 @@ export function partyHit(test, apply) {
     if (test(player)) apply();
     return;
   }
-  for (const k of upMembers()) {
+  for (const k of playingMembers()) {
     if (test(memberObj(k))) withMember(k, apply);
   }
 }
@@ -189,7 +201,7 @@ export function nearestMember(x, y) {
   if (!party.active) return player;
   let best = null;
   let bestD = Infinity;
-  for (const k of upMembers()) {
+  for (const k of playingMembers()) {
     const p = memberObj(k);
     const d = (p.worldX - x) ** 2 + (p.worldY - y) ** 2;
     if (d < bestD) [best, bestD] = [p, d];
@@ -200,7 +212,7 @@ export function nearestMember(x, y) {
 function nearestIndex(x, y) {
   let best = -1;
   let bestD = Infinity;
-  for (const k of upMembers()) {
+  for (const k of playingMembers()) {
     const p = memberObj(k);
     const d = (p.worldX - x) ** 2 + (p.worldY - y) ** 2;
     if (d < bestD) [best, bestD] = [k, d];
@@ -216,7 +228,7 @@ export function assignAggro(count = world.enemies.length) {
   for (let i = 0; i < count; i++) {
     const e = world.enemies[i];
     if (e.dead) continue;
-    const keep = e.template?.isBoss && isUp(e.aggro ?? -1) && game.time < (e.aggroUntil ?? 0);
+    const keep = e.template?.isBoss && inPlay(e.aggro ?? -1) && game.time < (e.aggroUntil ?? 0);
     if (keep) continue;
     e.aggro = nearestIndex(e.x, e.y);
     if (e.template?.isBoss) e.aggroUntil = game.time + COOP.bossRetargetTicks * (1000 / 60);
@@ -225,7 +237,8 @@ export function assignAggro(count = world.enemies.length) {
 
 /** Les apparitions et événements de carte tournent autour de chaque membre debout, à tour de rôle. */
 export function updateFocus() {
-  const up = upMembers();
+  const playing = playingMembers();
+  const up = playing.length > 0 ? playing : upMembers(); // tous en train de choisir : les apparitions restent autour d'eux
   if (up.length === 0) return party.focus;
   const slot = Math.floor(game.time / ((COOP.focusTicks * 1000) / 60)) % up.length;
   party.focus = up[slot];
@@ -234,7 +247,8 @@ export function updateFocus() {
 
 /** Centre de l'équipe debout (arène d'un boss) ; hors coop, le joueur. */
 export function teamCenter() {
-  const up = party.active ? upMembers() : [];
+  const playing = party.active ? playingMembers() : [];
+  const up = playing.length > 0 ? playing : party.active ? upMembers() : [];
   if (up.length === 0) return { x: player.worldX, y: player.worldY };
   let x = 0;
   let y = 0;
@@ -341,7 +355,7 @@ export function updateRevives() {
   for (const k of presentMembers()) {
     const p = memberObj(k);
     if (!p.downed) continue;
-    const helped = upMembers().some((j) => {
+    const helped = playingMembers().some((j) => {
       const q = memberObj(j);
       return (q.worldX - p.worldX) ** 2 + (q.worldY - p.worldY) ** 2 < COOP.reviveRadius ** 2;
     });

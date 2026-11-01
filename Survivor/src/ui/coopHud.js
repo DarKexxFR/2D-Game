@@ -47,7 +47,14 @@ export function updateCoopHud(now) {
     r.fill.style.width = `${Math.round(pct * 100)}%`;
     r.row.classList.toggle("down", !!p.downed);
     r.row.classList.toggle("gone", m.gone);
-    r.tag.textContent = m.gone ? "PARTI" : p.downed ? "À TERRE" : `NIV. ${p.level ?? 1}`;
+    r.row.classList.toggle("picking", !!p.picking);
+    r.tag.textContent = m.gone
+      ? "PARTI"
+      : p.downed
+        ? "À TERRE"
+        : p.picking
+          ? "CHOIX…"
+          : `NIV. ${p.level ?? 1}`;
   });
   const waiting = (game.coopWaiting || []).filter((name) => name !== party.members[party.local]?.name);
   const text = waiting.length > 0 && !game.over ? `${waiting.join(", ")} choisit une amélioration…` : "";
