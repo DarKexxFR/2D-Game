@@ -6,48 +6,8 @@
 import { ctx } from "../core/canvas.js";
 import { player } from "../core/state.js";
 import { beatLevel } from "./bosses.js";
-
-const TAU = Math.PI * 2;
-const CHARGE_TICKS = 40; // les repères s'allument pendant les 40 derniers ticks avant une attaque
-
-/** 0 → 1 à l'approche de la prochaine attaque du boss. */
-function charge(e) {
-  const t = Math.min(e.attackTimer ?? Infinity, e.skillTimer ?? Infinity);
-  if (!(t < CHARGE_TICKS) || t < 0) return 0;
-  return 1 - t / CHARGE_TICKS;
-}
-
-/** Trait néon sans flou : halo large et transparent, puis trait net. */
-function neonStroke(color, width, alpha = 1) {
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = alpha * 0.25;
-  ctx.lineWidth = width * 3;
-  ctx.stroke();
-  ctx.globalAlpha = alpha;
-  ctx.lineWidth = width;
-  ctx.stroke();
-}
-
-/** Anneau en pointillés qui tourne. */
-function dashedRing(x, y, radius, color, width, dash, offset, alpha) {
-  ctx.setLineDash(dash);
-  ctx.lineDashOffset = offset;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, TAU);
-  neonStroke(color, width, alpha);
-  ctx.setLineDash([]);
-}
-
-/** Arcs (segments d'anneau) qui tournent : `count` plaques de `span` radians. */
-function arcPlates(x, y, radius, count, span, rot, color, width, alpha) {
-  ctx.beginPath();
-  for (let i = 0; i < count; i++) {
-    const a = rot + (i * TAU) / count;
-    ctx.moveTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
-    ctx.arc(x, y, radius, a, a + span);
-  }
-  neonStroke(color, width, alpha);
-}
+import { BOSS_PARTS } from "./bossParts.js";
+import { TAU, arcPlates, charge, dashedRing, neonStroke } from "./layerKit.js";
 
 const LAYERS = {
   /** Cœur du Pulse : bouclier octogonal violet, plaques cyan en sens inverse, ECG qui bat. */
@@ -146,9 +106,11 @@ const LAYERS = {
     neonStroke("#00ff88", 2.5 * s, 0.55 + 0.45 * k);
     ctx.globalAlpha = 1;
   },
+  // Pièces propres aux autres boss (render/bossParts.js)
+  ...BOSS_PARTS,
 };
 
-/** Tous les autres boss : anneau en pointillés et plaques qui tournent en sens contraires. */
+/** Boss sans pièces propres : anneau en pointillés et plaques qui tournent en sens contraires. */
 function defaultLayers(e, now, s) {
   const r = e.size;
   const k = charge(e);
@@ -168,4 +130,9 @@ export function drawBossLayers(e, now, s = 1) {
 /** Ce type a-t-il des pièces animées ? (tous les boss, et ceux décrits ci-dessus) */
 export function hasBossLayers(e) {
   return !!(e.template?.isBoss || LAYERS[e.type]);
+}
+
+/** Types de boss qui ont leurs propres pièces (tests : chaque boss en a). */
+export function bossLayerTypes() {
+  return Object.keys(LAYERS);
 }

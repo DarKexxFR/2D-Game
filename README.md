@@ -169,9 +169,11 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
   ralentissent, ennemis qui blanchissent et grossissent sous l'impact, vaisseau étiré pendant le dash, tirs ennemis
   cerclés de sombre pour rester lisibles, aberration chromatique aux gros chocs, vignette et lignes d'écran. Chaque
   effet se coupe dans les Options (« Effets visuels ») ; la qualité basse les coupe tous, et le halo se coupe tout
-  seul sur un appareil trop lent. Vaisseaux des héros en coques détaillées et boss animés (anneaux, plaques,
-  repères qui s'allument avant une attaque), le tout dessiné en code ; illustrations dans les fiches d'équipement
-  et du bestiaire.
+  seul sur un appareil trop lent. Tous les modèles sont dessinés en code et animés : les 8 vaisseaux de héros et
+  les 17 coques de skin en plans détaillés, chacun des 20 boss avec ses propres pièces (glace en orbite, arcs
+  électriques, cadran d'horloge, toile, plan de l'Architecte...) qui s'allument avant une attaque, chaque ennemi
+  avec un détail animé (ailes, rotor, mèche, dard...) plafonné à 80 par image, et chaque familier. Illustrations
+  dans les fiches d'équipement et du bestiaire.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
   ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors

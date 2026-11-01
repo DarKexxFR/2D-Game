@@ -5,15 +5,12 @@
 // Module sans dépendance au canvas du jeu : menus, carte de score et aperçus s'en servent aussi.
 
 import { gfx } from "../core/gfx.js";
-import { glow, neonBody, noGlow, polygon, shade } from "./neon.js";
+import { neonBody, polygon } from "./neon.js";
+import { CYAN, GOLD, PINK, TAU, VIOLET, cockpit, light, line, plate } from "./shipKit.js";
+import { SKIN_DESIGNS } from "./skinShips.js";
 
-const TAU = Math.PI * 2;
 const RES = 2; // résolution du cache (net sur écrans haute densité)
 const CACHE_MAX = 96; // coques en cache au plus (couleur arc-en-ciel = une couleur par image)
-const PINK = "#ff2a6d";
-const VIOLET = "#aa66ff";
-const CYAN = "#00ffff";
-const GOLD = "#ffd700";
 
 /** @typedef {{ canvas: HTMLCanvasElement, half: number }} ShipSprite */
 /** @type {Map<string, ShipSprite>} */
@@ -21,49 +18,6 @@ const cache = new Map();
 
 /** Couleur sûre pour `shade` (qui attend #rrggbb). */
 const hex = (color) => (/^#[0-9a-f]{6}$/i.test(color) ? color : "#00ccff");
-
-/** Coque au fond sombre teinté et au contour lumineux. */
-function plate(c, points, color, line = 2, blur = 10) {
-  neonBody(c, () => polygon(c, points), color, line, blur);
-}
-
-/** Même forme des deux côtés de l'axe (y → -y). */
-function mirror(points) {
-  return points.map(([x, y]) => [x, -y]);
-}
-
-function line(c, color, width, ...pts) {
-  c.strokeStyle = color;
-  c.lineWidth = width;
-  c.beginPath();
-  pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-  c.stroke();
-}
-
-function cockpit(c, x, y, rx, ry, color) {
-  glow(c, color, 8);
-  c.fillStyle = "#ffffff";
-  c.beginPath();
-  c.ellipse(x, y, rx, ry, 0, 0, TAU);
-  c.fill();
-  noGlow(c);
-  c.fillStyle = color;
-  c.globalAlpha = 0.45;
-  c.beginPath();
-  c.ellipse(x - rx * 0.25, y, rx * 0.6, ry * 0.6, 0, 0, TAU);
-  c.fill();
-  c.globalAlpha = 1;
-}
-
-/** Petit feu de position (fixe, dans le cache). */
-function light(c, x, y, s, color) {
-  glow(c, color, 6);
-  c.fillStyle = color;
-  c.beginPath();
-  c.arc(x, y, s, 0, TAU);
-  c.fill();
-  noGlow(c);
-}
 
 /**
  * Plans des coques. `body(c, r, color)` : couches fixes (mises en cache) ; `engines` : réacteurs
@@ -550,6 +504,8 @@ const DESIGNS = {
       c.setLineDash([]);
     },
   },
+  // Coques des skins (data/skins.js) : boutique et passe de saison
+  ...SKIN_DESIGNS,
 };
 
 /** La coque a-t-elle un plan détaillé ? (sinon : silhouette simple de render/entities.js) */

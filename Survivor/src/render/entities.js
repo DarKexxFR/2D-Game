@@ -16,6 +16,8 @@ import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 import { drawDesignedShip, hasShipDesign } from "./ships.js";
 import { drawBossLayers, hasBossLayers } from "./bossLayers.js";
+import { beginMobLayers, drawMobLayers } from "./mobLayers.js";
+import { drawPetParts } from "./petParts.js";
 import { party } from "../systems/party.js";
 
 const TAU = Math.PI * 2;
@@ -97,7 +99,10 @@ export function drawPlayer(now, shared = true) {
     ctx.restore();
   } else drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
 
-  if (pet.active) PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
+  if (pet.active) {
+    PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
+    drawPetParts(pet.kind, pet.x, pet.y, pet.size, pet.color, now, pet.angle ?? 0);
+  }
 
   const orbSize = orbitalStats().size * 0.7;
   const orbColor = player.evolutions.guardianRing ? "#ffd700" : "#00ffff";
@@ -627,6 +632,7 @@ function drawPerkZones(now) {
 /** Dessine un familier hors partie (écran d'accueil). */
 export function drawPet(kind, x, y, size, color, now) {
   PET_DRAWERS[kind]?.(x, y, size, color, now);
+  drawPetParts(kind, x, y, size, color, now, pet.active ? (pet.angle ?? 0) : 0);
 }
 
 /** Armure : plus le prestige est haut, plus elle est épaisse, lumineuse et ornée. */
@@ -691,6 +697,7 @@ export function drawEnemies() {
     if (e.type === "twin_fire" && e.pair && !e.dead && !e.partner.dead) drawTether(e, now);
   }
   drawBossUnderlays(now); // corps du ver, poison des fleurs (sous les ennemis)
+  beginMobLayers();
   for (const e of world.enemies) {
     if (!isOnScreen(e.x, e.y, e.size)) continue;
     if (e.submerged) {
@@ -733,7 +740,9 @@ export function drawEnemies() {
       if (look.mode === "flee") angle += Math.PI; // le Voleur doré tourne le dos au joueur
       drawSprite(ctx, sprite, e.x, e.y, angle, scale * (1 + Math.sin(t / 140) * 0.04));
     }
-    if (hasBossLayers(e)) drawBossLayers(e, now); // anneaux, plaques et repères animés des boss
+    if (hasBossLayers(e))
+      drawBossLayers(e, now); // anneaux, plaques et repères animés des boss
+    else drawMobLayers(e, now); // ailes, rotors, mèches... des ennemis ordinaires (plafonné par image)
     ctx.globalAlpha = 1;
     if (e.magnetWarn > 0 || e.pulling > 0) drawMagnetPull(e, now);
     if (e.replicateWarn > 0) drawReplicateWarn(e);

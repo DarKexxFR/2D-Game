@@ -63,6 +63,9 @@ export const VISUAL_FX = {
   sparks: { speed: 7.5, friction: 0.92, length: 2.5 },
   // Dash : vaisseau étiré dans le sens du mouvement
   dashStretch: { along: 1.35, across: 0.75 },
+  // Pièces animées des ennemis ordinaires (render/mobLayers.js) : au plus `max` par image (ennemis à
+  // l'écran, aucune en qualité basse) ; au-delà, l'ennemi garde son sprite seul.
+  mobLayers: { max: 80 },
 };
 
 export const LIMITS = {

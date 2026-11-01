@@ -3,7 +3,7 @@
 // Chaque option a un identifiant d'achat (`hull:manta`, `trail:sparks`...) ; prix 0 = offerte.
 // `season: true` = exclusive du passe de saison : jamais en vente, gagnée à un palier (data/season.js).
 
-/** Formes de coque (tracés dans render/entities.js, HULLS). "hero" = celle du héros équipé. */
+/** Formes de coque (silhouette : HULLS de render/entities.js ; plan détaillé : render/ships.js). "hero" = celle du héros équipé. */
 export const SKIN_HULLS = [
   { id: "hero", name: "Du héros", price: 0 },
   { id: "arrow", name: "Flèche", price: 0 },
