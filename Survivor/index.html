@@ -89,6 +89,7 @@
     <link rel="stylesheet" href="css/animations.css" />
     <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/options.css" />
+    <link rel="stylesheet" href="css/fx.css" />
     <link rel="stylesheet" href="css/achievements.css" />
     <link rel="stylesheet" href="css/quests.css" />
     <link rel="stylesheet" href="css/streak.css" />
@@ -141,6 +142,8 @@
       </div>
 
       <canvas id="gameCanvas"></canvas>
+      <!-- Vignette et lignes d'écran par-dessus le canvas (Options > Écran rétro, css/fx.css) -->
+      <div id="crtOverlay" class="crt-overlay" aria-hidden="true"></div>
       <!-- Visible seulement pendant « Revoir ma mort » (ui/gameOverScreen.js) -->
       <button id="btnKillCamReplay" class="kill-cam-replay"><i data-icon="repeat"></i> REJOUER</button>
 
@@ -732,6 +735,28 @@
                 <button data-quality="high">HAUTE</button>
               </div>
               <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+            </div>
+            <div class="option-fx" id="optFx">
+              <div class="option-row">
+                <span><i data-icon="wave"></i> Grille vivante</span>
+                <button class="toggle-btn" data-fx="fxGrid"></button>
+              </div>
+              <div class="option-row">
+                <span><i data-icon="sparkle"></i> Halo lumineux</span>
+                <button class="toggle-btn" data-fx="fxBloom"></button>
+              </div>
+              <div class="option-row">
+                <span><i data-icon="monitor"></i> Écran rétro</span>
+                <button class="toggle-btn" data-fx="fxCrt"></button>
+              </div>
+              <div class="option-row">
+                <span><i data-icon="bolt"></i> Aberration aux chocs</span>
+                <button class="toggle-btn" data-fx="fxChroma"></button>
+              </div>
+              <p class="option-hint" id="optFxHint">
+                Grille qui ondule sous les explosions, halo néon, vignette et lignes d'écran. Le halo est le
+                plus gourmand ; en qualité basse, seuls les effets sans coût restent.
+              </p>
             </div>
             <div class="option-row">
               <label for="optShotOpacity"><i data-icon="eye"></i> Tirs alliés</label>

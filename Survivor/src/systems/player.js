@@ -1,6 +1,6 @@
 // Déplacement, dash, buffs, vie et expérience du joueur.
 
-import { ADS, REVIVE, STAT_CAPS, STUN, SURVIVAL, VERSUS } from "../config.js";
+import { ADS, REVIVE, STAT_CAPS, STUN, SURVIVAL, VERSUS, VISUAL_FX } from "../config.js";
 import { view } from "../core/canvas.js";
 import { emit } from "../core/events.js";
 import { isDown, stickDirection } from "../core/input.js";
@@ -15,6 +15,7 @@ import {
   createShockwave,
   createSpawnEffect,
   flashScreen,
+  kickChroma,
   slowMotion,
 } from "./effects.js";
 import { damageEnemy } from "./combat.js";
@@ -161,6 +162,7 @@ export function takeDamage(amount, source) {
   vibrate(40);
   addScreenShake(5);
   addFloatingText(player.worldX, player.worldY - 20, `-${Math.round(amount)}`, "#ff0000", 16);
+  if (amount >= player.maxHealth * VISUAL_FX.chroma.heavyHit) kickChroma(0.7); // coup lourd
   if (player.health <= 0 && player.revives > 0) {
     // Talent « Seconde chance », Phénix (consommé en premier) ou Renaissance céleste
     player.revives--;
@@ -203,6 +205,7 @@ export function reviveFromAd() {
  */
 function rebirth(color, label, kind = "talent", pushRadius = REVIVE.pushRadius) {
   logEvent("joueur", `renaissance (${kind})`);
+  kickChroma();
   const { worldX: x, worldY: y } = player;
   for (const e of world.enemies) {
     if (e.dead || e.submerged) continue;

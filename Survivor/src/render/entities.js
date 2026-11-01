@@ -1,5 +1,6 @@
 // Rendu du joueur, du drone, des ennemis et des projectiles (sprites néon).
 
+import { VISUAL_FX } from "../config.js";
 import { ctx } from "../core/canvas.js";
 import { game, pet, player, world } from "../core/state.js";
 import { auraRadius, getOrbitalPositions, isOnScreen, orbitalStats } from "../systems/combat.js";
@@ -15,14 +16,17 @@ import { beatScale, drawBossUnderlays, drawPlayerGlitch } from "./bosses.js";
 import { currentSkin, shipLook } from "../services/skins.js";
 
 const TAU = Math.PI * 2;
-const HIT_FLASH_MS = 80;
+const HIT_FLASH = VISUAL_FX.hitFlash;
+const DASH_STRETCH = VISUAL_FX.dashStretch;
 
 export function drawPlayer(now) {
   const { worldX: x, worldY: y, size } = player;
   const look = shipLook(player.hero, currentSkin(), now);
   const hull = look.hull;
   // Position à l'image précédente : gardée sur le joueur (deux parties en duel sur un écran)
-  const moving = Math.hypot(x - (player.drawnX ?? x), y - (player.drawnY ?? y)) > 0.5;
+  const mvx = x - (player.drawnX ?? x);
+  const mvy = y - (player.drawnY ?? y);
+  const moving = Math.hypot(mvx, mvy) > 0.5;
   player.drawnX = x;
   player.drawnY = y;
 
@@ -73,7 +77,17 @@ export function drawPlayer(now) {
   drawArmor(x, y, size, now);
   const bodyColor = player.isDashing ? "#ffffff" : player.hasRayGun ? "#00ff88" : look.color;
   drawWeapon(x, y, size);
-  drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
+  if (player.isDashing && moving) {
+    // Dash : le vaisseau s'étire dans le sens du mouvement (squash & stretch)
+    const a = Math.atan2(mvy, mvx);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(a);
+    ctx.scale(DASH_STRETCH.along, DASH_STRETCH.across);
+    ctx.rotate(-a);
+    drawShip(0, 0, size, player.aimAngle, bodyColor, true, now, hull);
+    ctx.restore();
+  } else drawShip(x, y, size, player.aimAngle, bodyColor, moving || player.isDashing, now, hull);
 
   if (pet.active) PET_DRAWERS[pet.kind]?.(pet.x, pet.y, pet.size, pet.color, now);
 
@@ -675,8 +689,9 @@ export function drawEnemies() {
     if (e.phaseWarn > 0) ctx.globalAlpha = Math.floor(now / 60) % 2 ? 0.35 : 1;
     const look = ENEMY_LOOKS[e.type] || ENEMY_LOOKS.normal;
     const base = e.template.size;
-    const scale = e.size / base;
-    const flash = game.time - (e.hitTime ?? -1e9) < HIT_FLASH_MS ? "flash" : "";
+    // Touché : silhouette blanche un peu plus grosse pendant quelques ticks (impact bien senti)
+    const flash = game.time - (e.hitTime ?? -1e9) < HIT_FLASH.ms ? "flash" : "";
+    const scale = (e.size / base) * (flash ? HIT_FLASH.scale : 1);
     const sprite = getSprite(look.sprite, base, e.color, flash);
     const t = now + (e.phase || 0) * 1000;
 
@@ -944,16 +959,25 @@ export function drawProjectiles() {
       drawSprite(ctx, getSprite("disc", roundSize(p.size), p.color), p.x, p.y, performance.now() / 40);
       continue;
     }
-    // Traînée puis projectile lumineux
+    // Traînée effilée puis projectile lumineux, en fusion additive : les tirs qui se croisent
+    // tirent vers le blanc (sans ombre dynamique, qui coûte très cher dans ce mode)
+    ctx.globalCompositeOperation = "lighter";
     ctx.strokeStyle = p.color;
-    ctx.globalAlpha = 0.35 * k;
-    ctx.lineWidth = p.size * 1.2;
+    ctx.globalAlpha = 0.18 * k;
+    ctx.lineWidth = p.size * 1.6;
     ctx.beginPath();
-    ctx.moveTo(p.x - p.vx * 1.8, p.y - p.vy * 1.8);
+    ctx.moveTo(p.x - p.vx * 2.6, p.y - p.vy * 2.6);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    ctx.globalAlpha = 0.4 * k;
+    ctx.lineWidth = p.size * 0.9;
+    ctx.beginPath();
+    ctx.moveTo(p.x - p.vx * 1.6, p.y - p.vy * 1.6);
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
     ctx.globalAlpha = k;
     drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
+    ctx.globalCompositeOperation = "source-over";
   }
   ctx.globalAlpha = 1;
   for (const p of world.enemyProjectiles) {
@@ -967,7 +991,7 @@ export function drawProjectiles() {
       drawSprite(ctx, getSprite("bit", roundSize(p.size), p.color), p.x, p.y);
       continue;
     }
-    drawSprite(ctx, getSprite("bullet", roundSize(p.size), p.color), p.x, p.y);
+    drawSprite(ctx, getSprite("enemyBullet", roundSize(p.size), p.color), p.x, p.y);
   }
 }
 

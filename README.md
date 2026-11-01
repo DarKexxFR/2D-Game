@@ -158,6 +158,13 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
   la partie en cours sur l'appareil (et toutes les 15 secondes de jeu) ; le bouton **REPRENDRE** de l'accueil la
   recharge telle quelle, en pause (ennemis, boss, build, choix d'amélioration en attente compris). Une mort
   efface la sauvegarde ; « Abandonner » (pause ou accueil) la jette. Pas en duel.
+- **Rendu néon** façon arcade : grille du sol qui ondule sous les explosions et s'enroule vers le trou noir,
+  s'assombrit pendant l'annonce d'une attaque de boss et bat au rythme du Cœur du Pulse ; halo lumineux sur tout
+  ce qui brille, tirs alliés en fusion additive (les croisements tirent vers le blanc), étincelles qui filent puis
+  ralentissent, ennemis qui blanchissent et grossissent sous l'impact, vaisseau étiré pendant le dash, tirs ennemis
+  cerclés de sombre pour rester lisibles, aberration chromatique aux gros chocs, vignette et lignes d'écran. Chaque
+  effet se coupe dans les Options (« Effets visuels ») ; la qualité basse les coupe tous, et le halo se coupe tout
+  seul sur un appareil trop lent.
 - **Écran de chargement** au lancement : barre de progression (fichiers du jeu, polices, images, compte en
   ligne), l'accueil n'apparaît qu'une fois tout prêt ; en cas de coupure, un bouton « RÉESSAYER ».
 - **Installable** sans boutique d'applications (PWA) : icône sur l'écran d'accueil, plein écran, jouable hors
@@ -232,7 +239,7 @@ Survivor/
     ├── data/             # Données pures : ennemis, objets, améliorations, biomes, succès, quêtes, icônes
     ├── systems/          # Logique par tick : joueur, ennemis, combat, boss, duel, événements...
     │   └── bosses/       # Un fichier par boss récent (+ kit.js : outils communs à tous les boss)
-    ├── render/           # Dessin sur le canvas (sprites néon en cache, ralenti de la mort, carte de score)
+    ├── render/           # Dessin sur le canvas (sprites néon en cache, grille, effets d'écran, ralenti de la mort, carte de score)
     ├── ui/               # Menus DOM (un écran visible à la fois, adresse #modal=... par écran)
     ├── services/         # Sauvegarde, compte, Supabase, duel en ligne, amis, saison, statistiques, diagnostic, sons et musique, pubs
     ├── stats/            # Page des statistiques (tableau de bord, graphiques)

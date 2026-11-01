@@ -1,16 +1,46 @@
 // Rendu des particules, ondes de choc et textes flottants.
 
+import { VISUAL_FX } from "../config.js";
 import { ctx } from "../core/canvas.js";
 import { player, world } from "../core/state.js";
 import { strokeCircle } from "./draw.js";
 
+const SPARK_LENGTH = VISUAL_FX.sparks.length;
+const ALPHA_STEPS = 4; // opacités regroupées en 4 paliers : un seul tracé par suite d'étincelles semblables
+
+/**
+ * Étincelles : traits orientés par la vitesse (longs au départ, ils raccourcissent en ralentissant),
+ * en fusion additive pour que les gerbes qui se croisent tirent vers le blanc. Les étincelles d'une même
+ * gerbe (même couleur, même palier d'opacité) partent dans un seul tracé.
+ */
 export function drawParticles() {
-  for (const p of world.particles) {
-    ctx.globalAlpha = Math.min(1, p.life / 30);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 3, 3);
+  const list = world.particles;
+  if (!list.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  ctx.lineWidth = 2;
+  let color = "";
+  let step = -1;
+  ctx.beginPath();
+  for (const p of list) {
+    const s = Math.ceil(Math.min(1, p.life / 30) * ALPHA_STEPS);
+    if (p.color !== color || s !== step) {
+      ctx.stroke();
+      ctx.beginPath();
+      color = p.color;
+      step = s;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = s / ALPHA_STEPS;
+    }
+    // Un point (trait d'un pixel) quand l'étincelle est presque arrêtée
+    const tx = p.vx * SPARK_LENGTH;
+    const ty = p.vy * SPARK_LENGTH;
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x - (Math.abs(tx) + Math.abs(ty) < 1 ? 1 : tx), p.y - ty);
   }
-  ctx.globalAlpha = 1;
+  ctx.stroke();
+  ctx.restore();
 }
 
 export function drawVisualEffects() {
@@ -37,12 +67,14 @@ export function drawVisualEffects() {
  */
 function drawShockwave(e) {
   const t = e.life / 30;
+  ctx.globalCompositeOperation = "lighter"; // les ondes qui se croisent s'additionnent vers le blanc
   ctx.globalAlpha = t * 0.3;
   strokeCircle(e.x, e.y, e.radius, e.color, 10 + 16 * t);
   ctx.globalAlpha = t;
   strokeCircle(e.x, e.y, e.radius, e.color, 2 + 10 * t);
   ctx.globalAlpha = t * 0.6;
   strokeCircle(e.x, e.y, e.radius * 0.8, "#ffffff", 1.5);
+  ctx.globalCompositeOperation = "source-over";
 }
 
 /**

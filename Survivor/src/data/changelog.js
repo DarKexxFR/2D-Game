@@ -10,6 +10,25 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-rendu-neon",
+    date: "Novembre 2026",
+    title: "Un néon plus vivant",
+    items: [
+      {
+        icon: "wave",
+        color: "#aa66ff",
+        title: "La grille réagit",
+        text: "Le sol ondule sous les explosions, s'enroule vers les trous noirs, s'assombrit quand un boss prépare une attaque et bat au rythme du Cœur du Pulse.",
+      },
+      {
+        icon: "sparkle",
+        color: "#00ffff",
+        title: "Plus de lumière, plus d'impact",
+        text: "Halo néon, tirs qui s'additionnent vers le blanc, étincelles, ennemis qui flashent quand ils sont touchés, dash étiré et tirs ennemis cerclés de noir pour rester lisibles. Chaque effet se règle dans les Options.",
+      },
+    ],
+  },
+  {
     id: "2026-11-manette",
     date: "Novembre 2026",
     title: "Jouable à la manette",

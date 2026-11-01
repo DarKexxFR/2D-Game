@@ -1,12 +1,15 @@
 // Effets visuels purement cosmétiques : particules, textes flottants,
 // cercles d'impact et tremblement d'écran.
 
-import { LIMITS } from "../config.js";
+import { LIMITS, VISUAL_FX } from "../config.js";
 import { gfx } from "../core/canvas.js";
 import { game, world } from "../core/state.js";
 import { recordBest } from "../services/achievements.js";
 import { playSfx } from "../services/sfx.js";
 import { removeWhere } from "../utils/math.js";
+import { addGridPulse, updateGridWarp } from "./gridWarp.js";
+
+const SPARKS = VISUAL_FX.sparks;
 
 export function addScreenShake(amount) {
   game.screenShake = amount;
@@ -18,16 +21,22 @@ export function addFloatingText(x, y, text, color = "#fff", size = 14, duration 
   texts.push({ x, y, text, color, size, vy: -1.5, life: duration });
 }
 
+/**
+ * Étincelles : parties vite dans toutes les directions, elles ralentissent (`VISUAL_FX.sparks.friction`)
+ * et raccourcissent (render/effects.js les dessine en traits orientés par leur vitesse).
+ */
 export function createParticles(x, y, color, count) {
   const particles = world.particles;
   count = Math.max(1, Math.round(count * gfx.particles));
   if (particles.length > LIMITS.particlesLowQuality) count = Math.min(count, 2);
   for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const v = SPARKS.speed * (0.25 + Math.random() * 0.75);
     particles.push({
       x,
       y,
-      vx: (Math.random() - 0.5) * 5,
-      vy: (Math.random() - 0.5) * 5,
+      vx: Math.cos(a) * v,
+      vy: Math.sin(a) * v,
       life: 20 + Math.random() * 20,
       color,
     });
@@ -56,6 +65,12 @@ export function createShockwave(x, y, radius, color = "#ffffff") {
       1,
     ); // la plus ancienne
   fx.push({ type: "shockwave", x, y, radius: 0, max: radius, life: SHOCKWAVE_TICKS, color });
+  addGridPulse(x, y, radius); // la grille du sol ondule sous l'explosion
+}
+
+/** Gros choc (furie d'un boss, coup lourd, renaissance) : aberration chromatique pendant quelques images. */
+export function kickChroma(strength = 1) {
+  game.chroma = Math.max(game.chroma || 0, Math.round(VISUAL_FX.chroma.ticks * strength));
 }
 
 /** Flash plein écran d'une couleur, qui s'estompe en quelques images. */
@@ -93,10 +108,14 @@ export function updateEffects() {
   if (game.slowMo > 0) game.slowMo--;
   if (game.flash && (game.flash.alpha *= 0.88) < 0.02) game.flash = null;
   if (game.comboTimer > 0 && --game.comboTimer === 0) game.combo = 0;
+  if (game.chroma > 0) game.chroma--;
+  updateGridWarp();
 
   for (const p of world.particles) {
     p.x += p.vx;
     p.y += p.vy;
+    p.vx *= SPARKS.friction;
+    p.vy *= SPARKS.friction;
     p.life--;
   }
   removeWhere(world.particles, (p) => p.life <= 0);

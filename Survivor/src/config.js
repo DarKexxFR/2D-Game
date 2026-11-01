@@ -33,6 +33,38 @@ export const NEXT_WAVE_DELAY = 60; // ticks entre la mort du boss et la vague su
 /** Options > « Tirs alliés » : opacité des tirs du joueur (render/allyAlpha.js), de `min` à 100 %. */
 export const SHOT_OPACITY = { min: 0.2 };
 
+/**
+ * Effets visuels « néon » (render/postFx.js, render/gridWarp.js, systems/gridWarp.js) : purement cosmétiques,
+ * réglables dans les Options (`fxGrid`, `fxBloom`, `fxCrt`, `fxChroma`) et coupés en qualité basse.
+ */
+export const VISUAL_FX = {
+  // Grille du sol qui se déforme sous les explosions et s'enroule vers le trou noir
+  grid: {
+    pulses: 12, // déformations à la fois au plus (les plus anciennes s'effacent)
+    speed: 9, // vitesse du front de l'onde (unités par tick)
+    width: 70, // épaisseur du front
+    life: 60, // durée d'une onde (ticks)
+    maxShift: 32, // déplacement maximal d'un nœud (moins de la moitié d'une case : les lignes ne se croisent pas)
+    perRadius: 0.22, // force d'une onde par unité de rayon de l'explosion
+    vortexPull: 0.32, // trou noir : part du rayon aspirée vers le centre
+    vortexSwirl: 0.5, // trou noir : rotation (radians au centre)
+    dimDuringTelegraph: 0.45, // opacité de la grille pendant l'annonce d'une attaque de boss
+    beat: 0.6, // Cœur du Pulse : la grille s'illumine à chaque battement (+60 %)
+  },
+  // Halo global : l'image réduite (1/scale), adoucie, puis rajoutée en « screen »
+  // `budgetMs` : si le halo coûte plus que ça par image en moyenne (appareil sans accélération graphique),
+  // il se coupe tout seul jusqu'au rechargement de la page (le réglage du joueur ne change pas)
+  bloom: { scale: 4, alpha: 0.42, budgetMs: 3, samples: 45 },
+  // Aberration chromatique aux gros chocs (furie d'un boss, coup lourd, renaissance)
+  chroma: { ticks: 10, shift: 4, heavyHit: 0.2 },
+  // Ennemi touché : silhouette blanche un peu plus grosse
+  hitFlash: { ms: 80, scale: 1.12 },
+  // Étincelles : traits orientés par la vitesse, qui ralentissent et raccourcissent
+  sparks: { speed: 7.5, friction: 0.92, length: 2.5 },
+  // Dash : vaisseau étiré dans le sens du mouvement
+  dashStretch: { along: 1.35, across: 0.75 },
+};
+
 export const LIMITS = {
   gems: 300,
   particles: 1000,

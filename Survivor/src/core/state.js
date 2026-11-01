@@ -31,6 +31,7 @@ export const world = {
   mines: [], // mines à plasma posées (arme d'appoint, voir systems/sideWeapons.js)
   slashes: [], // coups de fouet laser (purement visuels)
   trail: [], // traînée cosmétique du vaisseau (skin, voir systems/trail.js)
+  gridPulses: [], // ondes qui déforment la grille du sol (purement visuelles, voir systems/gridWarp.js)
 };
 
 export function resetGame() {
@@ -65,6 +66,8 @@ export function resetGame() {
     slowMo: 0, // ticks de ralenti restants (mort d'un boss)
     killCam: { frames: [], tick: 0, killer: null }, // ralenti de la mort (voir systems/killCam.js)
     flash: null, // flash plein écran { color, alpha }
+    chroma: 0, // ticks d'aberration chromatique restants (gros chocs, voir render/postFx.js)
+    gridDim: 1, // opacité de la grille du sol (baisse pendant l'annonce d'une attaque de boss)
     banner: null, // duel sur un écran : annonce dans la moitié d'écran (voir systems/versus.js)
     duelAttack: 0, // duel : éliminations vers la prochaine attaque (voir systems/duelAttacks.js)
     duelSpell: 0, // duel : éliminations vers le prochain sort

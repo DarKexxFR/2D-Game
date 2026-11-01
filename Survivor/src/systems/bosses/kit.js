@@ -4,7 +4,7 @@
 import { player, world } from "../../core/state.js";
 import { playSfx } from "../../services/sfx.js";
 import { angleTo } from "../../utils/math.js";
-import { addFloatingText, addScreenShake, createParticles } from "../effects.js";
+import { addFloatingText, addScreenShake, createParticles, kickChroma } from "../effects.js";
 import { spawnEnemy } from "../spawner.js";
 
 /** Angle du boss vers le joueur. */
@@ -24,6 +24,7 @@ export function enrage(e, color, speedMult, text) {
   e.speed = e.baseSpeed = e.baseSpeed * speedMult;
   addFloatingText(e.x, e.y - e.size - 20, text, color, 26, 80);
   addScreenShake(12);
+  kickChroma();
   playSfx("boss");
   return true;
 }

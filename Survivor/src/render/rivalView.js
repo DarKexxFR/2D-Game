@@ -81,7 +81,7 @@ export function drawRivalView(now) {
     game.wave = cur.w;
     ctx.fillStyle = "#06020d";
     ctx.fillRect(0, 0, view.width, view.height);
-    drawGrid();
+    drawGrid({ live: false });
     ctx.translate(-camera.x, -camera.y);
     drawMapBorder();
     drawEnemies();

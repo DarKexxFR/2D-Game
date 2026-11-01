@@ -8,7 +8,7 @@ import { game, player } from "../core/state.js";
 import { CARD_EFFECTS as C } from "../data/cardEffects.js";
 import { angleTo, dist } from "../utils/math.js";
 import { chainLightning, damageEnemy, enemyGrid, explode } from "./combat.js";
-import { addFloatingText, createParticles, createShockwave } from "./effects.js";
+import { addFloatingText, createParticles, createShockwave, kickChroma } from "./effects.js";
 
 /** Tir de l'arme équipée qui part : rebonds (Ricochet) et tir géant (Pulsar). */
 export function onCardShot(proj) {
@@ -115,5 +115,6 @@ export function absorbHit() {
   player.shieldReadyAt = game.time + Math.max(4, e.seconds - e.perCard * (player.energyShield - 1)) * 1000;
   addFloatingText(player.worldX, player.worldY - 30, "BLOQUÉ !", e.color, 16, 40);
   createShockwave(player.worldX, player.worldY, player.size + 30, e.color);
+  kickChroma(0.5);
   return true;
 }

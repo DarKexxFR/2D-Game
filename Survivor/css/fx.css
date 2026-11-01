@@ -1,0 +1,32 @@
+/* Effets néon : calque « écran rétro » par-dessus le canvas et réglages des Options (Effets visuels) */
+
+/* Vignette sombre dans les coins + lignes d'écran très fines. Un simple calque CSS : composé par le GPU,
+   il ne coûte rien au dessin du jeu. Placé juste après le canvas, sans z-index : le panneau en jeu et
+   les menus (plus loin dans la page) restent au-dessus. */
+.crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(5, 0, 15, 0.7) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.11) 0px,
+      rgba(0, 0, 0, 0.11) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+}
+body.fx-crt .crt-overlay {
+  display: block;
+}
+
+/* Options : une ligne par effet, libellé + interrupteur */
+.option-fx .option-row {
+  grid-template-columns: 1fr 140px;
+}
+.option-fx .toggle-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
