@@ -13,7 +13,7 @@ import {
   evolutionsFor,
   marketCards,
   tradeableCards,
-  ownedPowers,
+  usedPowerSlots,
 } from "../data/upgrades.js";
 import { addStat, recordBest } from "../services/achievements.js";
 import { heal } from "../systems/player.js";
@@ -365,11 +365,11 @@ export function evolutionHint(u, p) {
   return hint;
 }
 
-/** « Pouvoirs 4/6 », ou le rappel que seuls les pouvoirs possédés montent encore. */
+/** « Pouvoirs 4/10 », ou le rappel que seuls les pouvoirs possédés (et les fusions) restent possibles. */
 export function powerSlotsText(p) {
-  const n = ownedPowers(p).length;
+  const n = usedPowerSlots(p);
   return n >= POWER_RULES.slots
-    ? `Pouvoirs ${n}/${POWER_RULES.slots} · améliore ceux que tu as`
+    ? `Pouvoirs ${n}/${POWER_RULES.slots} · améliore ou fusionne ceux que tu as`
     : `Pouvoirs ${n}/${POWER_RULES.slots}`;
 }
 
@@ -384,7 +384,8 @@ export function cardTitle(u, p) {
 export function takeCard(u, p) {
   applyUpgrade(u, p);
   if (u.rarity === "evolution") addStat("evolutions");
-  if (u.rarity === "fusion") addStat("fusions");
+  if (u.powers) addStat("powerFusions");
+  else if (u.rarity === "fusion") addStat("fusions");
   if (u.sideWeapon) recordBest("bestSideWeapons", p.sideWeapons.length);
 }
 

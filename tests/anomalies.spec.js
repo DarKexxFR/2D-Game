@@ -333,9 +333,9 @@ test("Marchand Noir : emplacements de pouvoir pleins, un nouveau pouvoir se pren
     const m = state.world.merchants[0];
     p.worldX = m.x;
     p.worldY = m.y;
-    return upgrades.ownedPowers(p).length;
+    return { owned: upgrades.ownedPowers(p).length, slots: upgrades.POWER_RULES.slots };
   });
-  expect(filled).toBe(8);
+  expect(filled.owned).toBe(filled.slots);
   await expect(page.locator("#blackMarket")).toBeVisible();
   await page.locator("#marketOffers .upgrade-option").first().click();
   await expect(page.locator("#marketNote")).toContainText("Emplacements de pouvoir pleins");
@@ -355,6 +355,6 @@ test("Marchand Noir : emplacements de pouvoir pleins, un nouveau pouvoir se pren
     }),
     [given, reward],
   );
-  expect(after).toEqual({ powers: 8, given: 0, reward: 1 });
+  expect(after).toEqual({ powers: filled.slots, given: 0, reward: 1 });
   await killPlayer(page);
 });

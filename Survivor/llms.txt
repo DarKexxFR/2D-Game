@@ -29,6 +29,8 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 - Armes d'appoint : jusqu'à 3 armes en plus de l'arme équipée (missiles chercheurs, mines à plasma, foudre
   céleste, onde pulsée, faisceau rotatif, fouet laser), 5 niveaux chacune et une évolution ; deux armes au
   niveau maximum peuvent fusionner en une seule (6 fusions).
+- Pouvoirs : 10 emplacements, chaque pouvoir monte jusqu'au niveau 5 ; deux pouvoirs au niveau 3 peuvent se fondre
+  en un seul emplacement avec un bonus (14 fusions de pouvoirs).
 - Cartes corrompues (gros bonus contre un malus), sanctuaires maudits, événements de carte, boîte mystère.
 - Anomalies de biome : plaques de verglas (Toundra de glace), tourelles piratables (Station orbitale), portails aux quatre coins (Faille quantique).
 - Marchand Noir : échange une carte déjà prise ou 20 % des PV max contre une carte légendaire ou corrompue garantie.

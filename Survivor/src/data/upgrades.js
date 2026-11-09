@@ -6,11 +6,16 @@
 // (jusqu'à `max`, par défaut `POWER_RULES.maxLevel`). Emplacements pleins = seules les cartes des
 // pouvoirs possédés (et les armes d'appoint, évolutions, fusions) sont proposées. Le niveau d'un pouvoir
 // est son nombre dans `p.inventory`, comme avant.
+//
+// FUSIONS : deux pouvoirs fondus (évolution de pouvoir, ou fusion de data/powerFusions.js) n'occupent plus
+// qu'un emplacement (`p.mergedPowers` : nom du pouvoir → id de l'évolution ou de la fusion). Ils gardent leur
+// niveau et peuvent encore monter. Emplacements occupés = `usedPowerSlots(p)`.
 
 import { STAT_CAPS } from "../config.js";
 import { createHealEffect } from "../systems/effects.js";
 import { WEAPONS } from "./items.js";
 import { CARD_EFFECTS as C } from "./cardEffects.js";
+import { POWER_FUSIONS, POWER_FUSION_RULES } from "./powerFusions.js";
 import {
   SIDE_FUSIONS,
   SIDE_WEAPONS,
@@ -20,7 +25,7 @@ import {
 } from "./sideWeapons.js";
 
 export const POWER_RULES = {
-  slots: 8, // pouvoirs différents au plus par partie
+  slots: 10, // emplacements de pouvoir (deux pouvoirs fondus = un emplacement)
   maxLevel: 5, // niveau maximum par défaut d'un pouvoir
   // Tout est au maximum : cartes de secours (ui/upgradeMenu.js) à la place des pouvoirs
   filler: { heal: 0.3, gold: 30, goldPerWave: 6 },
@@ -34,6 +39,18 @@ const POWER_NAMES = new Set();
 
 /** Pouvoirs possédés par `p` (noms), dans l'ordre où il les a pris. */
 export const ownedPowers = (p) => Object.keys(p.inventory).filter((name) => POWER_NAMES.has(name));
+
+/** Id de l'évolution ou de la fusion dans laquelle le pouvoir `name` est fondu, sinon undefined. */
+export const mergedInto = (p, name) => p.mergedPowers?.[name];
+
+/** Emplacements de pouvoir occupés : un par pouvoir, un seul pour deux pouvoirs fondus ensemble. */
+export const usedPowerSlots = (p) => new Set(ownedPowers(p).map((name) => mergedInto(p, name) ?? name)).size;
+
+/** Fond les pouvoirs `names` (ceux qui ne le sont pas déjà) dans l'évolution ou la fusion `id`. */
+function mergePowers(p, id, names) {
+  p.mergedPowers ??= {};
+  for (const name of names) if (!p.mergedPowers[name]) p.mergedPowers[name] = id;
+}
 
 /**
  * Déclare un pouvoir : niveau maximum, emplacement libre exigé pour le prendre, puis la condition
@@ -57,7 +74,7 @@ function power(def) {
 function fitsPower(p, name, max, extra, freed) {
   const level = count(p, name);
   if (level >= max) return false;
-  if (level === 0 && ownedPowers(p).length - freed >= POWER_RULES.slots) return false;
+  if (level === 0 && usedPowerSlots(p) - freed >= POWER_RULES.slots) return false;
   return !extra || extra(p);
 }
 
@@ -410,7 +427,8 @@ for (const u of [...UPGRADES, ...CORRUPTED_UPGRADES]) POWER_NAMES.add(u.name);
 const powerMax = (name) => UPGRADES.find((u) => u.name === name)?.max ?? POWER_RULES.maxLevel;
 
 // --- ÉVOLUTIONS : pouvoir au niveau maximum + pouvoir partenaire → super-arme ---
-// Elles sont proposées en priorité à la montée de niveau dès que la recette est complète.
+// Elles sont proposées en priorité à la montée de niveau dès que la recette est complète, et fondent leurs
+// deux pouvoirs en un seul emplacement.
 const evolution = ({ id, name, icon, desc, base, baseMax = powerMax(base), partner }) => ({
   id,
   name,
@@ -421,7 +439,10 @@ const evolution = ({ id, name, icon, desc, base, baseMax = powerMax(base), partn
   partner,
   recipe: `${base} niv. ${baseMax} + ${partner}`,
   canApply: (p) => !p.evolutions[id] && count(p, base) >= baseMax && count(p, partner) >= 1,
-  apply: (p) => (p.evolutions[id] = true),
+  apply: (p) => {
+    p.evolutions[id] = true;
+    mergePowers(p, id, [base, partner]);
+  },
 });
 
 export const EVOLUTIONS = [
@@ -683,8 +704,39 @@ function fuseSideWeapons(p, id, ids) {
   p.evolutions[id] = true;
 }
 
+// --- FUSIONS DE POUVOIRS (data/powerFusions.js) : deux pouvoirs assez montés → un emplacement + bonus ---
+const fusionLevel = (name) => Math.min(POWER_FUSION_RULES.minLevel, powerMax(name));
+
+export const POWER_FUSION_CARDS = POWER_FUSIONS.map((f) => ({
+  id: f.id,
+  name: f.name,
+  icon: f.icon,
+  desc: `${f.desc} · libère un emplacement`,
+  rarity: "fusion",
+  powers: f.powers,
+  recipe: f.powers.map((n) => `${n} niv. ${fusionLevel(n)}`).join(" + "),
+  /** @param {any} p */
+  canApply: (p) =>
+    !p.evolutions[f.id] && f.powers.every((n) => count(p, n) >= fusionLevel(n) && !mergedInto(p, n)),
+  /** @param {any} p */
+  apply: (p) => {
+    f.apply(p);
+    p.evolutions[f.id] = true;
+    mergePowers(p, f.id, f.powers);
+  },
+}));
+
 /** @type {any[]} évolutions d'armes, d'armes d'appoint, d'améliorations et fusions (formes différentes) */
-const ALL_EVOLUTIONS = [...SIDE_FUSION_CARDS, ...WEAPON_EVOLUTIONS, ...SIDE_EVOLUTIONS, ...EVOLUTIONS];
+const ALL_EVOLUTIONS = [
+  ...SIDE_FUSION_CARDS,
+  ...WEAPON_EVOLUTIONS,
+  ...SIDE_EVOLUTIONS,
+  ...EVOLUTIONS,
+  ...POWER_FUSION_CARDS,
+];
+
+/** Évolution ou fusion d'après son id, ou undefined. */
+export const evolutionById = (id) => ALL_EVOLUTIONS.find((e) => e.id === id);
 const ALL_CARDS = [...UPGRADES, ...SIDE_WEAPON_CARDS, ...CORRUPTED_UPGRADES];
 
 /** Texte d'une carte pour `p` (une arme d'appoint décrit son prochain niveau). */
@@ -692,6 +744,30 @@ export const cardDesc = (u, p) => (u.describe ? u.describe(p) : u.desc);
 
 /** Carte (amélioration, arme d'appoint ou corrompue) d'après son nom, ou undefined. */
 export const cardByName = (name) => ALL_CARDS.find((u) => u.name === name);
+
+/**
+ * Recettes de pouvoirs (évolutions et fusions) encore à faire dont `p` possède déjà un ingrédient, les plus
+ * avancées d'abord : [{ recipe, steps: [{ name, level, need }] }]. Aide affichée dans le build (Pause).
+ * @param {any} p
+ */
+export function powerRecipesInReach(p) {
+  /** @type {{ recipe: any, steps: { name: string, level: number, need: number }[] }[]} */
+  const list = [];
+  for (const e of /** @type {any[]} */ ([...EVOLUTIONS, ...POWER_FUSION_CARDS])) {
+    if (p.evolutions[e.id]) continue;
+    const steps = e.powers
+      ? e.powers.map((name) => ({ name, level: count(p, name), need: fusionLevel(name) }))
+      : [
+          { name: e.base, level: count(p, e.base), need: powerMax(e.base) },
+          { name: e.partner, level: count(p, e.partner), need: 1 },
+        ];
+    if (!steps.some((s) => s.level > 0)) continue;
+    if (e.powers && e.powers.some((n) => mergedInto(p, n))) continue; // un pouvoir ne se fond qu'une fois
+    list.push({ recipe: e, steps });
+  }
+  const missing = (r) => r.steps.reduce((sum, s) => sum + Math.max(0, s.need - s.level), 0);
+  return list.sort((a, b) => missing(a) - missing(b));
+}
 
 /** Toutes les évolutions obtenues par `p` (armes équipées, armes d'appoint, améliorations). */
 export const ownedEvolutions = (p) => ALL_EVOLUTIONS.filter((e) => p.evolutions[e.id]);
@@ -714,6 +790,11 @@ export function evolutionsFor(upgrade, p) {
   return ALL_EVOLUTIONS.filter((e) => {
     if (p.evolutions[e.id]) return false;
     if (e.parts) return false; // fusion : deux armes au maximum, pas une carte partenaire
+    if (e.powers) {
+      // fusion de pouvoirs : la carte en est un ingrédient, l'autre est déjà possédé, aucun n'est déjà fondu
+      if (!e.powers.includes(upgrade.name) || e.powers.some((n) => mergedInto(p, n))) return false;
+      return e.powers.every((n) => n === upgrade.name || has(n));
+    }
     if (e.weapon) return e.partner === upgrade.name && p.weapon?.id === e.weapon;
     return (e.partner === upgrade.name && has(e.base)) || (e.base === upgrade.name && has(e.partner));
   });
@@ -797,7 +878,7 @@ export function marketCards(p, rarities) {
 
 /**
  * Cartes que `p` peut rendre, regroupées par nom : [{ card, count }]. Ni évolution, ni fusion, ni
- * arme d'appoint, ni corrompue, ni carte à effet spécial (voir plus haut).
+ * pouvoir fondu, ni arme d'appoint, ni corrompue, ni carte à effet spécial (voir plus haut).
  */
 export function tradeableCards(p) {
   /** @type {Map<string, { card: any, count: number }>} */
@@ -805,6 +886,7 @@ export function tradeableCards(p) {
   for (const entry of p.cardLog ?? []) {
     const card = cardByName(entry.name);
     if (!card || !entry.delta || NOT_TRADEABLE.has(card.rarity) || !(p.inventory[entry.name] > 0)) continue;
+    if (mergedInto(p, entry.name)) continue; // pouvoir fondu : le rendre garderait le bonus de la fusion
     const row = found.get(entry.name) ?? { card, count: 0 };
     row.count++;
     found.set(entry.name, row);

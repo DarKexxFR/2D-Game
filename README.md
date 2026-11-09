@@ -87,9 +87,14 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
 - **Bestiaire** : la page [`bestiaire.html`](Survivor/bestiaire.html), façon wiki, a une fiche par ennemi et boss
   (53 fiches : capacités, statistiques, où le trouver, astuce, nombre éliminés). Une fiche se débloque en
   éliminant l'ennemi en jeu ; des succès récompensent 10, 25 et toutes les fiches.
-- **Pouvoirs** à chaque niveau : **8 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
+- **Pouvoirs** à chaque niveau : **10 emplacements** au plus, chaque pouvoir monte jusqu'au niveau 5 (3 pour
   Berserker et Exécution, 4 pour Multi-Tir) et chaque niveau compte. Emplacements pleins = seules les cartes des
-  pouvoirs possédés reviennent ; tout au maximum = cartes de secours (Réparation, Butin). Pouvoirs dont Givre,
+  pouvoirs possédés reviennent ; tout au maximum = cartes de secours (Réparation, Butin).
+- **Fusions de pouvoirs** (14, `src/data/powerFusions.js`) : deux pouvoirs montés au niveau 3 se fondent en un
+  seul emplacement avec un bonus (Prédateur, Colosse, Comète, Pluie d'or, Onde de choc, Éclats de givre, Œil du
+  faucon, Rafale, Forteresse, Avatar solaire, Orage vivant, Soif de guerre, Couperet, Constellation). Ils gardent
+  leur niveau et montent encore ; les évolutions de pouvoirs fondent aussi leurs deux pouvoirs. La pause rappelle
+  les « fusions à portée » avec leur avancement ; succès Alchimiste et Grand alchimiste. Pouvoirs dont Givre,
   Ricochet, Bouclier d'énergie, Dash explosif, Arc électrique, Pulsar, Surtension ; **évolutions** (armes et compétences, dont Zéro absolu et Tempête stellaire), **cartes corrompues** (gros bonus
   contre un malus), **sanctuaires maudits** (défi à tenir 5 s pour une carte rare), **événements de carte**
   (astéroïdes, pluie acide, trou noir, pluie d'étoiles), boîte mystère, Voleur doré.

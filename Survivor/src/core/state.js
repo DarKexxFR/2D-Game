@@ -121,6 +121,7 @@ export function resetPlayer(accountLevel) {
     inventory: {},
     cardLog: [], // ce que chaque carte prise a changé (voir removeCard dans data/upgrades.js)
     evolutions: {}, // évolutions d'armes obtenues (voir data/upgrades.js)
+    mergedPowers: {}, // pouvoirs fondus : nom → id de l'évolution ou de la fusion (un seul emplacement)
     thorns: 0,
     vampirism: 0,
     explosionChance: 0,
