@@ -319,7 +319,7 @@ export const RARITIES = {
   evolution: { weight: 0, color: "#ff2a6d" }, // jamais tirée au hasard : proposée en priorité
   corrupted: { weight: 10, color: "#ff1f4b" }, // cartes « Corrompues » : bonus fort contre un malus
   weapon: { weight: 22, color: "#00e5ff" }, // armes d'appoint (data/sideWeapons.js) : nouvelle arme ou niveau
-  fusion: { weight: 0, color: "#ff8cf8" }, // fusion de deux armes d'appoint : proposée en priorité
+  fusion: { weight: 0, color: "#ff8cf8" }, // fusion de deux armes d'appoint ou de deux pouvoirs : proposée en priorité
 };
 
 // Coffre lâché par un boss : une augmentation au choix (raretés hautes favorisées) + de l'or.
