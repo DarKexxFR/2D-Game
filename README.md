@@ -271,6 +271,7 @@ Survivor/
     ├── services/         # Sauvegarde, compte, Supabase, duel et coop en ligne, amis, saison, statistiques, diagnostic, sons et musique, pubs
     ├── stats/            # Page des statistiques (tableau de bord, graphiques)
     └── utils/            # Maths, grille spatiale
+design/icons/             # Icônes du jeu exportées de Figma (SVG, grille 24), converties par `npm run icons`
 tests/                    # Tests Playwright (un fichier *.spec.js par fonctionnalité)
 supabase/                 # Schéma, guides (connexion, notifications, statistiques), fonction d'envoi des notifications
 ```
@@ -296,6 +297,9 @@ supabase/                 # Schéma, guides (connexion, notifications, statistiq
 - **Un pouvoir** : un objet `{ name, rarity, icon, desc, max?, canApply?, apply }` dans `UPGRADES`
   (`src/data/upgrades.js`) ; `apply` donne **un niveau**, `max` vaut `POWER_RULES.maxLevel` par défaut, les
   emplacements sont gérés seuls (effets en combat dans `src/systems/cardEffects.js`, réglages dans `src/data/cardEffects.js`).
+- **Une icône** : la dessiner dans le fichier Figma « Last Pulse — Icônes » (composant 24 × 24, trait 2), l'exporter
+  en SVG sous `design/icons/<nom>.svg`, lancer `npm run icons`, puis l'utiliser par son nom (`<i data-icon="nom">`
+  ou `icon("nom")`). Marche à suivre : [`design/icons/README.md`](design/icons/README.md).
 - **Une mise à jour** : une entrée en tête de `CHANGELOG` (`src/data/changelog.js`, `id` nouveau) pour la
   fenêtre « Nouveautés ».
 - **Un objet** : `src/data/items.js` (effets ★3 et panoplies dans `src/data/perks.js`).

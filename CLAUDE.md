@@ -85,8 +85,13 @@ Principes :
   à l'écran** (choix du propriétaire) : les touches se voient dans les Options et le tutoriel.
 - **Sprites** : dessinés une fois dans des canvas hors écran (`getSprite` / `drawSprite`).
   Lueur via `shadowBlur` ; la qualité basse la coupe.
-- **Icônes** : `<i data-icon="nom">` dans le HTML (remplacé par `hydrateIcons`), ou
-  `icon(nom, couleur)` en JS. Taille = `font-size`, couleur = `color`.
+- **Icônes** (faites main dans Figma, choix du propriétaire, à la place de Papicons / game-icons.net) : fichier Figma
+  « Last Pulse — Icônes » (un composant 24 × 24 par icône, trait 2 arrondi, parties pleines en remplissage), exports SVG
+  dans `design/icons/<nom>.svg`, convertis par `npm run icons` (`scripts/build-icons.mjs`) en
+  `data/iconPaths.js` (**généré**, ignoré par Prettier ; `npm run lint` vérifie qu'il est à jour). `s` = tracé au trait,
+  `f` = tracé plein. `<i data-icon="nom">` dans le HTML (remplacé par `hydrateIcons`), `icon(nom, couleur)` en JS
+  (taille = `font-size`, couleur = `color`), `drawIcon(ctx, …)` de `render/icons.js` sur un canvas ; nom inconnu =
+  `unknown`. Nouvelle icône = un SVG de plus (pas de `transform` : aplatir dans Figma). Tests : `tests/icons.spec.js`.
 - **Équilibrage** : les valeurs vivent dans `config.js` ou `data/`, jamais en dur dans la logique.
 - **Pubs récompensées** : `services/ads.js` → `showRewardedAd(placement)` renvoie `true` si la pub
   est vue en entier. Régie choisie par `ADS.provider` dans `config.js` (`"demo"` = fausse pub
@@ -251,7 +256,7 @@ Principes :
   - **Pas en coop** : pause, boîte mystère, sanctuaires maudits, Marchand Noir, pub « revivre », ralenti de la mort,
     sauvegarde de la partie, tutoriel. Skin de chaque joueur : `player.skin` (`resolved`, `currentSkin(player.skin)`).
   - Interface : panneau `#coopParty` (`ui/coopHud.js`), vaisseaux de l'équipe, pseudo et cercle de réanimation
-    (`render/coop.js`), flèches vers les coéquipiers hors champ. Icônes Papicons `coop` (link) et `join` (login).
+    (`render/coop.js`), flèches vers les coéquipiers hors champ. Icônes `coop` (maillons) et `join` (entrer).
     Tests : `tests/coop.spec.js` (3 pages, connexion directe et relais).
 - **Fenêtres de partie** (pause, choix d'amélioration, revivre, fin ; classe `game-panel`, styles dans `css/panels.css`,
   une couleur d'accent `--accent` par fenêtre) : le **build** (`ui/buildView.js`, `buildView(player)`) montre les armes
@@ -568,7 +573,7 @@ bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une 
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés, coop en ligne de 2 à 4 joueurs,
 reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur), rendu néon (grille vivante, halo, aberration, écran rétro), vaisseaux de héros et boss animés en code, illustrations des menus,
-tous les modèles redessinés (coques de skin, 20 boss, ennemis, familiers).
+tous les modèles redessinés (coques de skin, 20 boss, ennemis, familiers), 110 icônes faites main dans Figma.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

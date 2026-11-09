@@ -10,6 +10,19 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-icones-maison",
+    date: "Novembre 2026",
+    title: "Nouvelles icônes",
+    items: [
+      {
+        icon: "sparkle",
+        color: "#00ffff",
+        title: "110 icônes faites main",
+        text: "Armes, armures, héros, familiers, coffres, rangs et menus : toutes les icônes du jeu ont été redessinées à la main, au trait néon, pour un style unique et cohérent.",
+      },
+    ],
+  },
+  {
     id: "2026-11-tous-les-modeles",
     date: "Novembre 2026",
     title: "Tous les modèles redessinés",
