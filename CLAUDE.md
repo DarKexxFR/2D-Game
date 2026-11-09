@@ -259,12 +259,17 @@ Principes :
   couleur de la rareté, ×nombre, effet), triées de la plus rare à la plus commune. Pause : build complet (un par joueur
   en duel sur un écran) ; écran de fin : version `compact` (icônes seules) dans `#runBuild`. Tests : `tests/build-view.spec.js`.
 - **Pouvoirs limités** (`POWER_RULES` dans `data/upgrades.js`) : chaque carte de `UPGRADES` et chaque corrompue est
-  un pouvoir, déclaré par `power()` ; au plus `slots` (8) pouvoirs différents, chacun monte de niveau jusqu'à `max`
+  un pouvoir, déclaré par `power()` ; au plus `slots` (10) emplacements, chacun monte de niveau jusqu'à `max`
   (défaut `maxLevel` 5 ; corrompues 1). Niveau = nombre dans `p.inventory` ; `ownedPowers(p)`. Emplacements pleins =
   seuls les pouvoirs possédés (et armes d'appoint, évolutions) sont proposés. Pool trop court = cartes de secours
   `FILLER_CARDS` (`ui/upgradeMenu.js` : Réparation, Butin ; `filler`, jamais notées dans l'inventaire). Évolution
   d'un pouvoir = son `max` + partenaire (`baseMax` déduit). Choix du propriétaire : moins de pouvoirs, plus forts,
-  à faire monter. Tests : `tests/powers.spec.js`.
+  à faire monter. **Fusions de pouvoirs** (`POWER_FUSIONS` de `data/powerFusions.js`, cartes `POWER_FUSION_CARDS`,
+  rareté `fusion`, champ `powers`) : deux pouvoirs au niveau `POWER_FUSION_RULES.minLevel` (3) → bonus, et les deux
+  n'occupent plus qu'un emplacement (`p.mergedPowers` nom → id ; les évolutions de pouvoirs fondent aussi les leurs).
+  Toujours compter les emplacements avec `usedPowerSlots(p)`, jamais `ownedPowers(p).length`. Un pouvoir fondu monte
+  encore, ne se fond qu'une fois et ne se rend pas au Marchand Noir. Pause : « Fusions à portée »
+  (`powerRecipesInReach`). Statistique `powerFusions` (succès Alchimiste). Tests : `tests/powers.spec.js`.
 - **Choix d'amélioration** (`ui/upgradeMenu.js`) : aussi au clavier (1 / 2 / 3, flèches ou ZQSD +
   Entrée / Espace, carte surlignée) ; Entrée / Espace sont ignorés juste après
   l'ouverture pour qu'un dash ne valide pas une carte. Le tir auto est actif par défaut (T le coupe).
@@ -568,7 +573,7 @@ bestiaire (page wiki, fiches débloquées en jeu), musiques synthétisées (une 
 fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mobs, 4 boss dont l'Architecte final),
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés, coop en ligne de 2 à 4 joueurs,
 reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur), rendu néon (grille vivante, halo, aberration, écran rétro), vaisseaux de héros et boss animés en code, illustrations des menus,
-tous les modèles redessinés (coques de skin, 20 boss, ennemis, familiers).
+tous les modèles redessinés (coques de skin, 20 boss, ennemis, familiers), 10 emplacements de pouvoir et 14 fusions de pouvoirs.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

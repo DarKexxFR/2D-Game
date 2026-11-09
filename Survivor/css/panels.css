@@ -631,3 +631,39 @@ button.pause-abandon {
     font-size: 24px;
   }
 }
+
+/* Pouvoirs fondus (évolution ou fusion) : bord de la couleur de la fusion, nom de la fusion */
+.bv-card.merged {
+  border-color: color-mix(in srgb, var(--fc) 45%, transparent);
+  border-left-color: var(--c);
+  background: color-mix(in srgb, var(--fc) 8%, transparent);
+}
+.bv-merged {
+  display: block;
+  color: var(--fc);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Fusions à portée : recette et avancement de chaque ingrédient */
+.bv-reach {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+.bv-recipe {
+  --c: #ff8cf8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 9px;
+  border: 1px dashed color-mix(in srgb, var(--c) 45%, transparent);
+  font-size: 18px;
+}
+.bv-recipe small .ok {
+  color: #00ff88;
+}

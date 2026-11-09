@@ -10,6 +10,31 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-fusions-pouvoirs",
+    date: "Novembre 2026",
+    title: "10 pouvoirs et fusions",
+    items: [
+      {
+        icon: "chartUp",
+        color: "#00ffff",
+        title: "10 emplacements de pouvoir",
+        text: "Vous pouvez maintenant porter 10 pouvoirs différents au lieu de 8.",
+      },
+      {
+        icon: "atom",
+        color: "#ff8cf8",
+        title: "14 fusions de pouvoirs",
+        text: "Deux pouvoirs montés au niveau 3 se fondent en un seul emplacement, avec un bonus en plus : Prédateur, Colosse, Comète, Orage vivant... Ils gardent leur niveau et peuvent encore monter. Les évolutions de pouvoirs libèrent aussi un emplacement.",
+      },
+      {
+        icon: "eye",
+        color: "#00ff88",
+        title: "Fusions à portée",
+        text: "La pause montre les évolutions et fusions dont vous avez déjà un ingrédient, avec leur avancement. Deux nouveaux succès : Alchimiste et Grand alchimiste.",
+      },
+    ],
+  },
+  {
     id: "2026-11-tous-les-modeles",
     date: "Novembre 2026",
     title: "Tous les modèles redessinés",

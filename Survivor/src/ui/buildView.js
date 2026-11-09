@@ -1,9 +1,19 @@
 // Build de la partie (menu Pause, écran de fin) : armes (équipée + armes d'appoint), évolutions obtenues
 // et pouvoirs (emplacements limités), chacun avec son icône à la couleur de sa rareté, son niveau et son effet.
+// Deux pouvoirs fondus (évolution ou fusion) sont côte à côte, marqués du nom de la fusion ; hors version
+// compacte, les recettes à portée (un ingrédient déjà possédé) sont rappelées avec leur avancement.
 
 import { RARITIES } from "../config.js";
 import { SIDE_WEAPON_RULES, sideLook } from "../data/sideWeapons.js";
-import { POWER_RULES, cardByName, ownedEvolutions, ownedPowers } from "../data/upgrades.js";
+import {
+  POWER_RULES,
+  cardByName,
+  evolutionById,
+  mergedInto,
+  ownedEvolutions,
+  powerRecipesInReach,
+  usedPowerSlots,
+} from "../data/upgrades.js";
 import { el } from "./dom.js";
 import { icon } from "./icons.js";
 
@@ -40,9 +50,13 @@ export function buildView(p, { compact = false, title = "" } = {}) {
       chip.append(icon(e.icon, rarityColor(e.rarity)), el("span", "", e.name));
       list.append(chip);
     }
-    root.append(section("Évolutions", list));
+    root.append(section("Évolutions et fusions", list));
   }
-  root.append(section(`Pouvoirs ${ownedPowers(p).length}/${POWER_RULES.slots}`, cardTiles(p, compact)));
+  root.append(section(`Pouvoirs ${usedPowerSlots(p)}/${POWER_RULES.slots}`, cardTiles(p, compact)));
+  if (!compact) {
+    const reach = recipesInReach(p);
+    if (reach) root.append(section("Fusions à portée", reach));
+  }
   return root;
 }
 
@@ -109,12 +123,42 @@ function pips(level, max) {
   return row;
 }
 
+/** Recettes de pouvoirs à portée (au plus `MAX_REACH`), ou null s'il n'y en a aucune. */
+const MAX_REACH = 4;
+function recipesInReach(p) {
+  const list = powerRecipesInReach(p).slice(0, MAX_REACH);
+  if (list.length === 0) return null;
+  const box = el("div", "bv-reach");
+  for (const { recipe, steps } of list) {
+    const row = el("div", "bv-recipe");
+    row.style.setProperty("--c", rarityColor(recipe.rarity));
+    row.title = recipe.desc;
+    const text = el("div", "bv-ctext");
+    text.append(el("b", "", recipe.name));
+    const parts = el("small", "");
+    steps.forEach((s, i) => {
+      if (i > 0) parts.append(" + ");
+      parts.append(
+        el("span", s.level >= s.need ? "ok" : "", `${s.name} ${Math.min(s.level, s.need)}/${s.need}`),
+      );
+    });
+    text.append(parts);
+    row.append(icon(recipe.icon, rarityColor(recipe.rarity)), text);
+    box.append(row);
+  }
+  return box;
+}
+
 function cardTiles(p, compact) {
+  // Pouvoirs fondus d'abord, par paire ; puis les autres, du plus rare au plus commun
+  const group = (c) => mergedInto(p, c.name) ?? "";
   const cards = Object.entries(p.inventory)
     .map(([name, count]) => ({ def: cardByName(name), name, count }))
     .filter((c) => c.def && !c.def.sideWeapon) // les armes d'appoint sont dans « Armes »
     .sort(
       (a, b) =>
+        Number(!group(a)) - Number(!group(b)) ||
+        group(a).localeCompare(group(b)) ||
         RARITY_ORDER.indexOf(a.def.rarity) - RARITY_ORDER.indexOf(b.def.rarity) ||
         b.count - a.count ||
         a.name.localeCompare(b.name),
@@ -126,10 +170,15 @@ function cardTiles(p, compact) {
   }
   for (const { def, name, count } of cards) {
     const color = rarityColor(def.rarity);
-    const tile = el("div", `bv-card rarity-${def.rarity}`);
+    const fusion = evolutionById(mergedInto(p, name));
+    const tile = el("div", `bv-card rarity-${def.rarity}${fusion ? " merged" : ""}`);
     tile.style.setProperty("--c", color);
     const max = def.max ?? count;
     tile.title = `${name} · niv. ${count}/${max} · ${RARITY_NAMES[def.rarity] || ""} · ${def.desc}`;
+    if (fusion) {
+      tile.title += ` · fondu dans ${fusion.name}`;
+      tile.style.setProperty("--fc", rarityColor(fusion.rarity));
+    }
     const box = el("div", "bv-cicon");
     box.append(icon(def.icon, color));
     if (count > 1 || compact) box.append(el("span", "bv-count", `${count}`));
@@ -138,13 +187,14 @@ function cardTiles(p, compact) {
       const text = el("div", "bv-ctext");
       text.append(el("b", "", name));
       if (max > 1) text.append(pips(count, max));
+      if (fusion) text.append(el("span", "bv-merged", fusion.name));
       text.append(el("small", "", def.malus ? `${def.desc} · ${def.malus}` : def.desc));
       tile.append(text);
     }
     grid.append(tile);
   }
   // Emplacements de pouvoir encore libres
-  for (let i = cards.length; i < POWER_RULES.slots; i++) {
+  for (let i = usedPowerSlots(p); i < POWER_RULES.slots; i++) {
     const empty = el("div", "bv-card empty");
     empty.title = "Emplacement de pouvoir libre";
     empty.append(el("div", "bv-cicon"), compact ? "" : el("div", "bv-ctext", "Libre"));
