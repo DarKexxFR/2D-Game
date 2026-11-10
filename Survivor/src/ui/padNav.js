@@ -19,6 +19,7 @@ const NATIVE = "button, a[href], input:not([type=hidden]), select, textarea, [da
 let focused = null;
 let rootKey = ""; // écran (ou fenêtre) où se trouve la sélection
 let shownAt = 0; // ouverture de cet écran (A ignoré juste après)
+let idle = true; // aucune manette : l'écran affiché n'est plus suivi (voir idlePadNav)
 /** Dernier élément choisi par écran : on y revient en rouvrant l'écran. */
 const memory = new Map();
 /** Pour retrouver la sélection quand un menu redessine sa liste : id, ou rang dans la liste. */
@@ -95,13 +96,25 @@ function defaultFocus(root, list) {
   return list.find((el) => el.matches("[data-pad-focus]")) || list[0] || null;
 }
 
+/**
+ * Plus aucune manette : on arrête de suivre l'écran affiché (sans manette, updateGamepads ne passe plus ici,
+ * pour ne pas forcer la mise en page à chaque image). La prochaine synchro ne compte pas comme une ouverture.
+ */
+export function idlePadNav() {
+  setFocus(null);
+  rootKey = "#idle";
+  idle = true;
+}
+
 /** Garde la sélection valide (écran changé, liste redessinée). Appelé à chaque image dans un menu. */
 export function syncPadNav(now, padMode) {
   const root = navRoot();
   const key = root ? root.id : "";
   if (key !== rootKey) {
     rootKey = key;
-    shownAt = now;
+    // Au retour d'une manette, l'écran était déjà là : ce n'est pas une ouverture (A accepté tout de suite)
+    shownAt = idle ? -Infinity : now;
+    idle = false;
     setFocus(null);
     if (root && padMode) {
       const list = candidates(root);
