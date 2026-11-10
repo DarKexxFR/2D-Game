@@ -1,0 +1,196 @@
+/* Défi entre amis (ui/challengeMenu.js) : mêmes cartes de règles que le défi du jour */
+.daily-actions {
+  margin-bottom: 4px;
+}
+button.challenge-open,
+button.challenge-new {
+  background: linear-gradient(180deg, #00e5ff, #006f86);
+  color: #001218;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+}
+#challengeMenu {
+  border-color: #00e5ff;
+  max-width: 620px;
+}
+.challenge-actions {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.challenge-actions .duel-join {
+  margin-top: 6px;
+}
+.challenge-error {
+  min-height: 16px;
+  font-size: 12px;
+  color: #ff6b8f;
+}
+.challenge-card {
+  display: none;
+  padding: 12px;
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  border-radius: 12px;
+  background: rgba(0, 229, 255, 0.05);
+}
+.challenge-card.open {
+  display: block;
+}
+.challenge-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #8adfff;
+}
+.challenge-code b {
+  font-family: "Press Start 2P", monospace;
+  font-size: 18px;
+  letter-spacing: 5px;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+.challenge-target {
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #00ff88;
+}
+.challenge-target:empty {
+  display: none;
+}
+.challenge-status {
+  min-height: 16px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #00ff88;
+}
+.challenge-list {
+  display: grid;
+  gap: 6px;
+  max-height: 26vh;
+  padding: 0;
+  margin: 0 0 10px;
+  list-style: none;
+  overflow-y: auto;
+}
+.challenge-list li button {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #333;
+  border-left: 3px solid #00e5ff;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #ccc;
+  font-size: 12px;
+  text-align: left;
+  box-shadow: none;
+}
+.challenge-list li button.won {
+  border-left-color: #00ff88;
+}
+.challenge-list li button.current {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.1);
+}
+.challenge-list .code {
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #ffd700;
+}
+.challenge-list .score {
+  color: #fff;
+  white-space: nowrap;
+}
+.challenge-list .empty {
+  font-size: 12px;
+  color: #888;
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+  .challenge-card {
+    padding: 8px;
+  }
+  .challenge-card .daily-rule {
+    padding: 6px 4px;
+  }
+  .challenge-card .daily-rule span {
+    font-size: 10px;
+  }
+  .challenge-code b {
+    font-size: 15px;
+  }
+}
+
+/* Écran de fin d'une partie de défi */
+.challenge-result {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #8adfff;
+}
+.challenge-result:empty {
+  display: none;
+}
+.challenge-result.won {
+  color: #00ff88;
+}
+.challenge-result.lost {
+  color: #ff6b8f;
+}
+button.challenge-send {
+  display: none;
+  background: linear-gradient(180deg, #00e5ff, #006f86);
+  color: #001218;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+}
+
+/* Événement du week-end (services/weekendEvent.js) : à la place du slogan de l'accueil */
+.home-event {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin: 8px auto 0;
+  max-width: 560px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--event, #ffd700);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--event, #ffd700) 60%, transparent);
+}
+.home-event small {
+  font-weight: 400;
+  color: #bbb;
+  text-shadow: none;
+}
+#mainMenu.weekend .home-tagline {
+  display: none;
+}
+#mainMenu.weekend .home-event {
+  display: flex;
+}
+@media (max-width: 760px), (max-height: 560px) {
+  .home-event {
+    margin-top: 4px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+}
+
+/* Écran de fin : bonus du week-end */
+#gameOver .reward-weekend:not(:empty) {
+  border: 1px solid currentColor;
+  font-size: 12px;
+}
+#gameOver .reward-weekend:empty {
+  display: none;
+}

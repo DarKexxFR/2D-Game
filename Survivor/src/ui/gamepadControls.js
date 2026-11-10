@@ -9,7 +9,7 @@ import { game } from "../core/state.js";
 import { versus } from "../systems/versus.js";
 import { showToast } from "./achievementMenu.js";
 import { pickInput } from "./duelPicks.js";
-import { padNavInput, scrollPadNav, syncPadNav } from "./padNav.js";
+import { idlePadNav, padNavInput, scrollPadNav, syncPadNav } from "./padNav.js";
 
 /** Actions déclenchées à l'appui (les autres, comme le dash, sont tenues : lues par isDown). */
 const PRESS_ACTIONS = ["pause", "skill", "autoShoot", "spell"];
@@ -49,10 +49,24 @@ function isVisibleOverlay() {
   return !!invite && invite.style.display !== "none" && invite.getClientRects().length > 0;
 }
 
+let padsActive = false; // une manette était branchée à l'image précédente
+
 /** Relit les manettes et aiguille leurs appuis ; appelé à chaque image (partie et menus). */
 export function updateGamepads(now) {
   const events = pollGamepads(now);
   if (document.body.classList.contains("booting")) return; // écran de chargement : rien à piloter
+  // Aucune manette : rien à aiguiller (une dernière passe après le départ de la dernière, pour ranger le
+  // curseur des menus). Avant, chaque image mesurait la fenêtre d'invitation, ce qui forçait le navigateur
+  // à recalculer la mise en page à chaque image, même sans manette.
+  if (events.length === 0 && !pads.some(Boolean)) {
+    if (padsActive) {
+      padsActive = false;
+      syncPadNav(now, false); // range le cercle de sélection
+      idlePadNav();
+    }
+    return;
+  }
+  padsActive = true;
   if (events.length > 0 || padMoved()) setPadMode(true);
 
   const menu = inMenu();

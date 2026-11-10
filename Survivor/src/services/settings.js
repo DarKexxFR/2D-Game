@@ -9,7 +9,8 @@ const DEFAULTS = {
   sfxVolume: 0.6,
   vibration: true,
   shotOpacity: 1, // opacité des tirs du joueur (Options), de SHOT_OPACITY.min à 1
-  quality: isTouch ? "medium" : "high", // low | medium | high
+  quality: "auto", // auto | low | medium | high (AUTO : suit l'appareil, voir core/quality.js)
+  autoLevel: null, // niveau retenu par l'AUTO (low | medium | high), null = celui de l'appareil
   // Effets visuels (Options > Effets visuels, voir config.js VISUAL_FX) ; coupés en qualité basse
   fxGrid: true, // grille du sol qui se déforme
   fxBloom: !isTouch, // halo lumineux global (le plus coûteux : désactivé d'office sur téléphone)

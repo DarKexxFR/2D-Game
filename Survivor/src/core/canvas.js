@@ -4,6 +4,7 @@
 
 import { onSettingsChange } from "../services/settings.js";
 import { QUALITY, gfx } from "./gfx.js";
+import { qualityLevel } from "./quality.js";
 
 export const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("gameCanvas"));
 export const ctx = canvas.getContext("2d");
@@ -38,8 +39,13 @@ function resize() {
   view.pixelRatio = dpr * view.scale;
 }
 window.addEventListener("resize", resize);
+let appliedLevel = "";
 onSettingsChange((s) => {
-  Object.assign(gfx, QUALITY[s.quality] || QUALITY.high);
+  // Qualité effective (en AUTO : le niveau choisi par la mesure des images, voir core/quality.js)
+  const level = qualityLevel(s);
+  if (level === appliedLevel) return; // un autre réglage a changé : rien à refaire (resize vide le canvas)
+  appliedLevel = level;
+  Object.assign(gfx, QUALITY[level]);
   resize();
 });
 

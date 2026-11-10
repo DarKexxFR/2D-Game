@@ -20,7 +20,7 @@ export function initReviveMenu({ onRevive, onGiveUp }) {
 }
 
 export function canOfferRevive() {
-  return adsEnabled() && !game.daily && !game.adReviveUsed;
+  return adsEnabled() && !game.daily && !game.challenge && !game.adReviveUsed; // défis : à armes égales
 }
 
 export function showReviveOffer() {

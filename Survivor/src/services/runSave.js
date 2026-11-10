@@ -38,7 +38,7 @@ const VISUAL_LISTS = [
 
 /**
  * @typedef {object} RunMeta résumé affiché sur l'accueil (bouton REPRENDRE)
- * @property {string} mode "normal" | "daily" | "rush"
+ * @property {string} mode "normal" | "daily" | "rush" | "challenge"
  * @property {string} difficulty
  * @property {number} wave vague (Boss Rush : boss vaincus)
  * @property {number} level

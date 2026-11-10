@@ -11,7 +11,10 @@ import { icon, setLabel } from "./icons.js";
 import { showScreen } from "./screens.js";
 
 let toastTimer = null;
+let toastShownAt = 0;
 const toastQueue = [];
+/** Durée d'un toast seul, et d'un toast suivi d'autres (ms). */
+const TOAST_MS = { alone: 3500, queued: 1800 };
 
 export function openAchievements() {
   renderAchievements();
@@ -82,7 +85,13 @@ function showAchievementToast(achievement) {
 /** Notification en haut de l'écran (succès, quête accomplie...) : à la suite si plusieurs arrivent. */
 export function showToast(text, iconName) {
   toastQueue.push({ text, iconName });
-  if (!toastTimer) nextToast();
+  if (!toastTimer) return nextToast();
+  // Un toast affiché seul (long) est écourté dès qu'un autre attend derrière lui
+  if (toastQueue.length === 1) {
+    clearTimeout(toastTimer);
+    const left = Math.max(0, TOAST_MS.queued - (performance.now() - toastShownAt));
+    toastTimer = setTimeout(nextToast, left);
+  }
 }
 
 function nextToast() {
@@ -95,5 +104,6 @@ function nextToast() {
   }
   setLabel(toast, ` ${next.text}`, next.iconName, { before: true });
   toast.classList.add("visible");
-  toastTimer = setTimeout(nextToast, toastQueue.length ? 1800 : 3500);
+  toastShownAt = performance.now();
+  toastTimer = setTimeout(nextToast, toastQueue.length ? TOAST_MS.queued : TOAST_MS.alone);
 }

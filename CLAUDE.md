@@ -55,7 +55,19 @@ Principes :
 - **Pas fixe à 60 Hz** (`TICK_MS`) : la logique avance en ticks, le rendu suit le
   `requestAnimationFrame`. Les durées de jeu sont en ticks, pas en millisecondes.
 - **Grille spatiale** `enemyGrid` reconstruite à chaque tick (et dans `activateSkill`) pour
-  les collisions : toute recherche d'ennemis proches passe par elle.
+  les collisions : toute recherche d'ennemis proches passe par elle. Cases de `ENEMY_GRID_CELL` (64 px) ; chaque
+  ennemi est rangé dans toutes les cases de son cercle, donc pour un test de contact il suffit de chercher sur son
+  propre rayon (puis `distance < rayon + e.size`). Dans les boucles chaudes : distances au carré, `dist` (racine)
+  seulement si besoin, jamais `Math.hypot` (lent).
+- **Qualité AUTO** (réglage par défaut, `core/quality.js`, réglages `AUTO_QUALITY`) : `qualityLevel()` = niveau
+  réellement appliqué (lu par `core/canvas.js` et la musique ; **ne plus lire `settings.quality` directement**).
+  `sampleFrame` (chaque image de partie, ni pause ni menu) mesure les images par paquets : deux paquets sous
+  45 images/s = un cran plus bas, huit paquets fluides = un cran plus haut, retenu dans `settings.autoLevel` ;
+  cadence bridée à 30 images/s (régulière) ignorée, remontée suivie d'une baisse en moins de 20 s = plus de
+  remontée de la session. Les tests gardent une qualité fixe (`fixtures.js`) ; `tests/auto-quality.spec.js`.
+- **Rien qui force la mise en page à chaque image** : pas de lecture de `clientWidth`, `offsetTop`,
+  `getClientRects`... dans la boucle (HUD, manettes) après des écritures DOM ; largeur via `ResizeObserver`
+  (`hudWidth` de `ui/hud.js`), manettes ignorées tant qu'aucune n'est branchée.
 - **Opacité des tirs alliés** (`render/allyAlpha.js`, réglage `shotOpacity`, `SHOT_OPACITY` dans `config.js`) : tout dessin
   d'un tir du joueur (projectiles, orbes, aura, armes d'appoint, éclairs, météores) multiplie son alpha par `allyAlpha()` ;
   jamais les tirs ennemis ni les attaques de boss.
@@ -501,7 +513,22 @@ Principes :
   `vibrate` de `services/sfx.js` fait aussi vibrer la manette du joueur en cours. Limite : les `confirm()` natifs ne se
   répondent pas à la manette. Tests : `tests/gamepad.spec.js` (fausses manettes via `navigator.getGamepads`).
 - **Défi du jour** : `Math.random` est remplacé par un RNG à graine pendant la partie
-  (`useSeed` / `restoreRandom` dans `services/daily.js`).
+  (`useSeed` / `restoreRandom` dans `services/daily.js`). Règles tirées d'une graine par `rulesFromSeed`.
+- **Défi entre amis** (`services/friendChallenge.js`, écran `ui/challengeMenu.js`, `#modal=defi-ami`, bouton
+  « DÉFIER UN AMI » du défi du jour, réglages `FRIEND_CHALLENGE`) : code de 6 caractères (alphabet sans O/0/I/1/L) →
+  graine `hash("survivor-defi-" + code)` → mêmes règles que le défi du jour (`rulesFromSeed`, niveau 1, sans talents
+  ni Cœur), mode `challenge`, `game.challenge = { code, seed }`. Lien `#defi=CODE` ou `#defi=CODE.vague.xp.pseudo`
+  (`takeChallengeLink`, lu dans `enterHome` avant le routeur, puis effacé). Défis récents dans `account.challenges`
+  (synchronisés, `sanitizeChallenges` au chargement) ; fin de partie : `recordChallengeRun`, `#challengeResult`,
+  `#btnChallengeSend`, statistique `challengeWins` (succès Rival, Inarrêtable). Hors classements, pas de pub
+  « revivre », aucun serveur. Ajouter un héros, une arme ou un modificateur change les règles des anciens codes
+  (comme pour le défi du jour). Tests : `tests/friend-challenge.spec.js`.
+- **Événements du week-end** (`data/weekendEvents.js`, `services/weekendEvent.js`) : samedi et dimanche (heure
+  locale), un événement par semaine à tour de rôle (`eventOfWeek`, numéro de semaine). Multiplicateurs `gold`,
+  `accountXp`, `seasonXp` sur les récompenses du compte seulement (`payRunRewards` de `main.js`, `bonus` de
+  `addRunSeasonXp`), **jamais le score** ; pas en duel. Bannière `#homeEvent` à la place du slogan de l'accueil
+  (classe `weekend` de `#mainMenu`), ligne `#runWeekendGain` en fin de partie. Coupés dans les tests par défaut
+  (`weekendEvents` de `fixtures.js`, sinon un test lancé un samedi changerait) ; `tests/weekend-events.spec.js`.
 
 ## Règles importantes
 
@@ -579,7 +606,8 @@ fin repoussée à la vague 40 (biomes Faille quantique et Noyau stellaire, 4 mob
 fusion d'armes d'appoint, forge d'équipement, 10 nouvelles augmentations, fenêtre des nouveautés, coop en ligne de 2 à 4 joueurs,
 reprise d'une partie interrompue, anomalies de biome (verglas, tourelles piratables, portails), Marchand Noir, synergies pour les 8 familiers, démantèlement et attributs mythiques, Cœur Cybernétique, support manette (jeu, menus, une manette par joueur), rendu néon (grille vivante, halo, aberration, écran rétro), vaisseaux de héros et boss animés en code, illustrations des menus,
 tous les modèles redessinés (coques de skin, 20 boss, ennemis, familiers), 10 emplacements de pouvoir et 14 fusions de pouvoirs,
-110 icônes faites main dans Figma.
+110 icônes faites main dans Figma, qualité AUTO et moteur allégé (grille fine, plus de mise en page forcée), défi entre amis
+(code + lien avec le score à battre), événements du week-end.
 
 Pubs : régie choisie = AdSense H5 Games Ads (adaptateur prêt, en attente de l'accord de Google, voir `PUBS.md`).
 

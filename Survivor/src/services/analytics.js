@@ -13,7 +13,7 @@ import { isOnlineEnabled, request } from "./supabase.js";
 
 /**
  * @typedef {object} RunReport
- * @property {string} mode "normal", "daily", "rush" ou "duel"
+ * @property {string} mode "normal", "daily", "rush", "duel", "duel-local", "coop" ou "challenge"
  * @property {string} difficulty
  * @property {number} wave
  * @property {number} pulse pulsations franchies en Endless Pulse

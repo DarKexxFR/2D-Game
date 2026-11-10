@@ -31,7 +31,9 @@ export function runSummary({ pseudo, wave, valueLabel, isNewRecord }) {
     ? { label: "BOSS RUSH", color: "#ffd700" }
     : game.daily
       ? { label: "DÉFI DU JOUR", color: "#00ff88" }
-      : { label: `SURVIE · ${diff.name}`, color: diff.color };
+      : game.challenge
+        ? { label: `DÉFI ${game.challenge.code}`, color: "#00e5ff" }
+        : { label: `SURVIE · ${diff.name}`, color: diff.color };
   const biome = biomeForWave(game.wave);
   const look = shipLook(player.hero, currentSkin(), 0);
   const cards = Object.entries(player.inventory)

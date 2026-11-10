@@ -39,6 +39,8 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
 
 - Survie en vagues, en Facile, Normal ou Cauchemar.
 - Défi du jour : la même partie pour tous les joueurs.
+- Défi entre amis : un code de 6 caractères donne la même partie (héros, arme, hasard) ; le lien partagé emporte
+  le score à battre. Hors classements.
 - Boss Rush : les boss à la suite.
 - Endless Pulse : après la victoire contre l'Architecte (vague 40), la partie continue avec des mutations cumulées.
 - Duel 1v1 : chaque joueur joue sa partie de survie, les éliminations envoient des ennemis et des sorts à
@@ -56,6 +58,7 @@ Le jeu est en français. Aucun téléchargement ni compte n'est nécessaire pour
   https://last-pulse.com/bestiaire.html.
 - Talents, puis Cœur Cybernétique (niveau de compte 20 ou vague 30 battue : 3 passifs actifs sur 12), succès, quêtes hebdomadaires, série de connexion sur 7 jours, skins du vaisseau.
 - Saison mensuelle avec un passe gratuit de 30 paliers et un classement de saison.
+- Événements du week-end : chaque samedi et dimanche, un bonus d'or ou d'XP différent chaque semaine.
 - Classements mondiaux : Normal, saison, Cauchemar, Endless, défi du jour, duel ELO.
 
 ## Liens

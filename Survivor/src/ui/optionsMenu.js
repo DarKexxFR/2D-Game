@@ -11,6 +11,7 @@ import {
 import { analyticsEnabled, setAnalyticsEnabled } from "../services/analytics.js";
 import { journalText } from "../services/diagnostics.js";
 import { settings, updateSettings } from "../services/settings.js";
+import { isAutoQuality, qualityLevel } from "../core/quality.js";
 import { allyAlpha } from "../render/allyAlpha.js";
 import { isOnlineEnabled } from "../services/supabase.js";
 import { canVibrate, playSfx, vibrate } from "../services/sfx.js";
@@ -180,8 +181,12 @@ function render() {
   for (const btn of document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-quality]"))) {
     btn.classList.toggle("active", btn.dataset.quality === settings.quality);
   }
+  setText(
+    "optQualityHint",
+    isAutoQuality() ? `Auto : ${QUALITY_NAMES[qualityLevel()]} en ce moment.` : QUALITY_HINT,
+  );
   // En qualité basse, seul l'écran rétro (calque CSS, sans coût) reste réglable
-  const low = settings.quality === "low";
+  const low = qualityLevel() === "low";
   for (const btn of fxButtons()) {
     const on = settings[btn.dataset.fx] !== false;
     const locked = low && btn.dataset.fx !== "fxCrt";
@@ -190,6 +195,9 @@ function render() {
     btn.classList.toggle("on", on && !locked);
   }
 }
+
+const QUALITY_NAMES = { low: "qualité basse", medium: "qualité moyenne", high: "haute qualité" };
+const QUALITY_HINT = "Auto : s'adapte à la fluidité de l'appareil. Basse : sans effets lumineux.";
 
 function fxButtons() {
   return document.querySelectorAll(/** @type {"button"} */ ("#optionsMenu [data-fx]"));

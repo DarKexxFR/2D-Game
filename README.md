@@ -119,6 +119,9 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
 
 - Survie en **Facile / Normal / Cauchemar** (Cauchemar débloqué à la vague 10, classement à part).
 - **Défi du jour** (même partie pour tout le monde), **Boss Rush**.
+- **Défi entre amis** (depuis l'écran du Défi du jour) : un code de 6 caractères donne la même partie à tous
+  (héros, arme, modificateur et hasard imposés) ; le lien partagé (`#defi=CODE`) emporte le score à battre et
+  l'écran de fin dit si on l'a battu. Hors classements, sans serveur ; succès Rival et Inarrêtable.
 - **Duel 1 contre 1** : sur un écran (écran scindé) ou en ligne (code de salon, connexion directe WebRTC).
   Les éliminations envoient des ennemis et des sorts à l'adversaire ; le gagnant empoche l'XP et l'or des deux
   parties. **Classement ELO** pour les joueurs connectés, avec des **rangs** visibles (Bronze, Argent, Or, Diamant,
@@ -143,6 +146,9 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
 - **Cœur Cybernétique** (écran Talents, débloqué au niveau de compte 20 ou après la vague 30) : 4 branches de 3
   passifs achetés une fois avec de l'or, au plus 3 actifs à la fois (ex. tir manuel +25 % de dégâts, arme
   d'appoint au départ contre -20 % d'or, sanctuaires maudits tenus en 3 s).
+- **Événements du week-end** : chaque samedi et dimanche (heure locale), un bonus de récompenses qui change
+  chaque semaine (Ruée vers l'or, Week-end d'entraînement, Week-end de saison, Grand week-end), annoncé sur
+  l'accueil. Il ne touche que l'or et l'XP du compte et de saison, jamais le score.
 - Talents, succès avec récompenses, **quêtes hebdomadaires**, **série de connexion** sur 7 jours, **skins** du
   vaisseau (forme, couleurs, traînée), tutoriel de première partie.
 - **Saison mensuelle** et son **passe gratuit** : 30 paliers (or, coffres jusqu'au mythique, une traînée et une
@@ -174,7 +180,9 @@ la manette se débranche en pleine partie, vibrations et activation dans les **O
   ralentissent, ennemis qui blanchissent et grossissent sous l'impact, vaisseau étiré pendant le dash, tirs ennemis
   cerclés de sombre pour rester lisibles, aberration chromatique aux gros chocs, vignette et lignes d'écran. Chaque
   effet se coupe dans les Options (« Effets visuels ») ; la qualité basse les coupe tous, et le halo se coupe tout
-  seul sur un appareil trop lent. Tous les modèles sont dessinés en code et animés : les 8 vaisseaux de héros et
+  seul sur un appareil trop lent. La qualité **AUTO** (par défaut) mesure la fluidité pendant la partie : elle
+  baisse d'un cran quand l'appareil passe sous 45 images/s et remonte quand tout redevient fluide (sans se
+  tromper sur un navigateur bridé à 30 images/s). Tous les modèles sont dessinés en code et animés : les 8 vaisseaux de héros et
   les 17 coques de skin en plans détaillés, chacun des 20 boss avec ses propres pièces (glace en orbite, arcs
   électriques, cadran d'horloge, toile, plan de l'Architecte...) qui s'allument avant une attaque, chaque ennemi
   avec un détail animé (ailes, rotor, mèche, dard...) plafonné à 80 par image, et chaque familier. Illustrations

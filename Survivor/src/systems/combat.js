@@ -1,11 +1,11 @@
 // Tirs du joueur, dégâts infligés aux ennemis, aura, orbes et ultime.
 
-import { KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
+import { ENEMY_GRID_CELL, KUNAI, MYSTERY_BOX, SURVIVAL, TICK_MS } from "../config.js";
 import { gfx, view } from "../core/canvas.js";
 import { aimAngle } from "../core/input.js";
 import { emit } from "../core/events.js";
 import { camera, game, player, world } from "../core/state.js";
-import { BIOME_FOES, GOBLIN, MAX_ENEMY_SIZE, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, TWINS } from "../data/enemies.js";
 import { playSfx, vibrate } from "../services/sfx.js";
 import { SpatialHash } from "../utils/spatialHash.js";
 import { angleDiff, angleTo, dist } from "../utils/math.js";
@@ -31,8 +31,12 @@ import { coreHitMult, coreShotMult } from "./cyberCore.js";
 import { timeFactorAt } from "./hazards.js";
 import { cardDamageMult, onCardHit, onCardKill, onCardShot, ricochet } from "./cardEffects.js";
 
-/** Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). */
-export const enemyGrid = new SpatialHash(MAX_ENEMY_SIZE);
+/**
+ * Grille des ennemis, reconstruite à chaque tick (utilisée aussi par l'IA). Chaque ennemi est rangé dans toutes
+ * les cases que couvre son cercle : des cases petites devant les boss (un boss en couvre une vingtaine) mais à
+ * peine plus grandes qu'un ennemi ordinaire, pour qu'une recherche ne ramène que des voisins proches.
+ */
+export const enemyGrid = new SpatialHash(ENEMY_GRID_CELL);
 
 export function rebuildEnemyGrid() {
   enemyGrid.clear();

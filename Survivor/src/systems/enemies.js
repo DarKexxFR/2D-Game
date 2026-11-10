@@ -1,7 +1,7 @@
 // IA des ennemis : déplacement, séparation, attaques et comportements de boss.
 
 import { game, player, world } from "../core/state.js";
-import { BIOME_FOES, GOBLIN, KRAKEN, MAX_ENEMY_SIZE, SLIME_KING, TWINS } from "../data/enemies.js";
+import { BIOME_FOES, GOBLIN, KRAKEN, SLIME_KING, TWINS } from "../data/enemies.js";
 import { playSfx } from "../services/sfx.js";
 import { SURVIVAL, TICK_MS } from "../config.js";
 import { angleDiff, angleTo, clamp, dist, removeWhere } from "../utils/math.js";
@@ -142,21 +142,31 @@ function moveEnemy(e, distToPlayer) {
     }
   }
 
-  const a = Math.atan2(ty - e.y, tx - e.x);
-  let mx = Math.cos(a);
-  let my = Math.sin(a);
+  // Direction unitaire vers la cible (sans trigonométrie : appelé pour chaque ennemi à chaque tick)
+  const tdx = tx - e.x;
+  const tdy = ty - e.y;
+  const tlen = Math.sqrt(tdx * tdx + tdy * tdy);
+  let mx = tlen > 0 ? tdx / tlen : 1;
+  let my = tlen > 0 ? tdy / tlen : 0;
 
-  // Séparation : repousse les ennemis qui se chevauchent (via la grille spatiale)
-  for (const other of enemyGrid.query(e.x, e.y, e.size + MAX_ENEMY_SIZE)) {
+  // Séparation : repousse les ennemis qui se chevauchent (via la grille spatiale). Chaque ennemi est rangé
+  // dans toutes les cases que couvre son cercle : deux cercles qui se touchent partagent forcément une case,
+  // il suffit donc de chercher sur son propre rayon. Distance au carré d'abord : la racine n'est calculée
+  // que pour les ennemis qui se touchent vraiment.
+  for (const other of enemyGrid.query(e.x, e.y, e.size)) {
     if (other === e || other.dead) continue;
-    const d = dist(e.x, e.y, other.x, other.y);
-    if (d > 0 && d < e.size + other.size) {
-      mx += ((e.x - other.x) / d) * 1.5;
-      my += ((e.y - other.y) / d) * 1.5;
+    const ox = e.x - other.x;
+    const oy = e.y - other.y;
+    const reach = e.size + other.size;
+    const d2 = ox * ox + oy * oy;
+    if (d2 > 0 && d2 < reach * reach) {
+      const d = Math.sqrt(d2);
+      mx += (ox / d) * 1.5;
+      my += (oy / d) * 1.5;
     }
   }
 
-  const len = Math.hypot(mx, my);
+  const len = Math.sqrt(mx * mx + my * my);
   if (len > 0) {
     // Traînée spectrale (Cape ★3) : ennemi ralenti
     const speed = e.speed * (e.slowUntil > game.time ? e.slowFactor : 1);

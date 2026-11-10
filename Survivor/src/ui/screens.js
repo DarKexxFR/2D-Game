@@ -32,6 +32,7 @@ const SCREENS = [
   "duelMenu",
   "coopMenu",
   "friendsMenu",
+  "challengeMenu",
 ];
 
 let current = null;

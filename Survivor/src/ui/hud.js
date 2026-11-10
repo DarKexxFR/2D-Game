@@ -38,6 +38,22 @@ export function shortNumber(n) {
 }
 
 let headerFit = "";
+let panelWidth = -1; // largeur du panneau, tenue à jour par un ResizeObserver (-1 = pas encore observé)
+
+/**
+ * Largeur du panneau sans la lire dans le DOM à chaque image : lire `clientWidth` juste après les écritures
+ * du HUD forçait le navigateur à recalculer toute la mise en page à chaque image (coûteux sur téléphone).
+ */
+function hudWidth() {
+  if (panelWidth >= 0 || typeof ResizeObserver === "undefined")
+    return panelWidth >= 0 ? panelWidth : $("ui").clientWidth;
+  const ui = $("ui");
+  panelWidth = ui.clientWidth;
+  new ResizeObserver(() => {
+    panelWidth = ui.clientWidth; // lu hors de la boucle de jeu, une fois la mise en page faite
+  }).observe(ui);
+  return panelWidth;
+}
 
 /**
  * Compteurs toujours à droite de la vague, sur la même ligne : si une police plus large les fait passer à la
@@ -45,12 +61,12 @@ let headerFit = "";
  * la largeur du panneau ou les polices changent (pas à chaque élimination).
  */
 function fitHeader() {
-  const ui = $("ui");
+  const width = hudWidth();
   const key = [$("wave")._text, $("kills")._text, $("uiRunGold")._text]
     .map((t) => (t || "").length)
-    .concat(ui.clientWidth, document.fonts?.status ?? "")
+    .concat(width, document.fonts?.status ?? "")
     .join("|");
-  if (key === headerFit || ui.clientWidth === 0) return;
+  if (key === headerFit || width === 0) return;
   headerFit = key;
   setClass("uiHeader", "tight", false);
   // passés à la ligne = sous la vague (sur la même ligne, ils sont centrés verticalement, donc un peu plus bas)
