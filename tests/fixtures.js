@@ -29,7 +29,10 @@ export const test = base.extend({
   },
   // Erreurs provoquées exprès par un test (test.use({ allowedErrors: [...] })) : tolérées, une fois chacune
   allowedErrors: [[], { option: true }],
-  page: async ({ page, supabase, allowedErrors }, use) => {
+  // Événements du week-end (data/weekendEvents.js) : coupés par défaut, sinon un test lancé un samedi verrait
+  // ses récompenses changer. tests/weekend-events.spec.js les rallume (test.use({ weekendEvents: true })).
+  weekendEvents: [false, { option: true }],
+  page: async ({ page, supabase, allowedErrors, weekendEvents }, use) => {
     const errors = [];
     const allowed = [...allowedErrors];
     page.on("pageerror", (e) => {
@@ -38,6 +41,21 @@ export const test = base.extend({
       else errors.push(e.message);
     });
     await routeSupabase(page, supabase);
+    if (!weekendEvents) {
+      await page.route("**/src/data/weekendEvents.js", (route) =>
+        route.fulfill({
+          contentType: "text/javascript",
+          body: "export const WEEKEND_EVENTS = []; export const WEEKEND = { days: [] };",
+        }),
+      );
+    }
+    // Qualité fixe (celle de l'appareil) : en AUTO, un navigateur de test lent baisserait la qualité au hasard
+    // pendant les tests. tests/auto-quality.spec.js teste l'AUTO en le choisissant lui-même.
+    await page.addInitScript(() => {
+      if (localStorage.getItem("survivor_settings")) return;
+      const touch = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+      localStorage.setItem("survivor_settings", JSON.stringify({ quality: touch ? "medium" : "high" }));
+    });
     await use(page);
     expect(errors, "erreurs JavaScript dans la page").toEqual([]);
   },

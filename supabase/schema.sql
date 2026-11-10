@@ -1029,7 +1029,7 @@ declare
   s analytics_sessions;
 begin
   select * into s from analytics_sessions where id = p_session and device = p_device;
-  if not found or p_mode not in ('normal', 'daily', 'rush', 'duel', 'duel-local') then return; end if;
+  if not found or p_mode not in ('normal', 'daily', 'rush', 'duel', 'duel-local', 'coop', 'challenge') then return; end if;
   if exists (select 1 from analytics_runs where session = p_session and created_at > now() - interval '5 seconds') then
     return;
   end if;

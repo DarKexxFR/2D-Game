@@ -7,6 +7,7 @@ import { game, world } from "../core/state.js";
 import { biomeForWave } from "../data/biomes.js";
 import { BOSS_MUSIC, SONGS } from "../data/music.js";
 import { randomItem } from "../utils/math.js";
+import { qualityLevel } from "../core/quality.js";
 import { getAudio, onAudioUnlock } from "./audioContext.js";
 import { createMusicBus, MusicSequencer } from "./musicSequencer.js";
 import { onSettingsChange, settings } from "./settings.js";
@@ -100,7 +101,7 @@ function playSong(theme) {
   const start = Math.max(current ? current.seq.nextBeat() : 0, ctx.currentTime + 0.05);
   const fadeIn = current ? MUSIC.crossfade : MUSIC.fadeIn;
   stopSong(start);
-  const seq = new MusicSequencer(ctx, bus, SONGS[theme], { light: settings.quality === "low" });
+  const seq = new MusicSequencer(ctx, bus, SONGS[theme], { light: qualityLevel() === "low" });
   seq.start(start, fadeIn);
   current = { theme, seq };
   applyVolume();

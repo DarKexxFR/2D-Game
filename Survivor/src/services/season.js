@@ -143,11 +143,12 @@ export function addSeasonXp(amount) {
  * XP de saison d'une partie terminée (survie, défi du jour, Boss Rush, duel), plus le bonus de la
  * première partie du jour. Renvoie { xp, firstOfDay }.
  */
-export function addRunSeasonXp({ wave, bosses, kills, difficulty = "normal", pulse = 0 }) {
+/** `bonus` : multiplicateur de l'événement du week-end (services/weekendEvent.js), 1 sinon. */
+export function addRunSeasonXp({ wave, bosses, kills, difficulty = "normal", pulse = 0, bonus = 1 }) {
   const r = SEASON.run;
   const mult = DIFFICULTIES[difficulty]?.rewards ?? 1;
   const base = Math.min(r.max, wave * r.perWave + bosses * r.perBoss + kills * r.perKill) * mult;
-  let xp = base + pulse * r.perPulse;
+  let xp = (base + pulse * r.perPulse) * bonus;
   const s = state();
   const day = todayKey();
   const firstOfDay = s.firstRunDay !== day;

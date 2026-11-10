@@ -1,6 +1,11 @@
 export const clamp = (v, min, max) => (v < min ? min : v > max ? max : v);
 
-export const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+/** Distance entre deux points. `Math.sqrt` plutôt que `Math.hypot`, bien plus lent (appelée des milliers de fois par tick). */
+export const dist = (ax, ay, bx, by) => {
+  const dx = ax - bx;
+  const dy = ay - by;
+  return Math.sqrt(dx * dx + dy * dy);
+};
 
 export const angleTo = (fromX, fromY, toX, toY) => Math.atan2(toY - fromY, toX - fromX);
 

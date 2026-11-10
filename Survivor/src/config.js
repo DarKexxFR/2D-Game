@@ -79,6 +79,37 @@ export const LIMITS = {
   leaderboard: 10,
 };
 
+// Qualité AUTO (Options) : le jeu mesure la durée des images pendant la partie et baisse la qualité d'un cran
+// quand l'appareil ne suit plus, puis la remonte quand tout redevient fluide (voir core/quality.js).
+export const AUTO_QUALITY = {
+  window: 90, // images par mesure (moyenne de leur durée)
+  slowMs: 1000 / 45, // plus lent en moyenne (moins de 45 images/s) = trop lourd
+  slowWindows: 2, // mesures lentes d'affilée avant de baisser d'un cran
+  fastMs: 1000 / 57, // plus rapide en moyenne = assez de marge pour remonter
+  fastWindows: 8, // mesures rapides d'affilée avant de remonter d'un cran (plus prudent que la baisse)
+  // Navigateur bridé à 30 images/s (économie d'énergie) : images très régulières autour de 33 ms. Ce n'est pas
+  // l'appareil qui peine, baisser la qualité n'y changerait rien.
+  capMs: 1000 / 30,
+  capTolerance: 2.5, // écart à 33 ms toléré pour reconnaître la cadence bridée
+  capJitter: 2, // écart type maximal des durées d'image d'une cadence bridée
+  bounceMs: 20_000, // remontée suivie d'une baisse en moins de 20 s = plus de remontée de la session
+  ignoreMs: 250, // image plus longue (onglet en arrière-plan, chargement) : ignorée
+};
+
+// Côté d'une case de la grille des ennemis (systems/combat.js), en pixels : un peu plus que deux ennemis
+// ordinaires côte à côte. Avant, 130 (taille du plus gros boss) : chaque recherche ramenait des dizaines
+// d'ennemis trop loin pour compter.
+export const ENEMY_GRID_CELL = 64;
+
+// Défi entre amis (services/friendChallenge.js) : un code = une graine (héros, arme, modificateur et hasard
+// imposés, comme le défi du jour). Le lien partagé emporte le score à battre ; rien ne passe par un serveur.
+export const FRIEND_CHALLENGE = {
+  codeLength: 6,
+  alphabet: "ABCDEFGHJKMNPQRSTUVWXYZ23456789", // ni O / 0 ni I / 1 / L : un code se recopie sans erreur
+  saved: 8, // défis gardés dans le compte (les plus récents)
+  nameMax: 16, // longueur maximale du pseudo emporté par le lien
+};
+
 export const STAT_CAPS = {
   speed: 7, // vitesse de déplacement maximale (base 4,7) : au-delà le jeu devient injouable
   attackSpeed: 50,

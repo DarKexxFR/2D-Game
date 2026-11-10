@@ -15,6 +15,8 @@ import { initLeaderboardMenu, openLeaderboard } from "./leaderboardMenu.js";
 import { showScreen } from "./screens.js";
 import { refreshSeasonTile } from "./seasonMenu.js";
 import { renderResumeRun } from "./resumeRun.js";
+import { minutesLeft, weekendEvent } from "../services/weekendEvent.js";
+import { icon } from "./icons.js";
 
 let pseudo = loadPseudo();
 
@@ -62,10 +64,35 @@ export function refreshAccountUI() {
   setWidth("acBarFill", account.currentXp / account.nextLevelXp);
   setText("acGoldDisplay", account.gold);
   refreshHomeTiles();
+  refreshWeekendEvent();
   refreshDifficulty();
   setText("shopGoldDisplay", account.gold);
   setText("invGoldDisplay", account.gold);
   renderChests();
+}
+
+/** Événement du week-end (services/weekendEvent.js) : il prend la place du slogan sous le titre. */
+function refreshWeekendEvent() {
+  const ev = weekendEvent();
+  const node = $("homeEvent");
+  setClass("mainMenu", "weekend", !!ev);
+  if (!ev) {
+    node.replaceChildren();
+    return;
+  }
+  const left = minutesLeft();
+  const time =
+    left >= 24 * 60
+      ? `${Math.floor(left / 1440)} j ${Math.floor((left % 1440) / 60)} h`
+      : `${Math.floor(left / 60)} h ${String(left % 60).padStart(2, "0")}`;
+  const key = `${ev.id}|${time}`;
+  if (node.dataset.key === key) return;
+  node.dataset.key = key;
+  node.style.setProperty("--event", ev.color);
+  node.replaceChildren(icon(ev.icon), document.createTextNode(` WEEK-END · ${ev.name} : ${ev.desc}`));
+  const end = document.createElement("small");
+  end.textContent = `encore ${time}`;
+  node.append(end);
 }
 
 /** Infos rapides de l'écran d'accueil : héros équipé, défi du jour, talents, quêtes. */

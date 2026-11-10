@@ -49,10 +49,19 @@ function isVisibleOverlay() {
   return !!invite && invite.style.display !== "none" && invite.getClientRects().length > 0;
 }
 
+let padsActive = false; // une manette était branchée à l'image précédente
+
 /** Relit les manettes et aiguille leurs appuis ; appelé à chaque image (partie et menus). */
 export function updateGamepads(now) {
   const events = pollGamepads(now);
   if (document.body.classList.contains("booting")) return; // écran de chargement : rien à piloter
+  // Aucune manette : rien à aiguiller (une dernière passe après le départ de la dernière, pour ranger le
+  // curseur des menus). Avant, chaque image mesurait la fenêtre d'invitation, ce qui forçait le navigateur
+  // à recalculer la mise en page à chaque image, même sans manette.
+  if (events.length === 0 && !pads.some(Boolean)) {
+    if (!padsActive) return;
+    padsActive = false;
+  } else padsActive = true;
   if (events.length > 0 || padMoved()) setPadMode(true);
 
   const menu = inMenu();

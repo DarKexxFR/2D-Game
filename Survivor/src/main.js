@@ -15,6 +15,13 @@ import { view } from "./core/canvas.js";
 import { on } from "./core/events.js";
 import { onAction } from "./core/input.js";
 import {
+  isAutoQuality,
+  onAutoQualityChange,
+  qualityLevel,
+  resetFrameProbe,
+  sampleFrame,
+} from "./core/quality.js";
+import {
   camera,
   game,
   mysteryBox,
@@ -118,7 +125,7 @@ import { updateCursedShrines } from "./systems/cursedShrines.js";
 import { updateAnomaly } from "./systems/anomalies/index.js";
 import { updateBlackMarket } from "./systems/blackMarket.js";
 import { initBlackMarket } from "./ui/blackMarket.js";
-import { $ } from "./ui/dom.js";
+import { $, setVisible } from "./ui/dom.js";
 import { initKillCamButton, setOnlineStatus, showGameOver } from "./ui/gameOverScreen.js";
 import { initShareMenu } from "./ui/shareMenu.js";
 import { drawKillCam, killCamActive, stopKillCam } from "./render/killCam.js";
@@ -154,9 +161,12 @@ import {
 } from "./ui/upgradeMenu.js";
 import { initAchievementMenu, openAchievements, showToast } from "./ui/achievementMenu.js";
 import { initDailyMenu, openDaily } from "./ui/dailyMenu.js";
+import { currentChallenge, initChallengeMenu, openChallenges, scoreText, share } from "./ui/challengeMenu.js";
+import { challengeRules, recordChallengeRun, takeChallengeLink } from "./services/friendChallenge.js";
 import { initQuestMenu, openQuests } from "./ui/questMenu.js";
 import { announceRolledOver, initSeasonMenu, openSeason } from "./ui/seasonMenu.js";
 import { addRunSeasonXp } from "./services/season.js";
+import { weekendBonus } from "./services/weekendEvent.js";
 import { canSaveRun, clearRun, restoreRunState, saveRun, savedRun } from "./services/runSave.js";
 import { confirmDropRun, initResumeRun } from "./ui/resumeRun.js";
 import { initAnalytics, trackRun } from "./services/analytics.js";
@@ -226,6 +236,7 @@ import { closeInstall, initAppMenu, maybeAskPush, openInstall, renderApp } from 
 // --- CYCLE DE VIE D'UNE PARTIE ---
 
 let lastMode = "normal"; // « REJOUER » relance le même mode
+let lastChallenge = ""; // code du défi entre amis joué (REJOUER relance le même)
 let runReported = false; // partie déjà comptée dans les statistiques (fin, victoire ou abandon)
 let ticking = false; // un tick de la partie est en cours (voir update)
 let deathPending = false; // mort pendant un tick : traitée une fois le tick fini
@@ -289,8 +300,10 @@ function resumeRun() {
     showToast("Cette partie n'a pas pu être reprise.", "warning");
     return showMainMenu();
   }
-  // Défi du jour : nouvelle graine (la suite tirée avant l'interruption n'est pas sauvegardée)
-  if (game.daily) useSeed((game.daily.seed ^ Math.floor(game.time)) >>> 0);
+  // Défi du jour, défi entre amis : nouvelle graine (la suite tirée avant l'interruption n'est pas sauvegardée)
+  const seeded = game.daily || game.challenge;
+  if (seeded) useSeed((seeded.seed ^ Math.floor(game.time)) >>> 0);
+  if (game.challenge) lastChallenge = game.challenge.code;
   Object.assign(game, { started: true, running: true, paused: false, over: false });
   nextSaveAt = game.time + RUN_SAVE.everySeconds * 1000;
   logEvent("partie", `reprise ${lastMode} · vague ${game.wave}`);
@@ -377,14 +390,16 @@ function setupRun(mode, difficulty = "normal", prepare = null) {
   resetTrail();
   game.difficulty = difficulty;
   if (difficulty !== "normal") game.modifier = difficultyModifier(difficulty);
-  if (mode === "daily") {
-    const daily = dailyChallenge();
-    game.daily = daily;
-    game.modifier = daily.modifier;
-    useSeed(daily.seed);
+  if (mode === "daily" || mode === "challenge") {
+    // Défi du jour ou défi entre amis : règles et hasard tirés d'une graine, les mêmes pour tous
+    const rules = mode === "daily" ? dailyChallenge() : challengeRules(lastChallenge);
+    if (mode === "daily") game.daily = rules;
+    else game.challenge = { code: lastChallenge, seed: rules.seed };
+    game.modifier = rules.modifier;
+    useSeed(rules.seed);
     resetPlayer(1); // même base pour tout le monde : ni niveau de compte ni talents
     const base = { level: 1, prestige: 1 };
-    applyEquipment({ hero: { id: daily.hero, ...base }, weapon: { id: daily.weapon, ...base } });
+    applyEquipment({ hero: { id: rules.hero, ...base }, weapon: { id: rules.weapon, ...base } });
   } else {
     resetPlayer(account.level);
     applyEquipment();
@@ -625,7 +640,7 @@ function settleCoop(reason = "") {
   resetUpgradeMenu();
   showTouchControls(false);
   showCoopHud(false);
-  addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
+  const weekend = payRunRewards();
   recordBest("bestCombo", game.stats.bestCombo);
   recordCompletedRun();
   reportRun("coop", reason || "équipe à terre");
@@ -635,6 +650,7 @@ function settleCoop(reason = "") {
     kills: game.kills,
     difficulty: "normal",
     pulse: game.endless?.depth || 0,
+    bonus: weekend.seasonMult,
   });
   refreshAccountUI();
   showGameOver({
@@ -646,7 +662,7 @@ function settleCoop(reason = "") {
     gold: game.runGold,
     isNewRecord: false,
   });
-  showSeasonGain(season);
+  showSeasonGain(season, weekend);
   setOnlineStatus(reason || "Coop : partie hors classement mondial");
   coopRoundOver();
 }
@@ -832,18 +848,20 @@ function settleRun() {
   restoreRandom();
   stopTutorial();
   showTouchControls(false);
-  addAccountRewards(Math.floor(game.totalRunXp), game.runGold);
+  const weekend = payRunRewards();
   recordBest("bestCombo", game.stats.bestCombo);
   if (game.daily) addStat("dailyRuns");
   recordCompletedRun();
   reportRun(lastMode, game.over ? game.killCam.killer?.name || "" : "");
   const rush = game.rush;
+  showChallengeResult();
   const season = addRunSeasonXp({
     wave: rush ? 0 : game.wave,
     bosses: game.stats.bosses,
     kills: game.kills,
     difficulty: game.difficulty,
     pulse: game.endless?.depth || 0,
+    bonus: weekend.seasonMult,
   });
   refreshAccountUI();
   const pseudo = getPseudo();
@@ -858,7 +876,22 @@ function settleRun() {
       gold: game.runGold,
       isNewRecord: rush.defeated > rush.bestBefore,
     });
-    showSeasonGain(season);
+    showSeasonGain(season, weekend);
+    setOnlineStatus("");
+    return;
+  }
+  if (game.challenge) {
+    // Défi entre amis : comparé au score de l'ami, hors classements (graine choisie par les joueurs)
+    showGameOver({
+      pseudo,
+      level: player.level,
+      wave: game.wave,
+      waveLabel: "Vague · Défi entre amis",
+      xp: game.totalRunXp,
+      gold: game.runGold,
+      isNewRecord: false,
+    });
+    showSeasonGain(season, weekend);
     setOnlineStatus("");
     return;
   }
@@ -878,7 +911,7 @@ function settleRun() {
     gold: game.runGold,
     isNewRecord,
   });
-  showSeasonGain(season);
+  showSeasonGain(season, weekend);
 
   const day = game.daily?.day;
   if (day) saveDailyBest(day, game.wave, game.totalRunXp);
@@ -905,10 +938,49 @@ function settleRun() {
   }
 }
 
-/** Écran de fin : XP de saison gagnée par la partie (voir services/season.js). */
-function showSeasonGain({ xp, firstOfDay }) {
+/** Écran de fin d'un défi entre amis : record, score de l'ami battu ou non, bouton pour le défier. */
+function showChallengeResult() {
+  const result = $("challengeResult");
+  result.className = "challenge-result";
+  result.textContent = "";
+  setVisible("btnChallengeSend", !!game.challenge);
+  if (!game.challenge) return;
+  const { entry, isRecord, beat } = recordChallengeRun(game.challenge.code, {
+    wave: game.wave,
+    xp: game.totalRunXp,
+  });
+  if (beat) addStat("challengeWins");
+  if (entry.target) {
+    result.classList.add(beat ? "won" : "lost");
+    result.textContent = beat
+      ? `DÉFI RELEVÉ ! Tu bats ${entry.from || "ton ami"} (${scoreText(entry.target)})`
+      : `Raté : ${entry.from || "ton ami"} reste devant (${scoreText(entry.target)})`;
+  } else result.textContent = isRecord ? "Nouveau record du défi : envoie-le à un ami !" : "";
+}
+
+/**
+ * Récompenses du compte pour la partie finie, bonus de l'événement du week-end compris
+ * (services/weekendEvent.js : or et XP de compte en plus, multiplicateur de l'XP de saison).
+ */
+function payRunRewards() {
+  const xp = Math.floor(game.totalRunXp);
+  const bonus = weekendBonus({ xp, gold: game.runGold });
+  addAccountRewards(xp + bonus.xp, game.runGold + bonus.gold);
+  return bonus;
+}
+
+/** Écran de fin : XP de saison gagnée par la partie (voir services/season.js) et bonus du week-end. */
+function showSeasonGain({ xp, firstOfDay }, weekend) {
   const bonus = firstOfDay ? " · bonus 1re partie du jour" : "";
   $("runSeasonGain").textContent = xp > 0 ? `+${xp} XP de saison${bonus}` : "";
+  const ev = weekend?.event;
+  const parts = [];
+  if (weekend?.gold > 0) parts.push(`+${weekend.gold} or`);
+  if (weekend?.xp > 0) parts.push(`+${weekend.xp} XP`);
+  if (weekend?.seasonMult > 1) parts.push(`XP de saison ×${String(weekend.seasonMult).replace(".", ",")}`);
+  const line = $("runWeekendGain");
+  line.textContent = ev && parts.length ? `${ev.name} : ${parts.join(" · ")}` : "";
+  line.style.color = ev?.color || "";
 }
 
 // --- ADRESSE DE LA PAGE (#modal=option...) ---
@@ -921,6 +993,7 @@ const MENUS = {
   leaderboardMenu: openLeaderboard,
   achievementMenu: openAchievements,
   dailyMenu: openDaily,
+  challengeMenu: () => openChallenges(),
   questMenu: openQuests,
   seasonMenu: openSeason,
   bossRushMenu: openBossRush,
@@ -1063,12 +1136,16 @@ function runFrame(now) {
     } else if (party.role === "guest") guestFrame(now);
     if (killCamActive()) drawKillCam(now);
     else render();
+    // Qualité AUTO : seules les images où la partie tourne vraiment comptent (pas la pause ni un choix)
+    if (game.running && !game.paused && !game.over) sampleFrame(now);
+    else resetFrameProbe();
     if (!versus.split) updateHud();
     if (inParty()) updateCoopHud(now);
     if (versus.active) updateVersusHud();
     updateMusic(now);
   } else {
     accumulator = 0;
+    resetFrameProbe();
     renderMenuBackground();
   }
 }
@@ -1103,8 +1180,9 @@ function initDiagnostics() {
     enemies: game.started ? world.enemies.length : undefined,
     shots: game.started ? world.projectiles.length + world.enemyProjectiles.length : undefined,
     event: game.mapEvent?.type,
-    quality: settings.quality,
+    quality: isAutoQuality() ? `auto (${qualityLevel()})` : settings.quality,
   }));
+  onAutoQualityChange((to, from, why) => logEvent("qualité", `auto : ${from} → ${to} (${why})`));
   watch("écran", () => currentScreen() || "jeu");
   watch("mode", mode);
   watch("vague", () => (game.started ? game.wave : "—"));
@@ -1131,6 +1209,14 @@ function init() {
   ensureStarterItems();
   initMainMenu({ onPlay: () => startGame("normal") });
   initDailyMenu({ onPlay: () => startGame("daily"), onBack: showMainMenu });
+  initChallengeMenu({
+    onPlay: () => {
+      lastChallenge = currentChallenge();
+      startGame("challenge");
+    },
+    onBack: (screen) => (screen === "dailyMenu" ? openDaily() : showMainMenu()),
+  });
+  $("btnChallengeSend").addEventListener("click", () => share(lastChallenge, "onlineStatus"));
   initBossRushMenu({ onPlay: () => startGame("rush"), onBack: showMainMenu });
   initTalentMenu({ onBack: showMainMenu, onChange: refreshAccountUI });
   initCyberCoreMenu({ onBack: openTalents, onChange: refreshAccountUI });
@@ -1394,7 +1480,14 @@ function enterHome() {
     refreshAccountUI();
     renderApp();
   }
+  const challengeLink = takeChallengeLink(); // lien « #defi=... » d'un ami : lu avant que le routeur n'efface l'adresse
   initRouter({ navigate, getCurrent: currentScreen, deepLinks: Object.keys(MENUS) });
+  if (challengeLink) {
+    openChallenges({ link: challengeLink });
+    requestAnimationFrame(frame);
+    finishLoading();
+    return;
+  }
   announceRolledOver(); // nouveau mois : récompenses de la saison passée données d'office
   // Nouveautés d'une mise à jour, puis série de connexion (pas à un tout nouveau joueur, qui commence par
   // le tutoriel) : proposées à l'arrivée sur l'accueil, l'une après l'autre

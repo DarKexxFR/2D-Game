@@ -16,6 +16,8 @@ const MODE_NAMES = {
   rush: "Boss Rush",
   duel: "Duel en ligne",
   "duel-local": "Duel sur un écran",
+  coop: "Coop en ligne",
+  challenge: "Défi entre amis",
 };
 
 let days = 30;

@@ -95,6 +95,7 @@
     <link rel="stylesheet" href="css/streak.css" />
     <link rel="stylesheet" href="css/news.css" />
     <link rel="stylesheet" href="css/daily.css" />
+    <link rel="stylesheet" href="css/challenge.css" />
     <link rel="stylesheet" href="css/bossrush.css" />
     <link rel="stylesheet" href="css/endless.css" />
     <link rel="stylesheet" href="css/season.css" />
@@ -318,6 +319,7 @@
           <div class="home-title">
             <h1>LAST PULSE</h1>
             <p class="home-tagline">Survivre à la nuée.</p>
+            <p id="homeEvent" class="home-event" role="status"></p>
             <button id="btnSeason" class="home-season" aria-label="Passe de saison">
               <i data-icon="season"></i>
               <span class="home-season-text"
@@ -558,7 +560,10 @@
           <div id="dailyModifier" class="daily-rule"></div>
         </div>
         <p id="dailyBest" class="daily-best"></p>
-        <button id="btnDailyPlay">JOUER LE DÉFI</button>
+        <div class="btn-grid daily-actions">
+          <button id="btnDailyPlay">JOUER LE DÉFI</button>
+          <button id="btnChallenges" class="challenge-open"><i data-icon="friends"></i> DÉFIER UN AMI</button>
+        </div>
         <h3 class="shop-section">CLASSEMENT DU JOUR</h3>
         <div class="lb-scroll daily-scroll">
           <table class="lb-table">
@@ -574,6 +579,49 @@
           </table>
         </div>
         <button id="btnDailyBack" class="secondary">RETOUR</button>
+      </div>
+
+      <!-- ===== DÉFI ENTRE AMIS (ui/challengeMenu.js) ===== -->
+      <div id="challengeMenu" class="menu-overlay">
+        <h2>DÉFI ENTRE AMIS</h2>
+        <p class="menu-sub">Même graine, même héros, même arme : qui ira le plus loin ? · hors classements</p>
+        <div class="challenge-actions">
+          <button id="btnChallengeNew" class="challenge-new">
+            <i data-icon="sparkle"></i> CRÉER UN DÉFI
+          </button>
+          <div class="duel-join">
+            <input
+              type="text"
+              id="challengeCode"
+              placeholder="CODE"
+              maxlength="7"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              aria-label="Code du défi"
+            />
+            <button id="btnChallengeJoin" class="secondary"><i data-icon="join"></i> RELEVER</button>
+          </div>
+          <p id="challengeError" class="challenge-error" aria-live="polite"></p>
+        </div>
+        <div id="challengeCard" class="challenge-card">
+          <p class="challenge-code">CODE <b id="challengeCurrent"></b></p>
+          <div class="daily-rules">
+            <div id="challengeHero" class="daily-rule"></div>
+            <div id="challengeWeapon" class="daily-rule"></div>
+            <div id="challengeModifier" class="daily-rule"></div>
+          </div>
+          <p id="challengeTarget" class="challenge-target"></p>
+          <p id="challengeBest" class="daily-best"></p>
+          <div class="btn-grid">
+            <button id="btnChallengePlay"><i data-icon="play"></i> JOUER</button>
+            <button id="btnChallengeShare" class="secondary"><i data-icon="share"></i> PARTAGER</button>
+          </div>
+          <p id="challengeShareStatus" class="challenge-status" aria-live="polite"></p>
+        </div>
+        <h3 class="shop-section">MES DÉFIS</h3>
+        <ul id="challengeList" class="challenge-list"></ul>
+        <button id="btnChallengeBack" class="secondary" data-pad-back>RETOUR</button>
       </div>
 
       <!-- ===== BOSS RUSH ===== -->
@@ -736,11 +784,14 @@
             <div class="option-row option-quality">
               <span><i data-icon="monitor"></i> Qualité graphique</span>
               <div class="segmented">
+                <button data-quality="auto">AUTO</button>
                 <button data-quality="low">BASSE</button>
                 <button data-quality="medium">MOYENNE</button>
                 <button data-quality="high">HAUTE</button>
               </div>
-              <p class="option-hint">Basse : sans effets lumineux, idéal pour les vieux téléphones.</p>
+              <p class="option-hint" id="optQualityHint">
+                Auto : la qualité s'adapte à la fluidité de l'appareil. Basse : sans effets lumineux.
+              </p>
             </div>
             <div class="option-fx" id="optFx">
               <div class="option-row">
@@ -1149,7 +1200,9 @@
           <p class="reward-xp">+<span id="runXpGain">0</span> XP</p>
           <p class="reward-gold">+<span id="runGoldGain">0</span> OR</p>
           <p id="runSeasonGain" class="reward-season"></p>
+          <p id="runWeekendGain" class="reward-weekend"></p>
         </div>
+        <p id="challengeResult" class="challenge-result"></p>
         <div id="runStats" class="run-stats"></div>
         <div id="runBuild" class="run-build"></div>
         <div id="newRecordMsg">NOUVEAU RECORD !</div>
@@ -1157,6 +1210,9 @@
         <div class="end-actions">
           <button id="btnKillCam" class="kill-cam-btn">▶ REVOIR MA MORT</button>
           <button id="btnShareRun" class="share-run-btn"><i data-icon="share"></i> PARTAGER</button>
+          <button id="btnChallengeSend" class="share-run-btn challenge-send">
+            <i data-icon="friends"></i> DÉFIER UN AMI
+          </button>
         </div>
         <div class="btn-grid">
           <button id="btnReplay">REJOUER</button>

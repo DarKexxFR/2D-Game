@@ -35,6 +35,7 @@ const ROUTES = {
   duelMenu: "duel",
   coopMenu: "coop",
   friendsMenu: "amis",
+  challengeMenu: "defi-ami",
 };
 const PLAYING = "#jeu";
 

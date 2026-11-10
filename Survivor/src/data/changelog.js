@@ -10,6 +10,31 @@
  */
 export const CHANGELOG = [
   {
+    id: "2026-11-defis-amis",
+    date: "Novembre 2026",
+    title: "Défis entre amis et week-ends",
+    items: [
+      {
+        icon: "friends",
+        color: "#00e5ff",
+        title: "Défi entre amis",
+        text: "Créez un défi depuis l'écran du Défi du jour et envoyez le lien : votre ami joue la même partie (même héros, même arme, même hasard) et voit s'il bat votre score. Deux nouveaux succès : Rival et Inarrêtable.",
+      },
+      {
+        icon: "star",
+        color: "#ffd700",
+        title: "Événements du week-end",
+        text: "Chaque samedi et dimanche, un bonus différent : Ruée vers l'or, Week-end d'entraînement, Week-end de saison ou Grand week-end. Il s'affiche sur l'accueil.",
+      },
+      {
+        icon: "monitor",
+        color: "#00ff88",
+        title: "Qualité AUTO et jeu plus fluide",
+        text: "La nouvelle qualité AUTO (Options) baisse les effets quand l'appareil peine et les remet quand tout redevient fluide. Les grosses hordes coûtent aussi beaucoup moins cher à calculer.",
+      },
+    ],
+  },
+  {
     id: "2026-11-icones-maison",
     date: "Novembre 2026",
     title: "Nouvelles icônes",

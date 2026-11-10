@@ -3,6 +3,7 @@
 import { ACCOUNT_SCALING, LIMITS, STORAGE_KEYS } from "../config.js";
 import { DEFAULT_EQUIPPED } from "../data/items.js";
 import { DEFAULT_SKIN } from "../data/skins.js";
+import { sanitizeChallenges } from "./friendChallenge.js";
 
 function readJSON(key, fallback) {
   try {
@@ -53,6 +54,8 @@ export const account = {
   pulseShards: 0, // Éclats de Pulse (démantèlement à la Forge, voir data/pulseShards.js)
   // Cœur Cybernétique (data/cyberCore.js) : nœuds achetés et nœuds actifs (au plus CYBER_CORE.activeSlots)
   cyberCore: { owned: [], active: [] },
+  /** @type {import("./friendChallenge.js").SavedChallenge[]} défis entre amis récents (services/friendChallenge.js) */
+  challenges: [],
 };
 
 export function loadAccount() {
@@ -92,6 +95,7 @@ export function loadAccount() {
     owned: Array.isArray(saved.cyberCore?.owned) ? saved.cyberCore.owned : [],
     active: Array.isArray(saved.cyberCore?.active) ? saved.cyberCore.active : [],
   };
+  account.challenges = sanitizeChallenges(saved.challenges);
   account.bestiary = { ...bestiaryFromStats(account.achievementStats), ...saved.bestiary };
   // Sauvegarde d'avant le tutoriel : un joueur qui a déjà fini une partie n'en a pas besoin
   account.tutorialDone = saved.tutorialDone ?? account.achievementStats.runs > 0;

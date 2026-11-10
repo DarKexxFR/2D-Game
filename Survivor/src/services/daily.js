@@ -50,17 +50,23 @@ export function seededRandom(seed) {
   };
 }
 
-export function dailyChallenge(day = todayKey()) {
-  const seed = hash(`survivor-daily-${day}`);
+/**
+ * Règles tirées d'une graine : héros, arme et modificateur imposés (défi du jour, défi entre amis).
+ * @param {number} seed
+ */
+export function rulesFromSeed(seed) {
   const rand = seededRandom(seed);
   const pick = (list) => list[Math.floor(rand() * list.length)];
   return {
-    day,
     seed,
     hero: pick(Object.keys(HEROES)),
     weapon: pick(Object.keys(WEAPONS)),
     modifier: pick(DAILY_MODIFIERS),
   };
+}
+
+export function dailyChallenge(day = todayKey()) {
+  return { day, ...rulesFromSeed(hash(`survivor-daily-${day}`)) };
 }
 
 // --- Graine pendant la partie : Math.random est remplacé le temps du défi ---
