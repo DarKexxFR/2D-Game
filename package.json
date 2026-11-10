@@ -6,8 +6,9 @@
   "scripts": {
     "start": "python3 -m http.server 8000 --directory Survivor",
     "test": "playwright test",
-    "lint": "prettier --check \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\" && node scripts/check-syntax.mjs",
+    "lint": "prettier --check \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\" && node scripts/check-syntax.mjs && node scripts/build-icons.mjs --check",
     "format": "prettier --write \"Survivor/**/*.{js,css,html}\" \"tests/**/*.js\" \"*.{js,json}\"",
+    "icons": "node scripts/build-icons.mjs",
     "typecheck": "tsc -p jsconfig.json && tsc -p jsconfig.sw.json"
   },
   "devDependencies": {

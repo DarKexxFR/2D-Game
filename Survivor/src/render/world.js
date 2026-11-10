@@ -6,34 +6,12 @@ import { camera, game, mysteryBox as box, player, world } from "../core/state.js
 import { arenaShrunk, mapBounds } from "../systems/arena.js";
 import { isOnScreen } from "../systems/combat.js";
 import { isPlayerNearBox } from "../systems/mysteryBox.js";
-import { ICONS, iconGrid } from "../data/icons.js";
+import { drawIcon } from "./icons.js";
 import { drawText, fillCircle, strokeCircle } from "./draw.js";
 import { drawSprite, getSprite } from "./sprites.js";
 
 export { drawGrid } from "./grid.js";
 import { shrineHold } from "../systems/cyberCore.js";
-
-const iconPaths = new Map();
-
-/** Icône (data/icons.js) convertie une fois en Path2D pour le canvas. */
-function iconPath(name) {
-  let p = iconPaths.get(name);
-  if (!p) iconPaths.set(name, (p = new Path2D(ICONS[name])));
-  return p;
-}
-
-/** Dessine une icône (pleine) centrée en (x, y) à la taille voulue. */
-function drawIcon(name, x, y, size, color) {
-  const grid = iconGrid(name);
-  ctx.save();
-  ctx.translate(x - size / 2, y - size / 2);
-  ctx.scale(size / grid, size / grid);
-  ctx.fillStyle = color;
-  ctx.shadowBlur = 8;
-  ctx.shadowColor = color;
-  ctx.fill(iconPath(name), "evenodd");
-  ctx.restore();
-}
 
 export function drawMapBorder() {
   ctx.strokeStyle = "#ff0055";
@@ -139,7 +117,7 @@ export function drawShrines(now) {
     strokeCircle(s.x, s.y, s.size, s.color, 2.5);
     ctx.shadowBlur = 0;
     strokeCircle(s.x, s.y, s.size + 6 + pulse * 4, s.color, 1);
-    drawIcon(s.icon, s.x, s.y, s.size * 1.1, s.color);
+    drawIcon(ctx, s.icon, s.x, s.y, s.size * 1.1, s.color, 8);
   }
 }
 

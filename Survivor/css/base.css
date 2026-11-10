@@ -88,12 +88,19 @@ button.secondary {
   vertical-align: -0.15em;
   line-height: 1;
 }
-/* Icônes pleines (Papicons, game-icons.net) remplies de la couleur du texte */
+/* Icônes faites main dans Figma (design/icons) : trait néon + parties pleines, à la couleur du texte */
 .ico svg {
   width: 1em;
   height: 1em;
-  fill: currentColor;
-  fill-rule: evenodd;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   filter: drop-shadow(0 0 3px currentColor);
   overflow: visible;
+}
+.ico svg .f {
+  fill: currentColor;
+  stroke: none;
 }
